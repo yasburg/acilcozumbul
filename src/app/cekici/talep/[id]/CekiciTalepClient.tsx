@@ -4,22 +4,29 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
-import { Btn, Card } from "@/components/ui";
+import { Btn, Card, Field } from "@/components/ui";
 
-interface TalepOnizleme {
+interface TalepDurum {
   id: string;
   durum: string;
-  satinAlindi: boolean;
-  baskaSatinAldi?: boolean;
+  kazandim?: boolean;
+  teklifVerdim?: boolean;
+  ihaleAcik?: boolean;
+  ihaleKapandi?: boolean;
+  kaybettim?: boolean;
   tercihEdilmedi?: boolean;
   mesaj?: string;
-  onizleme?: { bolge: string; sorunOzet: string };
+  onizleme?: { bolge: string; sorunOzet: string; hedefBolge?: string };
   krediMaliyet?: number;
   kredi?: number;
+  benimTeklif?: { fiyat: number; tahminiSureDk: number; mesaj?: string };
+  teklifSayisi?: number;
+  ihaleBitis?: string;
   ad?: string;
   soyad?: string;
   telefon?: string;
   konum?: { adres: string; lat: number; lng: number };
+  hedefKonum?: { adres: string; lat: number; lng: number };
   sorun?: string;
 }
 
@@ -30,12 +37,16 @@ export default function CekiciTalepClient() {
   const id = params.id as string;
   const token = searchParams.get("t");
 
-  const [talep, setTalep] = useState<TalepOnizleme | null>(null);
+  const [talep, setTalep] = useState<TalepDurum | null>(null);
   const [cekici, setCekici] = useState<{ ad: string; kredi: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [islem, setIslem] = useState(false);
   const [error, setError] = useState("");
-  const [musteriAlindi, setMusteriAlindi] = useState(false);
+  const [teklifGonderildi, setTeklifGonderildi] = useState(false);
+
+  const [fiyat, setFiyat] = useState("");
+  const [sure, setSure] = useState("30");
+  const [mesaj, setMesaj] = useState("");
 
   const yukle = useCallback(async () => {
     setError("");
@@ -83,48 +94,40 @@ export default function CekiciTalepClient() {
     return () => clearInterval(interval);
   }, [yukle]);
 
-  async function satinAl() {
+  async function teklifVer() {
+    const fiyatNum = Number(fiyat);
+    if (!fiyatNum || fiyatNum < 100) {
+      setError("Geçerli bir fiyat girin (min. 100 TL).");
+      return;
+    }
+
     setIslem(true);
     setError("");
     try {
-      const res = await fetch(`/api/cekici/talep/${id}/satin-al`, {
+      const res = await fetch(`/api/cekici/talep/${id}/teklif`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fiyat: fiyatNum,
+          tahminiSureDk: Number(sure) || 30,
+          mesaj: mesaj.trim() || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "İşlem başarısız.");
+        setError(data.error || "Teklif gönderilemedi.");
         if (data.tercihEdilmedi) {
           setTalep((t) =>
-            t
-              ? {
-                  ...t,
-                  tercihEdilmedi: true,
-                  baskaSatinAldi: false,
-                  onizleme: undefined,
-                  mesaj: "Müşteri sizi tercih etmedi.",
-                }
-              : t
+            t ? { ...t, tercihEdilmedi: true, onizleme: undefined, mesaj: data.error } : t
           );
         }
         return;
       }
-      setTalep({
-        id,
-        durum: "satın_alındı",
-        satinAlindi: true,
-        ad: data.ad,
-        soyad: data.soyad,
-        telefon: data.telefon,
-        konum: data.konum,
-        sorun: data.sorun,
-      });
       if (cekici) setCekici({ ...cekici, kredi: data.kredi ?? cekici.kredi - 1 });
-      setMusteriAlindi(true);
-      setTimeout(() => {
-        router.push("/cekici/panel?tab=musteriler&mesaj=musteri-alindi");
-      }, 1500);
+      setTeklifGonderildi(true);
+      await yukle();
     } catch {
-      setError("İşlem başarısız.");
+      setError("Teklif gönderilemedi.");
     } finally {
       setIslem(false);
     }
@@ -134,11 +137,13 @@ export default function CekiciTalepClient() {
     ? `tel:${talep.telefon.replace(/\s/g, "")}`
     : "#";
 
-  const satınAlinabilir =
+  const teklifVerebilir =
     talep &&
-    !talep.satinAlindi &&
-    !talep.baskaSatinAldi &&
+    talep.ihaleAcik &&
+    !talep.kazandim &&
+    !talep.teklifVerdim &&
     !talep.tercihEdilmedi &&
+    !talep.ihaleKapandi &&
     talep.onizleme;
 
   return (
@@ -151,10 +156,12 @@ export default function CekiciTalepClient() {
         <p className="text-center text-slate-500 py-12">Yükleniyor…</p>
       )}
 
-      {musteriAlindi && (
+      {teklifGonderildi && talep?.teklifVerdim && (
         <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">
-          <p className="text-sm font-semibold text-emerald-800">✅ Müşteri alındı!</p>
-          <p className="text-xs text-emerald-700 mt-1">Panele yönlendiriliyorsunuz…</p>
+          <p className="text-sm font-semibold text-emerald-800">✅ Teklifiniz alındı!</p>
+          <p className="text-xs text-emerald-700 mt-1">
+            Kazanamazsanız 1 krediniz iade edilir.
+          </p>
         </div>
       )}
 
@@ -178,54 +185,105 @@ export default function CekiciTalepClient() {
               <p className="text-4xl mb-3">😔</p>
               <p className="font-semibold text-slate-800">Müşteri sizi tercih etmedi</p>
               <p className="text-sm text-slate-500 mt-2">
-                Müşteri yeni çekici aradı. Bu talebi tekrar satın alamazsınız.
+                Bu talebe tekrar teklif veremezsiniz.
               </p>
             </Card>
           )}
 
-          {talep.baskaSatinAldi && !talep.satinAlindi && (
+          {talep.ihaleKapandi && !talep.kazandim && (
             <Card className="border-slate-200 bg-slate-50 text-center py-6">
-              <p className="text-4xl mb-3">🔒</p>
-              <p className="font-semibold text-slate-800">Müşteri satın alındı</p>
+              <p className="text-4xl mb-3">{talep.kaybettim ? "📤" : "🔒"}</p>
+              <p className="font-semibold text-slate-800">
+                {talep.kaybettim ? "Teklifiniz seçilmedi" : "İhale kapandı"}
+              </p>
               <p className="text-sm text-slate-500 mt-2">
                 {talep.mesaj ??
-                  "Bu müşteri başka bir çekici tarafından alındı. Bilgilere yalnızca satın alan çekici ulaşabilir."}
+                  (talep.kaybettim
+                    ? "Krediniz iade edildi."
+                    : "Müşteri başka bir çekiciyi seçti.")}
               </p>
             </Card>
           )}
 
-          {satınAlinabilir && (
+          {talep.teklifVerdim && talep.benimTeklif && !talep.kazandim && (
+            <Card className="border-amber-200 bg-amber-50">
+              <p className="text-xs text-amber-700 uppercase tracking-wide mb-2">
+                Teklifiniz
+              </p>
+              <p className="text-2xl font-bold text-amber-600">
+                {talep.benimTeklif.fiyat} TL
+              </p>
+              <p className="text-sm text-slate-600 mt-1">
+                Tahmini ~{talep.benimTeklif.tahminiSureDk} dk
+              </p>
+              <p className="text-xs text-slate-500 mt-3">
+                Müşteri seçim yapana kadar bekleyin. Seçilmezseniz krediniz iade edilir.
+              </p>
+              {talep.teklifSayisi != null && (
+                <p className="text-xs text-amber-700 mt-2">
+                  Toplam {talep.teklifSayisi} aktif teklif
+                </p>
+              )}
+            </Card>
+          )}
+
+          {teklifVerebilir && (
             <>
               <Card>
                 <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">
-                  Önizleme (kısıtlı)
+                  Talep özeti
                 </p>
-                <p className="font-medium mb-2 text-slate-900">
+                <p className="font-medium mb-1 text-slate-900">
                   📍 {talep.onizleme!.bolge}
                 </p>
+                {talep.onizleme!.hedefBolge && (
+                  <p className="text-sm text-amber-700 mb-2">
+                    → {talep.onizleme!.hedefBolge}
+                  </p>
+                )}
                 <p className="text-sm text-slate-600">{talep.onizleme!.sorunOzet}</p>
               </Card>
               <p className="text-sm text-slate-500 text-center">
-                Müşteri bilgilerini görmek için{" "}
+                Teklif vermek için{" "}
                 <strong className="text-amber-600">1 kredi</strong> harcanır.
+                Kazanamazsanız iade edilir.
               </p>
+              <Field
+                label="Fiyat (TL)"
+                type="number"
+                placeholder="1500"
+                value={fiyat}
+                onChange={(e) => setFiyat(e.target.value)}
+              />
+              <Field
+                label="Tahmini süre (dk)"
+                type="number"
+                value={sure}
+                onChange={(e) => setSure(e.target.value)}
+              />
+              <Field
+                label="Mesaj (isteğe bağlı)"
+                placeholder="Hemen yola çıkabilirim"
+                value={mesaj}
+                onChange={(e) => setMesaj(e.target.value)}
+              />
               {(cekici?.kredi ?? 0) < 1 ? (
                 <Link href="/cekici/kredi">
                   <Btn variant="primary">Kredi Satın Al</Btn>
                 </Link>
               ) : (
-                <Btn onClick={satinAl} disabled={islem}>
-                  {islem ? "İşleniyor…" : "Müşteriye Satın Al (1 Kredi)"}
+                <Btn onClick={teklifVer} disabled={islem}>
+                  {islem ? "Gönderiliyor…" : "Teklif Ver (1 Kredi)"}
                 </Btn>
               )}
             </>
           )}
 
-          {talep.satinAlindi && (
+          {talep.kazandim && (
             <>
               <Card>
                 <p className="text-xs text-emerald-600 uppercase tracking-wide mb-3">
-                  Müşteri Bilgileri
+                  Kazandınız — Müşteri Bilgileri
                 </p>
                 <p className="text-lg font-bold mb-1 text-slate-900">
                   {talep.ad} {talep.soyad}
@@ -233,33 +291,41 @@ export default function CekiciTalepClient() {
                 <p className="text-amber-600 font-mono text-lg mb-3">
                   {talep.telefon}
                 </p>
-                <p className="text-sm text-slate-600 mb-2">
-                  📍 {talep.konum?.adres}
+                <p className="text-sm text-slate-600 mb-1">
+                  📍 Arıza: {talep.konum?.adres}
                 </p>
+                {talep.hedefKonum && (
+                  <p className="text-sm text-amber-700 mb-2">
+                    → Hedef: {talep.hedefKonum.adres}
+                  </p>
+                )}
                 <p className="text-sm text-slate-500 border-t border-slate-100 pt-3 mt-3">
                   {talep.sorun}
                 </p>
+                {talep.benimTeklif && (
+                  <p className="text-sm font-semibold text-emerald-700 mt-3">
+                    Teklifiniz: {talep.benimTeklif.fiyat} TL
+                  </p>
+                )}
               </Card>
               <a href={telefonHref}>
                 <Btn variant="success">📞 Müşteriye Ara</Btn>
               </a>
               {talep.konum && (
                 <a
-                  href={`https://www.google.com/maps?q=${talep.konum.lat},${talep.konum.lng}`}
+                  href={`https://www.google.com/maps/dir/?api=1&origin=${talep.konum.lat},${talep.konum.lng}&destination=${talep.hedefKonum?.lat ?? talep.konum.lat},${talep.hedefKonum?.lng ?? talep.konum.lng}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Btn variant="secondary">Haritada Aç</Btn>
+                  <Btn variant="secondary">Rota — Haritada Aç</Btn>
                 </a>
               )}
             </>
           )}
 
-          {!talep.satinAlindi && (
-            <Link href="/cekici/kredi">
-              <Btn variant="outline">Kredi Satın Al</Btn>
-            </Link>
-          )}
+          <Link href="/cekici/kredi">
+            <Btn variant="outline">Kredi Satın Al</Btn>
+          </Link>
         </div>
       )}
     </MobileShell>

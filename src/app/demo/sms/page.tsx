@@ -23,6 +23,13 @@ export default function DemoSmsPage() {
     gercekGonderim: boolean;
     saglayici: string;
   } | null>(null);
+  const [basliklar, setBasliklar] = useState<{
+    basarili: boolean;
+    basliklar: string[];
+    hata?: string;
+    kod?: string;
+  } | null>(null);
+  const [baslikYukleniyor, setBaslikYukleniyor] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -35,6 +42,18 @@ export default function DemoSmsPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  async function baslikSorgula() {
+    setBaslikYukleniyor(true);
+    try {
+      const res = await fetch("/api/demo/netgsm-baslik");
+      setBasliklar(await res.json());
+    } catch {
+      setBasliklar({ basarili: false, basliklar: [], hata: "İstek başarısız" });
+    } finally {
+      setBaslikYukleniyor(false);
+    }
+  }
 
   return (
     <MobileShell backHref="/" subtitle="SMS kayıtları (çekici + müşteri)">
@@ -60,6 +79,54 @@ export default function DemoSmsPage() {
           )}
         </Card>
       )}
+
+      <Card className="mb-4">
+        <p className="text-sm font-semibold text-slate-800 mb-2">
+          Netgsm gönderici adları
+        </p>
+        <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+          Onaylı başlıkları API ile sorgular.{" "}
+          <a
+            href="https://www.netgsm.com.tr/dokuman/?language=PHP#gonderici-adi-sorgulama"
+            className="text-amber-600 underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Dokümantasyon
+          </a>
+        </p>
+        <button
+          type="button"
+          onClick={baslikSorgula}
+          disabled={baslikYukleniyor}
+          className="text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 w-full"
+        >
+          {baslikYukleniyor ? "Sorgulanıyor…" : "Gönderici adlarını sorgula"}
+        </button>
+        {basliklar && (
+          <div className="mt-3 text-sm">
+            {basliklar.basarili ? (
+              <>
+                <p className="text-emerald-700 font-medium mb-1">
+                  .env NETGSM_MSGHEADER için bunlardan birini kullanın:
+                </p>
+                <ul className="list-disc pl-5 text-slate-700 space-y-1">
+                  {basliklar.basliklar.map((b) => (
+                    <li key={b}>
+                      <code className="text-amber-800">{b}</code>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="text-red-600 text-xs leading-relaxed">
+                {basliklar.kod && <span className="font-mono">[{basliklar.kod}] </span>}
+                {basliklar.hata ?? "Sorgu başarısız"}
+              </p>
+            )}
+          </div>
+        )}
+      </Card>
 
       {loading && <p className="text-slate-500 text-center py-8">Yükleniyor…</p>}
 

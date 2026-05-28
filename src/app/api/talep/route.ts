@@ -3,6 +3,8 @@ import { randomUUID } from "crypto";
 import { addTalep } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import { notifyCekiciler, notifyMusteri } from "@/lib/sms";
+import { IHALE_SURE_DK } from "@/lib/ihale";
+import { parseIlIlce } from "@/lib/konum-parse";
 import { sorunMetniOlustur, sorunTipiBul } from "@/lib/sorun-tipleri";
 import type { Talep } from "@/lib/types";
 
@@ -10,7 +12,7 @@ export async function POST(request: NextRequest) {
   await ensureSeedData();
 
   const body = await request.json();
-  const { ad, soyad, telefon, konum, sorunTipi, sorunDetay, sorun } = body;
+  const { ad, soyad, telefon, konum, hedefKonum, sorunTipi, sorunDetay, sorun } = body;
 
   const tip = sorunTipi?.trim() || "diger";
   if (!sorunTipiBul(tip) && !sorun) {
@@ -34,6 +36,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (!hedefKonum?.adres) {
+    return NextResponse.json(
+      { error: "Aracın çekileceği adres gerekli." },
+      { status: 400 }
+    );
+  }
+
+  const olusturulma = new Date();
+  const ihaleBitis = new Date(olusturulma.getTime() + IHALE_SURE_DK * 60 * 1000);
+  const { il: konumIl, ilce: konumIlce } = parseIlIlce(konum.adres.trim());
+
   const talep: Talep = {
     id: randomUUID(),
     ad: ad.trim(),
@@ -44,12 +57,21 @@ export async function POST(request: NextRequest) {
       lng: konum.lng ?? 0,
       adres: konum.adres.trim(),
     },
+    konumIl: konumIl ?? undefined,
+    konumIlce: konumIlce ?? undefined,
+    hedefKonum: {
+      lat: hedefKonum.lat ?? 0,
+      lng: hedefKonum.lng ?? 0,
+      adres: hedefKonum.adres.trim(),
+    },
     sorun: sorunMetni,
     sorunTipi: tip,
     sorunDetay: sorunDetay?.trim(),
-    durum: "beklemede",
-    olusturulma: new Date().toISOString(),
+    durum: "ihalede",
+    olusturulma: olusturulma.toISOString(),
+    ihaleBitis: ihaleBitis.toISOString(),
     bildirilenCekiciIds: [],
+    teklifler: [],
   };
 
   const baseUrl =

@@ -10,6 +10,7 @@ const SEED_CEKICILER: Cekici[] = [
     sifre: "123456",
     kredi: 3,
     sehir: "İstanbul",
+    hizmetIlceleri: ["Kadıköy", "Üsküdar", "Ataşehir", "Maltepe"],
     aktif: true,
     kayitTarihi: new Date().toISOString(),
   },
@@ -21,6 +22,7 @@ const SEED_CEKICILER: Cekici[] = [
     sifre: "123456",
     kredi: 5,
     sehir: "İstanbul",
+    hizmetIlceleri: ["Beşiktaş", "Şişli", "Kağıthane", "Beyoğlu"],
     aktif: true,
     kayitTarihi: new Date().toISOString(),
   },
@@ -32,6 +34,7 @@ const SEED_CEKICILER: Cekici[] = [
     sifre: "123456",
     kredi: 2,
     sehir: "Ankara",
+    hizmetIlceleri: ["Çankaya", "Yenimahalle", "Keçiören"],
     aktif: true,
     kayitTarihi: new Date().toISOString(),
   },
@@ -43,18 +46,24 @@ export async function ensureSeedData(): Promise<void> {
     await saveCekiciler(SEED_CEKICILER);
     return;
   }
-  // Eski kayıtlara sifre alanı ekle
+
   let guncellendi = false;
   const migrated = existing.map((c) => {
-    if (!("sifre" in c) || !(c as Cekici).sifre) {
+    let row = c as Cekici;
+    if (!("sifre" in c) || !row.sifre) {
       guncellendi = true;
-      return {
-        ...c,
-        sifre: "123456",
-        kayitTarihi: c.kayitTarihi ?? new Date().toISOString(),
-      } as Cekici;
+      row = { ...row, sifre: "123456" };
     }
-    return c as Cekici;
+    if (!row.kayitTarihi) {
+      guncellendi = true;
+      row = { ...row, kayitTarihi: new Date().toISOString() };
+    }
+    if (!row.hizmetIlceleri) {
+      guncellendi = true;
+      row = { ...row, hizmetIlceleri: [] };
+    }
+    return row;
   });
+
   if (guncellendi) await saveCekiciler(migrated);
 }

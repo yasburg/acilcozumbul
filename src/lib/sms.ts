@@ -1,15 +1,7 @@
 import { getCekiciler } from "./db";
+import { filtreleCekicilerBolge } from "./cekici-bolge";
 import { sendSms } from "./sms-provider";
-import type { Talep } from "./types";
-
-function extractSehir(adres: string): string {
-  const lower = adres.toLowerCase();
-  if (lower.includes("istanbul") || lower.includes("İstanbul".toLowerCase()))
-    return "İstanbul";
-  if (lower.includes("ankara")) return "Ankara";
-  if (lower.includes("izmir")) return "İzmir";
-  return "";
-}
+import type { Cekici, Talep } from "./types";
 
 export async function notifyCekiciler(
   talep: Talep,
@@ -17,29 +9,28 @@ export async function notifyCekiciler(
   haricTutulan: string[] = [],
   options?: { yenidenArama?: boolean }
 ): Promise<string[]> {
-  const sehir = extractSehir(talep.konum.adres);
   const tumCekiciler = await getCekiciler();
   const haric = new Set(haricTutulan);
-  const hedefler = tumCekiciler.filter(
-    (c) =>
-      c.aktif &&
-      !haric.has(c.id) &&
-      (!sehir || c.sehir === sehir)
+
+  const bolgeyeUygun = filtreleCekicilerBolge(tumCekiciler, talep).filter(
+    (c) => c.aktif && !haric.has(c.id)
   );
-  const kullanilacak =
-    hedefler.length > 0
-      ? hedefler
-      : tumCekiciler.filter((c) => c.aktif && !haric.has(c.id));
 
   const bildirilenIds: string[] = [];
   const yeniden = options?.yenidenArama ?? false;
 
   await Promise.all(
-    kullanilacak.map(async (cekici) => {
+    bolgeyeUygun.map(async (cekici: Cekici) => {
       const link = `${baseUrl}/cekici/talep/${talep.id}?t=${cekici.token}`;
+      const hedef = talep.hedefKonum?.adres
+        ? ` → ${talep.hedefKonum.adres.split(",").slice(0, 2).join(",")}`
+        : "";
+      const bolge = talep.konumIlce
+        ? ` [${talep.konumIlce}]`
+        : "";
       const mesaj = yeniden
-        ? `${talep.ad} ${talep.soyad.charAt(0)}. müşteri yeni bir çekici arıyor (${talep.konum.adres}). Bilgilere ulaşmak için linke tıklayın: ${link}`
-        : `${talep.ad} ${talep.soyad.charAt(0)}. isimli kişi ${talep.konum.adres}'da yolda kaldı. Bilgilere ulaşmak için linke tıklayın: ${link}`;
+        ? `${talep.ad} ${talep.soyad.charAt(0)}. müşteri yeni çekici arıyor${bolge} (${talep.konum.adres}${hedef}). Teklif: ${link}`
+        : `${talep.ad} ${talep.soyad.charAt(0)}. yolda kaldı${bolge} (${talep.konum.adres}${hedef}). Teklif ver (1 kredi): ${link}`;
 
       await sendSms(cekici.telefon, mesaj, {
         aliciTipi: "cekici",
@@ -62,8 +53,8 @@ export async function notifyMusteri(
 ): Promise<void> {
   const bekleLink = `${baseUrl}/bekle/${talep.id}`;
   const mesajlar: Record<typeof tip, string> = {
-    talep_alindi: `acilcozumbul.com: Talebiniz alındı. Yakındaki çekicilere bildirim gönderildi. Takip: ${bekleLink}`,
-    cekici_bulundu: `acilcozumbul.com: Çekici bulundu! Kısa süre içinde sizi arayacak. Takip: ${bekleLink}`,
+    talep_alindi: `acilcozumbul.com: Talebiniz alındı. Çekiciler teklif verecek. Takip: ${bekleLink}`,
+    cekici_bulundu: `acilcozumbul.com: Çekici seçtiniz! Kısa süre içinde sizi arayacak. Takip: ${bekleLink}`,
     yeniden_arama: `acilcozumbul.com: Yeni çekici aranıyor. Lütfen bekleyin. Takip: ${bekleLink}`,
     anlasildi: `acilcozumbul.com: Çekici ile anlaşmanız kaydedildi. İyi yolculuklar!`,
   };

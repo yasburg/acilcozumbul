@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
     sifre: sifre.trim(),
     kredi: 1,
     sehir,
+    hizmetIlceleri: [],
     aktif: true,
     kayitTarihi: new Date().toISOString(),
   };

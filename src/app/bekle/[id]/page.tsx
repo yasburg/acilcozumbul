@@ -6,26 +6,41 @@ import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
 
 type Durum =
-  | "bekliyor"
+  | "ihale_bekliyor"
+  | "teklif_sec"
   | "cekici_bulundu"
   | "anlasma_bekliyor"
   | "tamamlandi"
   | "yeniden_araniyor";
 
+interface TeklifOzet {
+  id: string;
+  cekiciAd: string;
+  fiyat: number;
+  tahminiSureDk: number;
+  mesaj?: string;
+}
+
 export default function BeklePage() {
   const params = useParams();
   const id = params.id as string;
-  const [durum, setDurum] = useState<Durum>("bekliyor");
+  const [durum, setDurum] = useState<Durum>("ihale_bekliyor");
+  const [teklifler, setTeklifler] = useState<TeklifOzet[]>([]);
   const [cekiciAd, setCekiciAd] = useState<string | null>(null);
+  const [kazananFiyat, setKazananFiyat] = useState<number | null>(null);
   const [islem, setIslem] = useState(false);
   const [mesaj, setMesaj] = useState("");
+  const [ihaleBitis, setIhaleBitis] = useState<string | null>(null);
 
   useEffect(() => {
     const kontrol = async () => {
       try {
-        const res = await fetch(`/api/talep/${id}`);
-        if (!res.ok) return;
-        const data = await res.json();
+        const [durumRes, teklifRes] = await Promise.all([
+          fetch(`/api/talep/${id}`),
+          fetch(`/api/talep/${id}/teklifler`),
+        ]);
+        if (!durumRes.ok) return;
+        const data = await durumRes.json();
 
         if (data.tamamlandi) {
           setDurum("tamamlandi");
@@ -35,18 +50,32 @@ export default function BeklePage() {
         if (data.yenidenAranıyor) {
           setDurum("yeniden_araniyor");
           setCekiciAd(null);
+          setTeklifler([]);
           return;
         }
 
-        if (data.satinAlindi && data.anlasmaBekliyor) {
+        if (data.kazananSecildi && data.anlasmaBekliyor) {
           setDurum("anlasma_bekliyor");
           setCekiciAd(data.cekiciAd ?? "Çekici");
+          setKazananFiyat(data.kazananFiyat ?? null);
           return;
         }
 
-        if (data.satinAlindi) {
+        if (data.kazananSecildi) {
           setDurum("cekici_bulundu");
           setCekiciAd(data.cekiciAd ?? "Çekici");
+          return;
+        }
+
+        if (teklifRes.ok) {
+          const teklifData = await teklifRes.json();
+          setTeklifler(teklifData.teklifler ?? []);
+          setIhaleBitis(teklifData.ihaleBitis ?? null);
+          if ((teklifData.teklifler?.length ?? 0) > 0) {
+            setDurum("teklif_sec");
+          } else {
+            setDurum("ihale_bekliyor");
+          }
         }
       } catch {
         /* sessiz */
@@ -54,9 +83,31 @@ export default function BeklePage() {
     };
 
     kontrol();
-    const interval = setInterval(kontrol, 2000);
+    const interval = setInterval(kontrol, 2500);
     return () => clearInterval(interval);
   }, [id]);
+
+  async function teklifSec(teklifId: string) {
+    setIslem(true);
+    setMesaj("");
+    try {
+      const res = await fetch(`/api/talep/${id}/teklif-sec`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teklifId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setCekiciAd(data.cekiciAd);
+      setKazananFiyat(data.fiyat);
+      setDurum("anlasma_bekliyor");
+      setMesaj("Çekici seçildi. Kısa süre içinde sizi arayacak.");
+    } catch (e) {
+      setMesaj(e instanceof Error ? e.message : "Seçim başarısız.");
+    } finally {
+      setIslem(false);
+    }
+  }
 
   async function anlasmaBildir(sonuc: "anlasti" | "anlasamadi") {
     setIslem(true);
@@ -76,7 +127,8 @@ export default function BeklePage() {
       } else {
         setDurum("yeniden_araniyor");
         setCekiciAd(null);
-        setMesaj("Başka çekici aranıyor. Lütfen bekleyin.");
+        setTeklifler([]);
+        setMesaj("İhale yeniden açıldı. Yeni teklifler bekleniyor.");
       }
     } catch (e) {
       setMesaj(e instanceof Error ? e.message : "İşlem başarısız.");
@@ -105,10 +157,14 @@ export default function BeklePage() {
         <div className="space-y-6 py-4">
           <div className="text-center">
             <div className="text-5xl mb-4">🚛</div>
-            <h2 className="text-xl font-bold text-slate-900">Çekici Bulundu!</h2>
+            <h2 className="text-xl font-bold text-slate-900">Çekici Seçildi!</h2>
             <p className="text-slate-600 mt-2 text-sm">
-              <strong>{cekiciAd}</strong> sizi arayacak veya aradı. Anlaşma
-              durumunuzu bildirin:
+              <strong>{cekiciAd}</strong>
+              {kazananFiyat != null && (
+                <> · <span className="text-amber-600">{kazananFiyat} TL</span></>
+              )}
+              <br />
+              Sizi arayacak veya aradı. Anlaşma durumunuzu bildirin:
             </p>
           </div>
 
@@ -124,29 +180,62 @@ export default function BeklePage() {
           <Btn variant="danger" onClick={() => anlasmaBildir("anlasamadi")} disabled={islem}>
             ❌ Anlaşamadım — başka çekici ara
           </Btn>
-
-          <Card>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Anlaşamazsanız talebiniz tekrar açılır ve başka çekicilere iletilir.
-            </p>
-          </Card>
         </div>
       </MobileShell>
     );
   }
 
-  if (durum === "cekici_bulundu") {
+  if (durum === "teklif_sec") {
     return (
       <MobileShell>
-        <div className="flex flex-col items-center justify-center min-h-[60dvh] text-center space-y-6">
-          <div className="text-6xl">✅</div>
-          <h2 className="text-2xl font-bold text-emerald-700">Çekici Bulundu!</h2>
-          <p className="text-slate-600 max-w-xs">
-            {cekiciAd} talebinizi aldı. Kısa süre içinde sizi arayacak.
-          </p>
-          <Card className="w-full">
-            <p className="text-sm text-slate-500">
-              Telefonunuzu açık tutun. Anlaşma sonrası bildirim ekranı gelecektir.
+        <div className="space-y-4 py-2">
+          <div className="text-center mb-2">
+            <h2 className="text-xl font-bold text-slate-900">Gelen Teklifler</h2>
+            <p className="text-slate-500 text-sm mt-1">
+              Size en uygun teklifi seçin
+            </p>
+          </div>
+
+          {mesaj && (
+            <Card className="bg-amber-50 border-amber-200">
+              <p className="text-sm text-amber-900">{mesaj}</p>
+            </Card>
+          )}
+
+          <div className="space-y-2">
+            {teklifler
+              .sort((a, b) => a.fiyat - b.fiyat)
+              .map((t) => (
+                <Card key={t.id} className="border-slate-200">
+                  <div className="flex justify-between items-start gap-3">
+                    <div>
+                      <p className="font-semibold text-slate-900">{t.cekiciAd}</p>
+                      <p className="text-2xl font-bold text-amber-600 mt-1">
+                        {t.fiyat} TL
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Tahmini ~{t.tahminiSureDk} dk
+                      </p>
+                      {t.mesaj && (
+                        <p className="text-sm text-slate-600 mt-2">{t.mesaj}</p>
+                      )}
+                    </div>
+                    <Btn
+                      onClick={() => teklifSec(t.id)}
+                      disabled={islem}
+                      className="shrink-0 !px-4 !py-2 text-sm"
+                    >
+                      Seç
+                    </Btn>
+                  </div>
+                </Card>
+              ))}
+          </div>
+
+          <Card>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Daha fazla teklif gelebilir. İhale süresi dolana kadar bekleyebilir
+              veya mevcut tekliflerden birini seçebilirsiniz.
             </p>
           </Card>
         </div>
@@ -160,7 +249,7 @@ export default function BeklePage() {
         {durum === "yeniden_araniyor" && (
           <Card className="w-full mb-6 bg-amber-50 border-amber-200">
             <p className="text-sm text-amber-900">
-              Önceki çekici ile anlaşılamadı. Yeni çekici aranıyor…
+              Önceki çekici ile anlaşılamadı. İhale yeniden açıldı, teklifler bekleniyor…
             </p>
           </Card>
         )}
@@ -173,9 +262,22 @@ export default function BeklePage() {
           </div>
         </div>
         <h2 className="text-xl font-bold text-slate-900 mb-2">
-          Size en yakın çekici bulunuyor
+          Çekiciler teklif veriyor
         </h2>
-        <p className="text-slate-500 text-sm mb-6">Lütfen bekleyin…</p>
+        <p className="text-slate-500 text-sm mb-2">
+          {teklifler.length > 0
+            ? `${teklifler.length} teklif alındı`
+            : "Lütfen bekleyin…"}
+        </p>
+        {ihaleBitis && (
+          <p className="text-xs text-slate-400 mb-6">
+            İhale bitiş:{" "}
+            {new Date(ihaleBitis).toLocaleTimeString("tr-TR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
+        )}
         <div className="flex gap-1.5">
           {[0, 1, 2].map((i) => (
             <span
@@ -186,7 +288,7 @@ export default function BeklePage() {
           ))}
         </div>
         <p className="text-xs text-slate-400 mt-10 max-w-xs">
-          Yakındaki çekicilere SMS gönderildi. İlk kabul eden size ulaşacak.
+          Yakındaki çekicilere SMS gönderildi. Teklifler geldikçe burada listelenecek.
         </p>
       </div>
     </MobileShell>

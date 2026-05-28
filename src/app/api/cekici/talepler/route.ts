@@ -3,10 +3,11 @@ import { getCurrentCekici } from "@/lib/auth";
 import { getTalepler } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import {
-  acikTalepMi,
-  baskaCekiciAktifMi,
-  cekiciSatınAlabilirMi,
-  cekiciTercihEdilmediMi,
+  cekiciHaricMi,
+  cekiciTeklifVerdiMi,
+  ihaleAcikMi,
+} from "@/lib/ihale";
+import {
   isBugun,
   talepBolge,
   talepSorunOzet,
@@ -14,18 +15,24 @@ import {
 import type { ListeDurumu, Talep, TalepOzet } from "@/lib/types";
 
 function listeDurumuBelirle(talep: Talep, cekiciId: string): ListeDurumu {
-  if (talep.satinAlanCekiciId === cekiciId) return "benim";
-  if (talep.durum === "anlaşıldı") return "anlasildi";
-  if (cekiciTercihEdilmediMi(talep, cekiciId)) return "tercih_edilmedi";
-  if (baskaCekiciAktifMi(talep, cekiciId)) return "baskasi_aldi";
-  if (cekiciSatınAlabilirMi(talep, cekiciId)) return "acik";
-  if (acikTalepMi(talep)) return "acik";
-  return "baskasi_aldi";
+  if (talep.kazananCekiciId === cekiciId) return "kazandim";
+  if (talep.durum === "anlaşıldı" && talep.kazananCekiciId === cekiciId)
+    return "anlasildi";
+  if (cekiciHaricMi(talep, cekiciId)) return "tercih_edilmedi";
+  if (talep.kazananCekiciId && talep.kazananCekiciId !== cekiciId) {
+    return cekiciTeklifVerdiMi(talep, cekiciId) ? "kaybettim" : "acik";
+  }
+  if (cekiciTeklifVerdiMi(talep, cekiciId)) return "teklif_verdim";
+  if (ihaleAcikMi(talep) && !cekiciHaricMi(talep, cekiciId)) return "acik";
+  return "kaybettim";
 }
 
 function toOzet(talep: Talep, cekiciId: string): TalepOzet {
-  const benimMusterim = talep.satinAlanCekiciId === cekiciId;
+  const kazandim = talep.kazananCekiciId === cekiciId;
   const durum = listeDurumuBelirle(talep, cekiciId);
+  const aktifTeklifler = talep.teklifler?.filter((t) => t.durum === "aktif") ?? [];
+  const benimTeklif = talep.teklifler?.find((t) => t.cekiciId === cekiciId);
+
   return {
     id: talep.id,
     ad: talep.ad,
@@ -34,10 +41,13 @@ function toOzet(talep: Talep, cekiciId: string): TalepOzet {
     sorunOzet: talepSorunOzet(talep.sorun),
     durum: talep.durum,
     olusturulma: talep.olusturulma,
-    satinAlindi: !!talep.satinAlanCekiciId,
-    benimMusterim,
-    anlasmaDurumu: talep.anlasmaDurumu,
-    telefon: benimMusterim ? talep.telefon : undefined,
+    teklifSayisi: aktifTeklifler.length,
+    enDusukTeklif: aktifTeklifler.length
+      ? Math.min(...aktifTeklifler.map((t) => t.fiyat))
+      : undefined,
+    benimTeklifim: !!benimTeklif,
+    kazandim,
+    telefon: kazandim ? talep.telefon : undefined,
     listeDurumu: durum,
   };
 }
@@ -55,40 +65,19 @@ export async function GET() {
   const ilgili = bugun.filter(
     (t) =>
       t.bildirilenCekiciIds.includes(cekici.id) ||
-      t.satinAlanCekiciId === cekici.id ||
-      t.satinAlmaGecmisi?.some((g) => g.cekiciId === cekici.id)
+      t.kazananCekiciId === cekici.id ||
+      t.teklifler?.some((te) => te.cekiciId === cekici.id)
   );
 
   const tumOzet = ilgili.map((t) => toOzet(t, cekici.id));
 
   const bekleyen = tumOzet.filter((t) => t.listeDurumu === "acik");
-
-  const baskasiAldi = tumOzet.filter((t) => t.listeDurumu === "baskasi_aldi");
-
-  const tercihEdilmedi = tumOzet.filter(
-    (t) => t.listeDurumu === "tercih_edilmedi"
+  const teklifVerdigim = tumOzet.filter((t) => t.listeDurumu === "teklif_verdim");
+  const kazandiklarim = tumOzet.filter((t) => t.listeDurumu === "kazandim");
+  const kaybettiklerim = tumOzet.filter(
+    (t) => t.listeDurumu === "kaybettim" && t.benimTeklifim
   );
-
-  const satinAlinanlar = tumOzet.filter((t) => t.listeDurumu === "benim");
-
-  const gecmisSatinAlimlar = talepler
-    .filter((t) =>
-      t.satinAlmaGecmisi?.some((g) => g.cekiciId === cekici.id)
-    )
-    .map((t) => {
-      const kayit = t.satinAlmaGecmisi!.find((g) => g.cekiciId === cekici.id)!;
-      return {
-        ...toOzet(t, cekici.id),
-        satinAlmaTarihi: kayit.tarih,
-        tercihEdilmedi: kayit.tercihEdilmedi,
-        aktif: t.satinAlanCekiciId === cekici.id,
-      };
-    })
-    .sort(
-      (a, b) =>
-        new Date(b.satinAlmaTarihi).getTime() -
-        new Date(a.satinAlmaTarihi).getTime()
-    );
+  const tercihEdilmedi = tumOzet.filter((t) => t.listeDurumu === "tercih_edilmedi");
 
   const bugunTumu = [...tumOzet].sort(
     (a, b) =>
@@ -97,10 +86,13 @@ export async function GET() {
 
   return NextResponse.json({
     bekleyen,
-    baskasiAldi,
+    teklifVerdigim,
+    kazandiklarim,
+    kaybettiklerim,
     tercihEdilmedi,
-    satinAlinanlar,
     bugunTumu,
-    gecmisSatinAlimlar,
+    // Geriye uyumluluk
+    satinAlinanlar: kazandiklarim,
+    baskasiAldi: kaybettiklerim,
   });
 }

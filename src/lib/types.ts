@@ -1,15 +1,19 @@
 export type TalepDurumu =
-  | "beklemede"
-  | "satın_alındı"
+  | "ihalede"
+  | "kazanan_belli"
   | "anlaşıldı"
-  | "yeniden_aranıyor";
+  | "yeniden_ihalede"
+  | "iptal";
 
 export type AnlasmaDurumu = "bekliyor" | "anlaşıldı" | "anlaşılamadı";
 
+export type TeklifDurumu = "aktif" | "kazandi" | "kaybetti";
+
 export type ListeDurumu =
   | "acik"
-  | "benim"
-  | "baskasi_aldi"
+  | "teklif_verdim"
+  | "kazandim"
+  | "kaybettim"
   | "tercih_edilmedi"
   | "anlasildi";
 
@@ -19,10 +23,15 @@ export interface Konum {
   adres: string;
 }
 
-export interface SatinAlmaGecmisi {
+export interface Teklif {
+  id: string;
   cekiciId: string;
+  cekiciAd: string;
+  fiyat: number;
+  tahminiSureDk: number;
+  mesaj?: string;
   tarih: string;
-  tercihEdilmedi?: boolean;
+  durum: TeklifDurumu;
 }
 
 export interface Cekici {
@@ -33,6 +42,8 @@ export interface Cekici {
   sifre: string;
   kredi: number;
   sehir: string;
+  /** Hizmet verilen ilçeler (boş = bildirim alınmaz) */
+  hizmetIlceleri?: string[];
   aktif: boolean;
   kayitTarihi: string;
 }
@@ -43,16 +54,20 @@ export interface Talep {
   soyad: string;
   telefon: string;
   konum: Konum;
+  konumIl?: string;
+  konumIlce?: string;
+  hedefKonum?: Konum;
   sorun: string;
   sorunTipi?: string;
   sorunDetay?: string;
   durum: TalepDurumu;
   olusturulma: string;
-  satinAlanCekiciId?: string;
-  satinAlmaTarihi?: string;
+  ihaleBitis: string;
+  kazananCekiciId?: string;
+  kazananTeklifId?: string;
   bildirilenCekiciIds: string[];
   anlasmaDurumu?: AnlasmaDurumu;
-  satinAlmaGecmisi?: SatinAlmaGecmisi[];
+  teklifler: Teklif[];
   haricTutulanCekiciIds?: string[];
 }
 
@@ -86,9 +101,10 @@ export interface TalepOzet {
   sorunOzet: string;
   durum: TalepDurumu;
   olusturulma: string;
-  satinAlindi?: boolean;
-  benimMusterim?: boolean;
-  anlasmaDurumu?: AnlasmaDurumu;
+  teklifSayisi?: number;
+  enDusukTeklif?: number;
+  benimTeklifim?: boolean;
+  kazandim?: boolean;
   telefon?: string;
   listeDurumu?: ListeDurumu;
 }

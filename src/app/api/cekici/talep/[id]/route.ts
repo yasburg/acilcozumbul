@@ -3,12 +3,13 @@ import { getCurrentCekici } from "@/lib/auth";
 import { getTalepById } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import {
-  baskaCekiciAktifMi,
-  cekiciSatınAlabilirMi,
-  cekiciTercihEdilmediMi,
-  talepBolge,
-  talepSorunOzet,
-} from "@/lib/talep-utils";
+  cekiciHaricMi,
+  cekiciTeklifVerdiMi,
+  cekiciTeklifVerebilirMi,
+  ihaleAcikMi,
+  TEKLIF_KREDI,
+} from "@/lib/ihale";
+import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 
 export async function GET(
   _request: NextRequest,
@@ -27,39 +28,45 @@ export async function GET(
     return NextResponse.json({ error: "Talep bulunamadı." }, { status: 404 });
   }
 
-  const benimMusterim = talep.satinAlanCekiciId === cekici.id;
+  const benimMusterim = talep.kazananCekiciId === cekici.id;
+  const teklifVerdim = cekiciTeklifVerdiMi(talep, cekici.id);
+  const benimTeklifim = talep.teklifler?.find((t) => t.cekiciId === cekici.id);
 
   if (benimMusterim) {
     return NextResponse.json({
       id: talep.id,
       durum: talep.durum,
-      satinAlindi: true,
+      kazandim: true,
       ad: talep.ad,
       soyad: talep.soyad,
       telefon: talep.telefon,
       konum: talep.konum,
+      hedefKonum: talep.hedefKonum,
       sorun: talep.sorun,
       olusturulma: talep.olusturulma,
+      benimTeklif: benimTeklifim,
     });
   }
 
-  if (cekiciTercihEdilmediMi(talep, cekici.id)) {
+  if (cekiciHaricMi(talep, cekici.id)) {
     return NextResponse.json({
       id: talep.id,
       durum: talep.durum,
-      satinAlindi: false,
       tercihEdilmedi: true,
       mesaj: "Müşteri sizi tercih etmedi.",
     });
   }
 
-  if (baskaCekiciAktifMi(talep, cekici.id)) {
+  if (talep.kazananCekiciId && talep.kazananCekiciId !== cekici.id) {
+    const kaybettim = teklifVerdim;
     return NextResponse.json({
       id: talep.id,
       durum: talep.durum,
-      satinAlindi: false,
-      baskaSatinAldi: true,
-      mesaj: "Bu müşteri başka bir çekici tarafından satın alındı.",
+      ihaleKapandi: true,
+      kaybettim,
+      mesaj: kaybettim
+        ? "Başka bir çekici seçildi. Krediniz iade edildi."
+        : "Müşteri başka bir çekiciyi seçti.",
     });
   }
 
@@ -67,32 +74,49 @@ export async function GET(
     return NextResponse.json({
       id: talep.id,
       durum: talep.durum,
-      satinAlindi: false,
-      baskaSatinAldi: true,
+      ihaleKapandi: true,
       mesaj: "Bu talep tamamlanmış.",
     });
   }
 
-  if (!cekiciSatınAlabilirMi(talep, cekici.id)) {
+  if (teklifVerdim && benimTeklifim) {
     return NextResponse.json({
       id: talep.id,
       durum: talep.durum,
-      satinAlindi: false,
-      baskaSatinAldi: true,
-      mesaj: "Bu talep şu an satın alınamaz.",
+      teklifVerdim: true,
+      ihaleAcik: ihaleAcikMi(talep),
+      ihaleBitis: talep.ihaleBitis,
+      benimTeklif: benimTeklifim,
+      teklifSayisi: talep.teklifler?.filter((t) => t.durum === "aktif").length ?? 0,
+      onizleme: {
+        bolge: talepBolge(talep),
+        sorunOzet: talepSorunOzet(talep.sorun),
+        hedefBolge: talep.hedefKonum?.adres.split(",").slice(-2).join(",").trim(),
+      },
+      kredi: cekici.kredi,
+    });
+  }
+
+  if (!cekiciTeklifVerebilirMi(talep, cekici.id)) {
+    return NextResponse.json({
+      id: talep.id,
+      durum: talep.durum,
+      ihaleKapandi: true,
+      mesaj: "Bu talebe artık teklif verilemez.",
     });
   }
 
   return NextResponse.json({
     id: talep.id,
     durum: talep.durum,
-    satinAlindi: false,
-    baskaSatinAldi: false,
+    ihaleAcik: true,
+    ihaleBitis: talep.ihaleBitis,
     onizleme: {
       bolge: talepBolge(talep),
       sorunOzet: talepSorunOzet(talep.sorun),
+      hedefBolge: talep.hedefKonum?.adres.split(",").slice(-2).join(",").trim(),
     },
-    krediMaliyet: 1,
+    krediMaliyet: TEKLIF_KREDI,
     kredi: cekici.kredi,
   });
 }

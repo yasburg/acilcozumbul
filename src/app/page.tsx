@@ -7,7 +7,15 @@ import { SorunSecimi } from "@/components/SorunSecimi";
 import { Btn, Field, Card } from "@/components/ui";
 import { sorunMetniOlustur } from "@/lib/sorun-tipleri";
 
-type Step = "bilgi" | "konum" | "sorun";
+type Step = "bilgi" | "konum" | "hedef" | "sorun";
+
+interface KonumOneri {
+  ad: string;
+  adres: string;
+  lat: number;
+  lng: number;
+  mesafeKm?: number;
+}
 
 export default function HomePage() {
   const router = useRouter();
@@ -15,6 +23,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [konumYukleniyor, setKonumYukleniyor] = useState(false);
+  const [oneriYukleniyor, setOneriYukleniyor] = useState(false);
+  const [oneriler, setOneriler] = useState<KonumOneri[]>([]);
 
   const [form, setForm] = useState({
     ad: "",
@@ -23,6 +33,9 @@ export default function HomePage() {
     lat: 0,
     lng: 0,
     adres: "",
+    hedefLat: 0,
+    hedefLng: 0,
+    hedefAdres: "",
     sorunTipi: "",
     sorunDetay: "",
   });
@@ -31,7 +44,7 @@ export default function HomePage() {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
-  async function konumAl() {
+  async function konumAl(hedef = false) {
     setKonumYukleniyor(true);
     setError("");
     if (!navigator.geolocation) {
@@ -48,18 +61,25 @@ export default function HomePage() {
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=tr`
           );
           const data = await res.json();
-          if (data.display_name) {
-            adres = data.display_name;
-          }
+          if (data.display_name) adres = data.display_name;
         } catch {
-          /* adres koordinat olarak kalır */
+          /* koordinat kalır */
         }
-        setForm((f) => ({
-          ...f,
-          lat: latitude,
-          lng: longitude,
-          adres,
-        }));
+        if (hedef) {
+          setForm((f) => ({
+            ...f,
+            hedefLat: latitude,
+            hedefLng: longitude,
+            hedefAdres: adres,
+          }));
+        } else {
+          setForm((f) => ({
+            ...f,
+            lat: latitude,
+            lng: longitude,
+            adres,
+          }));
+        }
         setKonumYukleniyor(false);
       },
       () => {
@@ -70,6 +90,39 @@ export default function HomePage() {
     );
   }
 
+  async function cozumOner() {
+    if (!form.lat || !form.lng) {
+      setError("Önce arıza konumunuzu paylaşın.");
+      return;
+    }
+    setOneriYukleniyor(true);
+    setError("");
+    setOneriler([]);
+    try {
+      const res = await fetch(`/api/konum/oneri?lat=${form.lat}&lng=${form.lng}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Öneri alınamadı.");
+      setOneriler(data.oneriler ?? []);
+      if (!data.oneriler?.length) {
+        setError("Yakında öneri bulunamadı. Adresi elle yazabilirsiniz.");
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Öneri alınamadı.");
+    } finally {
+      setOneriYukleniyor(false);
+    }
+  }
+
+  function oneriSec(o: KonumOneri) {
+    setForm((f) => ({
+      ...f,
+      hedefLat: o.lat,
+      hedefLng: o.lng,
+      hedefAdres: o.adres,
+    }));
+    setOneriler([]);
+  }
+
   async function cekiciBul() {
     setError("");
     if (!form.ad || !form.soyad || !form.telefon) {
@@ -78,8 +131,13 @@ export default function HomePage() {
       return;
     }
     if (!form.adres) {
-      setError("Konum bilgisi gerekli.");
+      setError("Arıza konumu gerekli.");
       setStep("konum");
+      return;
+    }
+    if (!form.hedefAdres) {
+      setError("Aracın çekileceği adres gerekli.");
+      setStep("hedef");
       return;
     }
     if (!form.sorunTipi) {
@@ -102,6 +160,11 @@ export default function HomePage() {
           soyad: form.soyad,
           telefon: form.telefon,
           konum: { lat: form.lat, lng: form.lng, adres: form.adres },
+          hedefKonum: {
+            lat: form.hedefLat,
+            lng: form.hedefLng,
+            adres: form.hedefAdres,
+          },
           sorunTipi: form.sorunTipi,
           sorunDetay: form.sorunDetay,
           sorun: sorunMetniOlustur(form.sorunTipi, form.sorunDetay),
@@ -120,7 +183,8 @@ export default function HomePage() {
   const steps: { key: Step; label: string }[] = [
     { key: "bilgi", label: "1" },
     { key: "konum", label: "2" },
-    { key: "sorun", label: "3" },
+    { key: "hedef", label: "3" },
+    { key: "sorun", label: "4" },
   ];
 
   return (
@@ -179,14 +243,14 @@ export default function HomePage() {
 
       {step === "konum" && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold">Konumunuz</h2>
+          <h2 className="text-xl font-bold">Arıza Konumu</h2>
           <p className="text-slate-500 text-sm">
-            Size en yakın çekiciyi bulmak için konumunuzu paylaşın.
+            Aracınızın şu an bulunduğu yeri paylaşın.
           </p>
           <Btn
             type="button"
             variant="secondary"
-            onClick={konumAl}
+            onClick={() => konumAl(false)}
             disabled={konumYukleniyor}
           >
             {konumYukleniyor ? "Konum alınıyor…" : "📍 Konumumu Paylaş"}
@@ -199,7 +263,7 @@ export default function HomePage() {
           />
           {form.adres && (
             <Card>
-              <p className="text-xs text-slate-500 mb-1">Seçilen konum</p>
+              <p className="text-xs text-slate-500 mb-1">Arıza konumu</p>
               <p className="text-sm leading-relaxed">{form.adres}</p>
             </Card>
           )}
@@ -207,7 +271,79 @@ export default function HomePage() {
             <Btn variant="outline" onClick={() => setStep("bilgi")}>
               Geri
             </Btn>
-            <Btn onClick={() => setStep("sorun")} disabled={!form.adres}>
+            <Btn onClick={() => setStep("hedef")} disabled={!form.adres}>
+              Devam Et
+            </Btn>
+          </div>
+        </div>
+      )}
+
+      {step === "hedef" && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold">Nereye Çekilecek?</h2>
+          <p className="text-slate-500 text-sm">
+            Aracınızın götürülmesini istediğiniz adresi belirtin.
+          </p>
+          <Btn
+            type="button"
+            variant="secondary"
+            onClick={cozumOner}
+            disabled={oneriYukleniyor || !form.lat}
+          >
+            {oneriYukleniyor
+              ? "Öneriler hesaplanıyor…"
+              : "✨ Hesapla — Çözüm Öner"}
+          </Btn>
+          {oneriler.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs text-slate-500 uppercase tracking-wide">
+                Önerilen yerler
+              </p>
+              {oneriler.map((o) => (
+                <button
+                  key={o.adres}
+                  type="button"
+                  onClick={() => oneriSec(o)}
+                  className="w-full text-left rounded-xl border border-slate-200 bg-white px-4 py-3 hover:border-amber-400 transition"
+                >
+                  <p className="font-medium text-slate-900">{o.ad}</p>
+                  {o.mesafeKm != null && (
+                    <p className="text-xs text-amber-600 mt-0.5">
+                      ~{o.mesafeKm} km
+                    </p>
+                  )}
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                    {o.adres}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
+          <Btn
+            type="button"
+            variant="outline"
+            onClick={() => konumAl(true)}
+            disabled={konumYukleniyor}
+          >
+            📍 Hedef olarak konumumu kullan
+          </Btn>
+          <Field
+            label="Hedef adres"
+            placeholder="Oto sanayi, servis, ev adresi…"
+            value={form.hedefAdres}
+            onChange={(e) => update("hedefAdres", e.target.value)}
+          />
+          {form.hedefAdres && (
+            <Card>
+              <p className="text-xs text-slate-500 mb-1">Çekilecek yer</p>
+              <p className="text-sm leading-relaxed">{form.hedefAdres}</p>
+            </Card>
+          )}
+          <div className="flex gap-3">
+            <Btn variant="outline" onClick={() => setStep("konum")}>
+              Geri
+            </Btn>
+            <Btn onClick={() => setStep("sorun")} disabled={!form.hedefAdres}>
               Devam Et
             </Btn>
           </div>
@@ -227,7 +363,7 @@ export default function HomePage() {
             onDetayChange={(v) => update("sorunDetay", v)}
           />
           <div className="flex gap-3 pt-2">
-            <Btn variant="outline" onClick={() => setStep("konum")}>
+            <Btn variant="outline" onClick={() => setStep("hedef")}>
               Geri
             </Btn>
             <Btn

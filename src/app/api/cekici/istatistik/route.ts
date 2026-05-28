@@ -22,39 +22,37 @@ export async function GET() {
   const talepler = await getTalepler();
   const haftaBas = haftaBaslangici();
 
-  let satinAldiklarim = 0;
+  let teklifVerdigim = 0;
   let buHaftaHarcanan = 0;
 
   for (const talep of talepler) {
-    for (const kayit of talep.satinAlmaGecmisi ?? []) {
-      if (kayit.cekiciId !== cekici.id) continue;
-      satinAldiklarim += 1;
-      if (new Date(kayit.tarih) >= haftaBas) {
+    for (const teklif of talep.teklifler ?? []) {
+      if (teklif.cekiciId !== cekici.id) continue;
+      teklifVerdigim += 1;
+      if (new Date(teklif.tarih) >= haftaBas) {
         buHaftaHarcanan += 1;
       }
     }
   }
 
   const beniTercihEdenler = talepler.filter(
-    (t) =>
-      t.durum === "anlaşıldı" &&
-      t.satinAlanCekiciId === cekici.id &&
-      t.satinAlmaGecmisi?.some((g) => g.cekiciId === cekici.id && !g.tercihEdilmedi)
+    (t) => t.durum === "anlaşıldı" && t.kazananCekiciId === cekici.id
+  ).length;
+
+  const kazandigim = talepler.filter((t) =>
+    t.teklifler?.some((te) => te.cekiciId === cekici.id && te.durum === "kazandi")
   ).length;
 
   const tercihEdilmedim = talepler.filter((t) =>
-    t.satinAlmaGecmisi?.some(
-      (g) => g.cekiciId === cekici.id && g.tercihEdilmedi
-    )
+    (t.haricTutulanCekiciIds ?? []).includes(cekici.id)
   ).length;
 
   const tercihOrani =
-    satinAldiklarim > 0
-      ? Math.round((beniTercihEdenler / satinAldiklarim) * 100)
-      : 0;
+    kazandigim > 0 ? Math.round((beniTercihEdenler / kazandigim) * 100) : 0;
 
   return NextResponse.json({
-    satinAldiklarim,
+    teklifVerdigim,
+    satinAldiklarim: kazandigim,
     beniTercihEdenler,
     tercihEdilmedim,
     tercihOrani,

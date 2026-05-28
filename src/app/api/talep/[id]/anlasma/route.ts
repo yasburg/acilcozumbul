@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCekiciById, getTalepById, updateTalep } from "@/lib/db";
 import { notifyCekiciIptal, notifyCekiciler, notifyMusteri } from "@/lib/sms";
 import { ensureSeedData } from "@/lib/seed";
+import { IHALE_SURE_DK } from "@/lib/ihale";
 
 export async function POST(
   request: NextRequest,
@@ -20,7 +21,7 @@ export async function POST(
     return NextResponse.json({ error: "Talep bulunamadı." }, { status: 404 });
   }
 
-  if (talep.durum !== "satın_alındı" || !talep.satinAlanCekiciId) {
+  if (talep.durum !== "kazanan_belli" || !talep.kazananCekiciId) {
     return NextResponse.json(
       { error: "Bu talep için anlaşma bildirimi yapılamaz." },
       { status: 400 }
@@ -39,20 +40,8 @@ export async function POST(
     return NextResponse.json({ durum: "anlaşıldı", mesaj: "Anlaşma kaydedildi." });
   }
 
-  const cekiciId = talep.satinAlanCekiciId;
+  const cekiciId = talep.kazananCekiciId;
   const cekici = await getCekiciById(cekiciId);
-
-  const gecmis = talep.satinAlmaGecmisi ?? [];
-  const sonKayit = [...gecmis].reverse().find((g) => g.cekiciId === cekiciId);
-  if (sonKayit) sonKayit.tercihEdilmedi = true;
-  else {
-    gecmis.push({
-      cekiciId,
-      tarih: talep.satinAlmaTarihi ?? new Date().toISOString(),
-      tercihEdilmedi: true,
-    });
-  }
-  talep.satinAlmaGecmisi = gecmis;
 
   if (cekici) {
     await notifyCekiciIptal(cekici.telefon, cekici.id, talep);
@@ -62,10 +51,13 @@ export async function POST(
   if (!haric.includes(cekiciId)) haric.push(cekiciId);
   talep.haricTutulanCekiciIds = haric;
 
-  talep.satinAlanCekiciId = undefined;
-  talep.satinAlmaTarihi = undefined;
-  talep.durum = "yeniden_aranıyor";
+  talep.kazananCekiciId = undefined;
+  talep.kazananTeklifId = undefined;
+  talep.teklifler = [];
+  talep.durum = "yeniden_ihalede";
   talep.anlasmaDurumu = "bekliyor";
+  const simdi = new Date();
+  talep.ihaleBitis = new Date(simdi.getTime() + IHALE_SURE_DK * 60 * 1000).toISOString();
 
   const yeniBildirimler = await notifyCekiciler(talep, baseUrl, haric, {
     yenidenArama: true,
@@ -78,8 +70,8 @@ export async function POST(
   await notifyMusteri(talep, "yeniden_arama", baseUrl);
 
   return NextResponse.json({
-    durum: "yeniden_aranıyor",
-    mesaj: "Başka çekici aranıyor.",
+    durum: "yeniden_ihalede",
+    mesaj: "İhale yeniden açıldı. Çekiciler teklif verebilir.",
     yenidenAranıyor: true,
   });
 }

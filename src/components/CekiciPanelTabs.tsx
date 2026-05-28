@@ -26,34 +26,33 @@ interface TalepOzet {
   sorunOzet: string;
   durum: string;
   olusturulma: string;
-  satinAlindi?: boolean;
-  benimMusterim?: boolean;
+  teklifSayisi?: number;
+  enDusukTeklif?: number;
+  benimTeklifim?: boolean;
+  kazandim?: boolean;
   telefon?: string;
   listeDurumu?: ListeDurumu;
 }
 
-interface GecmisKayit extends TalepOzet {
-  satinAlmaTarihi: string;
-  tercihEdilmedi?: boolean;
-  aktif: boolean;
-}
-
 interface PanelData {
   bekleyen: TalepOzet[];
-  baskasiAldi: TalepOzet[];
+  teklifVerdigim: TalepOzet[];
+  kazandiklarim: TalepOzet[];
+  kaybettiklerim: TalepOzet[];
   tercihEdilmedi: TalepOzet[];
-  satinAlinanlar: TalepOzet[];
   bugunTumu: TalepOzet[];
-  gecmisSatinAlimlar: GecmisKayit[];
+  satinAlinanlar?: TalepOzet[];
+  baskasiAldi?: TalepOzet[];
 }
 
 const BADGE: Record<
   string,
   { label: string; className: string }
 > = {
-  acik: { label: "Açık", className: "bg-amber-50 text-amber-700" },
-  benim: { label: "Aktif", className: "bg-emerald-50 text-emerald-700" },
-  baskasi_aldi: { label: "Satın alındı", className: "bg-slate-100 text-slate-600" },
+  acik: { label: "Açık ihale", className: "bg-amber-50 text-amber-700" },
+  teklif_verdim: { label: "Teklif verdim", className: "bg-blue-50 text-blue-700" },
+  kazandim: { label: "Kazandım", className: "bg-emerald-50 text-emerald-700" },
+  kaybettim: { label: "Kaybettim", className: "bg-slate-100 text-slate-600" },
   tercih_edilmedi: {
     label: "Tercih edilmedi",
     className: "bg-red-50 text-red-600",
@@ -65,12 +64,11 @@ function TalepKarti({
   talep,
   kilitle = false,
 }: {
-  talep: TalepOzet | GecmisKayit;
+  talep: TalepOzet;
   kilitle?: boolean;
 }) {
-  const gecmis = "satinAlmaTarihi" in talep ? (talep as GecmisKayit) : null;
-  const durum = talep.listeDurumu ?? (gecmis?.aktif ? "benim" : "baskasi_aldi");
-  const badge = BADGE[durum] ?? BADGE.baskasi_aldi;
+  const durum = talep.listeDurumu ?? "acik";
+  const badge = BADGE[durum] ?? BADGE.kaybettim;
 
   const icerik = (
     <Card
@@ -91,21 +89,22 @@ function TalepKarti({
               <p className="text-sm text-slate-600 mt-1 line-clamp-2">
                 {talep.sorunOzet}
               </p>
+              {talep.teklifSayisi != null && talep.teklifSayisi > 0 && (
+                <p className="text-xs text-amber-600 mt-1">
+                  {talep.teklifSayisi} teklif
+                  {talep.enDusukTeklif != null && ` · en düşük ${talep.enDusukTeklif} TL`}
+                </p>
+              )}
             </>
           )}
-          {kilitle && durum === "baskasi_aldi" && (
-            <p className="text-sm text-slate-500 mt-1">
-              Başka çekici müşteriyi aldı
-            </p>
+          {kilitle && durum === "kaybettim" && (
+            <p className="text-sm text-slate-500 mt-1">Başka çekici seçildi</p>
           )}
           {kilitle && durum === "tercih_edilmedi" && (
             <p className="text-sm text-slate-500 mt-1">Müşteri sizi tercih etmedi</p>
           )}
-          {talep.telefon && durum === "benim" && (
+          {talep.telefon && durum === "kazandim" && (
             <p className="text-amber-700 font-mono text-sm mt-2">{talep.telefon}</p>
-          )}
-          {gecmis?.tercihEdilmedi && (
-            <p className="text-xs text-red-500 mt-1">Müşteri sizi tercih etmedi</p>
           )}
         </div>
         <span
@@ -169,7 +168,7 @@ export default function CekiciPanelTabs() {
   useEffect(() => {
     const mesaj = searchParams.get("mesaj");
     if (mesaj === "musteri-alindi") {
-      setFlash("Müşteri alındı! Bilgileri görüntüleyebilirsiniz.");
+      setFlash("Teklifiniz kabul edildi! Müşteri bilgilerine ulaşabilirsiniz.");
       setTab("musteriler");
     }
     if (mesaj === "kredi-eklendi") {
@@ -241,12 +240,12 @@ export default function CekiciPanelTabs() {
         <div className="space-y-6 animate-fade-in">
           <section>
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
-              Henüz satın alınmamış
+              Açık ihaleler
             </h2>
             {data.bekleyen.length === 0 ? (
               <Card>
                 <p className="text-sm text-slate-500 text-center py-2">
-                  Şu an satın alabileceğiniz açık talep yok.
+                  Şu an teklif verebileceğiniz açık talep yok.
                 </p>
               </Card>
             ) : (
@@ -260,18 +259,18 @@ export default function CekiciPanelTabs() {
 
           <section>
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
-              Satın alınmış (başkası aldı)
+              Teklif verdiğim
             </h2>
-            {data.baskasiAldi.length === 0 ? (
+            {(data.teklifVerdigim?.length ?? 0) === 0 ? (
               <Card>
                 <p className="text-sm text-slate-500 text-center py-2">
-                  Başkası tarafından alınan talep yok.
+                  Bekleyen teklifiniz yok.
                 </p>
               </Card>
             ) : (
               <div className="space-y-2">
-                {data.baskasiAldi.map((t) => (
-                  <TalepKarti key={t.id} talep={t} kilitle />
+                {data.teklifVerdigim!.map((t) => (
+                  <TalepKarti key={t.id} talep={t} />
                 ))}
               </div>
             )}
@@ -279,18 +278,37 @@ export default function CekiciPanelTabs() {
 
           <section>
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
-              Satın aldıklarım
+              Kazandıklarım
             </h2>
-            {data.satinAlinanlar.length === 0 ? (
+            {(data.kazandiklarim?.length ?? 0) === 0 ? (
               <Card>
                 <p className="text-sm text-slate-500 text-center py-2">
-                  Henüz müşteri almadınız.
+                  Henüz kazandığınız müşteri yok.
                 </p>
               </Card>
             ) : (
               <div className="space-y-2">
-                {data.satinAlinanlar.map((t) => (
+                {data.kazandiklarim!.map((t) => (
                   <TalepKarti key={t.id} talep={t} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section>
+            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
+              Kaybettiklerim
+            </h2>
+            {(data.kaybettiklerim?.length ?? 0) === 0 ? (
+              <Card>
+                <p className="text-sm text-slate-500 text-center py-2">
+                  Kaybedilen ihale yok.
+                </p>
+              </Card>
+            ) : (
+              <div className="space-y-2">
+                {data.kaybettiklerim!.map((t) => (
+                  <TalepKarti key={t.id} talep={t} kilitle />
                 ))}
               </div>
             )}
@@ -332,7 +350,7 @@ export default function CekiciPanelTabs() {
                     key={t.id}
                     talep={t}
                     kilitle={
-                      t.listeDurumu === "baskasi_aldi" ||
+                      t.listeDurumu === "kaybettim" ||
                       t.listeDurumu === "tercih_edilmedi"
                     }
                   />
@@ -366,7 +384,7 @@ export default function CekiciPanelTabs() {
                   <p className="text-2xl font-bold text-amber-600">
                     {istatistik.satinAldiklarim}
                   </p>
-                  <p className="text-xs text-slate-500 mt-1">Satın aldıklarım</p>
+                  <p className="text-xs text-slate-500 mt-1">Kazandıklarım</p>
                 </Card>
                 <Card className="text-center py-3">
                   <p className="text-2xl font-bold text-emerald-600">
@@ -397,29 +415,6 @@ export default function CekiciPanelTabs() {
           <Link href="/cekici/kredi">
             <Btn>💳 Kredi Satın Al</Btn>
           </Link>
-
-          <section>
-            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
-              Daha önce satın aldıklarım
-            </h2>
-            {!data?.gecmisSatinAlimlar.length ? (
-              <Card>
-                <p className="text-sm text-slate-500 text-center py-2">
-                  Henüz geçmiş kayıt yok.
-                </p>
-              </Card>
-            ) : (
-              <div className="space-y-2">
-                {data.gecmisSatinAlimlar.map((t) => (
-                  <TalepKarti
-                    key={`${t.id}-${t.satinAlmaTarihi}`}
-                    talep={t}
-                    kilitle={!t.aktif}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
 
           <Link href="/demo/sms">
             <Btn variant="secondary">📱 Demo SMS Kayıtları</Btn>
