@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
 import { getTalepler } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
+import { cekiciTalepBolgesineUygunMu } from "@/lib/cekici-bolge";
 import {
   cekiciHaricMi,
   cekiciTeklifVerdiMi,
@@ -20,7 +21,7 @@ function listeDurumuBelirle(talep: Talep, cekiciId: string): ListeDurumu {
     return "anlasildi";
   if (cekiciHaricMi(talep, cekiciId)) return "tercih_edilmedi";
   if (talep.kazananCekiciId && talep.kazananCekiciId !== cekiciId) {
-    return cekiciTeklifVerdiMi(talep, cekiciId) ? "kaybettim" : "acik";
+    return "kaybettim";
   }
   if (cekiciTeklifVerdiMi(talep, cekiciId)) return "teklif_verdim";
   if (ihaleAcikMi(talep) && !cekiciHaricMi(talep, cekiciId)) return "acik";
@@ -62,12 +63,19 @@ export async function GET() {
   const talepler = await getTalepler();
   const bugun = talepler.filter((t) => isBugun(t.olusturulma));
 
-  const ilgili = bugun.filter(
-    (t) =>
-      t.bildirilenCekiciIds.includes(cekici.id) ||
-      t.kazananCekiciId === cekici.id ||
-      t.teklifler?.some((te) => te.cekiciId === cekici.id)
-  );
+  const ilgili = bugun.filter((t) => {
+    if (t.kazananCekiciId === cekici.id) return true;
+    if (t.teklifler?.some((te) => te.cekiciId === cekici.id)) return true;
+    if (t.bildirilenCekiciIds.includes(cekici.id)) return true;
+    if (
+      ihaleAcikMi(t) &&
+      !cekiciHaricMi(t, cekici.id) &&
+      cekiciTalepBolgesineUygunMu(cekici, t)
+    ) {
+      return true;
+    }
+    return false;
+  });
 
   const tumOzet = ilgili.map((t) => toOzet(t, cekici.id));
 

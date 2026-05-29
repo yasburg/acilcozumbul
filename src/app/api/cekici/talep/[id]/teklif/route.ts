@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { getCurrentCekici } from "@/lib/auth";
 import { getTalepById, updateTalep } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
+import { cekiciTalepBolgesineUygunMu } from "@/lib/cekici-bolge";
 import { cekiciHaricMi, cekiciTeklifVerebilirMi } from "@/lib/ihale";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Teklif } from "@/lib/types";
@@ -38,6 +39,16 @@ export async function POST(
   if (cekiciHaricMi(talep, cekici.id)) {
     return NextResponse.json(
       { error: "Müşteri sizi tercih etmedi.", tercihEdilmedi: true },
+      { status: 403 }
+    );
+  }
+
+  const bolgeyeUygun =
+    talep.bildirilenCekiciIds.includes(cekici.id) ||
+    cekiciTalepBolgesineUygunMu(cekici, talep);
+  if (!bolgeyeUygun) {
+    return NextResponse.json(
+      { error: "Bu talep hizmet bölgelerinizin dışında." },
       { status: 403 }
     );
   }

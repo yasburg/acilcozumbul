@@ -10,6 +10,26 @@ export function konumGuvenliMi(): boolean {
   return window.isSecureContext === true;
 }
 
+/** Yerel ağ IP’si (telefon testi) */
+export function yerelAgHostu(host: string): boolean {
+  return (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    /^10\./.test(host) ||
+    /^192\.168\./.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+  );
+}
+
+/** http:// yerel IP → https:// aynı host (GPS için gerekli) */
+export function lanHttpsUrl(): string | null {
+  if (typeof window === "undefined" || konumGuvenliMi()) return null;
+  const { hostname, port, pathname, search } = window.location;
+  if (!yerelAgHostu(hostname)) return null;
+  const p = port || "3000";
+  return `https://${hostname}:${p}${pathname}${search}`;
+}
+
 export function cihazPlatformu(): "ios" | "android" | "other" {
   if (typeof navigator === "undefined") return "other";
   const ua = navigator.userAgent;
@@ -28,7 +48,8 @@ export function konumAyarlariAdimlari(): string[] {
       "Konum Servisleri açık olmalı",
       "Aşağı kaydırıp Safari’yi seçin",
       "«Uygulama Kullanırken» veya «İzin Ver» seçin (Asla seçmeyin)",
-      "Safari’ye dönün, bu sayfayı yenileyin ve «Konumumu Paylaş»a tekrar basın",
+      "Safari → Ayarlar (aA) → Web Sitesi Ayarları → bu site (10.55.x.x) → Konum: İzin Ver",
+      "Sayfayı yenileyin ve «Konumumu Paylaş»a tekrar basın",
     ];
   }
   if (p === "android") {
@@ -93,6 +114,34 @@ export function konumHataMesaji(code?: number): string {
         return "Telefonda http:// adresiyle GPS çalışmaz. Adresi elle yazın veya https:// ile açın (npm run dev:lan:https).";
       }
       return "Konum alınamadı. Lütfen adresi elle girin.";
+  }
+}
+
+/** Elle yazılan adresi koordinata çevir (Nominatim) */
+export async function geocodeAdres(
+  sorgu: string
+): Promise<{ lat: number; lng: number; adres: string } | null> {
+  const q = sorgu.trim();
+  if (q.length < 4) return null;
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=tr&accept-language=tr`,
+      { headers: { "Accept-Language": "tr" } }
+    );
+    const data = (await res.json()) as Array<{
+      lat: string;
+      lon: string;
+      display_name: string;
+    }>;
+    const ilk = data[0];
+    if (!ilk) return null;
+    return {
+      lat: parseFloat(ilk.lat),
+      lng: parseFloat(ilk.lon),
+      adres: ilk.display_name,
+    };
+  } catch {
+    return null;
   }
 }
 

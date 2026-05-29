@@ -184,6 +184,14 @@ export async function otpDogrula(
   return { ok: true, telefon };
 }
 
+/** Telefon için tüm OTP kayıtlarını sil (test / sıfırlama) */
+export async function otpTemizle(telefonHam: string): Promise<void> {
+  if (!telefonGecerliMi(telefonHam)) return;
+  const telefon = telefonNormalize(telefonHam);
+  const liste = await otpOku();
+  await otpYaz(liste.filter((k) => k.telefon !== telefon));
+}
+
 export async function telefonDogrulandiMi(telefonHam: string): Promise<boolean> {
   const telefon = telefonNormalize(telefonHam);
   const liste = await otpOku();

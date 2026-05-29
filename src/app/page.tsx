@@ -7,7 +7,9 @@ import { SorunSecimi } from "@/components/SorunSecimi";
 import { Btn, Field, Card } from "@/components/ui";
 import { sorunMetniOlustur, sorunTipiBul } from "@/lib/sorun-tipleri";
 import { KonumIzniYardim } from "@/components/KonumIzniYardim";
+import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import {
+  geocodeAdres,
   konumAlEsnek,
   konumGuvenliMi,
   konumHataMesaji,
@@ -18,7 +20,7 @@ import {
 } from "@/lib/konum-client";
 import { telefonGecerliMi, telefonMaskele, telefonNormalize } from "@/lib/telefon";
 
-type Step = "bilgi" | "kod" | "konum" | "sorun" | "hedef";
+type Step = "bilgi" | "konum" | "sorun" | "hedef";
 
 interface KonumOneri {
   ad: string;
@@ -28,7 +30,7 @@ interface KonumOneri {
   mesafeKm?: number;
 }
 
-const STEP_SIRA: Step[] = ["bilgi", "kod", "konum", "sorun", "hedef"];
+const STEP_SIRA: Step[] = ["bilgi", "konum", "sorun", "hedef"];
 const OTP_BEKLEYEN_KEY = "acilcozum_otp_bekleyen";
 
 export default function HomePage() {
@@ -45,7 +47,8 @@ export default function HomePage() {
   const [gelistirmeKodu, setGelistirmeKodu] = useState<string | null>(null);
   const [yenidenGonderSn, setYenidenGonderSn] = useState(0);
   const [otpBekleniyor, setOtpBekleniyor] = useState(false);
-  const [gpsGuvenli, setGpsGuvenli] = useState(true);
+  const [kodGirisAcik, setKodGirisAcik] = useState(false);
+  const [gpsGuvenli, setGpsGuvenli] = useState(false);
   const [konumIzni, setKonumIzni] = useState<KonumIzniDurumu>("unknown");
   const [konumIzniBekleniyor, setKonumIzniBekleniyor] = useState(false);
 
@@ -69,6 +72,12 @@ export default function HomePage() {
 
   useEffect(() => {
     if (step !== "konum" && step !== "hedef") return;
+    const guvenli = konumGuvenliMi();
+    setGpsGuvenli(guvenli);
+    if (!guvenli) {
+      setKonumIzni("unknown");
+      return;
+    }
     konumIzniOku().then(setKonumIzni);
     return konumIzniDinle(setKonumIzni);
   }, [step]);
@@ -80,6 +89,9 @@ export default function HomePage() {
         if (d.dogrulandi && d.telefon) {
           setTelefonDogrulandi(true);
           setForm((f) => ({ ...f, telefon: d.telefon }));
+          setStep("bilgi");
+        } else {
+          setTelefonDogrulandi(false);
         }
       })
       .catch(() => {});
@@ -88,6 +100,7 @@ export default function HomePage() {
       const kayitli = sessionStorage.getItem(OTP_BEKLEYEN_KEY);
       if (kayitli) {
         setOtpBekleniyor(true);
+        setKodGirisAcik(true);
         setForm((f) => (f.telefon ? f : { ...f, telefon: kayitli }));
       }
     } catch {
@@ -109,6 +122,7 @@ export default function HomePage() {
         .then((d) => {
           if (d.bekliyor) {
             setOtpBekleniyor(true);
+            setKodGirisAcik(true);
             setYenidenGonderSn(d.yenidenGonderSn ?? 0);
             if (d.gelistirmeKodu) setGelistirmeKodu(d.gelistirmeKodu);
           }
@@ -145,24 +159,25 @@ export default function HomePage() {
 
   function adimGit(hedef: Step) {
     const hedefIdx = STEP_SIRA.indexOf(hedef);
-    const kodIdx = STEP_SIRA.indexOf("kod");
-    if (hedefIdx > kodIdx && !telefonDogrulandi) {
+    if (hedefIdx > 0 && !telefonDogrulandi) {
       setError("Devam etmek için telefon doğrulaması gerekli.");
-      setStep(telefonDogrulandi ? hedef : "kod");
+      setKodGirisAcik(true);
+      setStep("bilgi");
       return;
     }
     setStep(hedef);
     setError("");
   }
 
-  function kodAdiminaGec(opts?: {
+  function kodGirisGoster(opts?: {
     mesaj?: string;
     gelistirmeKodu?: string | null;
     yenidenGonderSn?: number;
   }) {
     const tel = telefonNormalize(form.telefon);
     setOtpBekleniyor(true);
-    setStep("kod");
+    setKodGirisAcik(true);
+    setStep("bilgi");
     setError("");
     if (opts?.mesaj) setBilgiMesaj(opts.mesaj);
     if (opts?.gelistirmeKodu !== undefined) {
@@ -219,7 +234,8 @@ export default function HomePage() {
 
       if (data.kodBekliyor) {
         setOtpKod("");
-        kodAdiminaGec({
+        setTelefonDogrulandi(false);
+        kodGirisGoster({
           mesaj: data.mesaj ?? "SMS'teki kodu girin.",
           gelistirmeKodu: data.gelistirmeKodu ?? null,
           yenidenGonderSn: data.yenidenGonderSn ?? 60,
@@ -234,18 +250,18 @@ export default function HomePage() {
       }
 
       setOtpKod("");
-      kodAdiminaGec({
+      setTelefonDogrulandi(false);
+      kodGirisGoster({
         yenidenGonderSn: data.yenidenGonderSn ?? 60,
         gelistirmeKodu: data.gelistirmeKodu ?? null,
+        mesaj: data.smsGonderildi
+          ? (data.mesaj ?? "Kod gönderildi. Aşağıya girin.")
+          : data.gelistirmeKodu
+            ? (data.mesaj ?? "SMS gelmediyse geliştirme kodunu girin.")
+            : undefined,
       });
 
-      if (data.smsGonderildi) {
-        setBilgiMesaj(data.mesaj ?? "Kod gönderildi.");
-      } else if (data.gelistirmeKodu) {
-        setBilgiMesaj(
-          data.mesaj ?? "SMS gelmediyse aşağıdaki geliştirme kodunu girin."
-        );
-      } else {
+      if (!data.smsGonderildi && !data.gelistirmeKodu) {
         setError(
           [data.mesaj, data.smsHatasi].filter(Boolean).join(" ") ||
             "SMS gönderilemedi."
@@ -286,8 +302,10 @@ export default function HomePage() {
       if (!res.ok) throw new Error(data.error);
       setTelefonDogrulandi(true);
       setOtpBekleniyor(false);
+      setKodGirisAcik(false);
       setGelistirmeKodu(null);
       setBilgiMesaj("");
+      setOtpKod("");
       try {
         sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
       } catch {
@@ -335,7 +353,11 @@ export default function HomePage() {
       return;
     }
     if (!konumGuvenliMi()) {
-      setError(konumHataMesaji());
+      setGpsGuvenli(false);
+      setKonumIzni("unknown");
+      setError(
+        "GPS için https:// adresi gerekli. Yukarıdaki «HTTPS ile aç» butonunu kullanın veya adresi aşağıya yazın."
+      );
       setKonumYukleniyor(false);
       return;
     }
@@ -387,7 +409,21 @@ export default function HomePage() {
     try {
       const res = await fetch("/api/konum/ip-tahmin");
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        const mevcut = hedef ? form.hedefAdres : form.adres;
+        if (mevcut.trim().length >= 4) {
+          const g = await geocodeAdres(mevcut);
+          if (g) {
+            await konumKaydet(g.lat, g.lng, g.adres, hedef);
+            setBilgiMesaj("Adres haritada işaretlendi.");
+            return;
+          }
+        }
+        throw new Error(
+          data.error ??
+            "Yerel Wi‑Fi’de IP konumu çalışmaz. Adresi yazıp «Devam Et»e basın veya HTTPS ile GPS kullanın."
+        );
+      }
       const uyari = " (yaklaşık konum)";
       await konumKaydet(
         data.lat,
@@ -400,6 +436,31 @@ export default function HomePage() {
     } finally {
       setKonumYukleniyor(false);
     }
+  }
+
+  /** Elle yazılan adresi koordinata çevir (GPS yokken öneriler için) */
+  async function adresKoordinatDoldur(hedef = false): Promise<boolean> {
+    const adres = (hedef ? form.hedefAdres : form.adres).trim();
+    if (!adres) {
+      setError(hedef ? "Hedef adres gerekli." : "Adres gerekli.");
+      return false;
+    }
+    const lat = hedef ? form.hedefLat : form.lat;
+    const lng = hedef ? form.hedefLng : form.lng;
+    if (lat && lng) return true;
+
+    setKonumYukleniyor(true);
+    setError("");
+    const g = await geocodeAdres(adres);
+    setKonumYukleniyor(false);
+    if (g) {
+      await konumKaydet(g.lat, g.lng, g.adres, hedef);
+      return true;
+    }
+    setBilgiMesaj(
+      "Adres kaydedildi. Daha net yazarsanız (ilçe, mahalle) harita önerileri iyileşir."
+    );
+    return true;
   }
 
   async function cozumOner() {
@@ -444,14 +505,19 @@ export default function HomePage() {
 
   async function cekiciBul() {
     setError("");
+    if (!form.lat || !form.lng) {
+      const ok = await adresKoordinatDoldur(false);
+      if (!ok) return;
+    }
     if (!telefonDogrulandi) {
       setError("Telefon doğrulaması gerekli.");
-      setStep("kod");
+      setKodGirisAcik(true);
+      setStep("bilgi");
       return;
     }
-    if (!form.ad || !form.soyad || !form.telefon) {
-      setError("Ad, soyad ve telefon zorunludur.");
-      setStep("bilgi");
+    if (!form.ad?.trim() || !form.soyad?.trim() || !form.telefon) {
+      setError("Ad ve soyad zorunludur (arıza konumu adımında).");
+      setStep("konum");
       return;
     }
     if (!form.adres) {
@@ -507,31 +573,17 @@ export default function HomePage() {
 
   const steps: { key: Step; label: string }[] = [
     { key: "bilgi", label: "1" },
-    { key: "kod", label: "2" },
-    { key: "konum", label: "3" },
-    { key: "sorun", label: "4" },
-    { key: "hedef", label: "5" },
+    { key: "konum", label: "2" },
+    { key: "sorun", label: "3" },
+    { key: "hedef", label: "4" },
   ];
 
   const sorunLabel = form.sorunTipi
     ? sorunTipiBul(form.sorunTipi)?.label
     : null;
 
-  const lanHttpsUyarisi =
-    typeof window !== "undefined" &&
-    window.location.protocol === "http:" &&
-    !window.location.hostname.includes("localhost");
-
   return (
     <MobileShell subtitle="Yolda mı kaldınız? Hemen çekici bulun.">
-      {lanHttpsUyarisi && (
-        <Card className="border-amber-200 bg-amber-50 mb-4">
-          <p className="text-amber-900 text-sm">
-            Sayfa <strong>http</strong> ile açılmış; butonlar çalışmayabilir.{" "}
-            <strong>https://10.55.33.167:3000</strong> adresini kullanın.
-          </p>
-        </Card>
-      )}
 
       <div className="flex gap-1.5 mb-6">
         {steps.map((s) => (
@@ -553,202 +605,245 @@ export default function HomePage() {
         </div>
       )}
 
-      {bilgiMesaj && (step === "kod" || step === "bilgi") && (
+      {bilgiMesaj && step === "bilgi" && (
         <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
           {bilgiMesaj}
         </div>
       )}
 
       {step === "bilgi" && (
-        <form
-          className="space-y-4 animate-fade-in"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (loading) return;
-            if (telefonDogrulandi) adimGit("konum");
-            else void kodGonder();
-          }}
-        >
-          <h2 className="text-xl font-bold">İletişim Bilgileri</h2>
-          <p className="text-slate-500 text-sm">
-            Önce telefonunuzu doğrulayın; ardından talebe devam edin.
-          </p>
-          <Field
-            label="Telefon"
-            type="tel"
-            placeholder="05XX XXX XX XX"
-            value={form.telefon}
-            onChange={(e) => update("telefon", e.target.value)}
-            autoComplete="tel"
-            inputMode="tel"
-            enterKeyHint="go"
-            name="telefon"
-            required
-          />
-          <Field
-            label="Ad"
-            placeholder="Ahmet"
-            value={form.ad}
-            onChange={(e) => update("ad", e.target.value)}
-            autoComplete="given-name"
-            enterKeyHint="next"
-            name="ad"
-          />
-          <Field
-            label="Soyad"
-            placeholder="Yılmaz"
-            value={form.soyad}
-            onChange={(e) => update("soyad", e.target.value)}
-            autoComplete="family-name"
-            enterKeyHint="done"
-            name="soyad"
-          />
-          {telefonDogrulandi && (
-            <Card className="bg-emerald-50 border-emerald-200">
-              <p className="text-sm text-emerald-800">
-                ✓ {telefonMaskele(form.telefon)} doğrulandı
-              </p>
-            </Card>
-          )}
-          {telefonDogrulandi ? (
-            <Btn type="submit">Devam Et</Btn>
-          ) : (
-            <>
-              <Btn type="submit" disabled={loading}>
-                {loading ? "Kod gönderiliyor…" : "Doğrulama Kodu Gönder"}
-              </Btn>
-              {(otpBekleniyor || yenidenGonderSn > 0) && (
-                <Btn
-                  type="button"
-                  variant="outline"
-                  onClick={() =>
-                    kodAdiminaGec({
-                      mesaj: "SMS ile gelen 6 haneli kodu girin.",
-                    })
-                  }
-                >
-                  SMS Kodunu Gir
-                </Btn>
-              )}
-              <p className="text-xs text-slate-500 text-center">
-                {otpBekleniyor || yenidenGonderSn > 0
-                  ? "Kod geldi mi? «SMS Kodunu Gir» ile doğrulama adımına geçin."
-                  : "Önce telefon doğrulanır; ad/soyadı sonraki adımlarda da tamamlayabilirsiniz."}
-              </p>
-            </>
-          )}
-        </form>
-      )}
-
-      {step === "kod" && (
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!loading && otpKod.length === 6) void kodDogrula();
-          }}
-        >
+        <div className="space-y-4 animate-fade-in">
           <h2 className="text-xl font-bold">Telefon Doğrulama</h2>
           <p className="text-slate-500 text-sm">
-            {telefonMaskele(form.telefon)} numarasına gelen 6 haneli kodu girin.
+            {telefonDogrulandi
+              ? "Telefonunuz doğrulandı. Arıza konumuna geçebilirsiniz."
+              : "SMS kodu ile telefonunuzu doğrulayın. Ad ve soyad bir sonraki adımda."}
           </p>
-          {gelistirmeKodu && (
-            <Card className="bg-amber-50 border-amber-200">
-              <p className="text-xs text-amber-800">
-                Geliştirme kodu:{" "}
-                <span className="font-mono font-bold text-lg">{gelistirmeKodu}</span>
-              </p>
-            </Card>
+
+          {telefonDogrulandi ? (
+            <>
+              <Card className="bg-emerald-50 border-emerald-200">
+                <p className="text-sm text-emerald-800">
+                  ✓ {telefonMaskele(form.telefon)} doğrulandı
+                </p>
+              </Card>
+              <Btn type="button" onClick={() => adimGit("konum")}>
+                Arıza Konumuna Git
+              </Btn>
+            </>
+          ) : (
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (loading) return;
+                if (kodGirisAcik) {
+                  if (otpKod.length === 6) void kodDogrula();
+                  else setError("6 haneli doğrulama kodunu girin.");
+                  return;
+                }
+                void kodGonder();
+              }}
+            >
+              <Field
+                label="Telefon"
+                type="tel"
+                placeholder="05XX XXX XX XX"
+                value={form.telefon}
+                onChange={(e) => update("telefon", e.target.value)}
+                autoComplete="tel"
+                inputMode="tel"
+                enterKeyHint="go"
+                name="telefon"
+                required
+                disabled={kodGirisAcik}
+              />
+
+              {kodGirisAcik && (
+                <>
+                  <p className="text-sm text-slate-600">
+                    {telefonMaskele(form.telefon)} numarasına gelen 6 haneli kodu
+                    girin.
+                  </p>
+                  {gelistirmeKodu && (
+                    <Card className="bg-amber-50 border-amber-200">
+                      <p className="text-xs text-amber-800">
+                        Geliştirme kodu:{" "}
+                        <span className="font-mono font-bold text-lg">
+                          {gelistirmeKodu}
+                        </span>
+                      </p>
+                    </Card>
+                  )}
+                  <Field
+                    label="Doğrulama kodu"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="123456"
+                    maxLength={6}
+                    value={otpKod}
+                    onChange={(e) =>
+                      setOtpKod(e.target.value.replace(/\D/g, "").slice(0, 6))
+                    }
+                    autoComplete="one-time-code"
+                    enterKeyHint="done"
+                    name="otp"
+                    required
+                  />
+                  <Btn type="submit" disabled={loading || otpKod.length !== 6}>
+                    {loading ? "Doğrulanıyor…" : "Onayla — Arıza Konumuna Git"}
+                  </Btn>
+                  <button
+                    type="button"
+                    onClick={() => void kodGonder()}
+                    disabled={loading || yenidenGonderSn > 0}
+                    className="w-full min-h-[44px] text-sm text-amber-600 font-medium touch-manipulation disabled:text-slate-400"
+                  >
+                    {yenidenGonderSn > 0
+                      ? `Yeni kod (${yenidenGonderSn}s)`
+                      : "Kodu tekrar gönder"}
+                  </button>
+                  <Btn
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setKodGirisAcik(false);
+                      setOtpKod("");
+                    }}
+                  >
+                    Telefonu değiştir
+                  </Btn>
+                </>
+              )}
+
+              {!kodGirisAcik && (
+                <>
+                  <Btn type="submit" disabled={loading}>
+                    {loading ? "Kod gönderiliyor…" : "Doğrulama Kodu Gönder"}
+                  </Btn>
+                  {(otpBekleniyor || yenidenGonderSn > 0) && (
+                    <Btn
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        kodGirisGoster({
+                          mesaj: "SMS ile gelen 6 haneli kodu girin.",
+                        })
+                      }
+                    >
+                      SMS Kodunu Gir
+                    </Btn>
+                  )}
+                </>
+              )}
+            </form>
           )}
-          <Field
-            label="Doğrulama kodu"
-            type="text"
-            inputMode="numeric"
-            placeholder="123456"
-            maxLength={6}
-            value={otpKod}
-            onChange={(e) => setOtpKod(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            autoComplete="one-time-code"
-            enterKeyHint="done"
-            name="otp"
-            required
-          />
-          <Btn type="submit" disabled={loading || otpKod.length !== 6}>
-            {loading ? "Doğrulanıyor…" : "Onayla ve Devam Et"}
-          </Btn>
-          <button
-            type="button"
-            onClick={() => void kodGonder()}
-            disabled={loading || yenidenGonderSn > 0}
-            className="w-full min-h-[44px] text-sm text-amber-600 font-medium touch-manipulation disabled:text-slate-400"
-          >
-            {yenidenGonderSn > 0
-              ? `Yeni kod (${yenidenGonderSn}s)`
-              : "Kodu tekrar gönder"}
-          </button>
-          <Btn variant="outline" type="button" onClick={() => setStep("bilgi")}>
-            Geri — bilgileri düzenle
-          </Btn>
-        </form>
+        </div>
       )}
 
       {step === "konum" && (
         <div className="space-y-4">
           <h2 className="text-xl font-bold">Arıza Konumu</h2>
           <p className="text-slate-500 text-sm">
-            Aracınızın şu an bulunduğu yeri paylaşın.
+            İletişim bilgilerinizi ve aracınızın bulunduğu yeri girin.
           </p>
-          {!gpsGuvenli && (
-            <Card className="bg-amber-50 border-amber-200">
-              <p className="text-sm text-amber-900 leading-relaxed">
-                Telefonda <strong>http://</strong> ile açıldığı için GPS kapalıdır.
-                Adresi aşağıya yazın veya bilgisayarda{" "}
-                <code className="text-xs">npm run dev:lan:https</code> ile{" "}
-                <strong>https://</strong> adresinden deneyin (sertifikaya güvenin).
-              </p>
-            </Card>
-          )}
-          <KonumIzniYardim
-            durum={konumIzni}
-            gpsGuvenli={gpsGuvenli}
-            bekleniyor={konumIzniBekleniyor}
+
+          {!gpsGuvenli && <GpsHttpsBanner compact />}
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field
+              label="Ad"
+              placeholder="Ahmet"
+              value={form.ad}
+              onChange={(e) => update("ad", e.target.value)}
+              autoComplete="given-name"
+              name="ad"
+              required
+            />
+            <Field
+              label="Soyad"
+              placeholder="Yılmaz"
+              value={form.soyad}
+              onChange={(e) => update("soyad", e.target.value)}
+              autoComplete="family-name"
+              name="soyad"
+              required
+            />
+          </div>
+          <p className="text-xs text-slate-500 -mt-2">
+            Telefon: {telefonMaskele(form.telefon)}
+          </p>
+
+          <Field
+            label="Arıza adresi"
+            placeholder="Örn. İstanbul, Bayrampaşa, …"
+            value={form.adres}
+            onChange={(e) => update("adres", e.target.value)}
+            onBlur={() => {
+              if (form.adres.trim().length >= 6 && !form.lat) {
+                void geocodeAdres(form.adres).then((g) => {
+                  if (g) void konumKaydet(g.lat, g.lng, g.adres, false);
+                });
+              }
+            }}
           />
           <Btn
             type="button"
             variant="secondary"
-            onClick={() => konumAl(false)}
-            disabled={konumYukleniyor || !gpsGuvenli}
+            onClick={async () => {
+              if (!form.adres.trim()) {
+                setError("Önce arıza adresini yazın.");
+                return;
+              }
+              setKonumYukleniyor(true);
+              setError("");
+              const g = await geocodeAdres(form.adres);
+              setKonumYukleniyor(false);
+              if (g) {
+                await konumKaydet(g.lat, g.lng, g.adres, false);
+                setBilgiMesaj("Adres haritada işaretlendi.");
+              } else {
+                setError(
+                  "Adres bulunamadı. İlçe ve mahalle ekleyerek tekrar deneyin."
+                );
+              }
+            }}
+            disabled={konumYukleniyor || !form.adres.trim()}
           >
-            {konumYukleniyor
-              ? konumIzniBekleniyor
-                ? "İzin penceresinde «İzin Ver»e dokunun…"
-                : "Konum alınıyor…"
-              : "📍 Konumumu Paylaş (GPS)"}
+            {konumYukleniyor ? "Adres işleniyor…" : "📍 Adresi haritaya işle"}
           </Btn>
-          {konumIzni === "denied" && gpsGuvenli && (
-            <button
-              type="button"
-              onClick={konumIzniYenile}
-              className="w-full text-sm text-amber-600 font-medium underline"
-            >
-              Ayarlardan izin verdim — yeniden kontrol et
-            </button>
+
+          {gpsGuvenli && (
+            <>
+              <KonumIzniYardim
+                durum={konumIzni}
+                gpsGuvenli={gpsGuvenli}
+                bekleniyor={konumIzniBekleniyor}
+              />
+              <Btn
+                type="button"
+                variant="outline"
+                onClick={() => konumAl(false)}
+                disabled={konumYukleniyor}
+                className="!py-3 text-sm"
+              >
+                {konumYukleniyor
+                  ? konumIzniBekleniyor
+                    ? "İzin penceresinde «İzin Ver»e dokunun…"
+                    : "Konum alınıyor…"
+                  : "veya GPS konumumu paylaş"}
+              </Btn>
+              {konumIzni === "denied" && (
+                <button
+                  type="button"
+                  onClick={konumIzniYenile}
+                  className="w-full text-sm text-amber-600 font-medium underline"
+                >
+                  Ayarlardan izin verdim — yeniden kontrol et
+                </button>
+              )}
+            </>
           )}
-          <Btn
-            type="button"
-            variant="outline"
-            onClick={() => yaklasikKonumAl(false)}
-            disabled={konumYukleniyor}
-            className="!py-3 text-sm"
-          >
-            Yaklaşık konum (mobil veri / canlı site)
-          </Btn>
-          <Field
-            label="Adres"
-            placeholder="İstanbul, Bayrampaşa, ..."
-            value={form.adres}
-            onChange={(e) => update("adres", e.target.value)}
-          />
           {form.adres && (
             <Card>
               <p className="text-xs text-slate-500 mb-1">Arıza konumu</p>
@@ -756,11 +851,25 @@ export default function HomePage() {
             </Card>
           )}
           <div className="flex gap-3">
-            <Btn variant="outline" onClick={() => adimGit("kod")}>
+            <Btn variant="outline" onClick={() => adimGit("bilgi")}>
               Geri
             </Btn>
-            <Btn onClick={() => adimGit("sorun")} disabled={!form.adres}>
-              Devam Et
+            <Btn
+              onClick={async () => {
+                if (!form.ad.trim() || !form.soyad.trim()) {
+                  setError("Ad ve soyad zorunludur.");
+                  return;
+                }
+                if (await adresKoordinatDoldur(false)) adimGit("sorun");
+              }}
+              disabled={
+                !form.adres.trim() ||
+                !form.ad.trim() ||
+                !form.soyad.trim() ||
+                konumYukleniyor
+              }
+            >
+              {konumYukleniyor ? "Adres işleniyor…" : "Devam Et"}
             </Btn>
           </div>
         </div>
@@ -845,11 +954,6 @@ export default function HomePage() {
               bekleniyor={konumIzniBekleniyor}
             />
           )}
-          {!gpsGuvenli && (
-            <p className="text-xs text-amber-700">
-              Hedef için GPS yine http:// ile çalışmaz; adresi elle yazın.
-            </p>
-          )}
           <Btn
             type="button"
             variant="outline"
@@ -863,6 +967,13 @@ export default function HomePage() {
             placeholder="Oto sanayi, servis, ev adresi…"
             value={form.hedefAdres}
             onChange={(e) => update("hedefAdres", e.target.value)}
+            onBlur={() => {
+              if (form.hedefAdres.trim().length >= 6 && !form.hedefLat) {
+                void geocodeAdres(form.hedefAdres).then((g) => {
+                  if (g) void konumKaydet(g.lat, g.lng, g.adres, true);
+                });
+              }
+            }}
           />
           {form.hedefAdres && (
             <Card>
@@ -874,7 +985,12 @@ export default function HomePage() {
             <Btn variant="outline" onClick={() => adimGit("sorun")}>
               Geri
             </Btn>
-            <Btn onClick={cekiciBul} disabled={loading || !form.hedefAdres}>
+            <Btn
+              onClick={async () => {
+                if (await adresKoordinatDoldur(true)) void cekiciBul();
+              }}
+              disabled={loading || !form.hedefAdres.trim() || konumYukleniyor}
+            >
               {loading ? "Gönderiliyor…" : "🚛 Çekici Bul"}
             </Btn>
           </div>

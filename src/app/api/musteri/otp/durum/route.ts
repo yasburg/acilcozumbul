@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
-import { getDogrulanmisTelefon } from "@/lib/musteri-auth";
+import {
+  getDogrulanmisTelefon,
+  musteriTelCookieTemizle,
+} from "@/lib/musteri-auth";
 
 export async function GET() {
   const telefon = await getDogrulanmisTelefon();
-  return NextResponse.json({ dogrulandi: !!telefon, telefon: telefon ?? undefined });
+  const response = NextResponse.json({
+    dogrulandi: !!telefon,
+    telefon: telefon ?? undefined,
+  });
+  if (!telefon) {
+    musteriTelCookieTemizle(response);
+  }
+  return response;
 }

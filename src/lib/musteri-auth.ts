@@ -1,14 +1,24 @@
 import { cookies } from "next/headers";
+import { telefonDogrulandiMi } from "./musteri-otp";
 import { telefonNormalize } from "./telefon";
 
 export const MUSTERI_TEL_COOKIE = "musteri_tel_dogrulandi";
 
+/** Çerez + sunucudaki OTP kaydı birlikte geçerli olmalı */
 export async function getDogrulanmisTelefon(): Promise<string | null> {
   const store = await cookies();
   const val = store.get(MUSTERI_TEL_COOKIE)?.value;
   if (!val) return null;
   const norm = telefonNormalize(val);
-  return /^05[0-9]{9}$/.test(norm) ? norm : null;
+  if (!/^05[0-9]{9}$/.test(norm)) return null;
+  if (!(await telefonDogrulandiMi(norm))) return null;
+  return norm;
+}
+
+export function musteriTelCookieTemizle(response: {
+  cookies: { delete: (name: string) => void };
+}): void {
+  response.cookies.delete(MUSTERI_TEL_COOKIE);
 }
 
 export function musteriTelCookieDegeri(telefon: string): string {
