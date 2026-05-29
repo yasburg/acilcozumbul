@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
-import { getTalepler } from "@/lib/db";
+import { getSmsLog, getTalepler } from "@/lib/db";
+import { cekiciPuanOzeti } from "@/lib/cekici-puan";
+import { SMS_BILDIRIM_KREDI } from "@/lib/ihale";
 import { ensureSeedData } from "@/lib/seed";
 
 function haftaBaslangici(): Date {
@@ -19,43 +21,33 @@ export async function GET() {
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
   }
 
-  const talepler = await getTalepler();
   const haftaBas = haftaBaslangici();
+  const puan = await cekiciPuanOzeti(cekici.id);
 
-  let teklifVerdigim = 0;
-  let buHaftaHarcanan = 0;
+  const smsLog = await getSmsLog();
+  const buHaftaHarcanan =
+    smsLog.filter(
+      (k) =>
+        k.cekiciId === cekici.id &&
+        k.aliciTipi === "cekici" &&
+        k.gonderildi &&
+        new Date(k.gonderim) >= haftaBas
+    ).length * SMS_BILDIRIM_KREDI;
 
-  for (const talep of talepler) {
-    for (const teklif of talep.teklifler ?? []) {
-      if (teklif.cekiciId !== cekici.id) continue;
-      teklifVerdigim += 1;
-      if (new Date(teklif.tarih) >= haftaBas) {
-        buHaftaHarcanan += 1;
-      }
-    }
-  }
-
-  const beniTercihEdenler = talepler.filter(
-    (t) => t.durum === "anlaşıldı" && t.kazananCekiciId === cekici.id
-  ).length;
-
-  const kazandigim = talepler.filter((t) =>
-    t.teklifler?.some((te) => te.cekiciId === cekici.id && te.durum === "kazandi")
-  ).length;
-
+  const talepler = await getTalepler();
   const tercihEdilmedim = talepler.filter((t) =>
     (t.haricTutulanCekiciIds ?? []).includes(cekici.id)
   ).length;
 
-  const tercihOrani =
-    kazandigim > 0 ? Math.round((beniTercihEdenler / kazandigim) * 100) : 0;
-
   return NextResponse.json({
-    teklifVerdigim,
-    satinAldiklarim: kazandigim,
-    beniTercihEdenler,
+    teklifVerdigim: puan.toplamTeklif,
+    satinAldiklarim: puan.kazanilanTeklif,
+    beniTercihEdenler: puan.anlasilanIs,
     tercihEdilmedim,
-    tercihOrani,
+    tercihOrani: puan.tercihYuzde ?? 0,
+    tercihPuani: puan.tercihPuani,
+    fiyatGarantiPuani: puan.fiyatGarantiPuani,
+    fiyatGarantiYuzde: puan.fiyatGarantiYuzde,
     buHaftaHarcanan,
     mevcutKredi: cekici.kredi,
   });

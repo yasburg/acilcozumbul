@@ -1,7 +1,8 @@
-import { getCekiciById, updateCekici, updateTalep } from "./db";
+import { updateTalep } from "./db";
 import type { Talep, Teklif } from "./types";
 
-export const TEKLIF_KREDI = 1;
+/** Çekiciye talep bildirimi SMS'i başına düşen kredi */
+export const SMS_BILDIRIM_KREDI = 1;
 export const IHALE_SURE_DK = 30;
 
 export function ihaleAcikMi(talep: Talep): boolean {
@@ -27,18 +28,13 @@ export function cekiciTeklifVerebilirMi(talep: Talep, cekiciId: string): boolean
   return true;
 }
 
-export async function iadeKredi(cekiciId: string, miktar = TEKLIF_KREDI): Promise<void> {
-  const cekici = await getCekiciById(cekiciId);
-  if (!cekici) return;
-  cekici.kredi += miktar;
-  await updateCekici(cekici);
-}
-
-export async function kaybedenTekliflereIade(talep: Talep, kazananTeklifId: string): Promise<void> {
+export async function kaybedenTeklifleriIsaretle(
+  talep: Talep,
+  kazananTeklifId: string
+): Promise<void> {
   for (const teklif of talep.teklifler) {
     if (teklif.id !== kazananTeklifId && teklif.durum === "aktif") {
       teklif.durum = "kaybetti";
-      await iadeKredi(teklif.cekiciId);
     }
   }
   await updateTalep(talep);

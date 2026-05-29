@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCekiciById, getTalepById, updateTalep } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
-import { kaybedenTekliflereIade } from "@/lib/ihale";
+import { teklifFiyatDegistiMi } from "@/lib/cekici-puan";
+import { kaybedenTeklifleriIsaretle } from "@/lib/ihale";
 import { notifyMusteri } from "@/lib/sms";
 
 export async function POST(
@@ -30,13 +31,26 @@ export async function POST(
     return NextResponse.json({ error: "Geçersiz teklif." }, { status: 400 });
   }
 
+  if (teklifFiyatDegistiMi(teklif)) {
+    const ilk = teklif.ilkFiyat ?? teklif.fiyat;
+    return NextResponse.json(
+      {
+        error: `Bu çekici teklif fiyatını değiştirdi (${ilk} TL → ${teklif.fiyat} TL). Güvenlik nedeniyle bu teklifle seçim yapılamaz.`,
+        fiyatDegisti: true,
+        ilkFiyat: ilk,
+        guncelFiyat: teklif.fiyat,
+      },
+      { status: 403 }
+    );
+  }
+
   teklif.durum = "kazandi";
   talep.kazananCekiciId = teklif.cekiciId;
   talep.kazananTeklifId = teklif.id;
   talep.durum = "kazanan_belli";
   talep.anlasmaDurumu = "bekliyor";
 
-  await kaybedenTekliflereIade(talep, teklif.id);
+  await kaybedenTeklifleriIsaretle(talep, teklif.id);
 
   const cekici = await getCekiciById(teklif.cekiciId);
   const baseUrl =

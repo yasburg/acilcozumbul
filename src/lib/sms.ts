@@ -1,5 +1,6 @@
 import { getCekiciler } from "./db";
 import { filtreleCekicilerBolge } from "./cekici-bolge";
+import { SMS_BILDIRIM_KREDI } from "./ihale";
 import { sendSms } from "./sms-provider";
 import type { Cekici, Talep } from "./types";
 
@@ -13,7 +14,7 @@ export async function notifyCekiciler(
   const haric = new Set(haricTutulan);
 
   const bolgeyeUygun = filtreleCekicilerBolge(tumCekiciler, talep).filter(
-    (c) => c.aktif && !haric.has(c.id)
+    (c) => c.aktif && !haric.has(c.id) && c.kredi >= SMS_BILDIRIM_KREDI
   );
 
   const bildirilenIds: string[] = [];
@@ -29,17 +30,19 @@ export async function notifyCekiciler(
         ? ` [${talep.konumIlce}]`
         : "";
       const mesaj = yeniden
-        ? `${talep.ad} ${talep.soyad.charAt(0)}. müşteri yeni çekici arıyor${bolge} (${talep.konum.adres}${hedef}). Teklif: ${link}`
-        : `${talep.ad} ${talep.soyad.charAt(0)}. yolda kaldı${bolge} (${talep.konum.adres}${hedef}). Teklif ver (1 kredi): ${link}`;
+        ? `${talep.ad} ${talep.soyad.charAt(0)}. müşteri yeni çekici arıyor${bolge} (${talep.konum.adres}${hedef}). Ücretsiz teklif: ${link}`
+        : `${talep.ad} ${talep.soyad.charAt(0)}. yolda kaldı${bolge} (${talep.konum.adres}${hedef}). Ücretsiz teklif ver: ${link}`;
 
-      await sendSms(cekici.telefon, mesaj, {
+      const sonuc = await sendSms(cekici.telefon, mesaj, {
         aliciTipi: "cekici",
         cekiciId: cekici.id,
         talepId: talep.id,
         link,
       });
 
-      bildirilenIds.push(cekici.id);
+      if (sonuc.basarili) {
+        bildirilenIds.push(cekici.id);
+      }
     })
   );
 

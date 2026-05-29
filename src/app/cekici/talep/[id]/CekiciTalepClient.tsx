@@ -17,9 +17,17 @@ interface TalepDurum {
   tercihEdilmedi?: boolean;
   mesaj?: string;
   onizleme?: { bolge: string; sorunOzet: string; hedefBolge?: string };
-  krediMaliyet?: number;
+  teklifUcretsiz?: boolean;
   kredi?: number;
-  benimTeklif?: { fiyat: number; tahminiSureDk: number; mesaj?: string };
+  benimTeklif?: {
+    fiyat: number;
+    ilkFiyat?: number;
+    fiyatDegisti?: boolean;
+    tahminiSureDk: number;
+    mesaj?: string;
+  };
+  fiyatDegisti?: boolean;
+  fiyatDegistiUyari?: string;
   teklifSayisi?: number;
   ihaleBitis?: string;
   ad?: string;
@@ -47,6 +55,8 @@ export default function CekiciTalepClient() {
   const [fiyat, setFiyat] = useState("");
   const [sure, setSure] = useState("30");
   const [mesaj, setMesaj] = useState("");
+  const [fiyatGuncelle, setFiyatGuncelle] = useState(false);
+  const [yeniFiyat, setYeniFiyat] = useState("");
 
   const yukle = useCallback(async () => {
     setError("");
@@ -94,6 +104,32 @@ export default function CekiciTalepClient() {
     return () => clearInterval(interval);
   }, [yukle]);
 
+  async function fiyatGuncelleGonder() {
+    const fiyatNum = Number(yeniFiyat);
+    if (!fiyatNum || fiyatNum < 100) {
+      setError("Geçerli bir fiyat girin (min. 100 TL).");
+      return;
+    }
+    setIslem(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/cekici/talep/${id}/teklif`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fiyat: fiyatNum }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      if (data.uyari) setError(data.uyari);
+      setFiyatGuncelle(false);
+      await yukle();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Fiyat güncellenemedi.");
+    } finally {
+      setIslem(false);
+    }
+  }
+
   async function teklifVer() {
     const fiyatNum = Number(fiyat);
     if (!fiyatNum || fiyatNum < 100) {
@@ -123,8 +159,9 @@ export default function CekiciTalepClient() {
         }
         return;
       }
-      if (cekici) setCekici({ ...cekici, kredi: data.kredi ?? cekici.kredi - 1 });
+      if (cekici && data.kredi != null) setCekici({ ...cekici, kredi: data.kredi });
       setTeklifGonderildi(true);
+      setFiyatGuncelle(false);
       await yukle();
     } catch {
       setError("Teklif gönderilemedi.");
@@ -160,7 +197,7 @@ export default function CekiciTalepClient() {
         <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">
           <p className="text-sm font-semibold text-emerald-800">✅ Teklifiniz alındı!</p>
           <p className="text-xs text-emerald-700 mt-1">
-            Kazanamazsanız 1 krediniz iade edilir.
+            Teklif vermek ücretsiz — müşteri seçim yapana kadar bekleyin.
           </p>
         </div>
       )}
@@ -197,34 +234,81 @@ export default function CekiciTalepClient() {
                 {talep.kaybettim ? "Teklifiniz seçilmedi" : "İhale kapandı"}
               </p>
               <p className="text-sm text-slate-500 mt-2">
-                {talep.mesaj ??
-                  (talep.kaybettim
-                    ? "Krediniz iade edildi."
-                    : "Müşteri başka bir çekiciyi seçti.")}
+                {talep.mesaj ?? "Müşteri başka bir çekiciyi seçti."}
               </p>
             </Card>
           )}
 
           {talep.teklifVerdim && talep.benimTeklif && !talep.kazandim && (
-            <Card className="border-amber-200 bg-amber-50">
-              <p className="text-xs text-amber-700 uppercase tracking-wide mb-2">
-                Teklifiniz
-              </p>
-              <p className="text-2xl font-bold text-amber-600">
-                {talep.benimTeklif.fiyat} TL
-              </p>
-              <p className="text-sm text-slate-600 mt-1">
-                Tahmini ~{talep.benimTeklif.tahminiSureDk} dk
-              </p>
-              <p className="text-xs text-slate-500 mt-3">
-                Müşteri seçim yapana kadar bekleyin. Seçilmezseniz krediniz iade edilir.
-              </p>
-              {talep.teklifSayisi != null && (
-                <p className="text-xs text-amber-700 mt-2">
-                  Toplam {talep.teklifSayisi} aktif teklif
-                </p>
+            <>
+              {talep.fiyatDegisti && (
+                <Card className="border-red-200 bg-red-50">
+                  <p className="text-sm font-semibold text-red-800">
+                    ⚠️ Fiyat değişikliği uyarısı
+                  </p>
+                  <p className="text-xs text-red-700 mt-2 leading-relaxed">
+                    {talep.fiyatDegistiUyari ??
+                      "Teklif fiyatını değiştirdiniz. Müşteri bu teklifle sizi seçemez."}
+                  </p>
+                </Card>
               )}
-            </Card>
+              <Card className="border-amber-200 bg-amber-50">
+                <p className="text-xs text-amber-700 uppercase tracking-wide mb-2">
+                  Teklifiniz
+                </p>
+                <p className="text-2xl font-bold text-amber-600">
+                  {talep.benimTeklif.fiyat} TL
+                </p>
+                {talep.benimTeklif.ilkFiyat != null &&
+                  talep.benimTeklif.ilkFiyat !== talep.benimTeklif.fiyat && (
+                    <p className="text-xs text-red-600 mt-1">
+                      İlk fiyat: {talep.benimTeklif.ilkFiyat} TL
+                    </p>
+                  )}
+                <p className="text-sm text-slate-600 mt-1">
+                  Tahmini ~{talep.benimTeklif.tahminiSureDk} dk
+                </p>
+                <p className="text-xs text-slate-500 mt-3">
+                  Müşteri seçim yapana kadar bekleyin.
+                </p>
+                {talep.teklifSayisi != null && (
+                  <p className="text-xs text-amber-700 mt-2">
+                    Toplam {talep.teklifSayisi} aktif teklif
+                  </p>
+                )}
+                {!fiyatGuncelle ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setYeniFiyat(String(talep.benimTeklif!.fiyat));
+                      setFiyatGuncelle(true);
+                    }}
+                    className="text-xs text-amber-800 underline mt-3"
+                  >
+                    Fiyatı güncelle (müşteri seçemez)
+                  </button>
+                ) : (
+                  <div className="mt-3 space-y-2 border-t border-amber-200 pt-3">
+                    <Field
+                      label="Yeni fiyat (TL)"
+                      type="number"
+                      value={yeniFiyat}
+                      onChange={(e) => setYeniFiyat(e.target.value)}
+                    />
+                    <Btn onClick={fiyatGuncelleGonder} disabled={islem} className="!py-2 text-sm">
+                      Fiyatı kaydet
+                    </Btn>
+                    <button
+                      type="button"
+                      onClick={() => setFiyatGuncelle(false)}
+                      className="text-xs text-slate-500 w-full text-center"
+                    >
+                      İptal
+                    </button>
+                  </div>
+                )}
+              </Card>
+            </>
           )}
 
           {teklifVerebilir && (
@@ -243,10 +327,8 @@ export default function CekiciTalepClient() {
                 )}
                 <p className="text-sm text-slate-600">{talep.onizleme!.sorunOzet}</p>
               </Card>
-              <p className="text-sm text-slate-500 text-center">
-                Teklif vermek için{" "}
-                <strong className="text-amber-600">1 kredi</strong> harcanır.
-                Kazanamazsanız iade edilir.
+              <p className="text-sm text-emerald-700 text-center font-medium">
+                Teklif vermek ücretsizdir.
               </p>
               <Field
                 label="Fiyat (TL)"
@@ -267,15 +349,9 @@ export default function CekiciTalepClient() {
                 value={mesaj}
                 onChange={(e) => setMesaj(e.target.value)}
               />
-              {(cekici?.kredi ?? 0) < 1 ? (
-                <Link href="/cekici/kredi">
-                  <Btn variant="primary">Kredi Satın Al</Btn>
-                </Link>
-              ) : (
-                <Btn onClick={teklifVer} disabled={islem}>
-                  {islem ? "Gönderiliyor…" : "Teklif Ver (1 Kredi)"}
-                </Btn>
-              )}
+              <Btn onClick={teklifVer} disabled={islem}>
+                {islem ? "Gönderiliyor…" : "Teklif Ver (Ücretsiz)"}
+              </Btn>
             </>
           )}
 

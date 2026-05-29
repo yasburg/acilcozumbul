@@ -28,6 +28,10 @@ export interface Teklif {
   cekiciId: string;
   cekiciAd: string;
   fiyat: number;
+  /** İlk verilen fiyat — değişiklik takibi */
+  ilkFiyat?: number;
+  fiyatDegisti?: boolean;
+  fiyatGuncellemeTarihi?: string;
   tahminiSureDk: number;
   mesaj?: string;
   tarih: string;

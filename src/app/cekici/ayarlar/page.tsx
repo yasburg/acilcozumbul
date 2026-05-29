@@ -13,6 +13,9 @@ interface Istatistik {
   beniTercihEdenler: number;
   tercihEdilmedim: number;
   tercihOrani: number;
+  tercihPuani: number | null;
+  fiyatGarantiPuani: number;
+  fiyatGarantiYuzde: number;
   buHaftaHarcanan: number;
   mevcutKredi: number;
 }
@@ -32,13 +35,14 @@ function StatKutu({
   baslik: string;
   deger: string | number;
   alt?: string;
-  vurgu?: "amber" | "emerald" | "red" | "slate";
+  vurgu?: "amber" | "emerald" | "red" | "slate" | "blue";
 }) {
   const renk = {
     amber: "text-amber-600",
     emerald: "text-emerald-600",
     red: "text-red-600",
     slate: "text-slate-900",
+    blue: "text-blue-600",
   }[vurgu];
 
   return (
@@ -168,10 +172,24 @@ export default function AyarlarPage() {
                     vurgu="amber"
                   />
                   <StatKutu
-                    baslik="Beni tercih edenler"
-                    deger={`%${stats.tercihOrani}`}
-                    alt={`${stats.beniTercihEdenler} anlaşma`}
+                    baslik="Tercih puanı"
+                    deger={
+                      stats.tercihPuani != null
+                        ? `${stats.tercihPuani} / 5`
+                        : "—"
+                    }
+                    alt={
+                      stats.tercihPuani != null
+                        ? `%${stats.tercihOrani} müşteri tercihi`
+                        : "yeni çekici"
+                    }
                     vurgu="emerald"
+                  />
+                  <StatKutu
+                    baslik="Fiyat garantisi"
+                    deger={`${stats.fiyatGarantiPuani} / 5`}
+                    alt={`%${stats.fiyatGarantiYuzde} sabit fiyat`}
+                    vurgu="blue"
                   />
                   <StatKutu
                     baslik="Tercih edilmedim"
@@ -179,9 +197,9 @@ export default function AyarlarPage() {
                     vurgu="red"
                   />
                   <StatKutu
-                    baslik="Bu hafta harcanan"
+                    baslik="Bu hafta SMS"
                     deger={formatKredi(stats.buHaftaHarcanan)}
-                    alt="kredi"
+                    alt="kredi harcandı"
                     vurgu="slate"
                   />
                 </div>

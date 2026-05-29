@@ -77,7 +77,9 @@ export default function KrediPage() {
           </div>
         </label>
 
-        <p className="text-xs text-slate-500">1 kredi = 50 ₺</p>
+        <p className="text-xs text-slate-500">
+          1 kredi = 1 talep SMS bildirimi · 50 ₺ · Teklif vermek ücretsiz
+        </p>
 
         <Card className="bg-slate-50">
           <p className="text-sm text-slate-600">

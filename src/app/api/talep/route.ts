@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { addTalep } from "@/lib/db";
+import { getDogrulanmisTelefon } from "@/lib/musteri-auth";
 import { ensureSeedData } from "@/lib/seed";
 import { notifyCekiciler, notifyMusteri } from "@/lib/sms";
 import { IHALE_SURE_DK } from "@/lib/ihale";
 import { parseIlIlce } from "@/lib/konum-parse";
 import { sorunMetniOlustur, sorunTipiBul } from "@/lib/sorun-tipleri";
+import { telefonNormalize } from "@/lib/telefon";
 import type { Talep } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
@@ -33,6 +35,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Tüm alanları doldurun." },
       { status: 400 }
+    );
+  }
+
+  const dogrulanmisTel = await getDogrulanmisTelefon();
+  if (!dogrulanmisTel || dogrulanmisTel !== telefonNormalize(telefon)) {
+    return NextResponse.json(
+      { error: "Telefon doğrulaması gerekli. Lütfen SMS kodunu onaylayın." },
+      { status: 403 }
     );
   }
 

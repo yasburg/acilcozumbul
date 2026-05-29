@@ -40,12 +40,16 @@ const SEED_CEKICILER: Cekici[] = [
   },
 ];
 
+/** Mevcut kayıtları şema güncellemesi; boş DB'ye otomatik demo çekici eklemez. */
 export async function ensureSeedData(): Promise<void> {
   const existing = await getCekiciler();
-  if (existing.length === 0) {
+
+  if (existing.length === 0 && process.env.DEMO_SEED === "true") {
     await saveCekiciler(SEED_CEKICILER);
     return;
   }
+
+  if (existing.length === 0) return;
 
   let guncellendi = false;
   const migrated = existing.map((c) => {

@@ -102,7 +102,8 @@ export default function CekiciKayitPage() {
         />
 
         <p className="text-xs text-slate-500">
-          Kayıt sonrası 1 ücretsiz kredi hediye edilir.
+          Kayıt ücretsizdir. Kredi yükleyerek bölgenizdeki talep SMS bildirimlerini
+          alırsınız (1 kredi = 1 bildirim). Teklif vermek ücretsizdir.
         </p>
 
         <Btn type="submit" disabled={loading}>

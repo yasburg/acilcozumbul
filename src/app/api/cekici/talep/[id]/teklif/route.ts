@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { getCurrentCekici } from "@/lib/auth";
-import { getTalepById, updateCekici, updateTalep } from "@/lib/db";
+import { getTalepById, updateTalep } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
-import {
-  TEKLIF_KREDI,
-  cekiciHaricMi,
-  cekiciTeklifVerebilirMi,
-} from "@/lib/ihale";
+import { cekiciHaricMi, cekiciTeklifVerebilirMi } from "@/lib/ihale";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Teklif } from "@/lib/types";
 
@@ -63,13 +59,6 @@ export async function POST(
     );
   }
 
-  if (cekici.kredi < TEKLIF_KREDI) {
-    return NextResponse.json(
-      { error: "Yetersiz kredi. Teklif için 1 kredi gerekir.", kredi: cekici.kredi },
-      { status: 402 }
-    );
-  }
-
   talep = (await getTalepById(id))!;
   if (!cekiciTeklifVerebilirMi(talep, cekici.id)) {
     return NextResponse.json(
@@ -78,13 +67,13 @@ export async function POST(
     );
   }
 
-  cekici.kredi -= TEKLIF_KREDI;
-
   const teklif: Teklif = {
     id: randomUUID(),
     cekiciId: cekici.id,
     cekiciAd: cekici.ad,
     fiyat,
+    ilkFiyat: fiyat,
+    fiyatDegisti: false,
     tahminiSureDk,
     mesaj,
     tarih: new Date().toISOString(),
@@ -93,16 +82,70 @@ export async function POST(
 
   talep.teklifler = [...(talep.teklifler ?? []), teklif];
 
-  await updateCekici(cekici);
   await updateTalep(talep);
 
   return NextResponse.json({
     teklifId: teklif.id,
     kredi: cekici.kredi,
-    mesaj: "Teklifiniz alındı. Kazanamazsanız krediniz iade edilir.",
+    mesaj: "Teklifiniz alındı. Ücretsiz — müşteri seçim yapana kadar bekleyin.",
     onizleme: {
       bolge: talepBolge(talep),
       sorunOzet: talepSorunOzet(talep.sorun),
     },
+  });
+}
+
+/** Aktif teklif fiyatını güncelle — müşteri bu teklifle anlaşamaz */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  await ensureSeedData();
+  const cekici = await getCurrentCekici();
+  if (!cekici) {
+    return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const { fiyat: yeniFiyat } = await request.json();
+  const fiyat = Number(yeniFiyat);
+
+  if (!fiyat || fiyat < 100) {
+    return NextResponse.json(
+      { error: "Geçerli bir fiyat girin (min. 100 TL)." },
+      { status: 400 }
+    );
+  }
+
+  const talep = await getTalepById(id);
+  if (!talep) {
+    return NextResponse.json({ error: "Talep bulunamadı." }, { status: 404 });
+  }
+
+  const teklif = talep.teklifler?.find(
+    (t) => t.cekiciId === cekici.id && t.durum === "aktif"
+  );
+  if (!teklif) {
+    return NextResponse.json({ error: "Aktif teklifiniz yok." }, { status: 404 });
+  }
+
+  const ilkFiyat = teklif.ilkFiyat ?? teklif.fiyat;
+  if (fiyat !== ilkFiyat) {
+    teklif.fiyatDegisti = true;
+    teklif.fiyatGuncellemeTarihi = new Date().toISOString();
+  }
+  teklif.fiyat = fiyat;
+  if (teklif.ilkFiyat == null) teklif.ilkFiyat = ilkFiyat;
+
+  await updateTalep(talep);
+
+  return NextResponse.json({
+    fiyat: teklif.fiyat,
+    ilkFiyat: teklif.ilkFiyat,
+    fiyatDegisti: teklif.fiyatDegisti === true,
+    uyari:
+      teklif.fiyatDegisti
+        ? "Fiyatı değiştirdiniz. Müşteri bu teklifle sizi seçemez; yalnızca ilk fiyatınız geçerlidir."
+        : undefined,
   });
 }

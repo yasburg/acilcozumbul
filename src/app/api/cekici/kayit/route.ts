@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     telefon: telefon.trim(),
     token,
     sifre: sifre.trim(),
-    kredi: 1,
+    kredi: 0,
     sehir,
     hizmetIlceleri: [],
     aktif: true,

@@ -1,4 +1,5 @@
-import { addSmsKaydi } from "./db";
+import { addSmsKaydi, getCekiciById, updateCekici } from "./db";
+import { SMS_BILDIRIM_KREDI } from "./ihale";
 import { randomUUID } from "crypto";
 
 export type SmsAliciTipi = "cekici" | "musteri";
@@ -134,6 +135,30 @@ export async function sendSms(
 ): Promise<SmsGonderimSonuc> {
   let sonuc: SmsGonderimSonuc;
 
+  if (meta.aliciTipi === "cekici" && meta.cekiciId) {
+    const cekici = await getCekiciById(meta.cekiciId);
+    if (!cekici) {
+      sonuc = {
+        basarili: false,
+        saglayici: "demo",
+        hata: "Çekici bulunamadı",
+      };
+      await logSmsKaydi(telefon, mesaj, meta, sonuc);
+      return sonuc;
+    }
+    if (cekici.kredi < SMS_BILDIRIM_KREDI) {
+      sonuc = {
+        basarili: false,
+        saglayici: "demo",
+        hata: "Yetersiz kredi (SMS bildirimi için 1 kredi gerekir)",
+      };
+      await logSmsKaydi(telefon, mesaj, meta, sonuc);
+      return sonuc;
+    }
+    cekici.kredi -= SMS_BILDIRIM_KREDI;
+    await updateCekici(cekici);
+  }
+
   if (netgsmYapilandirildi()) {
     sonuc = await netgsmXmlGonder(telefon, mesaj);
   } else {
@@ -144,11 +169,38 @@ export async function sendSms(
     };
   }
 
+  if (
+    !sonuc.basarili &&
+    meta.aliciTipi === "cekici" &&
+    meta.cekiciId
+  ) {
+    const cekici = await getCekiciById(meta.cekiciId);
+    if (cekici) {
+      cekici.kredi += SMS_BILDIRIM_KREDI;
+      await updateCekici(cekici);
+    }
+  }
+
   if (!sonuc.basarili) {
     console.log(`[SMS DEMO - gönderilmedi] → ${telefon}: ${mesaj}`);
     if (sonuc.hata) console.log(`  Sebep: ${sonuc.hata}`);
   }
 
+  await logSmsKaydi(telefon, mesaj, meta, sonuc);
+  return sonuc;
+}
+
+async function logSmsKaydi(
+  telefon: string,
+  mesaj: string,
+  meta: {
+    aliciTipi: SmsAliciTipi;
+    cekiciId?: string;
+    talepId?: string;
+    link?: string;
+  },
+  sonuc: SmsGonderimSonuc
+): Promise<void> {
   await addSmsKaydi({
     id: randomUUID(),
     cekiciId: meta.cekiciId ?? "musteri",
@@ -161,8 +213,6 @@ export async function sendSms(
     gonderildi: sonuc.basarili,
     saglayici: sonuc.saglayici,
   });
-
-  return sonuc;
 }
 
 export function smsDurumu(): {

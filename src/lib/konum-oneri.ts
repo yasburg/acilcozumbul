@@ -6,18 +6,25 @@ export interface KonumOneri {
   mesafeKm?: number;
 }
 
-/** Araç çekilecek yer önerileri (oto sanayi, servis yakını) */
+const SORUN_ARAMALARI: Record<string, string[]> = {
+  ariza: ["oto sanayi", "oto servis", "yetkili servis"],
+  lastik: ["lastikçi", "oto lastik", "mobil lastik"],
+  aku: ["akü servisi", "oto elektrik", "oto sanayi"],
+  yakit: ["benzin istasyonu", "oto sanayi"],
+  kaza: ["oto sanayi", "oto kurtarma", "ekspertiz"],
+  kilit: ["oto anahtar", "anahtarcı", "oto sanayi"],
+  cekici: ["oto sanayi", "oto kurtarma", "çekici park"],
+  diger: ["oto sanayi", "oto servis", "oto kurtarma"],
+};
+
+/** Sorun tipine göre araç çekilecek yer önerileri */
 export async function hedefKonumOnerileri(
   lat: number,
-  lng: number
+  lng: number,
+  sorunTipi = "diger"
 ): Promise<KonumOneri[]> {
   const oneriler: KonumOneri[] = [];
-
-  const aramalar = [
-    "oto sanayi",
-    "oto kurtarma",
-    "lastikçi",
-  ];
+  const aramalar = SORUN_ARAMALARI[sorunTipi] ?? SORUN_ARAMALARI.diger;
 
   for (const q of aramalar) {
     try {

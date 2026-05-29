@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
+import { PuanGostergesi } from "@/components/PuanGostergesi";
 
 type Durum =
   | "ihale_bekliyor"
@@ -17,8 +18,15 @@ interface TeklifOzet {
   id: string;
   cekiciAd: string;
   fiyat: number;
+  ilkFiyat: number;
+  fiyatDegisti: boolean;
+  secilebilir: boolean;
   tahminiSureDk: number;
   mesaj?: string;
+  tercihPuani: number | null;
+  tercihYuzde: number | null;
+  fiyatGarantiPuani: number;
+  fiyatGarantiYuzde: number;
 }
 
 export default function BeklePage() {
@@ -97,7 +105,12 @@ export default function BeklePage() {
         body: JSON.stringify({ teklifId }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        if (data.fiyatDegisti) {
+          setMesaj(data.error);
+        }
+        throw new Error(data.error);
+      }
       setCekiciAd(data.cekiciAd);
       setKazananFiyat(data.fiyat);
       setDurum("anlasma_bekliyor");
@@ -202,31 +215,68 @@ export default function BeklePage() {
             </Card>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {teklifler
               .sort((a, b) => a.fiyat - b.fiyat)
               .map((t) => (
-                <Card key={t.id} className="border-slate-200">
-                  <div className="flex justify-between items-start gap-3">
+                <Card
+                  key={t.id}
+                  className={`border-slate-200 overflow-hidden ${
+                    t.fiyatDegisti ? "border-red-200 bg-red-50/30" : ""
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <PuanGostergesi
+                        label="Tercih puanı"
+                        puan={t.tercihPuani}
+                        yuzde={t.tercihYuzde}
+                        yuzdeEtiket="müşteri tercihi"
+                        variant="amber"
+                      />
+                      <PuanGostergesi
+                        label="Fiyat garantisi"
+                        puan={t.fiyatGarantiPuani}
+                        yuzde={t.fiyatGarantiYuzde}
+                        yuzdeEtiket="sabit fiyat"
+                        variant="emerald"
+                      />
+                    </div>
+
                     <div>
                       <p className="font-semibold text-slate-900">{t.cekiciAd}</p>
                       <p className="text-2xl font-bold text-amber-600 mt-1">
                         {t.fiyat} TL
                       </p>
+                      {t.fiyatDegisti && t.ilkFiyat !== t.fiyat && (
+                        <p className="text-xs text-red-600 mt-1 font-medium">
+                          ⚠️ İlk teklif {t.ilkFiyat} TL idi — fiyat değiştirildi
+                        </p>
+                      )}
                       <p className="text-xs text-slate-500 mt-1">
                         Tahmini ~{t.tahminiSureDk} dk
                       </p>
-                      {t.mesaj && (
-                        <p className="text-sm text-slate-600 mt-2">{t.mesaj}</p>
+                      {t.mesaj?.trim() && (
+                        <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+                          {t.mesaj}
+                        </p>
                       )}
                     </div>
-                    <Btn
-                      onClick={() => teklifSec(t.id)}
-                      disabled={islem}
-                      className="shrink-0 !px-4 !py-2 text-sm"
-                    >
-                      Seç
-                    </Btn>
+
+                    {t.fiyatDegisti ? (
+                      <div className="rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-800 leading-relaxed">
+                        Bu çekici teklif fiyatını sonradan değiştirdi. Güvenlik
+                        nedeniyle bu teklifle anlaşamazsınız.
+                      </div>
+                    ) : (
+                      <Btn
+                        onClick={() => teklifSec(t.id)}
+                        disabled={islem || !t.secilebilir}
+                        className="!py-3 text-sm"
+                      >
+                        Bu teklifi seç
+                      </Btn>
+                    )}
                   </div>
                 </Card>
               ))}
