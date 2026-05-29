@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
+import { cekiciFetch } from "@/lib/cekici-fetch";
 
 const SEHIRLER = ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana"];
 
@@ -31,7 +32,7 @@ export default function CekiciKayitPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/cekici/kayit", {
+      const res = await cekiciFetch("/api/cekici/kayit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -43,6 +44,7 @@ export default function CekiciKayitPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      router.refresh();
       router.push("/cekici/panel?mesaj=kayit-basarili");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Kayıt başarısız.");

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
 import { formatKredi } from "@/lib/talep-utils";
+import { cekiciFetch } from "@/lib/cekici-fetch";
 
 export default function KrediPage() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function KrediPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/cekici/me")
+    cekiciFetch("/api/cekici/me")
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => setKredi(d.kredi))
       .catch(() => router.push("/cekici/giris"));
@@ -24,7 +25,7 @@ export default function KrediPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/cekici/odeme/baslat", {
+      const res = await cekiciFetch("/api/cekici/odeme/baslat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ miktar }),

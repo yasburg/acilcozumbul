@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
+import { cekiciFetch } from "@/lib/cekici-fetch";
 
 export default function OdemePage() {
   const params = useParams();
@@ -19,7 +20,7 @@ export default function OdemePage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/cekici/me").then((r) => {
+    cekiciFetch("/api/cekici/me").then((r) => {
       if (!r.ok) router.push("/cekici/giris");
     });
     const stored = sessionStorage.getItem(`odeme-${odemeId}`);
@@ -40,7 +41,7 @@ export default function OdemePage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/cekici/odeme/${odemeId}/tamamla`, {
+      const res = await cekiciFetch(`/api/cekici/odeme/${odemeId}/tamamla`, {
         method: "POST",
       });
       const data = await res.json();

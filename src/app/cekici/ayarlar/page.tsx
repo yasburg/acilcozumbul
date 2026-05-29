@@ -7,6 +7,7 @@ import { MobileShell } from "@/components/MobileShell";
 import { IlceSecimi } from "@/components/IlceSecimi";
 import { Btn, Card } from "@/components/ui";
 import { formatKredi } from "@/lib/talep-utils";
+import { cekiciFetch } from "@/lib/cekici-fetch";
 
 interface Istatistik {
   satinAldiklarim: number;
@@ -66,8 +67,8 @@ export default function AyarlarPage() {
 
   const yukle = useCallback(async () => {
     const [statRes, bolgeRes] = await Promise.all([
-      fetch("/api/cekici/istatistik"),
-      fetch("/api/cekici/bolgeler"),
+      cekiciFetch("/api/cekici/istatistik"),
+      cekiciFetch("/api/cekici/bolgeler"),
     ]);
     if (!statRes.ok || !bolgeRes.ok) {
       router.push("/cekici/giris");
@@ -96,7 +97,7 @@ export default function AyarlarPage() {
     setHata("");
     setMesaj("");
     try {
-      const res = await fetch("/api/cekici/bolgeler", {
+      const res = await cekiciFetch("/api/cekici/bolgeler", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ilceler: secili }),

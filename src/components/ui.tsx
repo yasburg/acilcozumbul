@@ -3,12 +3,13 @@ import { ButtonHTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes } fro
 export function Btn({
   className = "",
   variant = "primary",
+  type = "button",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "success" | "outline" | "danger";
 }) {
   const base =
-    "w-full rounded-2xl py-4 px-6 font-semibold text-base transition active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100";
+    "w-full min-h-[52px] rounded-2xl py-4 px-6 font-semibold text-base transition touch-manipulation cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed";
   const variants = {
     primary: "bg-amber-500 text-white shadow-md shadow-amber-500/25 hover:bg-amber-600",
     secondary: "bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200",
@@ -17,7 +18,11 @@ export function Btn({
     danger: "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100",
   };
   return (
-    <button className={`${base} ${variants[variant]} ${className}`} {...props} />
+    <button
+      type={type}
+      className={`${base} ${variants[variant]} ${className}`}
+      {...props}
+    />
   );
 }
 

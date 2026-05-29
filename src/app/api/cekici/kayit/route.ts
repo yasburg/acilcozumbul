@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { addCekici, getCekiciByTelefon } from "@/lib/db";
 import { CEKICI_COOKIE } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
+import { telefonGecerliMi, telefonNormalize } from "@/lib/telefon";
 import type { Cekici } from "@/lib/types";
 
 const SEHIRLER = ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana"];
@@ -19,6 +20,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (!telefonGecerliMi(telefon)) {
+    return NextResponse.json(
+      { error: "Geçerli bir cep telefonu girin (05XX XXX XX XX)." },
+      { status: 400 }
+    );
+  }
+
+  const tel = telefonNormalize(telefon);
+
   if (sifre.length < 6) {
     return NextResponse.json(
       { error: "Şifre en az 6 karakter olmalı." },
@@ -30,7 +40,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Geçerli bir şehir seçin." }, { status: 400 });
   }
 
-  const mevcut = await getCekiciByTelefon(telefon);
+  const mevcut = await getCekiciByTelefon(tel);
   if (mevcut) {
     return NextResponse.json(
       { error: "Bu telefon numarası zaten kayıtlı." },
@@ -42,7 +52,7 @@ export async function POST(request: NextRequest) {
   const cekici: Cekici = {
     id: randomUUID(),
     ad: ad.trim(),
-    telefon: telefon.trim(),
+    telefon: tel,
     token,
     sifre: sifre.trim(),
     kredi: 0,

@@ -5,6 +5,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card, Field } from "@/components/ui";
+import { cekiciFetch } from "@/lib/cekici-fetch";
 
 interface TalepDurum {
   id: string;
@@ -62,16 +63,21 @@ export default function CekiciTalepClient() {
     setError("");
     try {
       if (token) {
-        await fetch("/api/cekici/auth", {
+        const authRes = await cekiciFetch("/api/cekici/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
         });
+        if (!authRes.ok) {
+          setError("SMS linki geçersiz veya süresi dolmuş.");
+          setLoading(false);
+          return;
+        }
       }
 
       const [meRes, talepRes] = await Promise.all([
-        fetch("/api/cekici/me"),
-        fetch(`/api/cekici/talep/${id}`),
+        cekiciFetch("/api/cekici/me"),
+        cekiciFetch(`/api/cekici/talep/${id}`),
       ]);
 
       if (!meRes.ok) {
@@ -113,7 +119,7 @@ export default function CekiciTalepClient() {
     setIslem(true);
     setError("");
     try {
-      const res = await fetch(`/api/cekici/talep/${id}/teklif`, {
+      const res = await cekiciFetch(`/api/cekici/talep/${id}/teklif`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fiyat: fiyatNum }),
@@ -140,7 +146,7 @@ export default function CekiciTalepClient() {
     setIslem(true);
     setError("");
     try {
-      const res = await fetch(`/api/cekici/talep/${id}/teklif`, {
+      const res = await cekiciFetch(`/api/cekici/talep/${id}/teklif`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

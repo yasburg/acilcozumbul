@@ -5,11 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
-
-const DEMO_HESAPLAR = [
-  { ad: "Ahmet Yılmaz", telefon: "05321112233", sifre: "123456" },
-  { ad: "Mehmet Demir", telefon: "05334445566", sifre: "123456" },
-];
+import { cekiciFetch } from "@/lib/cekici-fetch";
 
 export default function CekiciGirisPage() {
   const router = useRouter();
@@ -24,7 +20,7 @@ export default function CekiciGirisPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/cekici/giris", {
+      const res = await cekiciFetch("/api/cekici/giris", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -33,13 +29,23 @@ export default function CekiciGirisPage() {
           token: opts?.token ?? (smsMod ? token : undefined),
         }),
       });
+      const d = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error);
+        throw new Error(
+          typeof d.error === "string" ? d.error : "Giriş başarısız."
+        );
       }
+      router.refresh();
       router.push("/cekici/panel");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Giriş başarısız.");
+      const msg = e instanceof Error ? e.message : "Giriş başarısız.";
+      if (msg === "Failed to fetch" || msg.includes("NetworkError")) {
+        setError(
+          "Sunucuya ulaşılamadı. Telefonda https://10.55.33.167:3000 adresini kullanın (http değil)."
+        );
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -47,6 +53,18 @@ export default function CekiciGirisPage() {
 
   return (
     <MobileShell subtitle="Çekici girişi">
+      {typeof window !== "undefined" &&
+        window.location.protocol === "http:" &&
+        !window.location.hostname.includes("localhost") && (
+          <Card className="border-amber-200 bg-amber-50 mb-4">
+            <p className="text-amber-900 text-sm">
+              Bu sayfa <strong>http</strong> ile açılmış. Giriş için{" "}
+              <strong>https://10.55.33.167:3000</strong> kullanın (
+              <code className="text-xs">npm run dev:lan:https</code>).
+            </p>
+          </Card>
+        )}
+
       {error && (
         <Card className="border-red-200 bg-red-50 mb-4">
           <p className="text-red-700 text-sm">{error}</p>
@@ -99,21 +117,6 @@ export default function CekiciGirisPage() {
             </button>
           </>
         )}
-
-        <p className="text-xs text-slate-500 text-center">Demo hesaplar</p>
-        <div className="space-y-2">
-          {DEMO_HESAPLAR.map((d) => (
-            <button
-              key={d.telefon}
-              type="button"
-              onClick={() => giris({ telefon: d.telefon, sifre: d.sifre })}
-              disabled={loading}
-              className="w-full text-left rounded-xl bg-white border border-slate-200 px-4 py-3 hover:border-amber-300 text-sm"
-            >
-              {d.ad}
-            </button>
-          ))}
-        </div>
       </div>
 
       <p className="text-center text-sm text-slate-500 mt-6">

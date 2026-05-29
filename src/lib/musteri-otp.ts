@@ -45,6 +45,37 @@ export function otpSuresiDolduMu(kayit: OtpKayit): boolean {
   return Date.now() - new Date(kayit.olusturulma).getTime() > OTP_SURE_DK * 60 * 1000;
 }
 
+/** Gönderilmiş, süresi dolmamış ve doğrulanmamış OTP */
+export async function bekleyenOtpBilgisi(telefonHam: string): Promise<{
+  bekliyor: boolean;
+  yenidenGonderSn: number;
+  gelistirmeKodu?: string;
+  telefon?: string;
+}> {
+  if (!telefonGecerliMi(telefonHam)) {
+    return { bekliyor: false, yenidenGonderSn: 0 };
+  }
+
+  const telefon = telefonNormalize(telefonHam);
+  const liste = await otpOku();
+  const kayit = liste.find((k) => k.telefon === telefon && !k.dogrulandi);
+
+  if (!kayit || otpSuresiDolduMu(kayit)) {
+    return { bekliyor: false, yenidenGonderSn: 0 };
+  }
+
+  const gecenSn = Math.floor(
+    (Date.now() - new Date(kayit.sonGonderim).getTime()) / 1000
+  );
+  const yenidenGonderSn = Math.max(0, YENIDEN_GONDER_SN - gecenSn);
+  const gelistirmeKodu =
+    process.env.NODE_ENV !== "production" || process.env.OTP_DEV_FALLBACK === "true"
+      ? kayit.kod
+      : undefined;
+
+  return { bekliyor: true, yenidenGonderSn, gelistirmeKodu, telefon };
+}
+
 export async function otpGonder(
   telefonHam: string
 ): Promise<
@@ -93,7 +124,9 @@ export async function otpGonder(
   await otpYaz([...diger, yeni]);
 
   const gelistirmeKodu =
-    process.env.NODE_ENV !== "production" ? kod : undefined;
+    process.env.NODE_ENV !== "production" || process.env.OTP_DEV_FALLBACK === "true"
+      ? kod
+      : undefined;
 
   return {
     ok: true,

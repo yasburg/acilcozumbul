@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCekiciByTelefon, getCekiciByToken } from "@/lib/db";
 import { CEKICI_COOKIE } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
+import { telefonGecerliMi, telefonNormalize } from "@/lib/telefon";
 
 export async function POST(request: NextRequest) {
   await ensureSeedData();
@@ -13,8 +14,15 @@ export async function POST(request: NextRequest) {
   if (token) {
     cekici = await getCekiciByToken(token);
   } else if (telefon && sifre) {
-    cekici = await getCekiciByTelefon(telefon);
-    if (cekici && cekici.sifre !== sifre.trim()) {
+    if (!telefonGecerliMi(telefon)) {
+      return NextResponse.json(
+        { error: "Geçerli bir cep telefonu girin (05XX XXX XX XX)." },
+        { status: 400 }
+      );
+    }
+    const tel = telefonNormalize(telefon);
+    cekici = await getCekiciByTelefon(tel);
+    if (cekici && cekici.sifre !== String(sifre).trim()) {
       return NextResponse.json({ error: "Telefon veya şifre hatalı." }, { status: 401 });
     }
   } else {

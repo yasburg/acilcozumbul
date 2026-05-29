@@ -7,6 +7,7 @@ import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
 import { formatKredi } from "@/lib/talep-utils";
 import type { ListeDurumu } from "@/lib/types";
+import { cekiciFetch } from "@/lib/cekici-fetch";
 
 type Tab = "musteriler" | "hesabim";
 
@@ -148,9 +149,9 @@ export default function CekiciPanelTabs() {
 
   const yukle = useCallback(async () => {
     const [meRes, talepRes, statRes] = await Promise.all([
-      fetch("/api/cekici/me"),
-      fetch("/api/cekici/talepler"),
-      fetch("/api/cekici/istatistik"),
+      cekiciFetch("/api/cekici/me"),
+      cekiciFetch("/api/cekici/talepler"),
+      cekiciFetch("/api/cekici/istatistik"),
     ]);
     if (!meRes.ok) {
       router.push("/cekici/giris");

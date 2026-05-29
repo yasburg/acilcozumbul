@@ -1,0 +1,148 @@
+export type KonumIzniDurumu =
+  | "granted"
+  | "denied"
+  | "prompt"
+  | "unsupported"
+  | "unknown";
+
+export function konumGuvenliMi(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.isSecureContext === true;
+}
+
+export function cihazPlatformu(): "ios" | "android" | "other" {
+  if (typeof navigator === "undefined") return "other";
+  const ua = navigator.userAgent;
+  if (/iPad|iPhone|iPod/.test(ua)) return "ios";
+  if (/Android/i.test(ua)) return "android";
+  return "other";
+}
+
+/** Telefon ayarlarında konum izni açma adımları (web’den ayarlara otomatik gidilemez) */
+export function konumAyarlariAdimlari(): string[] {
+  const p = cihazPlatformu();
+  if (p === "ios") {
+    return [
+      "iPhone’da Ayarlar uygulamasını açın",
+      "Gizlilik ve Güvenlik → Konum Servisleri",
+      "Konum Servisleri açık olmalı",
+      "Aşağı kaydırıp Safari’yi seçin",
+      "«Uygulama Kullanırken» veya «İzin Ver» seçin (Asla seçmeyin)",
+      "Safari’ye dönün, bu sayfayı yenileyin ve «Konumumu Paylaş»a tekrar basın",
+    ];
+  }
+  if (p === "android") {
+    return [
+      "Ayarlar → Uygulamalar → Chrome (veya kullandığınız tarayıcı)",
+      "İzinler → Konum → «İzin ver»",
+      "Alternatif: sitede adres çubuğundaki kilit ikonu → Site ayarları → Konum → İzin ver",
+      "Sayfayı yenileyip «Konumumu Paylaş»a tekrar basın",
+    ];
+  }
+  return [
+    "Tarayıcı ayarlarından bu site için konum iznini «İzin ver» yapın",
+    "Sayfayı yenileyip tekrar deneyin",
+  ];
+}
+
+export async function konumIzniOku(): Promise<KonumIzniDurumu> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) {
+    return "unsupported";
+  }
+  if (!navigator.permissions?.query) {
+    return "unknown";
+  }
+  try {
+    const result = await navigator.permissions.query({
+      name: "geolocation",
+    });
+    return result.state as KonumIzniDurumu;
+  } catch {
+    return "unknown";
+  }
+}
+
+export function konumIzniDinle(
+  callback: (durum: KonumIzniDurumu) => void
+): () => void {
+  if (!navigator.permissions?.query) return () => {};
+  let permission: PermissionStatus | null = null;
+  const handler = () => {
+    if (permission) callback(permission.state as KonumIzniDurumu);
+  };
+  navigator.permissions
+    .query({ name: "geolocation" })
+    .then((p) => {
+      permission = p;
+      p.addEventListener("change", handler);
+    })
+    .catch(() => {});
+  return () => permission?.removeEventListener("change", handler);
+}
+
+export function konumHataMesaji(code?: number): string {
+  switch (code) {
+    case 1:
+      return "Konum izni verilmedi veya reddedildi. Aşağıdaki adımlarla Ayarlar’dan açabilirsiniz.";
+    case 2:
+      return "Konum şu an kullanılamıyor. Adresi elle yazın.";
+    case 3:
+      return "Konum isteği zaman aşımına uğradı. Tekrar deneyin veya adresi elle yazın.";
+    default:
+      if (!konumGuvenliMi()) {
+        return "Telefonda http:// adresiyle GPS çalışmaz. Adresi elle yazın veya https:// ile açın (npm run dev:lan:https).";
+      }
+      return "Konum alınamadı. Lütfen adresi elle girin.";
+  }
+}
+
+export async function reverseGeocode(
+  lat: number,
+  lng: number
+): Promise<string> {
+  let adres = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=tr`,
+      { headers: { "Accept-Language": "tr" } }
+    );
+    const data = await res.json();
+    if (data.display_name) adres = data.display_name;
+  } catch {
+    /* koordinat kalır */
+  }
+  return adres;
+}
+
+export function mevcutKonumAl(
+  options?: PositionOptions
+): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Tarayıcınız konum desteklemiyor."));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 20000,
+      maximumAge: 0,
+      ...options,
+    });
+  });
+}
+
+export async function konumAlEsnek(): Promise<GeolocationPosition> {
+  try {
+    return await mevcutKonumAl({
+      enableHighAccuracy: true,
+      timeout: 15000,
+    });
+  } catch (first) {
+    if (!konumGuvenliMi()) throw first;
+    return mevcutKonumAl({
+      enableHighAccuracy: false,
+      timeout: 20000,
+      maximumAge: 120000,
+    });
+  }
+}

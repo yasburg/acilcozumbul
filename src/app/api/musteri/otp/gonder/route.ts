@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { otpGonder } from "@/lib/musteri-otp";
-import { sendSms, smsDurumu } from "@/lib/sms-provider";
+import { bekleyenOtpBilgisi, otpGonder } from "@/lib/musteri-otp";
+import { telefonNormalize } from "@/lib/telefon";
+import { sendSms } from "@/lib/sms-provider";
 import { telefonMaskele } from "@/lib/telefon";
 
 export async function POST(request: NextRequest) {
@@ -8,10 +9,17 @@ export async function POST(request: NextRequest) {
   const sonuc = await otpGonder(telefon ?? "");
 
   if (!sonuc.ok) {
-    return NextResponse.json(
-      { error: sonuc.hata, yenidenGonderSn: sonuc.yenidenGonderSn },
-      { status: 400 }
-    );
+    if (sonuc.yenidenGonderSn != null) {
+      const bekleyen = await bekleyenOtpBilgisi(telefon ?? "");
+      return NextResponse.json({
+        kodBekliyor: true,
+        mesaj: "Kod zaten gönderildi. SMS'teki 6 haneli kodu girin.",
+        yenidenGonderSn: sonuc.yenidenGonderSn,
+        gelistirmeKodu: bekleyen.gelistirmeKodu,
+        telefon: bekleyen.telefon ?? telefonNormalize(telefon ?? ""),
+      });
+    }
+    return NextResponse.json({ error: sonuc.hata }, { status: 400 });
   }
 
   const smsMesaj = `acilcozumbul.com doğrulama kodunuz: ${sonuc.kod}. 5 dakika geçerlidir.`;
@@ -20,21 +28,23 @@ export async function POST(request: NextRequest) {
     talepId: "otp",
   });
 
-  const durum = smsDurumu();
   const body: Record<string, unknown> = {
-    mesaj: `${telefonMaskele(sonuc.telefon)} numarasına doğrulama kodu gönderildi.`,
     yenidenGonderSn: sonuc.yenidenGonderSn,
     smsGonderildi: sms.basarili,
+    telefon: sonuc.telefon,
   };
 
-  if (!sms.basarili && !durum.gercekGonderim && sonuc.gelistirmeKodu) {
+  if (sms.basarili) {
+    body.mesaj = `${telefonMaskele(sonuc.telefon)} numarasına doğrulama kodu gönderildi.`;
+  } else if (sonuc.gelistirmeKodu) {
     body.gelistirmeKodu = sonuc.gelistirmeKodu;
+    body.smsGonderildi = false;
     body.mesaj =
-      "SMS yapılandırılmamış (geliştirme). Aşağıdaki kodu girin.";
-  } else if (!sms.basarili) {
+      "SMS şu an gitmedi (test ortamı). Ekrandaki geliştirme kodunu girin.";
+  } else {
     body.mesaj =
-      "SMS gönderilemedi. Lütfen biraz sonra tekrar deneyin veya numaranızı kontrol edin.";
-    return NextResponse.json({ error: body.mesaj }, { status: 503 });
+      "Kod oluşturuldu ancak SMS gönderilemedi. Bir dakika sonra «Kodu tekrar gönder» deneyin.";
+    body.smsHatasi = sms.hata ?? "SMS servisi yanıt vermedi";
   }
 
   return NextResponse.json(body);
