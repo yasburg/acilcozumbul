@@ -17,6 +17,8 @@ interface Istatistik {
   tercihPuani: number | null;
   fiyatGarantiPuani: number;
   fiyatGarantiYuzde: number;
+  hizmetPuani: number | null;
+  hizmetDegerlendirmeAdet: number;
   buHaftaHarcanan: number;
   mevcutKredi: number;
 }
@@ -187,10 +189,24 @@ export default function AyarlarPage() {
                     vurgu="emerald"
                   />
                   <StatKutu
+                    baslik="Hizmet puanı"
+                    deger={
+                      stats.hizmetPuani != null
+                        ? `${stats.hizmetPuani} / 5`
+                        : "—"
+                    }
+                    alt={
+                      stats.hizmetDegerlendirmeAdet > 0
+                        ? `${stats.hizmetDegerlendirmeAdet} müşteri değerlendirmesi`
+                        : "henüz değerlendirme yok"
+                    }
+                    vurgu="blue"
+                  />
+                  <StatKutu
                     baslik="Fiyat garantisi"
                     deger={`${stats.fiyatGarantiPuani} / 5`}
                     alt={`%${stats.fiyatGarantiYuzde} sabit fiyat`}
-                    vurgu="blue"
+                    vurgu="slate"
                   />
                   <StatKutu
                     baslik="Tercih edilmedim"
