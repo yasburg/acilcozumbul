@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { SorunSecimi } from "@/components/SorunSecimi";
@@ -58,6 +58,7 @@ export default function HomePage() {
   const [gpsGuvenli, setGpsGuvenli] = useState(false);
   const [konumIzni, setKonumIzni] = useState<KonumIzniDurumu>("unknown");
   const [konumIzniBekleniyor, setKonumIzniBekleniyor] = useState(false);
+  const sorunDevamRef = useRef<HTMLDivElement>(null);
 
   const [form, setForm] = useState({
     ad: "",
@@ -76,6 +77,17 @@ export default function HomePage() {
   useEffect(() => {
     setGpsGuvenli(konumGuvenliMi());
   }, []);
+
+  useEffect(() => {
+    if (step !== "sorun" || !form.sorunTipi) return;
+    const t = window.setTimeout(() => {
+      sorunDevamRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }, 150);
+    return () => window.clearTimeout(t);
+  }, [form.sorunTipi, step]);
 
   useEffect(() => {
     if (step !== "konum" && step !== "hedef") return;
@@ -672,8 +684,9 @@ export default function HomePage() {
             onTipSec={(id) => update("sorunTipi", id)}
             onDetayChange={(v) => update("sorunDetay", v)}
           />
-          <div className="flex gap-3 pt-2">
+          <div ref={sorunDevamRef} className="flex gap-3 pt-2 scroll-mt-4">
             <Btn
+              className="w-full"
               onClick={() => {
                 if (!form.sorunTipi) {
                   setError("Lütfen sorununuzu seçin.");
