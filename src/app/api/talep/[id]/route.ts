@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCekiciById, getTalepById } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import { aktifTeklifler, ihaleAcikMi } from "@/lib/ihale";
+import {
+  getDegerlendirmeByTalepId,
+  memnuniyetDurumuHesapla,
+  memnuniyetSmsGonderGerekirse,
+} from "@/lib/memnuniyet";
 
 export async function GET(
   _request: NextRequest,
@@ -33,6 +38,16 @@ export async function GET(
     ? talep.teklifler?.find((t) => t.id === talep.kazananTeklifId)
     : undefined;
 
+  const degerlendirme = await getDegerlendirmeByTalepId(id);
+  const memnuniyet = memnuniyetDurumuHesapla(talep, degerlendirme);
+
+  if (memnuniyet.formAcik) {
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      `${_request.nextUrl.protocol}//${_request.nextUrl.host}`;
+    await memnuniyetSmsGonderGerekirse(talep, baseUrl).catch(() => {});
+  }
+
   return NextResponse.json({
     id: talep.id,
     durum: talep.durum,
@@ -47,5 +62,6 @@ export async function GET(
     kazananFiyat: kazananTeklif?.fiyat,
     anlasmaDurumu: talep.anlasmaDurumu,
     hedefKonum: talep.hedefKonum,
+    memnuniyet,
   });
 }

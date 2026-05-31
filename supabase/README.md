@@ -29,6 +29,17 @@ Dosyalar: `cekiciler.json`, `talepler.json`, `sms-log.json`, `telefon-otp.json`,
 - `SUPABASE_SERVICE_ROLE_KEY` mutlaka ekleyin
 - Eski volume’deki JSON’u bir kez `migrate-json-to-supabase` ile yükleyin
 
+## Memnuniyet değerlendirmesi
+
+`migrations/003_memnuniyet.sql` — anlaşmadan 2 saat sonra müşteri puanı (1–5).
+
+Test için kısa süre: `MEMNUNIYET_BEKLE_DK=1` (.env).
+
+`005_memnuniyet_detay.sql` — genel / fiyat / süre puanları + SMS bayrağı.
+
+Form açılınca müşteriye SMS (link: `/bekle/{talep-id}`). Ek olarak cron:
+`POST /api/cron/memnuniyet-sms` + `Authorization: Bearer CRON_SECRET` (her 5–10 dk).
+
 ## Güvenlik
 
 Tablolarda RLS açık; anon key ile doğrudan okuma/yazma yok. API route’ları `SUPABASE_SERVICE_ROLE_KEY` ile sunucudan erişir.

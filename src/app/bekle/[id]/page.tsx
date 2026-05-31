@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
+import { MemnuniyetBekle } from "@/components/MemnuniyetBekle";
+import { MemnuniyetFormu } from "@/components/MemnuniyetFormu";
 import { PuanGostergesi } from "@/components/PuanGostergesi";
 
 type Durum =
@@ -25,8 +27,21 @@ interface TeklifOzet {
   mesaj?: string;
   tercihPuani: number | null;
   tercihYuzde: number | null;
+  hizmetPuani: number | null;
+  hizmetDegerlendirmeAdet?: number;
   fiyatGarantiPuani: number;
   fiyatGarantiYuzde: number;
+}
+
+interface MemnuniyetState {
+  degerlendirildi: boolean;
+  formAcik: boolean;
+  beklemede: boolean;
+  kalanMs: number;
+  puan?: number;
+  puanGenel?: number;
+  puanFiyat?: number;
+  puanSure?: number;
 }
 
 export default function BeklePage() {
@@ -39,19 +54,39 @@ export default function BeklePage() {
   const [islem, setIslem] = useState(false);
   const [mesaj, setMesaj] = useState("");
   const [ihaleBitis, setIhaleBitis] = useState<string | null>(null);
+  const [memnuniyet, setMemnuniyet] = useState<MemnuniyetState | null>(null);
+  const [memnuniyetYenile, setMemnuniyetYenile] = useState(0);
 
   useEffect(() => {
+    let aktif = true;
+    let zamanlayici: ReturnType<typeof setTimeout> | undefined;
+
+    const planla = (ms: number) => {
+      if (!aktif) return;
+      zamanlayici = setTimeout(() => void kontrol(), ms);
+    };
+
     const kontrol = async () => {
+      if (!aktif) return;
       try {
-        const [durumRes, teklifRes] = await Promise.all([
-          fetch(`/api/talep/${id}`),
-          fetch(`/api/talep/${id}/teklifler`),
-        ]);
-        if (!durumRes.ok) return;
+        const durumRes = await fetch(`/api/talep/${id}`);
+        if (!durumRes.ok) {
+          planla(8000);
+          return;
+        }
         const data = await durumRes.json();
 
         if (data.tamamlandi) {
           setDurum("tamamlandi");
+          setCekiciAd(data.cekiciAd ?? null);
+          let mem = data.memnuniyet ?? null;
+          if (!mem) {
+            const mRes = await fetch(`/api/talep/${id}/memnuniyet`);
+            if (mRes.ok) mem = await mRes.json();
+          }
+          if (mem) setMemnuniyet(mem);
+          if (mem?.degerlendirildi || mem?.formAcik) return;
+          if (mem?.beklemede) planla(10000);
           return;
         }
 
@@ -59,6 +94,13 @@ export default function BeklePage() {
           setDurum("yeniden_araniyor");
           setCekiciAd(null);
           setTeklifler([]);
+          const teklifRes = await fetch(`/api/talep/${id}/teklifler`);
+          if (teklifRes.ok) {
+            const teklifData = await teklifRes.json();
+            setTeklifler(teklifData.teklifler ?? []);
+            setIhaleBitis(teklifData.ihaleBitis ?? null);
+          }
+          planla(4000);
           return;
         }
 
@@ -66,15 +108,18 @@ export default function BeklePage() {
           setDurum("anlasma_bekliyor");
           setCekiciAd(data.cekiciAd ?? "Çekici");
           setKazananFiyat(data.kazananFiyat ?? null);
+          planla(8000);
           return;
         }
 
         if (data.kazananSecildi) {
           setDurum("cekici_bulundu");
           setCekiciAd(data.cekiciAd ?? "Çekici");
+          planla(8000);
           return;
         }
 
+        const teklifRes = await fetch(`/api/talep/${id}/teklifler`);
         if (teklifRes.ok) {
           const teklifData = await teklifRes.json();
           setTeklifler(teklifData.teklifler ?? []);
@@ -85,15 +130,18 @@ export default function BeklePage() {
             setDurum("ihale_bekliyor");
           }
         }
+        planla(4000);
       } catch {
-        /* sessiz */
+        planla(8000);
       }
     };
 
-    kontrol();
-    const interval = setInterval(kontrol, 2500);
-    return () => clearInterval(interval);
-  }, [id]);
+    void kontrol();
+    return () => {
+      aktif = false;
+      if (zamanlayici) clearTimeout(zamanlayici);
+    };
+  }, [id, memnuniyetYenile]);
 
   async function teklifSec(teklifId: string) {
     setIslem(true);
@@ -137,6 +185,8 @@ export default function BeklePage() {
       if (sonuc === "anlasti") {
         setDurum("tamamlandi");
         setMesaj("Anlaşma kaydedildi. İyi yolculuklar!");
+        const mRes = await fetch(`/api/talep/${id}/memnuniyet`);
+        if (mRes.ok) setMemnuniyet(await mRes.json());
       } else {
         setDurum("yeniden_araniyor");
         setCekiciAd(null);
@@ -151,14 +201,55 @@ export default function BeklePage() {
   }
 
   if (durum === "tamamlandi") {
+    const formAcik = memnuniyet?.formAcik && !memnuniyet.degerlendirildi;
+    const bekle = memnuniyet?.beklemede && !memnuniyet.degerlendirildi;
+    const degerlendirildi = memnuniyet?.degerlendirildi;
+
     return (
       <MobileShell>
-        <div className="flex flex-col items-center justify-center min-h-[60dvh] text-center space-y-6">
-          <div className="text-6xl">🎉</div>
-          <h2 className="text-2xl font-bold text-emerald-700">İşlem Tamamlandı</h2>
-          <p className="text-slate-600 max-w-xs">
-            Çekici ile anlaştınız. Güvenli yolculuklar dileriz.
-          </p>
+        <div className="space-y-6 py-4 max-w-md mx-auto">
+          <div className="text-center">
+            <div className="text-5xl mb-3">🎉</div>
+            <h2 className="text-2xl font-bold text-emerald-700">İşlem Tamamlandı</h2>
+            <p className="text-slate-600 text-sm mt-2">
+              Çekici ile anlaştınız. Güvenli yolculuklar dileriz.
+            </p>
+          </div>
+
+          {degerlendirildi && (
+            <Card className="bg-emerald-50 border-emerald-200 text-center py-4 space-y-1">
+              <p className="text-sm text-emerald-800 font-medium">
+                ✓ Değerlendirmeniz alındı
+              </p>
+              {memnuniyet?.puanGenel != null && (
+                <p className="text-xs text-emerald-700">
+                  Genel {memnuniyet.puanGenel}/5 · Fiyat {memnuniyet.puanFiyat}/5
+                  · Süre {memnuniyet.puanSure}/5
+                </p>
+              )}
+            </Card>
+          )}
+
+          {bekle && memnuniyet && (
+            <MemnuniyetBekle
+              kalanMs={memnuniyet.kalanMs}
+              onSureDoldu={() => setMemnuniyetYenile((n) => n + 1)}
+            />
+          )}
+
+          {formAcik && (
+            <MemnuniyetFormu
+              talepId={id}
+              cekiciAd={cekiciAd ?? undefined}
+              onTamamlandi={() => setMemnuniyetYenile((n) => n + 1)}
+            />
+          )}
+
+          {!memnuniyet && (
+            <p className="text-xs text-slate-400 text-center">
+              Değerlendirme durumu yükleniyor…
+            </p>
+          )}
         </div>
       </MobileShell>
     );
@@ -226,13 +317,23 @@ export default function BeklePage() {
                   }`}
                 >
                   <div className="space-y-3">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <PuanGostergesi
                         label="Tercih puanı"
                         puan={t.tercihPuani}
                         yuzde={t.tercihYuzde}
                         yuzdeEtiket="müşteri tercihi"
                         variant="amber"
+                      />
+                      <PuanGostergesi
+                        label="Hizmet puanı"
+                        puan={t.hizmetPuani}
+                        altMetin={
+                          t.hizmetDegerlendirmeAdet
+                            ? `${t.hizmetDegerlendirmeAdet} değerlendirme`
+                            : undefined
+                        }
+                        variant="blue"
                       />
                       <PuanGostergesi
                         label="Fiyat garantisi"

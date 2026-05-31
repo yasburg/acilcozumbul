@@ -1,4 +1,5 @@
 import { getTalepler } from "./db";
+import { cekiciHizmetPuani, gorunurTercihPuani } from "./memnuniyet";
 import type { Teklif } from "./types";
 
 export interface CekiciPuanOzeti {
@@ -14,6 +15,11 @@ export interface CekiciPuanOzeti {
   anlasilanIs: number;
   toplamTeklif: number;
   fiyatDegistirenTeklif: number;
+  /** Müşteri memnuniyet ortalaması (1–5) */
+  hizmetPuani: number | null;
+  hizmetDegerlendirmeAdet: number;
+  /** Müşteriye gösterilen tercih puanı (içeride hizmet puanıyla harmanlanır) */
+  gorunurTercihPuani: number | null;
 }
 
 function normalizeTeklif(t: Teklif): Teklif {
@@ -36,7 +42,10 @@ export function fiyatGarantiPuaniHesapla(yuzde: number): number {
 }
 
 export async function cekiciPuanOzeti(cekiciId: string): Promise<CekiciPuanOzeti> {
-  const talepler = await getTalepler();
+  const [talepler, hizmet] = await Promise.all([
+    getTalepler(),
+    cekiciHizmetPuani(cekiciId),
+  ]);
 
   let kazanilanTeklif = 0;
   let anlasilanIs = 0;
@@ -72,6 +81,7 @@ export async function cekiciPuanOzeti(cekiciId: string): Promise<CekiciPuanOzeti
       : 100;
 
   const fiyatGarantiPuani = fiyatGarantiPuaniHesapla(fiyatGarantiYuzde);
+  const gorunurTercih = gorunurTercihPuani(tercihPuani, hizmet.ortalama);
 
   return {
     tercihYuzde,
@@ -82,6 +92,9 @@ export async function cekiciPuanOzeti(cekiciId: string): Promise<CekiciPuanOzeti
     anlasilanIs,
     toplamTeklif,
     fiyatDegistirenTeklif,
+    hizmetPuani: hizmet.ortalama,
+    hizmetDegerlendirmeAdet: hizmet.adet,
+    gorunurTercihPuani: gorunurTercih,
   };
 }
 

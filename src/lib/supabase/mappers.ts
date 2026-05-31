@@ -39,6 +39,8 @@ export type TalepRow = {
   kazanan_teklif_id: string | null;
   bildirilen_cekici_ids: string[];
   anlasma_durumu: string | null;
+  anlasildi_at: string | null;
+  memnuniyet_sms_gonderildi: boolean;
   haric_tutulan_cekici_ids: string[];
   teklifler: Teklif[];
 };
@@ -93,6 +95,8 @@ export function talepFromRow(r: TalepRow): Talep {
     kazananTeklifId: r.kazanan_teklif_id ?? undefined,
     bildirilenCekiciIds: r.bildirilen_cekici_ids ?? [],
     anlasmaDurumu: (r.anlasma_durumu as Talep["anlasmaDurumu"]) ?? undefined,
+    anlasildiAt: r.anlasildi_at ?? undefined,
+    memnuniyetSmsGonderildi: r.memnuniyet_sms_gonderildi ?? false,
     haricTutulanCekiciIds: r.haric_tutulan_cekici_ids ?? [],
     teklifler: r.teklifler ?? [],
   };
@@ -118,6 +122,8 @@ export function talepToRow(t: Talep): TalepRow {
     kazanan_teklif_id: t.kazananTeklifId ?? null,
     bildirilen_cekici_ids: t.bildirilenCekiciIds ?? [],
     anlasma_durumu: t.anlasmaDurumu ?? null,
+    anlasildi_at: t.anlasildiAt ?? null,
+    memnuniyet_sms_gonderildi: t.memnuniyetSmsGonderildi ?? false,
     haric_tutulan_cekici_ids: t.haricTutulanCekiciIds ?? [],
     teklifler: t.teklifler ?? [],
   };

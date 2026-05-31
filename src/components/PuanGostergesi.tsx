@@ -3,6 +3,7 @@ interface PuanGostergesiProps {
   puan: number | null;
   yuzde?: number | null;
   yuzdeEtiket?: string;
+  altMetin?: string;
   variant?: "amber" | "emerald" | "blue";
 }
 
@@ -26,6 +27,7 @@ export function PuanGostergesi({
   puan,
   yuzde,
   yuzdeEtiket = "tercih",
+  altMetin,
   variant = "amber",
 }: PuanGostergesiProps) {
   const v = VARIANTS[variant];
@@ -45,6 +47,9 @@ export function PuanGostergesi({
             <p className={`text-[10px] ${v.text} opacity-75 mt-0.5`}>
               %{yuzde} {yuzdeEtiket}
             </p>
+          )}
+          {altMetin && (
+            <p className={`text-[10px] ${v.text} opacity-75 mt-0.5`}>{altMetin}</p>
           )}
         </>
       ) : (

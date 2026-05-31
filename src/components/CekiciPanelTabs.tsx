@@ -19,6 +19,8 @@ interface Istatistik {
   tercihPuani: number | null;
   fiyatGarantiPuani: number;
   fiyatGarantiYuzde: number;
+  hizmetPuani: number | null;
+  hizmetDegerlendirmeAdet: number;
   buHaftaHarcanan: number;
 }
 
@@ -405,6 +407,19 @@ export default function CekiciPanelTabs() {
                 </Card>
                 <Card className="text-center py-3">
                   <p className="text-2xl font-bold text-blue-600">
+                    {istatistik.hizmetPuani != null
+                      ? `${istatistik.hizmetPuani}/5`
+                      : "—"}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Hizmet puanı
+                    {istatistik.hizmetDegerlendirmeAdet > 0
+                      ? ` (${istatistik.hizmetDegerlendirmeAdet} değ.)`
+                      : ""}
+                  </p>
+                </Card>
+                <Card className="text-center py-3">
+                  <p className="text-2xl font-bold text-slate-700">
                     {istatistik.fiyatGarantiPuani}/5
                   </p>
                   <p className="text-xs text-slate-500 mt-1">

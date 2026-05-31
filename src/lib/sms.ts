@@ -69,6 +69,21 @@ export async function notifyMusteri(
   });
 }
 
+/** Memnuniyet formu açıldığında müşteriye link */
+export async function notifyMusteriMemnuniyet(
+  talep: Talep,
+  baseUrl: string
+): Promise<void> {
+  const link = `${baseUrl}/bekle/${talep.id}`;
+  const mesaj = `acilcozumbul.com: Hizmeti değerlendirin (genel memnuniyet, fiyat ve varış süresi). Form: ${link}`;
+
+  await sendSms(talep.telefon, mesaj, {
+    aliciTipi: "musteri",
+    talepId: talep.id,
+    link,
+  });
+}
+
 /** İptal / anlaşamama — çekiciye bilgi SMS */
 export async function notifyCekiciIptal(
   cekiciTelefon: string,

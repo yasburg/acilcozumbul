@@ -38,8 +38,10 @@ export async function GET(
         tahminiSureDk: t.tahminiSureDk,
         mesaj: t.mesaj,
         tarih: t.tarih,
-        tercihPuani: puan.tercihPuani,
+        tercihPuani: puan.gorunurTercihPuani ?? puan.tercihPuani,
         tercihYuzde: puan.tercihYuzde,
+        hizmetPuani: puan.hizmetPuani,
+        hizmetDegerlendirmeAdet: puan.hizmetDegerlendirmeAdet,
         fiyatGarantiPuani: puan.fiyatGarantiPuani,
         fiyatGarantiYuzde: puan.fiyatGarantiYuzde,
       };

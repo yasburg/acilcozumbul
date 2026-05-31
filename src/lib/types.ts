@@ -71,8 +71,24 @@ export interface Talep {
   kazananTeklifId?: string;
   bildirilenCekiciIds: string[];
   anlasmaDurumu?: AnlasmaDurumu;
+  /** Anlaşma tamamlandığında (memnuniyet süresi başlangıcı) */
+  anlasildiAt?: string;
+  memnuniyetSmsGonderildi?: boolean;
   teklifler: Teklif[];
   haricTutulanCekiciIds?: string[];
+}
+
+export interface MusteriDegerlendirme {
+  id: string;
+  talepId: string;
+  cekiciId: string;
+  /** Genel ortalama (1–5) */
+  puan: number;
+  puanGenel: number;
+  puanFiyat: number;
+  puanSure: number;
+  yorum?: string;
+  olusturulma: string;
 }
 
 export interface SmsKaydi {

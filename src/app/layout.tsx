@@ -10,6 +10,11 @@ const geist = Geist({
 export const metadata: Metadata = {
   title: "Acil Çözüm Bul | acilcozumbul.com",
   description: "Yolda mı kaldınız? Hemen çekici bulun.",
+  icons: {
+    icon: [{ url: "/acilcozumbul-logo-transparan.png", type: "image/png" }],
+    apple: "/acilcozumbul-logo-transparan.png",
+    shortcut: "/acilcozumbul-logo-transparan.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

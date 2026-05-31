@@ -36,12 +36,12 @@ interface KonumOneri {
   mesafeKm?: number;
 }
 
-const STEP_SIRA: Step[] = ["bilgi", "konum", "sorun", "hedef"];
+const STEP_SIRA: Step[] = ["sorun", "bilgi", "konum", "hedef"];
 const OTP_BEKLEYEN_KEY = "acilcozum_otp_bekleyen";
 
 export default function HomePage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("bilgi");
+  const [step, setStep] = useState<Step>("sorun");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [bilgiMesaj, setBilgiMesaj] = useState("");
@@ -108,7 +108,6 @@ export default function HomePage() {
         if (d.dogrulandi && d.telefon) {
           setTelefonDogrulandi(true);
           setForm((f) => ({ ...f, telefon: d.telefon }));
-          setStep("bilgi");
         } else {
           setTelefonDogrulandi(false);
         }
@@ -120,6 +119,7 @@ export default function HomePage() {
       if (kayitli) {
         setOtpBekleniyor(true);
         setKodGirisAcik(true);
+        setStep("bilgi");
         setForm((f) => (f.telefon ? f : { ...f, telefon: kayitli }));
       }
     } catch {
@@ -178,12 +178,29 @@ export default function HomePage() {
 
   function adimGit(hedef: Step) {
     const hedefIdx = STEP_SIRA.indexOf(hedef);
-    if (hedefIdx > 0 && !telefonDogrulandi) {
+    const sorunIdx = STEP_SIRA.indexOf("sorun");
+    const bilgiIdx = STEP_SIRA.indexOf("bilgi");
+
+    if (hedefIdx > sorunIdx) {
+      if (!form.sorunTipi) {
+        setError("Lütfen sorununuzu seçin.");
+        setStep("sorun");
+        return;
+      }
+      if (form.sorunTipi === "diger" && !form.sorunDetay.trim()) {
+        setError("Lütfen sorununuzu kısaca açıklayın.");
+        setStep("sorun");
+        return;
+      }
+    }
+
+    if (hedefIdx > bilgiIdx && !telefonDogrulandi) {
       setError("Devam etmek için telefon doğrulaması gerekli.");
       setKodGirisAcik(true);
       setStep("bilgi");
       return;
     }
+
     setStep(hedef);
     setError("");
   }
@@ -600,9 +617,9 @@ export default function HomePage() {
   }
 
   const steps: { key: Step; label: string }[] = [
-    { key: "bilgi", label: "1" },
-    { key: "konum", label: "2" },
-    { key: "sorun", label: "3" },
+    { key: "sorun", label: "1" },
+    { key: "bilgi", label: "2" },
+    { key: "konum", label: "3" },
     { key: "hedef", label: "4" },
   ];
 
@@ -642,6 +659,44 @@ export default function HomePage() {
         </div>
       )}
 
+      {step === "sorun" && (
+        <div className="space-y-4 animate-fade-in">
+          <h2 className="text-xl font-bold">Sorununuz</h2>
+          <p className="text-slate-500 text-sm">
+            Önce aracınızdaki sorunu seçin; ardından telefon doğrulaması ve konum
+            bilgileri istenecek.
+          </p>
+          <SorunSecimi
+            seciliTip={form.sorunTipi}
+            detay={form.sorunDetay}
+            onTipSec={(id) => update("sorunTipi", id)}
+            onDetayChange={(v) => update("sorunDetay", v)}
+          />
+          <div className="flex gap-3 pt-2">
+            <Btn
+              onClick={() => {
+                if (!form.sorunTipi) {
+                  setError("Lütfen sorununuzu seçin.");
+                  return;
+                }
+                if (form.sorunTipi === "diger" && !form.sorunDetay.trim()) {
+                  setError("Lütfen sorununuzu kısaca açıklayın.");
+                  return;
+                }
+                setError("");
+                adimGit("bilgi");
+              }}
+              disabled={
+                !form.sorunTipi ||
+                (form.sorunTipi === "diger" && !form.sorunDetay.trim())
+              }
+            >
+              Devam Et
+            </Btn>
+          </div>
+        </div>
+      )}
+
       {step === "bilgi" && (
         <div className="space-y-4 animate-fade-in">
           <h2 className="text-xl font-bold">Telefon Doğrulama</h2>
@@ -650,6 +705,12 @@ export default function HomePage() {
               ? "Telefonunuz doğrulandı. Arıza konumuna geçebilirsiniz."
               : "SMS kodu ile telefonunuzu doğrulayın. Ad ve soyad bir sonraki adımda."}
           </p>
+          {sorunLabel && (
+            <Card className="bg-slate-50 border-slate-200">
+              <p className="text-xs text-slate-500">Seçilen sorun</p>
+              <p className="text-sm font-medium text-slate-900">{sorunLabel}</p>
+            </Card>
+          )}
 
           {telefonDogrulandi ? (
             <>
@@ -658,9 +719,14 @@ export default function HomePage() {
                   ✓ {telefonMaskele(form.telefon)} doğrulandı
                 </p>
               </Card>
-              <Btn type="button" onClick={() => adimGit("konum")}>
-                Arıza Konumuna Git
-              </Btn>
+              <div className="flex gap-3">
+                <Btn variant="outline" type="button" onClick={() => adimGit("sorun")}>
+                  Geri
+                </Btn>
+                <Btn type="button" onClick={() => adimGit("konum")}>
+                  Arıza Konumuna Git
+                </Btn>
+              </div>
             </>
           ) : (
             <form
@@ -765,6 +831,9 @@ export default function HomePage() {
 
               {!kodGirisAcik && (
                 <>
+                  <Btn variant="outline" type="button" onClick={() => adimGit("sorun")}>
+                    Geri
+                  </Btn>
                   <Btn type="submit" disabled={loading}>
                     {loading ? "Kod gönderiliyor…" : "Doğrulama Kodu Gönder"}
                   </Btn>
@@ -913,7 +982,7 @@ export default function HomePage() {
                   setError("Devam etmek için ad ve soyad girin (yukarıdaki alanlar).");
                   return;
                 }
-                if (await adresKoordinatDoldur(false)) adimGit("sorun");
+                if (await adresKoordinatDoldur(false)) adimGit("hedef");
               }}
               disabled={konumYukleniyor || !arızaKonumuHazir}
             >
@@ -931,35 +1000,6 @@ export default function HomePage() {
                   Konum hazır — devam için ad ve soyadı doldurun.
                 </p>
               )}
-          </div>
-        </div>
-      )}
-
-      {step === "sorun" && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold">Sorununuz</h2>
-          <p className="text-slate-500 text-sm">
-            Sorununuzu seçin; bir sonraki adımda size uygun hedef yerler önereceğiz.
-          </p>
-          <SorunSecimi
-            seciliTip={form.sorunTipi}
-            detay={form.sorunDetay}
-            onTipSec={(id) => update("sorunTipi", id)}
-            onDetayChange={(v) => update("sorunDetay", v)}
-          />
-          <div className="flex gap-3 pt-2">
-            <Btn variant="outline" onClick={() => adimGit("konum")}>
-              Geri
-            </Btn>
-            <Btn
-              onClick={() => adimGit("hedef")}
-              disabled={
-                !form.sorunTipi ||
-                (form.sorunTipi === "diger" && !form.sorunDetay.trim())
-              }
-            >
-              Devam Et
-            </Btn>
           </div>
         </div>
       )}
@@ -1042,7 +1082,7 @@ export default function HomePage() {
             </Card>
           )}
           <div className="flex gap-3">
-            <Btn variant="outline" onClick={() => adimGit("sorun")}>
+            <Btn variant="outline" onClick={() => adimGit("konum")}>
               Geri
             </Btn>
             <Btn

@@ -45,9 +45,11 @@ export async function GET() {
     beniTercihEdenler: puan.anlasilanIs,
     tercihEdilmedim,
     tercihOrani: puan.tercihYuzde ?? 0,
-    tercihPuani: puan.tercihPuani,
+    tercihPuani: puan.gorunurTercihPuani ?? puan.tercihPuani,
     fiyatGarantiPuani: puan.fiyatGarantiPuani,
     fiyatGarantiYuzde: puan.fiyatGarantiYuzde,
+    hizmetPuani: puan.hizmetPuani,
+    hizmetDegerlendirmeAdet: puan.hizmetDegerlendirmeAdet,
     buHaftaHarcanan,
     mevcutKredi: cekici.kredi,
   });

@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { BrandLogoYazili } from "@/components/BrandLogo";
 import { Btn, Card, Field } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 
@@ -54,7 +55,12 @@ function GirisForm() {
   return (
     <div className="min-h-dvh bg-slate-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <h1 className="text-xl font-bold text-slate-900">Yönetim paneli</h1>
+        <BrandLogoYazili
+          href="/"
+          priority
+          className="h-10 w-auto max-w-[240px] object-contain object-left mx-auto"
+        />
+        <h1 className="text-xl font-bold text-slate-900 mt-4">Yönetim paneli</h1>
         <p className="text-sm text-slate-500 mt-1">
           Supabase hesabınızla giriş yapın.
         </p>
