@@ -66,11 +66,18 @@ export function KonumIzniYardim({
     return (
       <Card className="bg-red-50 border-red-200">
         <p className="text-sm font-semibold text-red-900">
-          Konum izni kapalı
+          Konum alınamadı
         </p>
+        {cihazPlatformu() === "ios" && (
+          <p className="text-sm text-amber-900 mt-2 leading-relaxed bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            Safari’de site ayarlarında «İzin Ver» seçili olsa bile bu uyarı
+            çıkabilir. Önce <strong>«veya GPS konumumu paylaş»</strong> düğmesine
+            tekrar basın; izin penceresi çıkarsa İzin Ver deyin.
+          </p>
+        )}
         <p className="text-sm text-red-800 mt-2 leading-relaxed">
-          Daha önce «İzin Verme» seçilmiş olabilir. Web sitesi telefon ayarlarına
-          doğrudan götüremez; aşağıdaki adımları izleyin:
+          Hâlâ olmuyorsa aşağıdaki adımları izleyin, sayfayı yenileyin ve tekrar
+          deneyin. Adresi elle yazarak da devam edebilirsiniz.
         </p>
         <ol className="mt-3 space-y-2 text-sm text-red-900 list-decimal list-inside">
           {adimlar.map((adim) => (
@@ -81,8 +88,8 @@ export function KonumIzniYardim({
         </ol>
         {cihazPlatformu() === "ios" && (
           <p className="text-xs text-red-700 mt-3 border-t border-red-200 pt-3">
-            Kısayol: Ayarlar → Safari → Konum → «İzin Ver» veya «Uygulama
-            Kullanırken»
+            aA → Web Sitesi Ayarları → acilcozumbul.com → Konum: İzin Ver.
+            Ayarlar → Gizlilik → Konum Servisleri → Safari: Açık.
           </p>
         )}
       </Card>

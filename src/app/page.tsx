@@ -10,6 +10,7 @@ import { KonumIzniYardim } from "@/components/KonumIzniYardim";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import {
   geocodeAdres,
+  cihazPlatformu,
   konumAlEsnek,
   konumGuvenliMi,
   konumHataMesaji,
@@ -79,8 +80,20 @@ export default function HomePage() {
       setKonumIzni("unknown");
       return;
     }
-    konumIzniOku().then(setKonumIzni);
-    return konumIzniDinle(setKonumIzni);
+    konumIzniOku().then((izin) => {
+      if (izin === "denied" && cihazPlatformu() === "ios") {
+        setKonumIzni("prompt");
+      } else {
+        setKonumIzni(izin);
+      }
+    });
+    return konumIzniDinle((izin) => {
+      if (izin === "denied" && cihazPlatformu() === "ios") {
+        setKonumIzni("prompt");
+      } else {
+        setKonumIzni(izin);
+      }
+    });
   }, [step]);
 
   useEffect(() => {
@@ -377,18 +390,11 @@ export default function HomePage() {
       return;
     }
 
-    const izin = await konumIzniOku();
-    setKonumIzni(izin);
-
-    if (izin === "denied") {
-      setError(
-        "Konum izni reddedilmiş. Aşağıdaki adımlarla Ayarlar’dan açın, sayfayı yenileyin ve tekrar deneyin."
-      );
-      setKonumYukleniyor(false);
-      return;
-    }
-
     setKonumIzniBekleniyor(true);
+    const izin = await konumIzniOku();
+    if (izin === "granted") setKonumIzni("granted");
+    else if (izin !== "denied") setKonumIzni(izin);
+    /* Safari: permissions “denied” olsa bile GPS dene (site ayarı Allow olabilir) */
     try {
       const pos = await konumAlEsnek();
       const { latitude, longitude } = pos.coords;
@@ -416,9 +422,8 @@ export default function HomePage() {
   }
 
   async function konumIzniYenile() {
-    const izin = await konumIzniOku();
-    setKonumIzni(izin);
-    if (izin === "granted") setError("");
+    setError("");
+    await konumAl(false);
   }
 
   async function yaklasikKonumAl(hedef = false) {

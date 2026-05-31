@@ -48,8 +48,8 @@ export function konumAyarlariAdimlari(): string[] {
       "Konum Servisleri açık olmalı",
       "Aşağı kaydırıp Safari’yi seçin",
       "«Uygulama Kullanırken» veya «İzin Ver» seçin (Asla seçmeyin)",
-      "Safari → Ayarlar (aA) → Web Sitesi Ayarları → bu site (10.55.x.x) → Konum: İzin Ver",
-      "Sayfayı yenileyin ve «Konumumu Paylaş»a tekrar basın",
+      "Safari’de aA → Web Sitesi Ayarları → acilcozumbul.com → Konum: İzin Ver",
+      "Sayfayı yenileyin ve «GPS konumumu paylaş»a tekrar basın",
     ];
   }
   if (p === "android") {
@@ -66,6 +66,10 @@ export function konumAyarlariAdimlari(): string[] {
   ];
 }
 
+/**
+ * Safari iOS often reports "denied" here while site settings are "Allow".
+ * Do not use this alone to block getCurrentPosition — only for UI hints.
+ */
 export async function konumIzniOku(): Promise<KonumIzniDurumu> {
   if (typeof navigator === "undefined" || !navigator.geolocation) {
     return "unsupported";
@@ -181,17 +185,30 @@ export function mevcutKonumAl(
 }
 
 export async function konumAlEsnek(): Promise<GeolocationPosition> {
-  try {
-    return await mevcutKonumAl({
-      enableHighAccuracy: true,
-      timeout: 15000,
-    });
-  } catch (first) {
-    if (!konumGuvenliMi()) throw first;
-    return mevcutKonumAl({
-      enableHighAccuracy: false,
-      timeout: 20000,
-      maximumAge: 120000,
-    });
+  const ios = cihazPlatformu() === "ios";
+  const denemeler: PositionOptions[] = ios
+    ? [
+        /* Safari’de düşük doğruluk genelde daha güvenilir */
+        { enableHighAccuracy: false, timeout: 28000, maximumAge: 120000 },
+        { enableHighAccuracy: true, timeout: 22000, maximumAge: 0 },
+      ]
+    : [
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+        { enableHighAccuracy: false, timeout: 20000, maximumAge: 120000 },
+      ];
+
+  let sonHata: unknown;
+  for (const opts of denemeler) {
+    try {
+      return await mevcutKonumAl(opts);
+    } catch (e) {
+      sonHata = e;
+      const code =
+        e && typeof e === "object" && "code" in e
+          ? (e as GeolocationPositionError).code
+          : undefined;
+      if (code === 1) throw e;
+    }
   }
+  throw sonHata;
 }
