@@ -8,7 +8,21 @@ import {
   cekiciTeklifVerebilirMi,
   ihaleAcikMi,
 } from "@/lib/ihale";
+import { koordinatGecerli } from "@/lib/koordinat";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
+import type { Talep } from "@/lib/types";
+
+function rotaKoordinatlari(talep: Talep) {
+  return {
+    konum: koordinatGecerli(talep.konum)
+      ? { lat: talep.konum.lat, lng: talep.konum.lng }
+      : undefined,
+    hedefKonum:
+      talep.hedefKonum && koordinatGecerli(talep.hedefKonum)
+        ? { lat: talep.hedefKonum.lat, lng: talep.hedefKonum.lng }
+        : undefined,
+  };
+}
 
 export async function GET(
   _request: NextRequest,
@@ -104,6 +118,7 @@ export async function GET(
         sorunOzet: talepSorunOzet(talep.sorun),
         hedefBolge: talep.hedefKonum?.adres.split(",").slice(-2).join(",").trim(),
       },
+      ...rotaKoordinatlari(talep),
       kredi: cekici.kredi,
     });
   }
@@ -127,6 +142,7 @@ export async function GET(
       sorunOzet: talepSorunOzet(talep.sorun),
       hedefBolge: talep.hedefKonum?.adres.split(",").slice(-2).join(",").trim(),
     },
+    ...rotaKoordinatlari(talep),
     teklifUcretsiz: true,
     kredi: cekici.kredi,
   });

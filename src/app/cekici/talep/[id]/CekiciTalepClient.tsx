@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
+import { CekiciRotaPanel } from "@/components/CekiciRotaPanel";
+import { koordinatGecerli } from "@/lib/koordinat";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
@@ -34,8 +36,8 @@ interface TalepDurum {
   ad?: string;
   soyad?: string;
   telefon?: string;
-  konum?: { adres: string; lat: number; lng: number };
-  hedefKonum?: { adres: string; lat: number; lng: number };
+  konum?: { adres?: string; lat: number; lng: number };
+  hedefKonum?: { adres?: string; lat: number; lng: number };
   sorun?: string;
 }
 
@@ -189,6 +191,26 @@ export default function CekiciTalepClient() {
     !talep.ihaleKapandi &&
     talep.onizleme;
 
+  const musteriKoordinat = useMemo(() => {
+    if (!talep?.konum || !koordinatGecerli(talep.konum)) return null;
+    return { lat: talep.konum.lat, lng: talep.konum.lng };
+  }, [talep?.konum?.lat, talep?.konum?.lng]);
+
+  const hedefKoordinat = useMemo(() => {
+    if (!talep?.hedefKonum || !koordinatGecerli(talep.hedefKonum)) return null;
+    return { lat: talep.hedefKonum.lat, lng: talep.hedefKonum.lng };
+  }, [talep?.hedefKonum?.lat, talep?.hedefKonum?.lng]);
+
+  const rotaPanelGoster =
+    !!musteriKoordinat &&
+    (teklifVerebilir ||
+      (talep?.teklifVerdim && talep.ihaleAcik) ||
+      talep?.kazandim);
+
+  const toplamSureAyarla = useCallback((dk: number) => {
+    setSure(String(Math.max(5, dk)));
+  }, []);
+
   return (
     <MobileShell
       showBrand={false}
@@ -247,6 +269,14 @@ export default function CekiciTalepClient() {
 
           {talep.teklifVerdim && talep.benimTeklif && !talep.kazandim && (
             <>
+              {rotaPanelGoster && musteriKoordinat && talep.ihaleAcik && (
+                <CekiciRotaPanel
+                  key={`rota-${id}`}
+                  musteriKonum={musteriKoordinat}
+                  hedefKonum={hedefKoordinat}
+                  compact
+                />
+              )}
               {talep.fiyatDegisti && (
                 <Card className="border-red-200 bg-red-50">
                   <p className="text-sm font-semibold text-red-800">
@@ -333,6 +363,14 @@ export default function CekiciTalepClient() {
                 )}
                 <p className="text-sm text-slate-600">{talep.onizleme!.sorunOzet}</p>
               </Card>
+              {musteriKoordinat && (
+                <CekiciRotaPanel
+                  key={`rota-${id}`}
+                  musteriKonum={musteriKoordinat}
+                  hedefKonum={hedefKoordinat}
+                  onToplamSure={toplamSureAyarla}
+                />
+              )}
               <p className="text-sm text-emerald-700 text-center font-medium">
                 Teklif vermek ücretsizdir.
               </p>
@@ -393,14 +431,12 @@ export default function CekiciTalepClient() {
               <a href={telefonHref}>
                 <Btn variant="success">📞 Müşteriye Ara</Btn>
               </a>
-              {talep.konum && (
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&origin=${talep.konum.lat},${talep.konum.lng}&destination=${talep.hedefKonum?.lat ?? talep.konum.lat},${talep.hedefKonum?.lng ?? talep.konum.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Btn variant="secondary">Rota — Haritada Aç</Btn>
-                </a>
+              {musteriKoordinat && (
+                <CekiciRotaPanel
+                  key={`rota-${id}`}
+                  musteriKonum={musteriKoordinat}
+                  hedefKonum={hedefKoordinat}
+                />
               )}
             </>
           )}

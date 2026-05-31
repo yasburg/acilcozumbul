@@ -44,6 +44,7 @@ export default function HomePage() {
   const [oneriler, setOneriler] = useState<KonumOneri[]>([]);
   const [telefonDogrulandi, setTelefonDogrulandi] = useState(false);
   const [otpKod, setOtpKod] = useState("");
+  const [otpHata, setOtpHata] = useState("");
   const [gelistirmeKodu, setGelistirmeKodu] = useState<string | null>(null);
   const [yenidenGonderSn, setYenidenGonderSn] = useState(0);
   const [otpBekleniyor, setOtpBekleniyor] = useState(false);
@@ -283,8 +284,11 @@ export default function HomePage() {
 
   async function kodDogrula() {
     setError("");
+    setOtpHata("");
     if (otpKod.length !== 6) {
-      setError("6 haneli doğrulama kodunu girin.");
+      const msg = "6 haneli doğrulama kodunu girin.";
+      setOtpHata(msg);
+      setError(msg);
       return;
     }
     setLoading(true);
@@ -299,7 +303,15 @@ export default function HomePage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        const msg =
+          data.error ??
+          "Doğrulama kodu hatalı. SMS’teki 6 haneli kodu kontrol edin.";
+        setOtpHata(msg);
+        setError(msg);
+        return;
+      }
+      setOtpHata("");
       setTelefonDogrulandi(true);
       setOtpBekleniyor(false);
       setKodGirisAcik(false);
@@ -313,7 +325,10 @@ export default function HomePage() {
       }
       setStep("konum");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Doğrulama başarısız.");
+      const msg =
+        e instanceof Error ? e.message : "Doğrulama kodu doğrulanamadı.";
+      setOtpHata(msg);
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -379,6 +394,9 @@ export default function HomePage() {
       const { latitude, longitude } = pos.coords;
       const adres = await reverseGeocode(latitude, longitude);
       await konumKaydet(latitude, longitude, adres, hedef);
+      if (!hedef) {
+        setBilgiMesaj("✓ GPS konumu alındı. Ad ve soyadı kontrol edip «Devam Et»e basın.");
+      }
       setKonumIzni("granted");
       setKonumIzniBekleniyor(false);
     } catch (e) {
@@ -582,6 +600,9 @@ export default function HomePage() {
     ? sorunTipiBul(form.sorunTipi)?.label
     : null;
 
+  const arızaKonumuHazir =
+    !!form.adres.trim() || (!!form.lat && !!form.lng);
+
   return (
     <MobileShell subtitle="Yolda mı kaldınız? Hemen çekici bulun.">
 
@@ -605,7 +626,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {bilgiMesaj && step === "bilgi" && (
+      {bilgiMesaj && (step === "bilgi" || step === "konum") && (
         <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
           {bilgiMesaj}
         </div>
@@ -682,14 +703,30 @@ export default function HomePage() {
                     placeholder="123456"
                     maxLength={6}
                     value={otpKod}
-                    onChange={(e) =>
-                      setOtpKod(e.target.value.replace(/\D/g, "").slice(0, 6))
-                    }
+                    onChange={(e) => {
+                      setOtpHata("");
+                      setError("");
+                      setOtpKod(e.target.value.replace(/\D/g, "").slice(0, 6));
+                    }}
                     autoComplete="one-time-code"
                     enterKeyHint="done"
                     name="otp"
                     required
+                    aria-invalid={!!otpHata}
+                    className={
+                      otpHata
+                        ? "border-red-400 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-300/50"
+                        : undefined
+                    }
                   />
+                  {otpHata && (
+                    <div
+                      className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800 font-medium"
+                      role="alert"
+                    >
+                      ⚠️ {otpHata}
+                    </div>
+                  )}
                   <Btn type="submit" disabled={loading || otpKod.length !== 6}>
                     {loading ? "Doğrulanıyor…" : "Onayla — Arıza Konumuna Git"}
                   </Btn>
@@ -856,21 +893,34 @@ export default function HomePage() {
             </Btn>
             <Btn
               onClick={async () => {
+                if (!arızaKonumuHazir) {
+                  setError(
+                    "Arıza konumu gerekli. GPS paylaşın veya adresi yazıp «Adresi haritaya işle»ye basın."
+                  );
+                  return;
+                }
                 if (!form.ad.trim() || !form.soyad.trim()) {
-                  setError("Ad ve soyad zorunludur.");
+                  setError("Devam etmek için ad ve soyad girin (yukarıdaki alanlar).");
                   return;
                 }
                 if (await adresKoordinatDoldur(false)) adimGit("sorun");
               }}
-              disabled={
-                !form.adres.trim() ||
-                !form.ad.trim() ||
-                !form.soyad.trim() ||
-                konumYukleniyor
-              }
+              disabled={konumYukleniyor || !arızaKonumuHazir}
             >
               {konumYukleniyor ? "Adres işleniyor…" : "Devam Et"}
             </Btn>
+            {!arızaKonumuHazir && !konumYukleniyor && (
+              <p className="text-xs text-amber-700 text-center">
+                Devam için GPS konumu paylaşın veya arıza adresini yazın.
+              </p>
+            )}
+            {arızaKonumuHazir &&
+              (!form.ad.trim() || !form.soyad.trim()) &&
+              !konumYukleniyor && (
+                <p className="text-xs text-amber-700 text-center">
+                  Konum hazır — devam için ad ve soyadı doldurun.
+                </p>
+              )}
           </div>
         </div>
       )}

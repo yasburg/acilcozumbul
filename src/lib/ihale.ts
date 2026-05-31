@@ -3,7 +3,7 @@ import type { Talep, Teklif } from "./types";
 
 /** Çekiciye talep bildirimi SMS'i başına düşen kredi */
 export const SMS_BILDIRIM_KREDI = 1;
-export const IHALE_SURE_DK = 30;
+export const IHALE_SURE_DK = 60;
 
 export function ihaleAcikMi(talep: Talep): boolean {
   if (talep.durum !== "ihalede" && talep.durum !== "yeniden_ihalede") return false;

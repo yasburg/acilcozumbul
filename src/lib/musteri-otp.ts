@@ -174,8 +174,8 @@ export async function otpDogrula(
       ok: false,
       hata:
         kalan > 0
-          ? `Hatalı kod. ${kalan} deneme hakkınız kaldı.`
-          : "Çok fazla hatalı deneme. Yeni kod isteyin.",
+          ? `Doğrulama kodu hatalı. ${kalan} deneme hakkınız kaldı.`
+          : "Doğrulama kodu hatalı. Çok fazla deneme — yeni kod isteyin.",
     };
   }
 
