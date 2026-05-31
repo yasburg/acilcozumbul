@@ -10,7 +10,7 @@ const LINKS: { href: string; label: string; exact?: boolean }[] = [
   { href: "/panel/sms", label: "SMS" },
 ];
 
-export function PanelNav() {
+export function PanelNav({ onCikis }: { onCikis?: () => void }) {
   const pathname = usePathname();
 
   return (
@@ -56,6 +56,18 @@ export function PanelNav() {
       >
         Çekici giriş
       </Link>
+      {onCikis && (
+        <>
+          <div className="my-2 border-t border-slate-200" />
+          <button
+            type="button"
+            onClick={onCikis}
+            className="rounded-xl px-3 py-2.5 text-sm text-left text-red-600 hover:bg-red-50 w-full"
+          >
+            Çıkış yap
+          </button>
+        </>
+      )}
     </nav>
   );
 }
