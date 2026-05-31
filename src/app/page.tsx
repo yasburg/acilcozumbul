@@ -19,7 +19,12 @@ import {
   reverseGeocode,
   type KonumIzniDurumu,
 } from "@/lib/konum-client";
-import { telefonGecerliMi, telefonMaskele, telefonNormalize } from "@/lib/telefon";
+import {
+  telefonDogrulamaHatasi,
+  telefonGecerliMi,
+  telefonMaskele,
+  telefonNormalize,
+} from "@/lib/telefon";
 
 type Step = "bilgi" | "konum" | "sorun" | "hedef";
 
@@ -213,7 +218,7 @@ export default function HomePage() {
       return;
     }
     if (!telefonGecerliMi(form.telefon)) {
-      setError("Geçerli bir cep telefonu girin (05XX XXX XX XX).");
+      setError(telefonDogrulamaHatasi(form.telefon));
       return;
     }
 

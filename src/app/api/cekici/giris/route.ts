@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCekiciByTelefon, getCekiciByToken } from "@/lib/db";
 import { CEKICI_COOKIE } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
-import { telefonGecerliMi, telefonNormalize } from "@/lib/telefon";
+import {
+  telefonDogrulamaHatasi,
+  telefonGecerliMi,
+  telefonNormalize,
+} from "@/lib/telefon";
 
 export async function POST(request: NextRequest) {
   await ensureSeedData();
@@ -16,7 +20,7 @@ export async function POST(request: NextRequest) {
   } else if (telefon && sifre) {
     if (!telefonGecerliMi(telefon)) {
       return NextResponse.json(
-        { error: "Geçerli bir cep telefonu girin (05XX XXX XX XX)." },
+        { error: telefonDogrulamaHatasi(telefon) },
         { status: 400 }
       );
     }

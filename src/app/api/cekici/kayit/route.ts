@@ -3,7 +3,11 @@ import { randomUUID } from "crypto";
 import { addCekici, getCekiciByTelefon } from "@/lib/db";
 import { CEKICI_COOKIE } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
-import { telefonGecerliMi, telefonNormalize } from "@/lib/telefon";
+import {
+  telefonDogrulamaHatasi,
+  telefonGecerliMi,
+  telefonNormalize,
+} from "@/lib/telefon";
 import type { Cekici } from "@/lib/types";
 
 const SEHIRLER = ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana"];
@@ -22,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   if (!telefonGecerliMi(telefon)) {
     return NextResponse.json(
-      { error: "Geçerli bir cep telefonu girin (05XX XXX XX XX)." },
+      { error: telefonDogrulamaHatasi(telefon) },
       { status: 400 }
     );
   }

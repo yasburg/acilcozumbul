@@ -1,7 +1,11 @@
 import { randomInt } from "crypto";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { type OtpRow } from "./supabase/mappers";
-import { telefonGecerliMi, telefonNormalize } from "./telefon";
+import {
+  telefonDogrulamaHatasi,
+  telefonGecerliMi,
+  telefonNormalize,
+} from "./telefon";
 
 const OTP_SURE_DK = 5;
 const MAX_DENEME = 5;
@@ -122,7 +126,7 @@ export async function otpGonder(
   | { ok: false; hata: string; yenidenGonderSn?: number }
 > {
   if (!telefonGecerliMi(telefonHam)) {
-    return { ok: false, hata: "Geçerli bir cep telefonu girin (05XX XXX XX XX)." };
+    return { ok: false, hata: telefonDogrulamaHatasi(telefonHam) };
   }
 
   await otpEskiKayitlariTemizle();
