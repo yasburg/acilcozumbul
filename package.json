@@ -8,7 +8,8 @@
     "dev:lan:https": "next dev --hostname 0.0.0.0 --experimental-https",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "migrate:supabase": "node --env-file=.env scripts/migrate-json-to-supabase.mjs"
   },
   "dependencies": {
     "@netgsm/sms": "^1.1.11",

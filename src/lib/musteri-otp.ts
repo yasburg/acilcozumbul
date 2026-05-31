@@ -1,9 +1,8 @@
 import { randomInt } from "crypto";
-import { promises as fs } from "fs";
-import path from "path";
+import { getSupabaseAdmin } from "./supabase/admin";
+import { type OtpRow } from "./supabase/mappers";
 import { telefonGecerliMi, telefonNormalize } from "./telefon";
 
-const DATA_FILE = path.join(process.cwd(), "data", "telefon-otp.json");
 const OTP_SURE_DK = 5;
 const MAX_DENEME = 5;
 const YENIDEN_GONDER_SN = 60;
@@ -17,35 +16,69 @@ export interface OtpKayit {
   dogrulandi: boolean;
 }
 
-async function otpOku(): Promise<OtpKayit[]> {
-  try {
-    const raw = await fs.readFile(DATA_FILE, "utf-8");
-    return JSON.parse(raw) as OtpKayit[];
-  } catch {
-    return [];
-  }
+function otpFromRow(r: OtpRow): OtpKayit {
+  return {
+    telefon: r.telefon,
+    kod: r.kod,
+    olusturulma: r.olusturulma,
+    sonGonderim: r.son_gonderim,
+    deneme: r.deneme,
+    dogrulandi: r.dogrulandi,
+  };
 }
 
-async function otpYaz(liste: OtpKayit[]): Promise<void> {
-  await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
-  const simdi = Date.now();
-  const temiz = liste.filter(
-    (k) =>
-      simdi - new Date(k.olusturulma).getTime() < OTP_SURE_DK * 60 * 1000 * 3 ||
-      k.dogrulandi
-  );
-  await fs.writeFile(DATA_FILE, JSON.stringify(temiz, null, 2), "utf-8");
+function otpToRow(k: OtpKayit): OtpRow {
+  return {
+    telefon: k.telefon,
+    kod: k.kod,
+    olusturulma: k.olusturulma,
+    son_gonderim: k.sonGonderim,
+    deneme: k.deneme,
+    dogrulandi: k.dogrulandi,
+  };
 }
 
-function kodUret(): string {
-  return String(randomInt(100000, 999999));
+async function otpGet(telefon: string): Promise<OtpKayit | undefined> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("telefon_otp")
+    .select("*")
+    .eq("telefon", telefon)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? otpFromRow(data as OtpRow) : undefined;
+}
+
+async function otpUpsert(kayit: OtpKayit): Promise<void> {
+  const { error } = await getSupabaseAdmin()
+    .from("telefon_otp")
+    .upsert(otpToRow(kayit), { onConflict: "telefon" });
+  if (error) throw error;
+}
+
+async function otpSil(telefon: string): Promise<void> {
+  const { error } = await getSupabaseAdmin()
+    .from("telefon_otp")
+    .delete()
+    .eq("telefon", telefon);
+  if (error) throw error;
+}
+
+async function otpEskiKayitlariTemizle(): Promise<void> {
+  const sinir = new Date(
+    Date.now() - OTP_SURE_DK * 60 * 1000 * 3
+  ).toISOString();
+  const { error } = await getSupabaseAdmin()
+    .from("telefon_otp")
+    .delete()
+    .eq("dogrulandi", false)
+    .lt("olusturulma", sinir);
+  if (error) throw error;
 }
 
 export function otpSuresiDolduMu(kayit: OtpKayit): boolean {
   return Date.now() - new Date(kayit.olusturulma).getTime() > OTP_SURE_DK * 60 * 1000;
 }
 
-/** Gönderilmiş, süresi dolmamış ve doğrulanmamış OTP */
 export async function bekleyenOtpBilgisi(telefonHam: string): Promise<{
   bekliyor: boolean;
   yenidenGonderSn: number;
@@ -56,11 +89,11 @@ export async function bekleyenOtpBilgisi(telefonHam: string): Promise<{
     return { bekliyor: false, yenidenGonderSn: 0 };
   }
 
+  await otpEskiKayitlariTemizle();
   const telefon = telefonNormalize(telefonHam);
-  const liste = await otpOku();
-  const kayit = liste.find((k) => k.telefon === telefon && !k.dogrulandi);
+  const kayit = await otpGet(telefon);
 
-  if (!kayit || otpSuresiDolduMu(kayit)) {
+  if (!kayit || kayit.dogrulandi || otpSuresiDolduMu(kayit)) {
     return { bekliyor: false, yenidenGonderSn: 0 };
   }
 
@@ -92,11 +125,11 @@ export async function otpGonder(
     return { ok: false, hata: "Geçerli bir cep telefonu girin (05XX XXX XX XX)." };
   }
 
+  await otpEskiKayitlariTemizle();
   const telefon = telefonNormalize(telefonHam);
-  const liste = await otpOku();
-  const mevcut = liste.find((k) => k.telefon === telefon && !k.dogrulandi);
+  const mevcut = await otpGet(telefon);
 
-  if (mevcut) {
+  if (mevcut && !mevcut.dogrulandi) {
     const gecenSn = Math.floor(
       (Date.now() - new Date(mevcut.sonGonderim).getTime()) / 1000
     );
@@ -109,19 +142,21 @@ export async function otpGonder(
     }
   }
 
-  const kod = kodUret();
+  const kod = String(randomInt(100000, 999999));
   const simdi = new Date().toISOString();
   const yeni: OtpKayit = {
     telefon,
     kod,
-    olusturulma: mevcut && !otpSuresiDolduMu(mevcut) ? mevcut.olusturulma : simdi,
+    olusturulma:
+      mevcut && !mevcut.dogrulandi && !otpSuresiDolduMu(mevcut)
+        ? mevcut.olusturulma
+        : simdi,
     sonGonderim: simdi,
     deneme: 0,
     dogrulandi: false,
   };
 
-  const diger = liste.filter((k) => k.telefon !== telefon);
-  await otpYaz([...diger, yeni]);
+  await otpUpsert(yeni);
 
   const gelistirmeKodu =
     process.env.NODE_ENV !== "production" || process.env.OTP_DEV_FALLBACK === "true"
@@ -151,10 +186,9 @@ export async function otpDogrula(
   }
 
   const telefon = telefonNormalize(telefonHam);
-  const liste = await otpOku();
-  const kayit = liste.find((k) => k.telefon === telefon && !k.dogrulandi);
+  const kayit = await otpGet(telefon);
 
-  if (!kayit) {
+  if (!kayit || kayit.dogrulandi) {
     return { ok: false, hata: "Kod bulunamadı. Yeni kod isteyin." };
   }
 
@@ -168,7 +202,7 @@ export async function otpDogrula(
 
   if (kayit.kod !== kod) {
     kayit.deneme += 1;
-    await otpYaz(liste);
+    await otpUpsert(kayit);
     const kalan = MAX_DENEME - kayit.deneme;
     return {
       ok: false,
@@ -180,23 +214,19 @@ export async function otpDogrula(
   }
 
   kayit.dogrulandi = true;
-  await otpYaz(liste);
+  await otpUpsert(kayit);
   return { ok: true, telefon };
 }
 
-/** Telefon için tüm OTP kayıtlarını sil (test / sıfırlama) */
 export async function otpTemizle(telefonHam: string): Promise<void> {
   if (!telefonGecerliMi(telefonHam)) return;
   const telefon = telefonNormalize(telefonHam);
-  const liste = await otpOku();
-  await otpYaz(liste.filter((k) => k.telefon !== telefon));
+  await otpSil(telefon);
 }
 
 export async function telefonDogrulandiMi(telefonHam: string): Promise<boolean> {
   const telefon = telefonNormalize(telefonHam);
-  const liste = await otpOku();
-  const kayit = liste.find((k) => k.telefon === telefon && k.dogrulandi);
-  if (!kayit) return false;
-  // Doğrulama 30 dk geçerli
+  const kayit = await otpGet(telefon);
+  if (!kayit?.dogrulandi) return false;
   return Date.now() - new Date(kayit.olusturulma).getTime() < 30 * 60 * 1000;
 }

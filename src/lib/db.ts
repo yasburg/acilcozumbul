@@ -1,107 +1,126 @@
-import { promises as fs } from "fs";
-import path from "path";
-import type { Cekici, Talep, SmsKaydi } from "./types";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-
-async function ensureDataDir() {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-}
-
-async function readJson<T>(filename: string, fallback: T): Promise<T> {
-  await ensureDataDir();
-  const filePath = path.join(DATA_DIR, filename);
-  try {
-    const raw = await fs.readFile(filePath, "utf-8");
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-async function writeJson<T>(filename: string, data: T): Promise<void> {
-  await ensureDataDir();
-  const filePath = path.join(DATA_DIR, filename);
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8");
-}
+import { getSupabaseAdmin } from "./supabase/admin";
+import {
+  cekiciFromRow,
+  cekiciToRow,
+  smsFromRow,
+  smsToRow,
+  talepFromRow,
+  talepToRow,
+  type CekiciRow,
+  type SmsLogRow,
+  type TalepRow,
+} from "./supabase/mappers";
+import type { Cekici, SmsKaydi, Talep } from "./types";
 
 export async function getCekiciler(): Promise<Cekici[]> {
-  return readJson<Cekici[]>("cekiciler.json", []);
-}
-
-export async function saveCekiciler(cekiciler: Cekici[]): Promise<void> {
-  await writeJson("cekiciler.json", cekiciler);
+  const { data, error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .select("*")
+    .order("kayit_tarihi", { ascending: false });
+  if (error) throw error;
+  return (data as CekiciRow[]).map(cekiciFromRow);
 }
 
 export async function getCekiciById(id: string): Promise<Cekici | undefined> {
-  const cekiciler = await getCekiciler();
-  return cekiciler.find((c) => c.id === id);
+  const { data, error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? cekiciFromRow(data as CekiciRow) : undefined;
 }
 
 export async function getCekiciByToken(token: string): Promise<Cekici | undefined> {
-  const cekiciler = await getCekiciler();
-  return cekiciler.find((c) => c.token === token);
+  const { data, error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .select("*")
+    .eq("token", token)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? cekiciFromRow(data as CekiciRow) : undefined;
 }
 
 export async function getCekiciByTelefon(
   telefon: string
 ): Promise<Cekici | undefined> {
-  const norm = telefon.replace(/\D/g, "");
-  const cekiciler = await getCekiciler();
-  return cekiciler.find(
-    (c) => c.telefon.replace(/\D/g, "") === norm
-  );
+  const { data, error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .select("*")
+    .eq("telefon", telefon)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? cekiciFromRow(data as CekiciRow) : undefined;
 }
 
 export async function addCekici(cekici: Cekici): Promise<void> {
-  const cekiciler = await getCekiciler();
-  cekiciler.push(cekici);
-  await saveCekiciler(cekiciler);
+  const { error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .insert(cekiciToRow(cekici));
+  if (error) throw error;
 }
 
 export async function updateCekici(cekici: Cekici): Promise<void> {
-  const cekiciler = await getCekiciler();
-  const index = cekiciler.findIndex((c) => c.id === cekici.id);
-  if (index >= 0) {
-    cekiciler[index] = cekici;
-    await saveCekiciler(cekiciler);
-  }
+  const { error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .update(cekiciToRow(cekici))
+    .eq("id", cekici.id);
+  if (error) throw error;
+}
+
+export async function saveCekiciler(cekiciler: Cekici[]): Promise<void> {
+  const { error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .upsert(cekiciler.map(cekiciToRow), { onConflict: "id" });
+  if (error) throw error;
 }
 
 export async function getTalepler(): Promise<Talep[]> {
-  return readJson<Talep[]>("talepler.json", []);
-}
-
-export async function saveTalepler(talepler: Talep[]): Promise<void> {
-  await writeJson("talepler.json", talepler);
+  const { data, error } = await getSupabaseAdmin()
+    .from("talepler")
+    .select("*")
+    .order("olusturulma", { ascending: false });
+  if (error) throw error;
+  return (data as TalepRow[]).map(talepFromRow);
 }
 
 export async function getTalepById(id: string): Promise<Talep | undefined> {
-  const talepler = await getTalepler();
-  return talepler.find((t) => t.id === id);
+  const { data, error } = await getSupabaseAdmin()
+    .from("talepler")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? talepFromRow(data as TalepRow) : undefined;
 }
 
 export async function addTalep(talep: Talep): Promise<void> {
-  const talepler = await getTalepler();
-  talepler.push(talep);
-  await saveTalepler(talepler);
+  const { error } = await getSupabaseAdmin()
+    .from("talepler")
+    .insert(talepToRow(talep));
+  if (error) throw error;
 }
 
 export async function updateTalep(talep: Talep): Promise<void> {
-  const talepler = await getTalepler();
-  const index = talepler.findIndex((t) => t.id === talep.id);
-  if (index >= 0) {
-    talepler[index] = talep;
-    await saveTalepler(talepler);
-  }
+  const { error } = await getSupabaseAdmin()
+    .from("talepler")
+    .update(talepToRow(talep))
+    .eq("id", talep.id);
+  if (error) throw error;
 }
 
 export async function getSmsLog(): Promise<SmsKaydi[]> {
-  return readJson<SmsKaydi[]>("sms-log.json", []);
+  const { data, error } = await getSupabaseAdmin()
+    .from("sms_log")
+    .select("*")
+    .order("gonderim", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((r) => smsFromRow(r as SmsLogRow));
 }
 
 export async function addSmsKaydi(kayit: SmsKaydi): Promise<void> {
-  const log = await getSmsLog();
-  log.unshift(kayit);
-  await writeJson("sms-log.json", log);
+  const { error } = await getSupabaseAdmin()
+    .from("sms_log")
+    .insert(smsToRow(kayit));
+  if (error) throw error;
 }
