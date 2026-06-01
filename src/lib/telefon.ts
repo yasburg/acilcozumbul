@@ -1,6 +1,13 @@
-/** Türkiye cep: 05XXXXXXXXX veya 5XXXXXXXXX */
+/** Giriş alanında kullanıcıya gösterilecek örnekler */
+export const TELEFON_ORNEK_GIRISLERI = [
+  "05323233232",
+  "5323233232",
+  "0532 323 32 32",
+] as const;
+
+/** Türkiye cep: 05XXXXXXXXX veya 5XXXXXXXXX (boşluk/tire kabul edilir) */
 export function telefonNormalize(tel: string): string {
-  let d = tel.replace(/\D/g, "");
+  let d = tel.trim().replace(/\D/g, "");
   if (d.startsWith("90") && d.length === 12) d = "0" + d.slice(2);
   if (d.length === 10 && d.startsWith("5")) d = "0" + d;
   return d;

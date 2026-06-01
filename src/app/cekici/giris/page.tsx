@@ -7,6 +7,7 @@ import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { createClient } from "@/lib/supabase/client";
+import { TELEFON_ORNEK_GIRISLERI } from "@/lib/telefon";
 
 function epostaGibiMi(deger: string): boolean {
   return deger.includes("@");
@@ -76,7 +77,7 @@ function GirisIcerik() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        telefon: opts?.telefon ?? telefon,
+        telefon: (opts?.telefon ?? telefon).trim(),
         sifre: opts?.sifre ?? sifre,
         token: opts?.token ?? (smsMod ? token : undefined),
       }),
@@ -98,7 +99,7 @@ function GirisIcerik() {
         await yoneticiGiris(kimlik, sifre);
         return;
       }
-      await uyeGiris();
+      await uyeGiris({ telefon: kimlik, sifre });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Giriş başarısız.";
       if (msg === "Failed to fetch" || msg.includes("NetworkError")) {
@@ -135,8 +136,17 @@ function GirisIcerik() {
 
       <div className="space-y-4">
         <p className="text-sm text-slate-600 leading-relaxed">
-          Üye hesabı için telefon numaranızı, yönetim paneli için yetkili
-          e-postanızı ve şifrenizi girin.
+          Üye hesabı için telefon numaranızı veya e-postanızı ve şifrenizi
+          girin.
+        </p>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          Kabul edilen telefon girişleri:{" "}
+          {TELEFON_ORNEK_GIRISLERI.map((ornek, i) => (
+            <span key={ornek}>
+              {i > 0 && ", "}
+              <span className="font-mono text-slate-600">{ornek}</span>
+            </span>
+          ))}
         </p>
 
         {!smsMod ? (
