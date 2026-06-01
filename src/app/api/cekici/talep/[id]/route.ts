@@ -12,6 +12,7 @@ import { koordinatGecerli } from "@/lib/koordinat";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Talep } from "@/lib/types";
 
+/** Süre hesabı için koordinat (tam adres gönderilmez) */
 function rotaKoordinatlari(talep: Talep) {
   return {
     konum: koordinatGecerli(talep.konum)
@@ -142,8 +143,8 @@ export async function GET(
       sorunOzet: talepSorunOzet(talep.sorun),
       hedefBolge: talep.hedefKonum?.adres.split(",").slice(-2).join(",").trim(),
     },
-    ...rotaKoordinatlari(talep),
     teklifUcretsiz: true,
+    ...rotaKoordinatlari(talep),
     kredi: cekici.kredi,
   });
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
 import { surusSuresiDk, googleMapsYapilandirildi } from "@/lib/google-maps";
 import { koordinatGecerli, type LatLng } from "@/lib/koordinat";
+import { yerelOrtamMi } from "@/lib/yerel-ortam";
 
 function noktaOku(v: unknown): LatLng | null {
   if (!v || typeof v !== "object") return null;
@@ -78,7 +79,9 @@ export async function POST(request: NextRequest) {
     hedefVar: !!hedefKonum,
     kaynak,
     googleUyari:
-      kaynak === "osrm" && leg1.googleHata
+      yerelOrtamMi(request.headers.get("host")) &&
+      kaynak === "osrm" &&
+      leg1.googleHata
         ? "Google Routes henüz projede kapalı; süre tahmini OSRM ile hesaplandı. Harita yine Google Embed kullanır."
         : undefined,
   });

@@ -201,11 +201,9 @@ export default function CekiciTalepClient() {
     return { lat: talep.hedefKonum.lat, lng: talep.hedefKonum.lng };
   }, [talep?.hedefKonum?.lat, talep?.hedefKonum?.lng]);
 
-  const rotaPanelGoster =
+  const rotaSureGoster =
     !!musteriKoordinat &&
-    (teklifVerebilir ||
-      (talep?.teklifVerdim && talep.ihaleAcik) ||
-      talep?.kazandim);
+    (teklifVerebilir || (talep?.teklifVerdim && talep.ihaleAcik && !talep.kazandim));
 
   const toplamSureAyarla = useCallback((dk: number) => {
     setSure(String(Math.max(5, dk)));
@@ -269,9 +267,9 @@ export default function CekiciTalepClient() {
 
           {talep.teklifVerdim && talep.benimTeklif && !talep.kazandim && (
             <>
-              {rotaPanelGoster && musteriKoordinat && talep.ihaleAcik && (
+              {rotaSureGoster && musteriKoordinat && talep.ihaleAcik && (
                 <CekiciRotaPanel
-                  key={`rota-${id}`}
+                  key={`rota-bekle-${id}`}
                   musteriKonum={musteriKoordinat}
                   hedefKonum={hedefKoordinat}
                   compact
@@ -362,10 +360,13 @@ export default function CekiciTalepClient() {
                   </p>
                 )}
                 <p className="text-sm text-slate-600">{talep.onizleme!.sorunOzet}</p>
+                <p className="text-xs text-slate-500 mt-3 border-t border-slate-100 pt-3">
+                  Tam adres ve harita, ihaleyi kazandığınızda görünür.
+                </p>
               </Card>
-              {musteriKoordinat && (
+              {rotaSureGoster && musteriKoordinat && (
                 <CekiciRotaPanel
-                  key={`rota-${id}`}
+                  key={`rota-teklif-${id}`}
                   musteriKonum={musteriKoordinat}
                   hedefKonum={hedefKoordinat}
                   onToplamSure={toplamSureAyarla}
@@ -436,6 +437,7 @@ export default function CekiciTalepClient() {
                   key={`rota-${id}`}
                   musteriKonum={musteriKoordinat}
                   hedefKonum={hedefKoordinat}
+                  haritaButonu
                 />
               )}
             </>

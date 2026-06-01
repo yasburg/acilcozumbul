@@ -18,7 +18,10 @@ export function MobileShell({
 }: MobileShellProps) {
   return (
     <div className="min-h-dvh flex flex-col bg-slate-50 text-slate-900">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur-md px-4 py-4 shadow-sm">
+      <header
+        id="app-shell-header"
+        className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur-md px-4 py-4 shadow-sm"
+      >
         <div className="relative flex min-h-[4.5rem] items-center justify-center max-w-lg mx-auto">
           {backHref && (
             <Link

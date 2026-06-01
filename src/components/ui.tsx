@@ -1,4 +1,9 @@
-import { ButtonHTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes } from "react";
+import {
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  TextareaHTMLAttributes,
+  forwardRef,
+} from "react";
 
 export function Btn({
   className = "",
@@ -26,21 +31,33 @@ export function Btn({
   );
 }
 
-export function Field({
-  label,
-  className = "",
-  ...props
-}: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+export const Field = forwardRef<
+  HTMLInputElement,
+  InputHTMLAttributes<HTMLInputElement> & {
+    label: string;
+    invalid?: boolean;
+  }
+>(function Field({ label, className = "", invalid = false, ...props }, ref) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <span
+        className={`text-sm font-medium ${invalid ? "text-red-700" : "text-slate-700"}`}
+      >
+        {label}
+      </span>
       <input
-        className={`w-full rounded-xl bg-white border border-slate-200 px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 ${className}`}
+        ref={ref}
+        aria-invalid={invalid || undefined}
+        className={`w-full rounded-xl bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+          invalid
+            ? "border-red-500 ring-red-500/30 focus:ring-red-500/40 focus:border-red-500"
+            : "border-slate-200 focus:ring-amber-500/40 focus:border-amber-500"
+        } ${className}`}
         {...props}
       />
     </label>
   );
-}
+});
 
 export function TextArea({
   label,
@@ -69,5 +86,15 @@ export function Card({
     <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm p-4 ${className}`}>
       {children}
     </div>
+  );
+}
+
+export function Spinner({ className = "" }: { className?: string }) {
+  return (
+    <span
+      className={`inline-block size-5 shrink-0 animate-spin rounded-full border-2 border-amber-500 border-t-transparent ${className}`}
+      role="status"
+      aria-label="Yükleniyor"
+    />
   );
 }

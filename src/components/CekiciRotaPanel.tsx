@@ -5,6 +5,7 @@ import { Btn, Card } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { konumAlEsnek, konumGuvenliMi } from "@/lib/konum-client";
 import { latLngStr, type LatLng } from "@/lib/koordinat";
+import { istemciYerelMi } from "@/lib/yerel-ortam";
 
 interface RotaSureleri {
   sizeMusteriDk: number;
@@ -21,6 +22,10 @@ interface CekiciRotaPanelProps {
   /** Tahmini süre alanını otomatik doldur */
   onToplamSure?: (dk: number) => void;
   compact?: boolean;
+  /** İhale kazanıldıktan sonra — «Haritada rotayı göster» */
+  haritaButonu?: boolean;
+  /** «Google Maps uygulamasında aç» (sadece kazanan ekranı) */
+  disHaritaLink?: boolean;
 }
 
 function googleMapsDirUrl(
@@ -64,6 +69,8 @@ export function CekiciRotaPanel({
   hedefKonum,
   onToplamSure,
   compact = false,
+  haritaButonu = false,
+  disHaritaLink = false,
 }: CekiciRotaPanelProps) {
   const [cekiciKonum, setCekiciKonum] = useState<LatLng | null>(null);
   const [konumHata, setKonumHata] = useState("");
@@ -185,7 +192,7 @@ export function CekiciRotaPanel({
               : " (Google Maps)"}
         </p>
 
-        {sureler?.googleUyari && (
+        {sureler?.googleUyari && istemciYerelMi() && (
           <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
             {sureler.googleUyari}
           </p>
@@ -227,21 +234,23 @@ export function CekiciRotaPanel({
         )}
 
         <div className="flex flex-col gap-2 mt-3">
-          <button
-            type="button"
-            onClick={() => setHaritaAcik(true)}
-            disabled={!cekiciKonum}
-            className="w-full rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 text-left transition hover:border-blue-300 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span className="text-sm font-semibold text-blue-900 block">
-              🗺️ Haritada rotayı göster
-            </span>
-            <span className="text-xs text-blue-700 mt-0.5 block">
-              {cekiciKonum
-                ? "Siz · müşteri · hedef (Google Maps)"
-                : "Önce konum izni gerekli"}
-            </span>
-          </button>
+          {haritaButonu && (
+            <button
+              type="button"
+              onClick={() => setHaritaAcik(true)}
+              disabled={!cekiciKonum}
+              className="w-full rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 text-left transition hover:border-blue-300 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span className="text-sm font-semibold text-blue-900 block">
+                🗺️ Haritada rotayı göster
+              </span>
+              <span className="text-xs text-blue-700 mt-0.5 block">
+                {cekiciKonum
+                  ? "Siz · müşteri · hedef (Google Maps)"
+                  : "Önce konum izni gerekli"}
+              </span>
+            </button>
+          )}
 
           {!cekiciKonum && (
             <Btn
@@ -272,7 +281,7 @@ export function CekiciRotaPanel({
             </Btn>
           )}
 
-          {disHaritaUrl && (
+          {disHaritaLink && disHaritaUrl && (
             <a
               href={disHaritaUrl}
               target="_blank"
@@ -285,7 +294,7 @@ export function CekiciRotaPanel({
         </div>
       </Card>
 
-      {haritaAcik && cekiciKonum && (
+      {haritaButonu && haritaAcik && cekiciKonum && (
         <div
           className="fixed inset-0 z-50 flex flex-col bg-black/60 p-4 safe-bottom"
           role="dialog"

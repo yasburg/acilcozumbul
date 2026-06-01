@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { SorunSecimi } from "@/components/SorunSecimi";
-import { Btn, Field, Card } from "@/components/ui";
+import { Btn, Field, Card, Spinner } from "@/components/ui";
 import { sorunMetniOlustur, sorunTipiBul } from "@/lib/sorun-tipleri";
 import { KonumIzniYardim } from "@/components/KonumIzniYardim";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
@@ -25,16 +25,11 @@ import {
   telefonMaskele,
   telefonNormalize,
 } from "@/lib/telefon";
+import { googleMapsYapilandirildi } from "@/lib/google-maps";
+import type { KonumOneri } from "@/lib/hedef-oneri-data";
+import type { HedefOneriKaynak } from "@/lib/konum-oneri";
 
 type Step = "bilgi" | "konum" | "sorun" | "hedef";
-
-interface KonumOneri {
-  ad: string;
-  adres: string;
-  lat: number;
-  lng: number;
-  mesafeKm?: number;
-}
 
 const STEP_SIRA: Step[] = ["sorun", "bilgi", "konum", "hedef"];
 const OTP_BEKLEYEN_KEY = "acilcozum_otp_bekleyen";
@@ -45,9 +40,15 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [bilgiMesaj, setBilgiMesaj] = useState("");
-  const [konumYukleniyor, setKonumYukleniyor] = useState(false);
+  const [gpsYukleniyor, setGpsYukleniyor] = useState(false);
+  const [adresGeocodeYukleniyor, setAdresGeocodeYukleniyor] = useState(false);
+  const gpsIstekRef = useRef(0);
   const [oneriYukleniyor, setOneriYukleniyor] = useState(false);
   const [oneriler, setOneriler] = useState<KonumOneri[]>([]);
+  const [oneriKaynak, setOneriKaynak] = useState<HedefOneriKaynak | null>(
+    null
+  );
+  const [oneriAcikFiltre, setOneriAcikFiltre] = useState(false);
   const [telefonDogrulandi, setTelefonDogrulandi] = useState(false);
   const [otpKod, setOtpKod] = useState("");
   const [otpHata, setOtpHata] = useState("");
@@ -59,6 +60,16 @@ export default function HomePage() {
   const [konumIzni, setKonumIzni] = useState<KonumIzniDurumu>("unknown");
   const [konumIzniBekleniyor, setKonumIzniBekleniyor] = useState(false);
   const sorunDevamRef = useRef<HTMLDivElement>(null);
+  const konumIsimRef = useRef<HTMLDivElement>(null);
+  const arizaAdresRef = useRef<HTMLInputElement>(null);
+  const konumGpsIlkDeneme = useRef(false);
+  const stepRef = useRef<Step>("sorun");
+  const formLatRef = useRef(0);
+  const gpsYukleniyorRef = useRef(false);
+  const oneriOffsetRef = useRef(0);
+  const hedefOneriBaslatildi = useRef(false);
+  const [adSoyadHatasi, setAdSoyadHatasi] = useState(false);
+  const [arizaAdresDuzenle, setArizaAdresDuzenle] = useState(false);
 
   const [form, setForm] = useState({
     ad: "",
@@ -89,6 +100,17 @@ export default function HomePage() {
     return () => window.clearTimeout(t);
   }, [form.sorunTipi, step]);
 
+  stepRef.current = step;
+  formLatRef.current = form.lat;
+  gpsYukleniyorRef.current = gpsYukleniyor;
+
+  useEffect(() => {
+    if (step !== "konum") {
+      setAdSoyadHatasi(false);
+      setArizaAdresDuzenle(false);
+    }
+  }, [step]);
+
   useEffect(() => {
     if (step !== "konum" && step !== "hedef") return;
     const guvenli = konumGuvenliMi();
@@ -110,8 +132,41 @@ export default function HomePage() {
       } else {
         setKonumIzni(izin);
       }
+      if (
+        stepRef.current === "konum" &&
+        izin === "granted" &&
+        !formLatRef.current &&
+        !gpsYukleniyorRef.current
+      ) {
+        void konumAl(false);
+      }
     });
   }, [step]);
+
+  useEffect(() => {
+    if (step !== "konum") {
+      konumGpsIlkDeneme.current = false;
+      return;
+    }
+    if (konumGpsIlkDeneme.current || !konumGuvenliMi()) return;
+    if (form.lat && form.lng) return;
+
+    konumGpsIlkDeneme.current = true;
+    void konumAl(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca konum adımına girildiğinde
+  }, [step]);
+
+  useEffect(() => {
+    if (step !== "konum" || gpsYukleniyor) return;
+    if (form.lat && form.lng) {
+      setArizaAdresDuzenle(false);
+      return;
+    }
+    if (!konumGpsIlkDeneme.current) return;
+    window.requestAnimationFrame(() => {
+      arizaAdresRef.current?.focus({ preventScroll: true });
+    });
+  }, [step, gpsYukleniyor, form.lat, form.lng]);
 
   useEffect(() => {
     fetch("/api/musteri/otp/durum", { credentials: "include" })
@@ -171,7 +226,30 @@ export default function HomePage() {
     return () => clearInterval(t);
   }, [yenidenGonderSn]);
 
+  function scrollBelowStickyHeader(el: HTMLElement | null) {
+    if (!el) return;
+    const header = document.getElementById("app-shell-header");
+    const headerH = header?.getBoundingClientRect().height ?? 160;
+    const gap = 16;
+    const top = el.getBoundingClientRect().top + window.scrollY - headerH - gap;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }
+
+  function konumIsimHatasiGoster() {
+    const mesaj = "Devam etmek için ad ve soyad girin (yukarıdaki alanlar).";
+    setAdSoyadHatasi(true);
+    setError(mesaj);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        scrollBelowStickyHeader(konumIsimRef.current);
+      });
+    });
+  }
+
   function update(field: string, value: string | number) {
+    if (field === "ad" || field === "soyad") {
+      setAdSoyadHatasi(false);
+    }
     setForm((f) => {
       const next = { ...f, [field]: value };
       if (field === "telefon" && value !== f.telefon) {
@@ -404,14 +482,21 @@ export default function HomePage() {
     }
   }
 
+  function gpsIptal() {
+    gpsIstekRef.current += 1;
+    setGpsYukleniyor(false);
+    setKonumIzniBekleniyor(false);
+  }
+
   async function konumAl(hedef = false) {
-    setKonumYukleniyor(true);
+    const istekId = ++gpsIstekRef.current;
+    setGpsYukleniyor(true);
     setError("");
     setKonumIzniBekleniyor(false);
 
     if (!navigator.geolocation) {
       setError("Tarayıcınız konum desteklemiyor. Adresi elle yazın.");
-      setKonumYukleniyor(false);
+      if (gpsIstekRef.current === istekId) setGpsYukleniyor(false);
       return;
     }
     if (!konumGuvenliMi()) {
@@ -420,26 +505,31 @@ export default function HomePage() {
       setError(
         "GPS için https:// adresi gerekli. Yukarıdaki «HTTPS ile aç» butonunu kullanın veya adresi aşağıya yazın."
       );
-      setKonumYukleniyor(false);
+      if (gpsIstekRef.current === istekId) setGpsYukleniyor(false);
       return;
     }
 
     setKonumIzniBekleniyor(true);
     const izin = await konumIzniOku();
+    if (gpsIstekRef.current !== istekId) return;
     if (izin === "granted") setKonumIzni("granted");
     else if (izin !== "denied") setKonumIzni(izin);
     /* Safari: permissions “denied” olsa bile GPS dene (site ayarı Allow olabilir) */
     try {
       const pos = await konumAlEsnek();
+      if (gpsIstekRef.current !== istekId) return;
       const { latitude, longitude } = pos.coords;
       const adres = await reverseGeocode(latitude, longitude);
+      if (gpsIstekRef.current !== istekId) return;
       await konumKaydet(latitude, longitude, adres, hedef);
       if (!hedef) {
+        setArizaAdresDuzenle(false);
         setBilgiMesaj("✓ GPS konumu alındı. Ad ve soyadı kontrol edip «Devam Et»e basın.");
       }
       setKonumIzni("granted");
       setKonumIzniBekleniyor(false);
     } catch (e) {
+      if (gpsIstekRef.current !== istekId) return;
       const code =
         e && typeof e === "object" && "code" in e
           ? (e as GeolocationPositionError).code
@@ -450,8 +540,10 @@ export default function HomePage() {
       }
       setError(konumHataMesaji(code));
     } finally {
-      setKonumYukleniyor(false);
-      setKonumIzniBekleniyor(false);
+      if (gpsIstekRef.current === istekId) {
+        setGpsYukleniyor(false);
+        setKonumIzniBekleniyor(false);
+      }
     }
   }
 
@@ -461,7 +553,7 @@ export default function HomePage() {
   }
 
   async function yaklasikKonumAl(hedef = false) {
-    setKonumYukleniyor(true);
+    setAdresGeocodeYukleniyor(true);
     setError("");
     try {
       const res = await fetch("/api/konum/ip-tahmin");
@@ -491,7 +583,7 @@ export default function HomePage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Yaklaşık konum alınamadı.");
     } finally {
-      setKonumYukleniyor(false);
+      setAdresGeocodeYukleniyor(false);
     }
   }
 
@@ -506,10 +598,10 @@ export default function HomePage() {
     const lng = hedef ? form.hedefLng : form.lng;
     if (lat && lng) return true;
 
-    setKonumYukleniyor(true);
+    setAdresGeocodeYukleniyor(true);
     setError("");
     const g = await geocodeAdres(adres);
-    setKonumYukleniyor(false);
+    setAdresGeocodeYukleniyor(false);
     if (g) {
       await konumKaydet(g.lat, g.lng, g.adres, hedef);
       return true;
@@ -520,28 +612,79 @@ export default function HomePage() {
     return true;
   }
 
-  async function cozumOner() {
-    if (!form.lat || !form.lng) {
-      setError("Önce arıza konumunuzu paylaşın.");
-      return;
-    }
+  async function cozumOner(yenile = false) {
     if (!form.sorunTipi) {
       setError("Önce sorununuzu seçin.");
       setStep("sorun");
       return;
     }
+
+    const oncekiOneriler = yenile ? oneriler : [];
+    const queryOffset = yenile ? oneriOffsetRef.current : 0;
+
     setOneriYukleniyor(true);
     setError("");
-    setOneriler([]);
+    if (!yenile) setOneriler([]);
+
     try {
+      let lat = form.lat;
+      let lng = form.lng;
+      if (!lat || !lng) {
+        if (!form.adres.trim()) {
+          setError("Önce arıza konumunuzu paylaşın.");
+          setStep("konum");
+          return;
+        }
+        const g = await geocodeAdres(form.adres);
+        if (!g) {
+          setError(
+            "Arıza adresi haritada bulunamadı. «Arıza Konumu» adımında adresi ilçe ve mahalle ile netleştirin."
+          );
+          return;
+        }
+        await konumKaydet(g.lat, g.lng, g.adres, false);
+        lat = g.lat;
+        lng = g.lng;
+      }
+
+      let excludeQs = "";
+      if (oncekiOneriler.length > 0) {
+        excludeQs += `&exclude=${encodeURIComponent(oncekiOneriler.map((o) => o.adres).join("|"))}`;
+        const ids = oncekiOneriler
+          .map((o) => o.placeId)
+          .filter((id): id is string => !!id);
+        if (ids.length > 0) {
+          excludeQs += `&excludeIds=${encodeURIComponent(ids.join("|"))}`;
+        }
+      }
+
       const res = await fetch(
-        `/api/konum/oneri?lat=${form.lat}&lng=${form.lng}&sorunTipi=${encodeURIComponent(form.sorunTipi)}`
+        `/api/konum/oneri?lat=${lat}&lng=${lng}&sorunTipi=${encodeURIComponent(form.sorunTipi)}&limit=3&offset=${queryOffset}${excludeQs}`
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Öneri alınamadı.");
-      setOneriler(data.oneriler ?? []);
-      if (!data.oneriler?.length) {
-        setError("Yakında öneri bulunamadı. Adresi elle yazabilirsiniz.");
+
+      const gelen: KonumOneri[] = data.oneriler ?? [];
+      setOneriler(gelen);
+      setOneriKaynak(data.kaynak ?? null);
+      setOneriAcikFiltre(!!data.acikFiltrelendi);
+
+      if (yenile) {
+        oneriOffsetRef.current += 1;
+      } else {
+        oneriOffsetRef.current = 1;
+      }
+
+      if (!gelen.length) {
+        setError(
+          yenile
+            ? googleMapsYapilandirildi()
+              ? "Şu an açık başka yer bulunamadı. Hedef adresi elle yazabilirsiniz."
+              : "Yeni öneri bulunamadı. Hedef adresi aşağıya elle yazabilirsiniz."
+            : googleMapsYapilandirildi()
+              ? "Yakında şu an açık yer bulunamadı. Hedef adresi elle yazabilirsiniz."
+              : "Yakında öneri bulunamadı. Hedef adresi elle yazabilirsiniz."
+        );
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Öneri alınamadı.");
@@ -641,6 +784,27 @@ export default function HomePage() {
 
   const arızaKonumuHazir =
     !!form.adres.trim() || (!!form.lat && !!form.lng);
+
+  const devamEtEngelli =
+    !arızaKonumuHazir || adresGeocodeYukleniyor;
+
+  const arızaKoordinatiVar = !!(form.lat && form.lng);
+  const arizaKonumGpsAlindi = arızaKoordinatiVar && !arizaAdresDuzenle;
+  const cozumOneriAktif =
+    !!form.sorunTipi && (arızaKoordinatiVar || !!form.adres.trim());
+
+  const googleOneriAktif = googleMapsYapilandirildi();
+
+  useEffect(() => {
+    if (step !== "hedef") {
+      hedefOneriBaslatildi.current = false;
+      return;
+    }
+    if (hedefOneriBaslatildi.current || !cozumOneriAktif || oneriYukleniyor) return;
+    hedefOneriBaslatildi.current = true;
+    void cozumOner(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca hedef adımına girildiğinde
+  }, [step, cozumOneriAktif]);
 
   return (
     <MobileShell subtitle="Yolda mı kaldınız? Hemen çekici bulun.">
@@ -879,70 +1043,108 @@ export default function HomePage() {
 
           {!gpsGuvenli && <GpsHttpsBanner compact />}
 
-          <div className="grid grid-cols-2 gap-3">
-            <Field
-              label="Ad"
-              placeholder="Ahmet"
-              value={form.ad}
-              onChange={(e) => update("ad", e.target.value)}
-              autoComplete="given-name"
-              name="ad"
-              required
-            />
-            <Field
-              label="Soyad"
-              placeholder="Yılmaz"
-              value={form.soyad}
-              onChange={(e) => update("soyad", e.target.value)}
-              autoComplete="family-name"
-              name="soyad"
-              required
-            />
+          <div ref={konumIsimRef} className="scroll-mt-44 space-y-2">
+            <div className="grid grid-cols-2 gap-3">
+              <Field
+                label="Ad"
+                placeholder="Ahmet"
+                value={form.ad}
+                onChange={(e) => update("ad", e.target.value)}
+                autoComplete="given-name"
+                name="ad"
+                required
+                invalid={adSoyadHatasi && !form.ad.trim()}
+              />
+              <Field
+                label="Soyad"
+                placeholder="Yılmaz"
+                value={form.soyad}
+                onChange={(e) => update("soyad", e.target.value)}
+                autoComplete="family-name"
+                name="soyad"
+                required
+                invalid={adSoyadHatasi && !form.soyad.trim()}
+              />
+            </div>
+            {adSoyadHatasi && (
+              <p className="text-sm text-red-600" role="alert">
+                Devam etmek için ad ve soyad girin (yukarıdaki alanlar).
+              </p>
+            )}
           </div>
           <p className="text-xs text-slate-500 -mt-2">
             Telefon: {telefonMaskele(form.telefon)}
           </p>
 
-          <Field
-            label="Arıza adresi"
-            placeholder="Örn. İstanbul, Bayrampaşa, …"
-            value={form.adres}
-            onChange={(e) => update("adres", e.target.value)}
-            onBlur={() => {
-              if (form.adres.trim().length >= 6 && !form.lat) {
-                void geocodeAdres(form.adres).then((g) => {
-                  if (g) void konumKaydet(g.lat, g.lng, g.adres, false);
-                });
-              }
-            }}
-          />
-          <Btn
-            type="button"
-            variant="secondary"
-            onClick={async () => {
-              if (!form.adres.trim()) {
-                setError("Önce arıza adresini yazın.");
-                return;
-              }
-              setKonumYukleniyor(true);
-              setError("");
-              const g = await geocodeAdres(form.adres);
-              setKonumYukleniyor(false);
-              if (g) {
-                await konumKaydet(g.lat, g.lng, g.adres, false);
-                setBilgiMesaj("Adres haritada işaretlendi.");
-              } else {
-                setError(
-                  "Adres bulunamadı. İlçe ve mahalle ekleyerek tekrar deneyin."
-                );
-              }
-            }}
-            disabled={konumYukleniyor || !form.adres.trim()}
-          >
-            {konumYukleniyor ? "Adres işleniyor…" : "📍 Adresi haritaya işle"}
-          </Btn>
+          {(gpsYukleniyor || adresGeocodeYukleniyor) && (
+            <div
+              className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+              role="status"
+            >
+              <Spinner className="mt-0.5" />
+              <div className="text-sm text-amber-900 leading-relaxed min-w-0">
+                {gpsYukleniyor ? (
+                  <>
+                    <p className="font-medium">
+                      {konumIzniBekleniyor
+                        ? "Konum izni bekleniyor…"
+                        : "Konumunuz alınıyor…"}
+                    </p>
+                    <p className="text-xs text-amber-800 mt-1">
+                      İzin penceresinde «İzin Ver»e dokunun; konum otomatik
+                      yazılacak.
+                    </p>
+                  </>
+                ) : (
+                  <p className="font-medium">Adres doğrulanıyor…</p>
+                )}
+              </div>
+            </div>
+          )}
 
-          {gpsGuvenli && (
+          {arizaKonumGpsAlindi && form.adres ? (
+            <Card className="bg-emerald-50 border-emerald-200">
+              <p className="text-xs text-emerald-700 uppercase tracking-wide mb-1">
+                Arıza konumu (GPS)
+              </p>
+              <p className="text-sm text-emerald-900 leading-relaxed">
+                {form.adres}
+              </p>
+              <button
+                type="button"
+                onClick={() => setArizaAdresDuzenle(true)}
+                className="mt-2 text-xs text-emerald-800 underline font-medium"
+              >
+                Adresi düzelt
+              </button>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              <Field
+                ref={arizaAdresRef}
+                label="Arıza adresi"
+                placeholder="Örn. İstanbul, Bayrampaşa, mahalle, sokak…"
+                value={form.adres}
+                onChange={(e) => update("adres", e.target.value)}
+                onBlur={() => {
+                  if (form.adres.trim().length >= 6 && !form.lat) {
+                    void geocodeAdres(form.adres).then((g) => {
+                      if (g) void konumKaydet(g.lat, g.lng, g.adres, false);
+                    });
+                  }
+                }}
+              />
+              {!gpsYukleniyor && (
+                <p className="text-xs text-slate-500">
+                  {gpsGuvenli
+                    ? "Konum otomatik alınamadıysa aracınızın bulunduğu adresi yazın."
+                    : "GPS için HTTPS gerekir; adresi elle yazabilirsiniz."}
+                </p>
+              )}
+            </div>
+          )}
+
+          {gpsGuvenli && !arizaKonumGpsAlindi && !gpsYukleniyor && (
             <>
               <KonumIzniYardim
                 durum={konumIzni}
@@ -953,14 +1155,10 @@ export default function HomePage() {
                 type="button"
                 variant="outline"
                 onClick={() => konumAl(false)}
-                disabled={konumYukleniyor}
+                disabled={gpsYukleniyor}
                 className="!py-3 text-sm"
               >
-                {konumYukleniyor
-                  ? konumIzniBekleniyor
-                    ? "İzin penceresinde «İzin Ver»e dokunun…"
-                    : "Konum alınıyor…"
-                  : "veya GPS konumumu paylaş"}
+                📍 GPS konumumu tekrar dene
               </Btn>
               {konumIzni === "denied" && (
                 <button
@@ -973,42 +1171,48 @@ export default function HomePage() {
               )}
             </>
           )}
-          {form.adres && (
-            <Card>
-              <p className="text-xs text-slate-500 mb-1">Arıza konumu</p>
-              <p className="text-sm leading-relaxed">{form.adres}</p>
-            </Card>
-          )}
-          <div className="flex gap-3">
-            <Btn variant="outline" onClick={() => adimGit("bilgi")}>
-              Geri
-            </Btn>
-            <Btn
-              onClick={async () => {
-                if (!arızaKonumuHazir) {
-                  setError(
-                    "Arıza konumu gerekli. GPS paylaşın veya adresi yazıp «Adresi haritaya işle»ye basın."
-                  );
-                  return;
-                }
-                if (!form.ad.trim() || !form.soyad.trim()) {
-                  setError("Devam etmek için ad ve soyad girin (yukarıdaki alanlar).");
-                  return;
-                }
-                if (await adresKoordinatDoldur(false)) adimGit("hedef");
-              }}
-              disabled={konumYukleniyor || !arızaKonumuHazir}
-            >
-              {konumYukleniyor ? "Adres işleniyor…" : "Devam Et"}
-            </Btn>
-            {!arızaKonumuHazir && !konumYukleniyor && (
+          <div className="space-y-2">
+            <div className="flex gap-3">
+              <Btn variant="outline" onClick={() => adimGit("bilgi")}>
+                Geri
+              </Btn>
+              <Btn
+                onClick={async () => {
+                  if (!arızaKonumuHazir) {
+                    setError(
+                      "Arıza konumu gerekli. GPS paylaşın veya arıza adresini yazın."
+                    );
+                    return;
+                  }
+                  if (!form.ad.trim() || !form.soyad.trim()) {
+                    konumIsimHatasiGoster();
+                    return;
+                  }
+                  setAdSoyadHatasi(false);
+                  if (gpsYukleniyor) gpsIptal();
+                  if (await adresKoordinatDoldur(false)) adimGit("hedef");
+                }}
+                disabled={devamEtEngelli}
+              >
+                {adresGeocodeYukleniyor ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <Spinner className="size-4 border-white/40 border-t-white" />
+                    Adres işleniyor…
+                  </span>
+                ) : (
+                  "Devam Et"
+                )}
+              </Btn>
+            </div>
+            {!arızaKonumuHazir && !gpsYukleniyor && !adresGeocodeYukleniyor && (
               <p className="text-xs text-amber-700 text-center">
-                Devam için GPS konumu paylaşın veya arıza adresini yazın.
+                Devam için arıza adresini yazın veya GPS izni verin.
               </p>
             )}
             {arızaKonumuHazir &&
               (!form.ad.trim() || !form.soyad.trim()) &&
-              !konumYukleniyor && (
+              !gpsYukleniyor &&
+              !adresGeocodeYukleniyor && (
                 <p className="text-xs text-amber-700 text-center">
                   Konum hazır — devam için ad ve soyadı doldurun.
                 </p>
@@ -1022,32 +1226,72 @@ export default function HomePage() {
           <h2 className="text-xl font-bold">Nereye Çekilecek?</h2>
           <p className="text-slate-500 text-sm">
             {sorunLabel
-              ? `${sorunLabel} için uygun yerler önerilir veya adresi siz yazın.`
+              ? googleOneriAktif
+                ? `${sorunLabel} için Google’da şu an açık olan yakın 3 yeri öneriyoruz — birini seçin veya adresi siz yazın.`
+                : `${sorunLabel} için yakın 3 yer öneriyoruz — birini seçin veya adresi siz yazın.`
               : "Aracınızın götürülmesini istediğiniz adresi belirtin."}
           </p>
-          <Btn
-            type="button"
-            variant="secondary"
-            onClick={cozumOner}
-            disabled={oneriYukleniyor || !form.lat || !form.sorunTipi}
-          >
-            {oneriYukleniyor
-              ? "Öneriler hesaplanıyor…"
-              : "✨ Soruna Göre Çözüm Öner"}
-          </Btn>
+
+          {oneriYukleniyor && oneriler.length === 0 && (
+            <div
+              className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+              role="status"
+            >
+              <Spinner className="mt-0.5" />
+              <p className="text-sm font-medium text-amber-900">
+                {googleOneriAktif
+                  ? "Google’da şu an açık olan yakın yerler aranıyor…"
+                  : "Yakın yerler aranıyor…"}
+              </p>
+            </div>
+          )}
+
+          {!oneriYukleniyor && oneriAcikFiltre && oneriler.length > 0 && (
+            <Card className="bg-emerald-50 border-emerald-200 !py-3">
+              <p className="text-sm text-emerald-800 leading-relaxed">
+                Öneriler Google’dan alınır; yalnızca{" "}
+                <strong>şu an açık</strong> görünen işletmeler listelenir.
+              </p>
+            </Card>
+          )}
+
+          {!oneriYukleniyor &&
+            oneriKaynak === "nominatim" &&
+            oneriler.length > 0 && (
+              <Card className="bg-slate-50 border-slate-200 !py-3">
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Açık/kapalı bilgisi doğrulanamadı; yakın yerler harita
+                  verisinden listelendi.
+                </p>
+              </Card>
+            )}
+
+          {!cozumOneriAktif && !oneriYukleniyor && (
+            <p className="text-xs text-slate-500 text-center">
+              Öneri için önce sorun tipi ve arıza konumu gerekli.
+            </p>
+          )}
+
           {oneriler.length > 0 && (
             <div className="space-y-2">
               <p className="text-xs text-slate-500 uppercase tracking-wide">
-                Önerilen yerler
+                Önerilen yerler ({oneriler.length})
               </p>
               {oneriler.map((o) => (
                 <button
-                  key={o.adres}
+                  key={o.placeId ?? o.adres}
                   type="button"
                   onClick={() => oneriSec(o)}
                   className="w-full text-left rounded-xl border border-slate-200 bg-white px-4 py-3 hover:border-amber-400 transition"
                 >
-                  <p className="font-medium text-slate-900">{o.ad}</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium text-slate-900">{o.ad}</p>
+                    {oneriAcikFiltre && (
+                      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                        Açık
+                      </span>
+                    )}
+                  </div>
                   {o.mesafeKm != null && (
                     <p className="text-xs text-amber-600 mt-0.5">
                       ~{o.mesafeKm} km
@@ -1058,8 +1302,42 @@ export default function HomePage() {
                   </p>
                 </button>
               ))}
+              <Btn
+                type="button"
+                variant="secondary"
+                onClick={() => void cozumOner(true)}
+                disabled={oneriYukleniyor || !cozumOneriAktif}
+                className="!py-3 text-sm"
+              >
+                {oneriYukleniyor ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <Spinner className="size-4 border-slate-400 border-t-slate-600" />
+                    {googleOneriAktif && oneriAcikFiltre
+                      ? "Şu an açık yeni yerler aranıyor…"
+                      : "Yeni öneriler aranıyor…"}
+                  </span>
+                ) : googleOneriAktif ? (
+                  "🔄 Yeni açık öneriler ver"
+                ) : (
+                  "🔄 Yeni öneriler ver"
+                )}
+              </Btn>
             </div>
           )}
+
+          {!oneriYukleniyor &&
+            cozumOneriAktif &&
+            oneriler.length === 0 &&
+            hedefOneriBaslatildi.current && (
+              <Btn
+                type="button"
+                variant="secondary"
+                onClick={() => void cozumOner(false)}
+              >
+                Tekrar öneri dene
+              </Btn>
+            )}
+
           {gpsGuvenli && (
             <KonumIzniYardim
               durum={konumIzni}
@@ -1071,9 +1349,16 @@ export default function HomePage() {
             type="button"
             variant="outline"
             onClick={() => konumAl(true)}
-            disabled={konumYukleniyor || !gpsGuvenli}
+            disabled={gpsYukleniyor || !gpsGuvenli}
           >
-            📍 Hedef olarak GPS konumum
+            {gpsYukleniyor ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <Spinner className="size-4" />
+                Konum alınıyor…
+              </span>
+            ) : (
+              "📍 Hedef olarak GPS konumum"
+            )}
           </Btn>
           <Field
             label="Hedef adres"
@@ -1100,11 +1385,28 @@ export default function HomePage() {
             </Btn>
             <Btn
               onClick={async () => {
+                if (gpsYukleniyor) gpsIptal();
                 if (await adresKoordinatDoldur(true)) void cekiciBul();
               }}
-              disabled={loading || !form.hedefAdres.trim() || konumYukleniyor}
+              disabled={
+                loading ||
+                !form.hedefAdres.trim() ||
+                adresGeocodeYukleniyor
+              }
             >
-              {loading ? "Gönderiliyor…" : "🚛 Çekici Bul"}
+              {loading ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Spinner className="size-4 border-white/40 border-t-white" />
+                  Gönderiliyor…
+                </span>
+              ) : adresGeocodeYukleniyor ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Spinner className="size-4 border-white/40 border-t-white" />
+                  Adres işleniyor…
+                </span>
+              ) : (
+                "🚛 Çekici Bul"
+              )}
             </Btn>
           </div>
         </div>
