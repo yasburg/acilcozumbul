@@ -48,6 +48,8 @@ export interface Cekici {
   sehir: string;
   /** Hizmet verilen ilçeler (boş = bildirim alınmaz) */
   hizmetIlceleri?: string[];
+  /** SMS alınacak sorun tipleri (boş = hiçbir tür için bildirim alınmaz) */
+  hizmetSorunTipleri?: string[];
   aktif: boolean;
   kayitTarihi: string;
 }

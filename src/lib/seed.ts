@@ -1,5 +1,6 @@
 import { getCekiciler, saveCekiciler } from "./db";
 import type { Cekici } from "./types";
+import { tumSorunTipIdleri } from "./sorun-tipleri";
 
 const SEED_CEKICILER: Cekici[] = [
   {
@@ -11,6 +12,7 @@ const SEED_CEKICILER: Cekici[] = [
     kredi: 3,
     sehir: "İstanbul",
     hizmetIlceleri: ["Kadıköy", "Üsküdar", "Ataşehir", "Maltepe"],
+    hizmetSorunTipleri: tumSorunTipIdleri(),
     aktif: true,
     kayitTarihi: new Date().toISOString(),
   },
@@ -23,6 +25,7 @@ const SEED_CEKICILER: Cekici[] = [
     kredi: 5,
     sehir: "İstanbul",
     hizmetIlceleri: ["Beşiktaş", "Şişli", "Kağıthane", "Beyoğlu"],
+    hizmetSorunTipleri: tumSorunTipIdleri(),
     aktif: true,
     kayitTarihi: new Date().toISOString(),
   },
@@ -35,6 +38,7 @@ const SEED_CEKICILER: Cekici[] = [
     kredi: 2,
     sehir: "Ankara",
     hizmetIlceleri: ["Çankaya", "Yenimahalle", "Keçiören"],
+    hizmetSorunTipleri: tumSorunTipIdleri(),
     aktif: true,
     kayitTarihi: new Date().toISOString(),
   },
@@ -65,6 +69,10 @@ export async function ensureSeedData(): Promise<void> {
     if (!row.hizmetIlceleri) {
       guncellendi = true;
       row = { ...row, hizmetIlceleri: [] };
+    }
+    if (!row.hizmetSorunTipleri?.length) {
+      guncellendi = true;
+      row = { ...row, hizmetSorunTipleri: tumSorunTipIdleri() };
     }
     return row;
   });

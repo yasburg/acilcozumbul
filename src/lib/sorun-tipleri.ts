@@ -4,6 +4,20 @@ export interface SorunTipi {
   icon: string;
 }
 
+/** SMS / hizmet filtresi için geçerli sorun tipi kimlikleri */
+export const TUM_SORUN_TIP_IDLERI = [
+  "ariza",
+  "lastik",
+  "aku",
+  "yakit",
+  "kaza",
+  "kilit",
+  "cekici",
+  "diger",
+] as const;
+
+export type SorunTipiId = (typeof TUM_SORUN_TIP_IDLERI)[number];
+
 export const SORUN_TIPLERI: SorunTipi[] = [
   { id: "ariza", label: "Araç arızası / çalışmıyor", icon: "⚠️" },
   { id: "lastik", label: "Lastik patladı", icon: "🛞" },
@@ -17,6 +31,21 @@ export const SORUN_TIPLERI: SorunTipi[] = [
 
 export function sorunTipiBul(id: string): SorunTipi | undefined {
   return SORUN_TIPLERI.find((s) => s.id === id);
+}
+
+export function gecerliSorunTipi(id: string): id is SorunTipiId {
+  return (TUM_SORUN_TIP_IDLERI as readonly string[]).includes(id);
+}
+
+export function tumSorunTipIdleri(): SorunTipiId[] {
+  return [...TUM_SORUN_TIP_IDLERI];
+}
+
+/** Talep kaydındaki sorun tipi (yoksa diğer) */
+export function talepSorunTipi(talep: { sorunTipi?: string }): SorunTipiId {
+  const id = talep.sorunTipi?.trim();
+  if (id && gecerliSorunTipi(id)) return id;
+  return "diger";
 }
 
 export function sorunMetniOlustur(sorunTipi: string, sorunDetay?: string): string {

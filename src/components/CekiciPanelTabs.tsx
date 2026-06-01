@@ -148,14 +148,54 @@ export default function CekiciPanelTabs() {
   const [loading, setLoading] = useState(true);
   const [flash, setFlash] = useState<string | null>(null);
   const [istatistik, setIstatistik] = useState<Istatistik | null>(null);
+  const [panelYetkili, setPanelYetkili] = useState(false);
+  const [panelEposta, setPanelEposta] = useState<string | null>(null);
+  const [panelNext, setPanelNext] = useState("/panel");
+  const [cikisYukleniyor, setCikisYukleniyor] = useState(false);
+
+  const oturumuKapat = useCallback(async () => {
+    setCikisYukleniyor(true);
+    try {
+      await cekiciFetch("/api/cekici/cikis", { method: "POST" });
+      await fetch("/api/panel/cikis", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      /* yine de girişe yönlendir */
+    } finally {
+      setCikisYukleniyor(false);
+      router.push("/cekici/giris");
+      router.refresh();
+    }
+  }, [router]);
 
   const yukle = useCallback(async () => {
-    const [meRes, talepRes, statRes] = await Promise.all([
+    const nextParam = searchParams.get("next");
+    if (nextParam?.startsWith("/panel")) setPanelNext(nextParam);
+
+    const [meRes, talepRes, statRes, panelRes] = await Promise.all([
       cekiciFetch("/api/cekici/me"),
       cekiciFetch("/api/cekici/talepler"),
       cekiciFetch("/api/cekici/istatistik"),
+      fetch("/api/panel/oturum", { credentials: "include" }),
     ]);
+
+    let yetkili = false;
+    if (panelRes.ok) {
+      const p = await panelRes.json();
+      yetkili = !!p.yetkili;
+      setPanelYetkili(yetkili);
+      setPanelEposta(p.eposta ?? null);
+    } else {
+      setPanelYetkili(false);
+    }
+
     if (!meRes.ok) {
+      if (yetkili) {
+        setLoading(false);
+        return;
+      }
       router.push("/cekici/giris");
       return;
     }
@@ -163,7 +203,7 @@ export default function CekiciPanelTabs() {
     if (talepRes.ok) setData(await talepRes.json());
     if (statRes.ok) setIstatistik(await statRes.json());
     setLoading(false);
-  }, [router]);
+  }, [router, searchParams]);
 
   useEffect(() => {
     yukle();
@@ -218,10 +258,48 @@ export default function CekiciPanelTabs() {
     </nav>
   );
 
-  if (loading || !cekici) {
+  if (loading) {
     return (
       <MobileShell subtitle="Çekici Paneli" footer={tabBar}>
         <p className="text-center text-slate-500 py-12">Yükleniyor…</p>
+      </MobileShell>
+    );
+  }
+
+  if (!cekici && panelYetkili) {
+    return (
+      <MobileShell subtitle="Hesabım" footer={tabBar}>
+        <div className="space-y-4 animate-fade-in">
+          <Card className="bg-slate-50 border-slate-200">
+            <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">
+              Yetkili girişi
+            </p>
+            <p className="text-sm text-slate-800">
+              {panelEposta ?? "Yönetici hesabı"} ile giriş yaptınız.
+            </p>
+          </Card>
+          <Link href={panelNext.startsWith("/panel") ? panelNext : "/panel"}>
+            <Btn>📋 Yönetim paneline git</Btn>
+          </Link>
+          <Link href="/cekici/giris">
+            <Btn variant="outline">📱 Üye girişi (telefon / kayıt)</Btn>
+          </Link>
+          <Btn
+            variant="danger"
+            onClick={() => void oturumuKapat()}
+            disabled={cikisYukleniyor}
+          >
+            {cikisYukleniyor ? "Çıkış yapılıyor…" : "Çıkış yap"}
+          </Btn>
+        </div>
+      </MobileShell>
+    );
+  }
+
+  if (!cekici) {
+    return (
+      <MobileShell subtitle="Çekici Paneli">
+        <p className="text-center text-slate-500 py-12">Yönlendiriliyor…</p>
       </MobileShell>
     );
   }
@@ -250,8 +328,9 @@ export default function CekiciPanelTabs() {
             </h2>
             {data.bekleyen.length === 0 ? (
               <Card>
-                <p className="text-sm text-slate-500 text-center py-2">
-                  Şu an teklif verebileceğiniz açık talep yok.
+                <p className="text-sm text-slate-500 text-center py-2 leading-relaxed">
+                  Bölgenizde ve hesabınızda tanımlı sorun tiplerine uygun açık
+                  talep yok. Ayarlardan ilçe ve sorun tiplerinizi kontrol edin.
                 </p>
               </Card>
             ) : (
@@ -442,6 +521,14 @@ export default function CekiciPanelTabs() {
             </section>
           )}
 
+          {panelYetkili && (
+            <Link
+              href={panelNext.startsWith("/panel") ? panelNext : "/panel"}
+            >
+              <Btn variant="secondary">📋 Yönetim paneline git</Btn>
+            </Link>
+          )}
+
           <Link href="/cekici/ayarlar">
             <Btn variant="secondary">📊 Ayarlar & Detaylı İstatistikler</Btn>
           </Link>
@@ -453,6 +540,14 @@ export default function CekiciPanelTabs() {
           <Link href="/demo/sms">
             <Btn variant="secondary">📱 Demo SMS Kayıtları</Btn>
           </Link>
+
+          <Btn
+            variant="danger"
+            onClick={() => void oturumuKapat()}
+            disabled={cikisYukleniyor}
+          >
+            {cikisYukleniyor ? "Çıkış yapılıyor…" : "Çıkış yap"}
+          </Btn>
         </div>
       )}
     </MobileShell>

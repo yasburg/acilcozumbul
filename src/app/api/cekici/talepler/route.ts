@@ -3,6 +3,7 @@ import { getCurrentCekici } from "@/lib/auth";
 import { getTalepler } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import { cekiciTalepBolgesineUygunMu } from "@/lib/cekici-bolge";
+import { cekiciTalepSorununaUygunMu } from "@/lib/cekici-sorun";
 import {
   cekiciHaricMi,
   cekiciTeklifVerdiMi,
@@ -13,9 +14,10 @@ import {
   talepBolge,
   talepSorunOzet,
 } from "@/lib/talep-utils";
-import type { ListeDurumu, Talep, TalepOzet } from "@/lib/types";
+import type { Cekici, ListeDurumu, Talep, TalepOzet } from "@/lib/types";
 
-function listeDurumuBelirle(talep: Talep, cekiciId: string): ListeDurumu {
+function listeDurumuBelirle(talep: Talep, cekici: Cekici): ListeDurumu {
+  const cekiciId = cekici.id;
   if (talep.kazananCekiciId === cekiciId) return "kazandim";
   if (talep.durum === "anlaşıldı" && talep.kazananCekiciId === cekiciId)
     return "anlasildi";
@@ -24,13 +26,21 @@ function listeDurumuBelirle(talep: Talep, cekiciId: string): ListeDurumu {
     return "kaybettim";
   }
   if (cekiciTeklifVerdiMi(talep, cekiciId)) return "teklif_verdim";
-  if (ihaleAcikMi(talep) && !cekiciHaricMi(talep, cekiciId)) return "acik";
+  if (
+    ihaleAcikMi(talep) &&
+    !cekiciHaricMi(talep, cekiciId) &&
+    cekiciTalepBolgesineUygunMu(cekici, talep) &&
+    cekiciTalepSorununaUygunMu(cekici, talep)
+  ) {
+    return "acik";
+  }
   return "kaybettim";
 }
 
-function toOzet(talep: Talep, cekiciId: string): TalepOzet {
+function toOzet(talep: Talep, cekici: Cekici): TalepOzet {
+  const cekiciId = cekici.id;
   const kazandim = talep.kazananCekiciId === cekiciId;
-  const durum = listeDurumuBelirle(talep, cekiciId);
+  const durum = listeDurumuBelirle(talep, cekici);
   const aktifTeklifler = talep.teklifler?.filter((t) => t.durum === "aktif") ?? [];
   const benimTeklif = talep.teklifler?.find((t) => t.cekiciId === cekiciId);
 
@@ -66,18 +76,18 @@ export async function GET() {
   const ilgili = bugun.filter((t) => {
     if (t.kazananCekiciId === cekici.id) return true;
     if (t.teklifler?.some((te) => te.cekiciId === cekici.id)) return true;
-    if (t.bildirilenCekiciIds.includes(cekici.id)) return true;
     if (
       ihaleAcikMi(t) &&
       !cekiciHaricMi(t, cekici.id) &&
-      cekiciTalepBolgesineUygunMu(cekici, t)
+      cekiciTalepBolgesineUygunMu(cekici, t) &&
+      cekiciTalepSorununaUygunMu(cekici, t)
     ) {
       return true;
     }
     return false;
   });
 
-  const tumOzet = ilgili.map((t) => toOzet(t, cekici.id));
+  const tumOzet = ilgili.map((t) => toOzet(t, cekici));
 
   const bekleyen = tumOzet.filter((t) => t.listeDurumu === "acik");
   const teklifVerdigim = tumOzet.filter((t) => t.listeDurumu === "teklif_verdim");

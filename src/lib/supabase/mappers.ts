@@ -16,6 +16,7 @@ export type CekiciRow = {
   kredi: number;
   sehir: string;
   hizmet_ilceleri: string[];
+  hizmet_sorun_tipleri: string[];
   aktif: boolean;
   kayit_tarihi: string;
 };
@@ -55,6 +56,7 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     kredi: Number(r.kredi),
     sehir: r.sehir,
     hizmetIlceleri: r.hizmet_ilceleri ?? [],
+    hizmetSorunTipleri: r.hizmet_sorun_tipleri ?? [],
     aktif: r.aktif,
     kayitTarihi: r.kayit_tarihi,
   };
@@ -70,6 +72,7 @@ export function cekiciToRow(c: Cekici): CekiciRow {
     kredi: c.kredi,
     sehir: c.sehir,
     hizmet_ilceleri: c.hizmetIlceleri ?? [],
+    hizmet_sorun_tipleri: c.hizmetSorunTipleri ?? [],
     aktif: c.aktif,
     kayit_tarihi: c.kayitTarihi,
   };

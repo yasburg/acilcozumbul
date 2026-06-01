@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { IlceSecimi } from "@/components/IlceSecimi";
+import { SorunTipiSecimi } from "@/components/SorunTipiSecimi";
 import { Btn, Card } from "@/components/ui";
+import type { SorunTipi } from "@/lib/sorun-tipleri";
 import { formatKredi } from "@/lib/talep-utils";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 
@@ -62,17 +64,23 @@ export default function AyarlarPage() {
   const [stats, setStats] = useState<Istatistik | null>(null);
   const [bolge, setBolge] = useState<BolgeData | null>(null);
   const [secili, setSecili] = useState<string[]>([]);
+  const [tumSorunTipleri, setTumSorunTipleri] = useState<SorunTipi[]>([]);
+  const [seciliSorunTipleri, setSeciliSorunTipleri] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [kaydediyor, setKaydediyor] = useState(false);
+  const [sorunKaydediyor, setSorunKaydediyor] = useState(false);
   const [mesaj, setMesaj] = useState("");
+  const [sorunMesaj, setSorunMesaj] = useState("");
   const [hata, setHata] = useState("");
+  const [sorunHata, setSorunHata] = useState("");
 
   const yukle = useCallback(async () => {
-    const [statRes, bolgeRes] = await Promise.all([
+    const [statRes, bolgeRes, sorunRes] = await Promise.all([
       cekiciFetch("/api/cekici/istatistik"),
       cekiciFetch("/api/cekici/bolgeler"),
+      cekiciFetch("/api/cekici/sorun-tipleri"),
     ]);
-    if (!statRes.ok || !bolgeRes.ok) {
+    if (!statRes.ok || !bolgeRes.ok || !sorunRes.ok) {
       router.push("/cekici/giris");
       return;
     }
@@ -80,6 +88,9 @@ export default function AyarlarPage() {
     const b = await bolgeRes.json();
     setBolge(b);
     setSecili(b.seciliIlceler ?? []);
+    const s = await sorunRes.json();
+    setTumSorunTipleri(s.tumTipler ?? []);
+    setSeciliSorunTipleri(s.seciliTipler ?? []);
     setLoading(false);
   }, [router]);
 
@@ -92,6 +103,34 @@ export default function AyarlarPage() {
       prev.includes(ilce) ? prev.filter((i) => i !== ilce) : [...prev, ilce]
     );
     setMesaj("");
+  }
+
+  function toggleSorunTipi(id: string) {
+    setSeciliSorunTipleri((prev) =>
+      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+    );
+    setSorunMesaj("");
+  }
+
+  async function sorunTipleriKaydet() {
+    setSorunKaydediyor(true);
+    setSorunHata("");
+    setSorunMesaj("");
+    try {
+      const res = await cekiciFetch("/api/cekici/sorun-tipleri", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipler: seciliSorunTipleri }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setSeciliSorunTipleri(data.seciliTipler);
+      setSorunMesaj(data.mesaj);
+    } catch (e) {
+      setSorunHata(e instanceof Error ? e.message : "Kayıt başarısız.");
+    } finally {
+      setSorunKaydediyor(false);
+    }
   }
 
   async function kaydet() {
@@ -157,6 +196,48 @@ export default function AyarlarPage() {
             <div className="mt-4">
               <Btn onClick={kaydet} disabled={kaydediyor}>
                 {kaydediyor ? "Kaydediliyor…" : "Bölgeleri kaydet"}
+              </Btn>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
+              Hizmet verdiğim sorunlar
+            </h2>
+            <Card className="mb-3">
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Yalnızca işaretlediğiniz sorun tipleri için talep SMS&apos;i
+                alırsınız. Örneğin lastik seçili değilse, lastik patlaması
+                taleplerinde size bildirim gitmez.
+              </p>
+            </Card>
+
+            {sorunHata && (
+              <Card className="mb-3 border-red-200 bg-red-50">
+                <p className="text-sm text-red-700">{sorunHata}</p>
+              </Card>
+            )}
+            {sorunMesaj && (
+              <Card className="mb-3 border-emerald-200 bg-emerald-50">
+                <p className="text-sm text-emerald-800">{sorunMesaj}</p>
+              </Card>
+            )}
+
+            {tumSorunTipleri.length > 0 && (
+              <SorunTipiSecimi
+                tumTipler={tumSorunTipleri}
+                seciliTipler={seciliSorunTipleri}
+                onToggle={toggleSorunTipi}
+                onTumunuSec={() =>
+                  setSeciliSorunTipleri(tumSorunTipleri.map((t) => t.id))
+                }
+                onTemizle={() => setSeciliSorunTipleri([])}
+              />
+            )}
+
+            <div className="mt-4">
+              <Btn onClick={sorunTipleriKaydet} disabled={sorunKaydediyor}>
+                {sorunKaydediyor ? "Kaydediliyor…" : "Sorun tiplerini kaydet"}
               </Btn>
             </div>
           </section>

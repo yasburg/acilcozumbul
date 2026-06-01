@@ -15,7 +15,7 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
 
   async function cikis() {
     await fetch("/api/panel/cikis", { method: "POST" });
-    router.replace("/panel/giris");
+    router.replace("/cekici/giris?eposta=1");
     router.refresh();
   }
 

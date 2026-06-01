@@ -9,6 +9,7 @@ import {
   telefonNormalize,
 } from "@/lib/telefon";
 import type { Cekici } from "@/lib/types";
+import { tumSorunTipIdleri } from "@/lib/sorun-tipleri";
 
 const SEHIRLER = ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana"];
 
@@ -62,6 +63,7 @@ export async function POST(request: NextRequest) {
     kredi: 0,
     sehir,
     hizmetIlceleri: [],
+    hizmetSorunTipleri: tumSorunTipIdleri(),
     aktif: true,
     kayitTarihi: new Date().toISOString(),
   };

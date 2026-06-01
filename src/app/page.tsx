@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { SorunSecimi } from "@/components/SorunSecimi";
@@ -1413,9 +1414,12 @@ export default function HomePage() {
       )}
 
       <p className="text-center text-xs text-slate-500 mt-8">
-        <a href="/panel" className="text-amber-600 underline">
-          Yönetim paneli
-        </a>
+        <Link
+          href="/cekici/giris"
+          className="text-amber-600 underline font-medium"
+        >
+          Çekici / lastikçi / anahtarcı girişi
+        </Link>
       </p>
     </MobileShell>
   );

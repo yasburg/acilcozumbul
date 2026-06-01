@@ -1,5 +1,6 @@
 import { getCekiciler } from "./db";
 import { filtreleCekicilerBolge } from "./cekici-bolge";
+import { filtreleCekicilerSorun } from "./cekici-sorun";
 import { SMS_BILDIRIM_KREDI } from "./ihale";
 import { sendSms } from "./sms-provider";
 import type { Cekici, Talep } from "./types";
@@ -13,7 +14,10 @@ export async function notifyCekiciler(
   const tumCekiciler = await getCekiciler();
   const haric = new Set(haricTutulan);
 
-  const bolgeyeUygun = filtreleCekicilerBolge(tumCekiciler, talep).filter(
+  const bolgeVeSorunaUygun = filtreleCekicilerSorun(
+    filtreleCekicilerBolge(tumCekiciler, talep),
+    talep
+  ).filter(
     (c) => c.aktif && !haric.has(c.id) && c.kredi >= SMS_BILDIRIM_KREDI
   );
 
@@ -21,7 +25,7 @@ export async function notifyCekiciler(
   const yeniden = options?.yenidenArama ?? false;
 
   await Promise.all(
-    bolgeyeUygun.map(async (cekici: Cekici) => {
+    bolgeVeSorunaUygun.map(async (cekici: Cekici) => {
       const link = `${baseUrl}/cekici/talep/${talep.id}?t=${cekici.token}`;
       const hedef = talep.hedefKonum?.adres
         ? ` → ${talep.hedefKonum.adres.split(",").slice(0, 2).join(",")}`

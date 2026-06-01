@@ -4,6 +4,7 @@ import { getCurrentCekici } from "@/lib/auth";
 import { getTalepById, updateTalep } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import { cekiciTalepBolgesineUygunMu } from "@/lib/cekici-bolge";
+import { cekiciTalepSorununaUygunMu } from "@/lib/cekici-sorun";
 import { cekiciHaricMi, cekiciTeklifVerebilirMi } from "@/lib/ihale";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Teklif } from "@/lib/types";
@@ -43,12 +44,19 @@ export async function POST(
     );
   }
 
-  const bolgeyeUygun =
-    talep.bildirilenCekiciIds.includes(cekici.id) ||
-    cekiciTalepBolgesineUygunMu(cekici, talep);
-  if (!bolgeyeUygun) {
+  if (!cekiciTalepBolgesineUygunMu(cekici, talep)) {
     return NextResponse.json(
       { error: "Bu talep hizmet bölgelerinizin dışında." },
+      { status: 403 }
+    );
+  }
+
+  if (!cekiciTalepSorununaUygunMu(cekici, talep)) {
+    return NextResponse.json(
+      {
+        error:
+          "Bu sorun tipi hesabınızda tanımlı değil. Ayarlardan hizmet verdiğiniz sorunları güncelleyin.",
+      },
       { status: 403 }
     );
   }
