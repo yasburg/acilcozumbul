@@ -24,7 +24,7 @@ export const SORUN_TIPLERI: SorunTipi[] = [
   { id: "aku", label: "Akü bitti", icon: "🔋" },
   { id: "yakit", label: "Yakıt bitti", icon: "⛽" },
   { id: "kaza", label: "Kaza / çarpışma", icon: "💥" },
-  { id: "kilit", label: "Anahtar kilitlendi", icon: "🔑" },
+  { id: "kilit", label: "Arabam kilitlendi / Anahtar çalışmıyor", icon: "🔑" },
   { id: "cekici", label: "Çekici / kurtarma lazım", icon: "🚛" },
   { id: "diger", label: "Diğer", icon: "✏️" },
 ];
