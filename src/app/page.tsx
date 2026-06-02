@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { SorunSecimi } from "@/components/SorunSecimi";
 import { Btn, Field, Card, Spinner } from "@/components/ui";
-import { sorunMetniOlustur, sorunTipiBul } from "@/lib/sorun-tipleri";
+import {
+  sorunCagriButonEtiketi,
+  sorunMetniOlustur,
+  sorunTipiBul,
+} from "@/lib/sorun-tipleri";
 import { KonumIzniYardim } from "@/components/KonumIzniYardim";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import {
@@ -1406,7 +1410,7 @@ export default function HomePage() {
                   Adres işleniyor…
                 </span>
               ) : (
-                "🚛 Çekici Bul"
+                sorunCagriButonEtiketi(form.sorunTipi)
               )}
             </Btn>
           </div>

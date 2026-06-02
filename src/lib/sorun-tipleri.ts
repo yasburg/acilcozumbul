@@ -48,6 +48,25 @@ export function talepSorunTipi(talep: { sorunTipi?: string }): SorunTipiId {
   return "diger";
 }
 
+/** Son adım (hedef) «çağır» butonu metni */
+const SORUN_CAGRI_BUTON: Record<SorunTipiId, string> = {
+  ariza: "Çekici çağır",
+  lastik: "Lastikçi çağır",
+  aku: "Yol yardım çağır",
+  yakit: "Yol yardım çağır",
+  kaza: "Çekici çağır",
+  kilit: "Anahtarcı çağır",
+  cekici: "Çekici çağır",
+  diger: "Yol yardım çağır",
+};
+
+export function sorunCagriButonEtiketi(sorunTipi?: string): string {
+  const id = talepSorunTipi({ sorunTipi });
+  const tip = sorunTipiBul(id);
+  const metin = SORUN_CAGRI_BUTON[id];
+  return `${tip?.icon ?? "🚛"} ${metin}`;
+}
+
 export function sorunMetniOlustur(sorunTipi: string, sorunDetay?: string): string {
   const tip = sorunTipiBul(sorunTipi);
   const baslik = tip?.label ?? sorunTipi;
