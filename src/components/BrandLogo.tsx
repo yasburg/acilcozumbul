@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const LOGO_YAZILI = "/acilcozumbul-logo-yazili.png";
+const LOGO_YAZILI = "/acilcozumbul-logo-yazili-dikdortgen.png";
 const LOGO_ICON = "/acilcozumbul-logo-transparan.png";
 
 /** Yazılı marka logosu (header vb.) */
@@ -18,8 +18,8 @@ export function BrandLogoYazili({
     <Image
       src={LOGO_YAZILI}
       alt="Acil Çözüm Bul — acilcozumbul.com"
-      width={1254}
-      height={1254}
+      width={1668}
+      height={1086}
       className={className}
       priority={priority}
     />

@@ -812,7 +812,10 @@ export default function HomePage() {
   }, [step, cozumOneriAktif]);
 
   return (
-    <MobileShell subtitle="Yolda mı kaldınız? Hemen çekici bulun.">
+    <MobileShell
+      subtitle="Yolda mı kaldınız? Hemen en hızlı ve uygun teklifleri alın."
+      subtitleAlign="right"
+    >
 
       <div className="flex gap-1.5 mb-6">
         {steps.map((s) => (
