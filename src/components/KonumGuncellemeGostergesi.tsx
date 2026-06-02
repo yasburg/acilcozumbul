@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { KONUM_TAZE_MS } from "@/hooks/useCekiciKonumSync";
 
+const ALT_YAZI_MS = 3_000;
 const YESIL = { r: 5, g: 150, b: 105 };
 const TURUNCU = { r: 245, g: 158, b: 11 };
 
@@ -27,6 +28,19 @@ function KonumIkonu({ className }: { className?: string }) {
   );
 }
 
+function hedefAltYazi(
+  tikMesaj: string | null,
+  gonderiliyor: boolean,
+  hata: boolean,
+  sonGuncelleme: Date | null
+): string | null {
+  if (tikMesaj) return tikMesaj;
+  if (gonderiliyor) return sonGuncelleme ? "Güncelleniyor…" : "Konum alınıyor…";
+  if (hata) return "Konum alınamadı";
+  if (sonGuncelleme) return "Konum yenilendi";
+  return null;
+}
+
 export function KonumGuncellemeGostergesi({
   aktif,
   gonderiliyor,
@@ -40,9 +54,11 @@ export function KonumGuncellemeGostergesi({
   sonGuncelleme: Date | null;
   onYenile: () => void;
 }) {
-  if (!aktif) return null;
   const [simdi, setSimdi] = useState(() => Date.now());
   const [tikMesaj, setTikMesaj] = useState<string | null>(null);
+  const [gorunurAltYazi, setGorunurAltYazi] = useState<string | null>(null);
+
+  const mesaj = hedefAltYazi(tikMesaj, gonderiliyor, hata, sonGuncelleme);
 
   useEffect(() => {
     if (sonGuncelleme) setSimdi(Date.now());
@@ -55,10 +71,14 @@ export function KonumGuncellemeGostergesi({
   }, [sonGuncelleme]);
 
   useEffect(() => {
-    if (!tikMesaj) return;
-    const id = setTimeout(() => setTikMesaj(null), 2_500);
+    if (!mesaj) {
+      setGorunurAltYazi(null);
+      return;
+    }
+    setGorunurAltYazi(mesaj);
+    const id = setTimeout(() => setGorunurAltYazi(null), ALT_YAZI_MS);
     return () => clearTimeout(id);
-  }, [tikMesaj]);
+  }, [mesaj]);
 
   const tikla = useCallback(() => {
     if (gonderiliyor) return;
@@ -74,25 +94,21 @@ export function KonumGuncellemeGostergesi({
     onYenile();
   }, [gonderiliyor, onYenile, simdi, sonGuncelleme]);
 
+  useEffect(() => {
+    if (!tikMesaj) return;
+    const id = setTimeout(() => setTikMesaj(null), ALT_YAZI_MS);
+    return () => clearTimeout(id);
+  }, [tikMesaj]);
+
+  if (!aktif) return null;
   if (!sonGuncelleme && !gonderiliyor && !hata) return null;
 
   const gecenMs = sonGuncelleme ? simdi - sonGuncelleme.getTime() : KONUM_TAZE_MS;
-  const solmaOrani = sonGuncelleme && !gonderiliyor && !hata
-    ? Math.min(gecenMs / KONUM_TAZE_MS, 1)
-    : 0;
+  const solmaOrani =
+    sonGuncelleme && !gonderiliyor && !hata
+      ? Math.min(gecenMs / KONUM_TAZE_MS, 1)
+      : 0;
   const { css: renk } = renkKaristir(solmaOrani);
-
-  const altYazi = tikMesaj
-    ? tikMesaj
-    : gonderiliyor
-      ? "Güncelleniyor…"
-      : hata
-        ? "Konum alınamadı"
-        : sonGuncelleme
-          ? "Konum yenilendi"
-          : gonderiliyor
-            ? "Konum alınıyor…"
-            : "";
 
   const ikonStili = gonderiliyor
     ? {
@@ -110,7 +126,8 @@ export function KonumGuncellemeGostergesi({
           borderColor: renk,
           backgroundColor: `color-mix(in srgb, ${renk} 12%, white)`,
           color: renk,
-          transition: "border-color 0.4s ease, background-color 0.4s ease, color 0.4s ease",
+          transition:
+            "border-color 0.4s ease, background-color 0.4s ease, color 0.4s ease",
         };
 
   return (
@@ -141,13 +158,13 @@ export function KonumGuncellemeGostergesi({
         )}
         <KonumIkonu className="relative h-4 w-4" />
       </button>
-      {altYazi && (
+      {gorunurAltYazi && (
         <p
-          className="max-w-[7.5rem] text-right text-[10px] leading-tight font-medium text-slate-600 pointer-events-none select-none"
+          className="max-w-[7.5rem] text-right text-[10px] leading-tight font-medium text-slate-600 pointer-events-none select-none animate-fade-in"
           role="status"
           aria-live="polite"
         >
-          {altYazi}
+          {gorunurAltYazi}
         </p>
       )}
     </div>
