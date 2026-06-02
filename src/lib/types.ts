@@ -66,7 +66,18 @@ export interface Cekici {
   hizmetSorunTipleri?: string[];
   aktif: boolean;
   kayitTarihi: string;
+  faturaEposta?: string;
+  faturaEpostaDogrulandi?: string;
 }
+
+export type OdemeFatura = {
+  faturaEposta: string;
+  faturaAdres?: string;
+  faturaTcKimlik?: string;
+  kurumsal: boolean;
+  sirketUnvan?: string;
+  vergiNo?: string;
+};
 
 export interface Talep {
   id: string;
@@ -125,8 +136,37 @@ export interface BekleyenOdeme {
   cekiciId: string;
   miktar: number;
   tutar: number;
+  paketTl?: number;
+  listeFiyati?: number;
   olusturulma: string;
   durum: "bekliyor" | "tamamlandi";
+  faturaEposta?: string;
+  faturaAdres?: string;
+  faturaTcKimlik?: string;
+  kurumsal?: boolean;
+  sirketUnvan?: string;
+  vergiNo?: string;
+}
+
+export interface KrediOdeme {
+  id: string;
+  cekiciId: string;
+  cekiciAd: string;
+  cekiciTelefon: string;
+  miktar: number;
+  tutar: number;
+  listeFiyati?: number;
+  paketTl: number;
+  faturaEposta: string;
+  faturaAdres?: string;
+  faturaTcKimlik?: string;
+  kurumsal: boolean;
+  sirketUnvan?: string;
+  vergiNo?: string;
+  odemeReferans?: string;
+  garantiRespCode?: string;
+  demoOdeme: boolean;
+  olusturulma: string;
 }
 
 export interface TalepOzet {

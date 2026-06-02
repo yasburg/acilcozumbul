@@ -18,5 +18,7 @@ export async function GET() {
     sehir: cekici.sehir,
     hizmetModu: cekici.hizmetModu ?? "il_ilce",
     menzilKm: cekici.menzilKm ?? 30,
+    faturaEposta: cekici.faturaEposta ?? null,
+    faturaEpostaDogrulandi: Boolean(cekici.faturaEpostaDogrulandi),
   });
 }

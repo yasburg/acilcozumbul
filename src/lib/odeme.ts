@@ -2,11 +2,12 @@ import { randomUUID } from "crypto";
 import { krediPaketOdenecekTL, krediPaketBul } from "./kredi-fiyat";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { odemeFromRow, odemeToRow, type OdemeRow } from "./supabase/mappers";
-import type { BekleyenOdeme } from "./types";
+import type { BekleyenOdeme, OdemeFatura } from "./types";
 
 export async function olusturBekleyenOdeme(
   cekiciId: string,
-  paketTl: number
+  paketTl: number,
+  faturaEposta: string
 ): Promise<BekleyenOdeme> {
   const paket = krediPaketBul(paketTl);
   if (!paket) {
@@ -17,14 +18,45 @@ export async function olusturBekleyenOdeme(
     cekiciId,
     miktar: paket.kredi,
     tutar: krediPaketOdenecekTL(paket),
+    paketTl: paket.tutarTL,
+    listeFiyati: paket.tutarTL,
     olusturulma: new Date().toISOString(),
     durum: "bekliyor",
+    faturaEposta: faturaEposta.toLowerCase(),
   };
   const { error } = await getSupabaseAdmin()
     .from("odeme_bekleyen")
     .insert(odemeToRow(odeme));
   if (error) throw error;
   return odeme;
+}
+
+export async function guncelleBekleyenOdemeFatura(
+  id: string,
+  cekiciId: string,
+  fatura: OdemeFatura
+): Promise<BekleyenOdeme | undefined> {
+  const mevcut = await getBekleyenOdeme(id);
+  if (!mevcut || mevcut.cekiciId !== cekiciId) return undefined;
+
+  const guncel: BekleyenOdeme = {
+    ...mevcut,
+    ...fatura,
+  };
+  const { error } = await getSupabaseAdmin()
+    .from("odeme_bekleyen")
+    .update({
+      fatura_eposta: guncel.faturaEposta,
+      fatura_adres: guncel.faturaAdres ?? null,
+      fatura_tc_kimlik: guncel.faturaTcKimlik ?? null,
+      kurumsal: guncel.kurumsal ?? false,
+      sirket_unvan: guncel.sirketUnvan ?? null,
+      vergi_no: guncel.vergiNo ?? null,
+    })
+    .eq("id", id)
+    .eq("durum", "bekliyor");
+  if (error) throw error;
+  return guncel;
 }
 
 export async function getBekleyenOdeme(

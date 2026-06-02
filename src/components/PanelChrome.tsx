@@ -73,6 +73,12 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
                 SMS
               </Link>
               <Link
+                href="/panel/kredi-odemeler"
+                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
+              >
+                Kredi ödemeleri
+              </Link>
+              <Link
                 href="/panel/degerlendirmeler"
                 className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
               >

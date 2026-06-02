@@ -464,7 +464,7 @@ export default function CekiciPanelTabs() {
                 </p>
               </Card>
             ) : (
-              <div className="space-y-2">
+              <div className="flex flex-col gap-4">
                 {data.bekleyen.map((t) => (
                   <TalepKarti key={t.id} talep={t} />
                 ))}

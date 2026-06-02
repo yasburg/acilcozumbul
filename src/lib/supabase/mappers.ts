@@ -3,6 +3,7 @@ import type {
   Cekici,
   HizmetBolgeleri,
   HizmetBolgeModu,
+  KrediOdeme,
   Konum,
   SmsKaydi,
   Talep,
@@ -31,6 +32,8 @@ export type CekiciRow = {
   hizmet_sorun_tipleri: string[];
   aktif: boolean;
   kayit_tarihi: string;
+  fatura_eposta?: string | null;
+  fatura_eposta_dogrulandi?: string | null;
 };
 
 export type TalepRow = {
@@ -85,6 +88,8 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     hizmetSorunTipleri: r.hizmet_sorun_tipleri ?? [],
     aktif: r.aktif,
     kayitTarihi: r.kayit_tarihi,
+    faturaEposta: r.fatura_eposta ?? undefined,
+    faturaEpostaDogrulandi: r.fatura_eposta_dogrulandi ?? undefined,
   };
 }
 
@@ -112,6 +117,8 @@ export function cekiciToRow(c: Cekici): CekiciRow {
     hizmet_sorun_tipleri: c.hizmetSorunTipleri ?? [],
     aktif: c.aktif,
     kayit_tarihi: c.kayitTarihi,
+    fatura_eposta: c.faturaEposta ?? null,
+    fatura_eposta_dogrulandi: c.faturaEpostaDogrulandi ?? null,
   };
 }
 
@@ -217,8 +224,15 @@ export type OdemeRow = {
   cekici_id: string;
   miktar: number;
   tutar: number;
+  paket_tl?: number | null;
   olusturulma: string;
   durum: string;
+  fatura_eposta?: string | null;
+  fatura_adres?: string | null;
+  fatura_tc_kimlik?: string | null;
+  kurumsal?: boolean | null;
+  sirket_unvan?: string | null;
+  vergi_no?: string | null;
 };
 
 export function odemeFromRow(r: OdemeRow): BekleyenOdeme {
@@ -227,8 +241,15 @@ export function odemeFromRow(r: OdemeRow): BekleyenOdeme {
     cekiciId: r.cekici_id,
     miktar: Number(r.miktar),
     tutar: Number(r.tutar),
+    paketTl: r.paket_tl != null ? Number(r.paket_tl) : undefined,
     olusturulma: r.olusturulma,
     durum: r.durum as BekleyenOdeme["durum"],
+    faturaEposta: r.fatura_eposta ?? undefined,
+    faturaAdres: r.fatura_adres ?? undefined,
+    faturaTcKimlik: r.fatura_tc_kimlik ?? undefined,
+    kurumsal: r.kurumsal ?? false,
+    sirketUnvan: r.sirket_unvan ?? undefined,
+    vergiNo: r.vergi_no ?? undefined,
   };
 }
 
@@ -238,8 +259,82 @@ export function odemeToRow(o: BekleyenOdeme): OdemeRow {
     cekici_id: o.cekiciId,
     miktar: o.miktar,
     tutar: o.tutar,
+    paket_tl: o.paketTl ?? null,
     olusturulma: o.olusturulma,
     durum: o.durum,
+    fatura_eposta: o.faturaEposta ?? null,
+    fatura_adres: o.faturaAdres ?? null,
+    fatura_tc_kimlik: o.faturaTcKimlik ?? null,
+    kurumsal: o.kurumsal ?? false,
+    sirket_unvan: o.sirketUnvan ?? null,
+    vergi_no: o.vergiNo ?? null,
+  };
+}
+
+export type KrediOdemeRow = {
+  id: string;
+  cekici_id: string;
+  cekici_ad: string;
+  cekici_telefon: string;
+  miktar: number;
+  tutar: number;
+  liste_fiyati: number | null;
+  paket_tl: number;
+  fatura_eposta: string;
+  fatura_adres: string | null;
+  fatura_tc_kimlik: string | null;
+  kurumsal: boolean;
+  sirket_unvan: string | null;
+  vergi_no: string | null;
+  odeme_referans: string | null;
+  garanti_resp_code: string | null;
+  demo_odeme: boolean;
+  olusturulma: string;
+};
+
+export function krediOdemeFromRow(r: KrediOdemeRow): KrediOdeme {
+  return {
+    id: r.id,
+    cekiciId: r.cekici_id,
+    cekiciAd: r.cekici_ad,
+    cekiciTelefon: r.cekici_telefon,
+    miktar: Number(r.miktar),
+    tutar: Number(r.tutar),
+    listeFiyati: r.liste_fiyati != null ? Number(r.liste_fiyati) : undefined,
+    paketTl: Number(r.paket_tl),
+    faturaEposta: r.fatura_eposta,
+    faturaAdres: r.fatura_adres ?? undefined,
+    faturaTcKimlik: r.fatura_tc_kimlik ?? undefined,
+    kurumsal: r.kurumsal,
+    sirketUnvan: r.sirket_unvan ?? undefined,
+    vergiNo: r.vergi_no ?? undefined,
+    odemeReferans: r.odeme_referans ?? undefined,
+    garantiRespCode: r.garanti_resp_code ?? undefined,
+    demoOdeme: r.demo_odeme,
+    olusturulma: r.olusturulma,
+  };
+}
+
+export function krediOdemeToRow(k: KrediOdeme): KrediOdemeRow {
+  return {
+    id: k.id,
+    cekici_id: k.cekiciId,
+    cekici_ad: k.cekiciAd,
+    cekici_telefon: k.cekiciTelefon,
+    miktar: k.miktar,
+    tutar: k.tutar,
+    liste_fiyati: k.listeFiyati ?? null,
+    paket_tl: k.paketTl,
+    fatura_eposta: k.faturaEposta,
+    fatura_adres: k.faturaAdres ?? null,
+    fatura_tc_kimlik: k.faturaTcKimlik ?? null,
+    kurumsal: k.kurumsal,
+    sirket_unvan: k.sirketUnvan ?? null,
+    vergi_no: k.vergiNo ?? null,
+    odeme_referans: k.odemeReferans ?? null,
+    garanti_resp_code: k.garantiRespCode ?? null,
+    demo_odeme: k.demoOdeme,
+    olusturulma: k.olusturulma,
   };
 }
 

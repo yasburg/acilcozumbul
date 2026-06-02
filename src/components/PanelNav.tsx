@@ -8,6 +8,7 @@ const LINKS: { href: string; label: string; exact?: boolean }[] = [
   { href: "/panel/cekiciler", label: "Çekiciler" },
   { href: "/panel/talepler", label: "Talepler" },
   { href: "/panel/sms", label: "SMS" },
+  { href: "/panel/kredi-odemeler", label: "Kredi ödemeleri" },
   { href: "/panel/degerlendirmeler", label: "Değerlendirmeler" },
 ];
 
