@@ -6,8 +6,7 @@ import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
-
-const SEHIRLER = ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana"];
+import { DESTEKLENEN_ILLER } from "@/lib/il-ilce";
 
 export default function CekiciKayitPage() {
   const router = useRouter();
@@ -76,13 +75,13 @@ export default function CekiciKayitPage() {
           onChange={(e) => setForm((f) => ({ ...f, telefon: e.target.value }))}
         />
         <label className="block space-y-1.5">
-          <span className="text-sm font-medium text-slate-700">Şehir</span>
+          <span className="text-sm font-medium text-slate-700">İl</span>
           <select
             value={form.sehir}
             onChange={(e) => setForm((f) => ({ ...f, sehir: e.target.value }))}
             className="w-full rounded-xl bg-white border border-slate-200 px-4 py-3.5 text-slate-900"
           >
-            {SEHIRLER.map((s) => (
+            {DESTEKLENEN_ILLER.map((s) => (
               <option key={s} value={s}>
                 {s}
               </option>

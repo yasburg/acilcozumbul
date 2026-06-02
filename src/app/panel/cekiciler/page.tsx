@@ -63,7 +63,9 @@ export default function PanelCekicilerPage() {
               </div>
               <p className="text-xs text-slate-400 mt-2">
                 Kayıt: {new Date(c.kayitTarihi).toLocaleString("tr-TR")}
-                {c.hizmetIlceleri && c.hizmetIlceleri.length > 0
+                {c.hizmetBolgeleri && Object.keys(c.hizmetBolgeleri).length > 0
+                  ? ` · ${Object.values(c.hizmetBolgeleri).flat().length} ilçe`
+                  : c.hizmetIlceleri && c.hizmetIlceleri.length > 0
                   ? ` · ${c.hizmetIlceleri.length} ilçe`
                   : " · ilçe seçilmemiş"}
               </p>

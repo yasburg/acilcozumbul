@@ -16,5 +16,7 @@ export async function GET() {
     telefon: cekici.telefon,
     kredi: cekici.kredi,
     sehir: cekici.sehir,
+    hizmetModu: cekici.hizmetModu ?? "il_ilce",
+    menzilKm: cekici.menzilKm ?? 30,
   });
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 interface IlceSecimiProps {
   il: string;
   tumIlceler: string[];
@@ -18,6 +20,14 @@ export function IlceSecimi({
   onTemizle,
 }: IlceSecimiProps) {
   const seciliSet = new Set(seciliIlceler);
+  const [ara, setAra] = useState("");
+  const filtreliIlceler = useMemo(() => {
+    const q = ara.trim().toLocaleLowerCase("tr-TR");
+    if (!q) return tumIlceler;
+    return tumIlceler.filter((ilce) =>
+      ilce.toLocaleLowerCase("tr-TR").includes(q)
+    );
+  }, [ara, tumIlceler]);
 
   return (
     <div className="space-y-3">
@@ -45,8 +55,24 @@ export function IlceSecimi({
         </div>
       </div>
 
+      {tumIlceler.length > 12 && (
+        <input
+          type="search"
+          value={ara}
+          onChange={(e) => setAra(e.target.value)}
+          placeholder="İlçe ara…"
+          className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900"
+          autoComplete="off"
+        />
+      )}
+
       <div className="grid grid-cols-2 gap-2 max-h-[50vh] overflow-y-auto pr-1">
-        {tumIlceler.map((ilce) => {
+        {filtreliIlceler.length === 0 && (
+          <p className="col-span-2 text-sm text-slate-500 text-center py-4">
+            Eşleşen ilçe yok.
+          </p>
+        )}
+        {filtreliIlceler.map((ilce) => {
           const secili = seciliSet.has(ilce);
           return (
             <button

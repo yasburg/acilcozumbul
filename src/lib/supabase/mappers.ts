@@ -1,11 +1,17 @@
 import type {
   BekleyenOdeme,
   Cekici,
+  HizmetBolgeleri,
+  HizmetBolgeModu,
   Konum,
   SmsKaydi,
   Talep,
   Teklif,
 } from "../types";
+import {
+  hizmetBolgeleriFlatten,
+  normalizeHizmetBolgeleri,
+} from "../cekici-hizmet-bolge";
 
 export type CekiciRow = {
   id: string;
@@ -16,6 +22,12 @@ export type CekiciRow = {
   kredi: number;
   sehir: string;
   hizmet_ilceleri: string[];
+  hizmet_bolgeleri?: HizmetBolgeleri | null;
+  hizmet_modu?: string | null;
+  konum_lat?: number | null;
+  konum_lng?: number | null;
+  konum_guncelleme?: string | null;
+  menzil_km?: number | null;
   hizmet_sorun_tipleri: string[];
   aktif: boolean;
   kayit_tarihi: string;
@@ -47,6 +59,14 @@ export type TalepRow = {
 };
 
 export function cekiciFromRow(r: CekiciRow): Cekici {
+  const hizmetBolgeleri = normalizeHizmetBolgeleri(
+    (r.hizmet_bolgeleri as HizmetBolgeleri | undefined) ?? undefined,
+    r.sehir,
+    r.hizmet_ilceleri ?? []
+  );
+  const mod: HizmetBolgeModu =
+    r.hizmet_modu === "konum" ? "konum" : "il_ilce";
+
   return {
     id: r.id,
     ad: r.ad,
@@ -55,7 +75,13 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     sifre: r.sifre,
     kredi: Number(r.kredi),
     sehir: r.sehir,
-    hizmetIlceleri: r.hizmet_ilceleri ?? [],
+    hizmetIlceleri: hizmetBolgeleriFlatten(hizmetBolgeleri),
+    hizmetBolgeleri,
+    hizmetModu: mod,
+    konumLat: r.konum_lat ?? undefined,
+    konumLng: r.konum_lng ?? undefined,
+    konumGuncelleme: r.konum_guncelleme ?? undefined,
+    menzilKm: r.menzil_km != null ? Number(r.menzil_km) : 30,
     hizmetSorunTipleri: r.hizmet_sorun_tipleri ?? [],
     aktif: r.aktif,
     kayitTarihi: r.kayit_tarihi,
@@ -63,6 +89,11 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
 }
 
 export function cekiciToRow(c: Cekici): CekiciRow {
+  const bolgeler = normalizeHizmetBolgeleri(
+    c.hizmetBolgeleri,
+    c.sehir,
+    c.hizmetIlceleri
+  );
   return {
     id: c.id,
     ad: c.ad,
@@ -71,7 +102,13 @@ export function cekiciToRow(c: Cekici): CekiciRow {
     sifre: c.sifre,
     kredi: c.kredi,
     sehir: c.sehir,
-    hizmet_ilceleri: c.hizmetIlceleri ?? [],
+    hizmet_ilceleri: hizmetBolgeleriFlatten(bolgeler),
+    hizmet_bolgeleri: bolgeler,
+    hizmet_modu: c.hizmetModu ?? "il_ilce",
+    konum_lat: c.konumLat ?? null,
+    konum_lng: c.konumLng ?? null,
+    konum_guncelleme: c.konumGuncelleme ?? null,
+    menzil_km: c.menzilKm ?? 30,
     hizmet_sorun_tipleri: c.hizmetSorunTipleri ?? [],
     aktif: c.aktif,
     kayit_tarihi: c.kayitTarihi,

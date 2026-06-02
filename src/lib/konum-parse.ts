@@ -1,4 +1,9 @@
-import { ilGecerliMi, ilceListesi, type DesteklenenIl } from "./il-ilce";
+import {
+  DESTEKLENEN_ILLER,
+  ilGecerliMi,
+  ilceListesi,
+  type DesteklenenIl,
+} from "./il-ilce";
 
 function normalize(s: string): string {
   return s
@@ -17,6 +22,16 @@ function ilceEslesir(il: DesteklenenIl, parca: string): string | null {
   return null;
 }
 
+function ilAdindanBul(parca: string): DesteklenenIl | null {
+  if (ilGecerliMi(parca)) return parca;
+  const n = normalize(parca);
+  for (const ad of DESTEKLENEN_ILLER) {
+    const na = normalize(ad);
+    if (n.includes(na) || na.includes(n)) return ad;
+  }
+  return null;
+}
+
 /** Adres metninden il ve ilçe çıkarır (Nominatim / Türkiye formatı) */
 export function parseIlIlce(adres: string): {
   il: string | null;
@@ -31,31 +46,22 @@ export function parseIlIlce(adres: string): {
   let ilIndex = -1;
 
   for (let i = 0; i < parts.length; i++) {
-    const p = parts[i];
-    if (ilGecerliMi(p)) {
-      il = p;
+    const bulunan = ilAdindanBul(parts[i]);
+    if (bulunan) {
+      il = bulunan;
       ilIndex = i;
       break;
     }
-    for (const ad of ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana"] as const) {
-      if (normalize(p).includes(normalize(ad)) || normalize(ad).includes(normalize(p))) {
-        il = ad;
-        ilIndex = i;
-        break;
-      }
-    }
-    if (il) break;
   }
 
   if (!il) {
-    const lower = adres.toLowerCase();
-    if (lower.includes("istanbul") || lower.includes("i̇stanbul"))
-      il = "İstanbul";
-    else if (lower.includes("ankara")) il = "Ankara";
-    else if (lower.includes("izmir") || lower.includes("i̇zmir")) il = "İzmir";
-    else if (lower.includes("bursa")) il = "Bursa";
-    else if (lower.includes("antalya")) il = "Antalya";
-    else if (lower.includes("adana")) il = "Adana";
+    const lower = normalize(adres);
+    for (const ad of DESTEKLENEN_ILLER) {
+      if (lower.includes(normalize(ad))) {
+        il = ad;
+        break;
+      }
+    }
   }
 
   if (!il) return { il: null, ilce: null };

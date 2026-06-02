@@ -76,11 +76,18 @@ export default function PanelCekiciDetayPage() {
           value={new Date(cekici.kayitTarihi).toLocaleString("tr-TR")}
         />
         <Row
-          label="Hizmet ilçeleri"
+          label="Hizmet bölgesi"
           value={
-            cekici.hizmetIlceleri?.length
-              ? cekici.hizmetIlceleri.join(", ")
-              : "Seçilmemiş"
+            cekici.hizmetModu === "konum"
+              ? `Konum menzili: ${cekici.menzilKm ?? 0} km`
+              : cekici.hizmetBolgeleri &&
+                  Object.keys(cekici.hizmetBolgeleri).length > 0
+                ? Object.entries(cekici.hizmetBolgeleri)
+                    .map(([il, ilceler]) => `${il}: ${ilceler.join(", ")}`)
+                    .join(" · ")
+                : cekici.hizmetIlceleri?.length
+                  ? cekici.hizmetIlceleri.join(", ")
+                  : "Seçilmemiş"
           }
         />
         <Row label="Token" value={cekici.tokenOnizleme} mono />

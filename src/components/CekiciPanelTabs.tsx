@@ -8,6 +8,7 @@ import { Btn, Card } from "@/components/ui";
 import { formatKredi } from "@/lib/talep-utils";
 import type { ListeDurumu } from "@/lib/types";
 import { cekiciFetch } from "@/lib/cekici-fetch";
+import { useCekiciKonumSync } from "@/hooks/useCekiciKonumSync";
 
 type Tab = "musteriler" | "hesabim";
 
@@ -143,7 +144,11 @@ export default function CekiciPanelTabs() {
     kredi: number;
     sehir: string;
     telefon: string;
+    hizmetModu?: string;
+    menzilKm?: number;
   } | null>(null);
+
+  useCekiciKonumSync(cekici?.hizmetModu);
   const [data, setData] = useState<PanelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [flash, setFlash] = useState<string | null>(null);
@@ -306,6 +311,16 @@ export default function CekiciPanelTabs() {
 
   return (
     <MobileShell subtitle={`Hoş geldin, ${cekici.ad}`} footer={tabBar}>
+      {cekici.hizmetModu === "konum" && (
+        <Card className="mb-4 border-blue-200 bg-blue-50">
+          <p className="text-sm text-blue-900 leading-relaxed">
+            📍 Konum modu aktif — menzil{" "}
+            <strong>{cekici.menzilKm ?? 0} km</strong>. Konumunuz dakikada bir
+            güncellenir.
+          </p>
+        </Card>
+      )}
+
       {flash && (
         <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex justify-between items-start gap-2">
           <p className="text-sm text-emerald-800 font-medium">✅ {flash}</p>
@@ -329,8 +344,8 @@ export default function CekiciPanelTabs() {
             {data.bekleyen.length === 0 ? (
               <Card>
                 <p className="text-sm text-slate-500 text-center py-2 leading-relaxed">
-                  Bölgenizde ve hesabınızda tanımlı sorun tiplerine uygun açık
-                  talep yok. Ayarlardan ilçe ve sorun tiplerinizi kontrol edin.
+                  Ayarlarınıza (bölge veya menzil) ve sorun tiplerinize uygun
+                  açık talep yok. Ayarlar sayfasını kontrol edin.
                 </p>
               </Card>
             ) : (

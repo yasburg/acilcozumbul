@@ -38,6 +38,11 @@ export interface Teklif {
   durum: TeklifDurumu;
 }
 
+export type HizmetBolgeModu = "il_ilce" | "konum";
+
+/** İl adı → seçili ilçe listesi */
+export type HizmetBolgeleri = Record<string, string[]>;
+
 export interface Cekici {
   id: string;
   ad: string;
@@ -46,8 +51,16 @@ export interface Cekici {
   sifre: string;
   kredi: number;
   sehir: string;
-  /** Hizmet verilen ilçeler (boş = bildirim alınmaz) */
+  /** @deprecated hizmetBolgeleri kullanın */
   hizmetIlceleri?: string[];
+  /** Çoklu il / ilçe seçimi */
+  hizmetBolgeleri?: HizmetBolgeleri;
+  hizmetModu?: HizmetBolgeModu;
+  konumLat?: number;
+  konumLng?: number;
+  konumGuncelleme?: string;
+  /** Konum modunda menzil (0–100 km) */
+  menzilKm?: number;
   /** SMS alınacak sorun tipleri (boş = hiçbir tür için bildirim alınmaz) */
   hizmetSorunTipleri?: string[];
   aktif: boolean;

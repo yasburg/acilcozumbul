@@ -10,8 +10,7 @@ import {
 } from "@/lib/telefon";
 import type { Cekici } from "@/lib/types";
 import { tumSorunTipIdleri } from "@/lib/sorun-tipleri";
-
-const SEHIRLER = ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana"];
+import { ilGecerliMi } from "@/lib/il-ilce";
 
 export async function POST(request: NextRequest) {
   await ensureSeedData();
@@ -41,8 +40,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!SEHIRLER.includes(sehir)) {
-    return NextResponse.json({ error: "Geçerli bir şehir seçin." }, { status: 400 });
+  if (!ilGecerliMi(sehir)) {
+    return NextResponse.json({ error: "Geçerli bir il seçin." }, { status: 400 });
   }
 
   const mevcut = await getCekiciByTelefon(tel);
@@ -63,6 +62,9 @@ export async function POST(request: NextRequest) {
     kredi: 0,
     sehir,
     hizmetIlceleri: [],
+    hizmetBolgeleri: {},
+    hizmetModu: "il_ilce",
+    menzilKm: 30,
     hizmetSorunTipleri: tumSorunTipIdleri(),
     aktif: true,
     kayitTarihi: new Date().toISOString(),

@@ -1,6 +1,7 @@
 import { getCekiciler, saveCekiciler } from "./db";
 import type { Cekici } from "./types";
 import { tumSorunTipIdleri } from "./sorun-tipleri";
+import { hizmetBolgeSutunlariVar } from "./supabase/bolge-schema";
 
 const SEED_CEKICILER: Cekici[] = [
   {
@@ -12,6 +13,11 @@ const SEED_CEKICILER: Cekici[] = [
     kredi: 3,
     sehir: "İstanbul",
     hizmetIlceleri: ["Kadıköy", "Üsküdar", "Ataşehir", "Maltepe"],
+    hizmetBolgeleri: {
+      İstanbul: ["Kadıköy", "Üsküdar", "Ataşehir", "Maltepe"],
+    },
+    hizmetModu: "il_ilce",
+    menzilKm: 30,
     hizmetSorunTipleri: tumSorunTipIdleri(),
     aktif: true,
     kayitTarihi: new Date().toISOString(),
@@ -25,6 +31,11 @@ const SEED_CEKICILER: Cekici[] = [
     kredi: 5,
     sehir: "İstanbul",
     hizmetIlceleri: ["Beşiktaş", "Şişli", "Kağıthane", "Beyoğlu"],
+    hizmetBolgeleri: {
+      İstanbul: ["Beşiktaş", "Şişli", "Kağıthane", "Beyoğlu"],
+    },
+    hizmetModu: "il_ilce",
+    menzilKm: 30,
     hizmetSorunTipleri: tumSorunTipIdleri(),
     aktif: true,
     kayitTarihi: new Date().toISOString(),
@@ -38,6 +49,11 @@ const SEED_CEKICILER: Cekici[] = [
     kredi: 2,
     sehir: "Ankara",
     hizmetIlceleri: ["Çankaya", "Yenimahalle", "Keçiören"],
+    hizmetBolgeleri: {
+      Ankara: ["Çankaya", "Yenimahalle", "Keçiören"],
+    },
+    hizmetModu: "il_ilce",
+    menzilKm: 30,
     hizmetSorunTipleri: tumSorunTipIdleri(),
     aktif: true,
     kayitTarihi: new Date().toISOString(),
@@ -55,6 +71,7 @@ export async function ensureSeedData(): Promise<void> {
 
   if (existing.length === 0) return;
 
+  const bolgeSutunlari = await hizmetBolgeSutunlariVar();
   let guncellendi = false;
   const migrated = existing.map((c) => {
     let row = c as Cekici;
@@ -74,8 +91,28 @@ export async function ensureSeedData(): Promise<void> {
       guncellendi = true;
       row = { ...row, hizmetSorunTipleri: tumSorunTipIdleri() };
     }
+    if (
+      bolgeSutunlari &&
+      !row.hizmetBolgeleri &&
+      row.hizmetIlceleri?.length &&
+      row.sehir
+    ) {
+      guncellendi = true;
+      row = {
+        ...row,
+        hizmetBolgeleri: { [row.sehir]: row.hizmetIlceleri },
+        hizmetModu: row.hizmetModu ?? "il_ilce",
+        menzilKm: row.menzilKm ?? 30,
+      };
+    }
     return row;
   });
 
-  if (guncellendi) await saveCekiciler(migrated);
+  if (guncellendi) {
+    try {
+      await saveCekiciler(migrated);
+    } catch (e) {
+      console.warn("[ensureSeedData] çekici güncelleme atlandı:", e);
+    }
+  }
 }

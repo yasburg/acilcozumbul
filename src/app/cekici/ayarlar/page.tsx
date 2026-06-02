@@ -4,12 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
-import { IlceSecimi } from "@/components/IlceSecimi";
+import { BolgeAyarlari } from "@/components/BolgeAyarlari";
 import { SorunTipiSecimi } from "@/components/SorunTipiSecimi";
 import { Btn, Card } from "@/components/ui";
 import type { SorunTipi } from "@/lib/sorun-tipleri";
 import { formatKredi } from "@/lib/talep-utils";
-import { cekiciFetch } from "@/lib/cekici-fetch";
+import { cekiciFetch, cekiciJson } from "@/lib/cekici-fetch";
+import type { HizmetBolgeModu, HizmetBolgeleri } from "@/lib/types";
 
 interface Istatistik {
   satinAldiklarim: number;
@@ -25,10 +26,19 @@ interface Istatistik {
   mevcutKredi: number;
 }
 
-interface BolgeData {
-  il: string;
-  tumIlceler: string[];
-  seciliIlceler: string[];
+interface BolgeApiData {
+  mod: HizmetBolgeModu;
+  bolgeler: HizmetBolgeleri;
+  menzilKm: number;
+  konumGuncel?: boolean;
+  konumGuncelleme?: string | null;
+  tumIller: readonly string[];
+  istanbul: {
+    il: string;
+    avrupa: string[];
+    asya: string[];
+  };
+  schemaUyari?: string;
 }
 
 function StatKutu({
@@ -62,16 +72,14 @@ function StatKutu({
 export default function AyarlarPage() {
   const router = useRouter();
   const [stats, setStats] = useState<Istatistik | null>(null);
-  const [bolge, setBolge] = useState<BolgeData | null>(null);
-  const [secili, setSecili] = useState<string[]>([]);
+  const [bolge, setBolge] = useState<BolgeApiData | null>(null);
   const [tumSorunTipleri, setTumSorunTipleri] = useState<SorunTipi[]>([]);
   const [seciliSorunTipleri, setSeciliSorunTipleri] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [kaydediyor, setKaydediyor] = useState(false);
   const [sorunKaydediyor, setSorunKaydediyor] = useState(false);
-  const [mesaj, setMesaj] = useState("");
+  const [bolgeMesaj, setBolgeMesaj] = useState("");
   const [sorunMesaj, setSorunMesaj] = useState("");
-  const [hata, setHata] = useState("");
+  const [bolgeHata, setBolgeHata] = useState("");
   const [sorunHata, setSorunHata] = useState("");
 
   const yukle = useCallback(async () => {
@@ -80,30 +88,45 @@ export default function AyarlarPage() {
       cekiciFetch("/api/cekici/bolgeler"),
       cekiciFetch("/api/cekici/sorun-tipleri"),
     ]);
-    if (!statRes.ok || !bolgeRes.ok || !sorunRes.ok) {
+    if (
+      statRes.status === 401 ||
+      bolgeRes.status === 401 ||
+      sorunRes.status === 401
+    ) {
       router.push("/cekici/giris");
       return;
     }
-    setStats(await statRes.json());
-    const b = await bolgeRes.json();
-    setBolge(b);
-    setSecili(b.seciliIlceler ?? []);
-    const s = await sorunRes.json();
-    setTumSorunTipleri(s.tumTipler ?? []);
-    setSeciliSorunTipleri(s.seciliTipler ?? []);
+
+    if (statRes.ok) {
+      setStats(await cekiciJson(statRes));
+    }
+
+    const bolgeData = await cekiciJson<BolgeApiData & { error?: string }>(
+      bolgeRes
+    );
+    if (bolgeRes.ok) {
+      setBolge(bolgeData);
+      setBolgeHata(bolgeData.schemaUyari ?? "");
+    } else {
+      setBolge(null);
+      setBolgeHata(bolgeData.error ?? "Bölge ayarları yüklenemedi.");
+    }
+
+    if (sorunRes.ok) {
+      const s = await cekiciJson<{
+        tumTipler?: SorunTipi[];
+        seciliTipler?: string[];
+      }>(sorunRes);
+      setTumSorunTipleri(s.tumTipler ?? []);
+      setSeciliSorunTipleri(s.seciliTipler ?? []);
+    }
+
     setLoading(false);
   }, [router]);
 
   useEffect(() => {
     yukle();
   }, [yukle]);
-
-  function toggleIlce(ilce: string) {
-    setSecili((prev) =>
-      prev.includes(ilce) ? prev.filter((i) => i !== ilce) : [...prev, ilce]
-    );
-    setMesaj("");
-  }
 
   function toggleSorunTipi(id: string) {
     setSeciliSorunTipleri((prev) =>
@@ -133,27 +156,6 @@ export default function AyarlarPage() {
     }
   }
 
-  async function kaydet() {
-    setKaydediyor(true);
-    setHata("");
-    setMesaj("");
-    try {
-      const res = await cekiciFetch("/api/cekici/bolgeler", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ilceler: secili }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setSecili(data.seciliIlceler);
-      setMesaj(data.mesaj);
-    } catch (e) {
-      setHata(e instanceof Error ? e.message : "Kayıt başarısız.");
-    } finally {
-      setKaydediyor(false);
-    }
-  }
-
   return (
     <MobileShell backHref="/cekici/panel?tab=hesabim" subtitle="Ayarlar">
       {loading && (
@@ -166,38 +168,30 @@ export default function AyarlarPage() {
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
               Hizmet bölgeleri
             </h2>
-            <Card className="mb-3">
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Sadece seçtiğiniz ilçelerden gelen talepler için SMS bildirimi
-                alırsınız. İlçe seçmezseniz bildirim gitmez.
-              </p>
-            </Card>
 
-            {hata && (
+            {bolgeHata && (
               <Card className="mb-3 border-red-200 bg-red-50">
-                <p className="text-sm text-red-700">{hata}</p>
+                <p className="text-sm text-red-700">{bolgeHata}</p>
               </Card>
             )}
-            {mesaj && (
+            {bolgeMesaj && (
               <Card className="mb-3 border-emerald-200 bg-emerald-50">
-                <p className="text-sm text-emerald-800">{mesaj}</p>
+                <p className="text-sm text-emerald-800">{bolgeMesaj}</p>
               </Card>
             )}
 
-            <IlceSecimi
-              il={bolge.il}
-              tumIlceler={bolge.tumIlceler}
-              seciliIlceler={secili}
-              onToggle={toggleIlce}
-              onTumunuSec={() => setSecili([...bolge.tumIlceler])}
-              onTemizle={() => setSecili([])}
+            <BolgeAyarlari
+              baslangic={bolge}
+              onKaydedildi={(mesaj) => {
+                setBolgeMesaj(mesaj);
+                setBolgeHata("");
+                void yukle();
+              }}
+              onHata={(mesaj) => {
+                setBolgeHata(mesaj);
+                setBolgeMesaj("");
+              }}
             />
-
-            <div className="mt-4">
-              <Btn onClick={kaydet} disabled={kaydediyor}>
-                {kaydediyor ? "Kaydediliyor…" : "Bölgeleri kaydet"}
-              </Btn>
-            </div>
           </section>
 
           <section>
@@ -207,8 +201,7 @@ export default function AyarlarPage() {
             <Card className="mb-3">
               <p className="text-sm text-slate-600 leading-relaxed">
                 Yalnızca işaretlediğiniz sorun tipleri için talep SMS&apos;i
-                alırsınız. Örneğin lastik seçili değilse, lastik patlaması
-                taleplerinde size bildirim gitmez.
+                alırsınız.
               </p>
             </Card>
 
