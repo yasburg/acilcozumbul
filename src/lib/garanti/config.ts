@@ -184,11 +184,11 @@ export function garantiYapilandirmaOzeti(): {
         : "GARANTI_PASSWORD boş."
     );
   }
-  if (cfg.mod === "TEST" && !cfg.postUrl.includes("provtest")) {
+  if (cfg.mode === "TEST" && !cfg.postUrl.includes("provtest")) {
     uyarilar.push("TEST modu ama URL provtest değil.");
   }
   if (
-    cfg.mod === "TEST" &&
+    cfg.mode === "TEST" &&
     cfg.merchantId === RESMI_TEST_MERCHANT &&
     cfg.terminalId &&
     cfg.terminalId !== RESMI_TEST_TERMINAL

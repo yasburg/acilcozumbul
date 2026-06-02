@@ -1,9 +1,7 @@
 import { updateTalep } from "./db";
-import type { Talep, Teklif } from "./types";
-
 import { cekiciTalepBolgesineUygunMu } from "./cekici-bolge";
 import { cekiciTalepSorununaUygunMu } from "./cekici-sorun";
-import type { Cekici, Talep } from "./types";
+import type { Cekici, Talep, Teklif } from "./types";
 
 /** Çekiciye talep bildirimi SMS'i başına düşen kredi (panelde görünürlük de buna bağlı) */
 export const SMS_BILDIRIM_KREDI = 1;
