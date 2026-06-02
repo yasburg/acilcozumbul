@@ -34,8 +34,8 @@ export async function notifyCekiciler(
         ? ` [${talep.konumIlce}]`
         : "";
       const mesaj = yeniden
-        ? `${talep.ad} ${talep.soyad.charAt(0)}. müşteri yeni çekici arıyor${bolge} (${talep.konum.adres}${hedef}). Ücretsiz teklif: ${link}`
-        : `${talep.ad} ${talep.soyad.charAt(0)}. yolda kaldı${bolge} (${talep.konum.adres}${hedef}). Ücretsiz teklif ver: ${link}`;
+        ? `${talep.ad} ${talep.soyad.charAt(0)}. müşteri yeni çekici arıyor${bolge} (${talep.konum.adres}${hedef}). Teklif: ${link}`
+        : `${talep.ad} ${talep.soyad.charAt(0)}. yolda kaldı${bolge} (${talep.konum.adres}${hedef}). Teklif ver: ${link}`;
 
       const sonuc = await sendSms(cekici.telefon, mesaj, {
         aliciTipi: "cekici",

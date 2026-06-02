@@ -4,9 +4,11 @@ import { getTalepById } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import {
   cekiciHaricMi,
+  cekiciTalebeBildirildiMi,
   cekiciTeklifVerdiMi,
   cekiciTeklifVerebilirMi,
   ihaleAcikMi,
+  SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
 import { koordinatGecerli } from "@/lib/koordinat";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
@@ -130,6 +132,18 @@ export async function GET(
       durum: talep.durum,
       ihaleKapandi: true,
       mesaj: "Bu talebe artık teklif verilemez.",
+    });
+  }
+
+  if (!cekiciTalebeBildirildiMi(talep, cekici.id)) {
+    return NextResponse.json({
+      id: talep.id,
+      erisimYok: true,
+      kredi: cekici.kredi,
+      mesaj:
+        cekici.kredi < SMS_BILDIRIM_KREDI
+          ? "Krediniz yok. Yeni talep SMS'i ve panel listesi için kredi yükleyin (1 kredi = 1 bildirim)."
+          : "Bu talep size SMS ile bildirilmedi.",
     });
   }
 

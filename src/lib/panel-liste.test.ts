@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Cekici, ListeDurumu, Talep } from "./types";
 import {
+  cekiciAcikTalepUygunMu,
   cekiciHaricMi,
+  cekiciTalebeBildirildiMi,
   cekiciTeklifVerdiMi,
   cekiciTeklifVerebilirMi,
   ihaleAcikMi,
@@ -21,13 +23,9 @@ function listeDurumuBelirle(talep: Talep, cekici: Cekici): ListeDurumu {
     return "kaybettim";
   }
   if (cekiciTeklifVerdiMi(talep, cekiciId)) return "teklif_verdim";
-  if (
-    ihaleAcikMi(talep) &&
-    !cekiciHaricMi(talep, cekiciId) &&
-    cekiciTalepBolgesineUygunMu(cekici, talep) &&
-    cekiciTalepSorununaUygunMu(cekici, talep)
-  ) {
-    return "acik";
+  if (cekiciAcikTalepUygunMu(talep, cekici)) {
+    if (cekiciTalebeBildirildiMi(talep, cekiciId)) return "acik";
+    return "gizli";
   }
   return "kaybettim";
 }
@@ -42,9 +40,18 @@ function teklifVerilebilirMi(cekici: Cekici, talep: Talep): boolean {
 describe("F — Panel / teklif mantığı", () => {
   const cekici = cekiciFixture({ id: "ben" });
 
-  it("F1: bölge+sorun uygun açık ihale → acik", () => {
-    const t = talepFixture({ konumIl: "İstanbul", konumIlce: "Kadıköy" });
+  it("F1: bölge+sorun uygun ve SMS bildirimi var → acik", () => {
+    const t = talepFixture({
+      konumIl: "İstanbul",
+      konumIlce: "Kadıköy",
+      bildirilenCekiciIds: ["ben"],
+    });
     expect(listeDurumuBelirle(t, cekici)).toBe("acik");
+  });
+
+  it("F1b: bildirim yok → gizli (panelde kilitli)", () => {
+    const t = talepFixture({ konumIl: "İstanbul", konumIlce: "Kadıköy" });
+    expect(listeDurumuBelirle(t, cekici)).toBe("gizli");
   });
 
   it("F2: bölge dışı açık ihale → kaybettim (listede görünmez)", () => {

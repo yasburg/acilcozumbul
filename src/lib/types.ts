@@ -11,6 +11,7 @@ export type TeklifDurumu = "aktif" | "kazandi" | "kaybetti";
 
 export type ListeDurumu =
   | "acik"
+  | "gizli"
   | "teklif_verdim"
   | "kazandim"
   | "kaybettim"
@@ -142,4 +143,6 @@ export interface TalepOzet {
   kazandim?: boolean;
   telefon?: string;
   listeDurumu?: ListeDurumu;
+  /** SMS/katılım yok — panelde bulanık */
+  gizli?: boolean;
 }

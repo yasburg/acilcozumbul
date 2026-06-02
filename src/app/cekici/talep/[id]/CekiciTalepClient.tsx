@@ -21,6 +21,7 @@ interface TalepDurum {
   mesaj?: string;
   onizleme?: { bolge: string; sorunOzet: string; hedefBolge?: string };
   teklifUcretsiz?: boolean;
+  erisimYok?: boolean;
   kredi?: number;
   benimTeklif?: {
     fiyat: number;
@@ -189,6 +190,7 @@ export default function CekiciTalepClient() {
     !talep.teklifVerdim &&
     !talep.tercihEdilmedi &&
     !talep.ihaleKapandi &&
+    !talep.erisimYok &&
     talep.onizleme;
 
   const musteriKoordinat = useMemo(() => {
@@ -398,6 +400,22 @@ export default function CekiciTalepClient() {
                 {islem ? "Gönderiliyor…" : "Teklif Ver (Ücretsiz)"}
               </Btn>
             </>
+          )}
+
+          {talep.erisimYok && (
+            <Card className="border-amber-200 bg-amber-50 text-center py-6">
+              <p className="font-semibold text-amber-900">Talep görüntülenemiyor</p>
+              <p className="text-sm text-amber-800 mt-2 leading-relaxed">
+                {talep.mesaj ??
+                  "Bu talep size SMS ile bildirilmedi. Panelde yalnızca bildirim aldığınız talepler görünür."}
+              </p>
+              <Link
+                href="/cekici/kredi"
+                className="inline-block mt-4 text-sm font-semibold text-amber-700 underline"
+              >
+                Kredi yükle
+              </Link>
+            </Card>
           )}
 
           {talep.kazandim && (

@@ -5,7 +5,12 @@ import { getTalepById, updateTalep } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import { cekiciTalepBolgesineUygunMu } from "@/lib/cekici-bolge";
 import { cekiciTalepSorununaUygunMu } from "@/lib/cekici-sorun";
-import { cekiciHaricMi, cekiciTeklifVerebilirMi } from "@/lib/ihale";
+import {
+  cekiciHaricMi,
+  cekiciTalebeBildirildiMi,
+  cekiciTeklifVerebilirMi,
+  SMS_BILDIRIM_KREDI,
+} from "@/lib/ihale";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Teklif } from "@/lib/types";
 
@@ -83,6 +88,19 @@ export async function POST(
     return NextResponse.json(
       { error: "Bu talebe az önce teklif verildi veya ihale kapandı." },
       { status: 409 }
+    );
+  }
+
+  if (!cekiciTalebeBildirildiMi(talep, cekici.id)) {
+    return NextResponse.json(
+      {
+        error:
+          cekici.kredi < SMS_BILDIRIM_KREDI
+            ? "Bu talep size bildirilmedi. Kredi yükleyerek yeni talep SMS'leri alabilirsiniz."
+            : "Bu talep size SMS ile bildirilmedi.",
+        erisimYok: true,
+      },
+      { status: 403 }
     );
   }
 

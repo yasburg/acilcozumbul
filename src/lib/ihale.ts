@@ -1,8 +1,27 @@
 import { updateTalep } from "./db";
 import type { Talep, Teklif } from "./types";
 
-/** Çekiciye talep bildirimi SMS'i başına düşen kredi */
+import { cekiciTalepBolgesineUygunMu } from "./cekici-bolge";
+import { cekiciTalepSorununaUygunMu } from "./cekici-sorun";
+import type { Cekici, Talep } from "./types";
+
+/** Çekiciye talep bildirimi SMS'i başına düşen kredi (panelde görünürlük de buna bağlı) */
 export const SMS_BILDIRIM_KREDI = 1;
+
+/** SMS gönderildi ve 1 kredi düşüldüyse true */
+export function cekiciTalebeBildirildiMi(talep: Talep, cekiciId: string): boolean {
+  return (talep.bildirilenCekiciIds ?? []).includes(cekiciId);
+}
+
+/** Açık ihale — bölge/sorun uygun (SMS veya manuel katılım öncesi) */
+export function cekiciAcikTalepUygunMu(talep: Talep, cekici: Cekici): boolean {
+  return (
+    ihaleAcikMi(talep) &&
+    !cekiciHaricMi(talep, cekici.id) &&
+    cekiciTalepBolgesineUygunMu(cekici, talep) &&
+    cekiciTalepSorununaUygunMu(cekici, talep)
+  );
+}
 export const IHALE_SURE_DK = 60;
 
 export function ihaleAcikMi(talep: Talep): boolean {

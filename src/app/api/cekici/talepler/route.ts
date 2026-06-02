@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
 import { getTalepler } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
-import { cekiciTalepBolgesineUygunMu } from "@/lib/cekici-bolge";
-import { cekiciTalepSorununaUygunMu } from "@/lib/cekici-sorun";
 import {
+  cekiciAcikTalepUygunMu,
   cekiciHaricMi,
+  cekiciTalebeBildirildiMi,
   cekiciTeklifVerdiMi,
-  ihaleAcikMi,
+  SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
 import {
   isBugun,
@@ -26,13 +26,9 @@ function listeDurumuBelirle(talep: Talep, cekici: Cekici): ListeDurumu {
     return "kaybettim";
   }
   if (cekiciTeklifVerdiMi(talep, cekiciId)) return "teklif_verdim";
-  if (
-    ihaleAcikMi(talep) &&
-    !cekiciHaricMi(talep, cekiciId) &&
-    cekiciTalepBolgesineUygunMu(cekici, talep) &&
-    cekiciTalepSorununaUygunMu(cekici, talep)
-  ) {
-    return "acik";
+  if (cekiciAcikTalepUygunMu(talep, cekici)) {
+    if (cekiciTalebeBildirildiMi(talep, cekiciId)) return "acik";
+    return "gizli";
   }
   return "kaybettim";
 }
@@ -44,22 +40,27 @@ function toOzet(talep: Talep, cekici: Cekici): TalepOzet {
   const aktifTeklifler = talep.teklifler?.filter((t) => t.durum === "aktif") ?? [];
   const benimTeklif = talep.teklifler?.find((t) => t.cekiciId === cekiciId);
 
+  const gizli = durum === "gizli";
+
   return {
     id: talep.id,
-    ad: talep.ad,
-    soyad: talep.soyad,
+    ad: gizli ? "•••" : talep.ad,
+    soyad: gizli ? "" : talep.soyad,
     bolge: talepBolge(talep),
-    sorunOzet: talepSorunOzet(talep.sorun),
+    sorunOzet: gizli ? "Detaylar için ihaleye katılın" : talepSorunOzet(talep.sorun),
     durum: talep.durum,
     olusturulma: talep.olusturulma,
-    teklifSayisi: aktifTeklifler.length,
-    enDusukTeklif: aktifTeklifler.length
-      ? Math.min(...aktifTeklifler.map((t) => t.fiyat))
-      : undefined,
+    teklifSayisi: gizli ? undefined : aktifTeklifler.length,
+    enDusukTeklif: gizli
+      ? undefined
+      : aktifTeklifler.length
+        ? Math.min(...aktifTeklifler.map((t) => t.fiyat))
+        : undefined,
     benimTeklifim: !!benimTeklif,
     kazandim,
     telefon: kazandim ? talep.telefon : undefined,
     listeDurumu: durum,
+    gizli,
   };
 }
 
@@ -76,12 +77,7 @@ export async function GET() {
   const ilgili = bugun.filter((t) => {
     if (t.kazananCekiciId === cekici.id) return true;
     if (t.teklifler?.some((te) => te.cekiciId === cekici.id)) return true;
-    if (
-      ihaleAcikMi(t) &&
-      !cekiciHaricMi(t, cekici.id) &&
-      cekiciTalepBolgesineUygunMu(cekici, t) &&
-      cekiciTalepSorununaUygunMu(cekici, t)
-    ) {
+    if (cekiciAcikTalepUygunMu(t, cekici)) {
       return true;
     }
     return false;
@@ -90,6 +86,7 @@ export async function GET() {
   const tumOzet = ilgili.map((t) => toOzet(t, cekici));
 
   const bekleyen = tumOzet.filter((t) => t.listeDurumu === "acik");
+  const bekleyenGizli = tumOzet.filter((t) => t.listeDurumu === "gizli");
   const teklifVerdigim = tumOzet.filter((t) => t.listeDurumu === "teklif_verdim");
   const kazandiklarim = tumOzet.filter((t) => t.listeDurumu === "kazandim");
   const kaybettiklerim = tumOzet.filter(
@@ -104,11 +101,14 @@ export async function GET() {
 
   return NextResponse.json({
     bekleyen,
+    bekleyenGizli,
     teklifVerdigim,
     kazandiklarim,
     kaybettiklerim,
     tercihEdilmedi,
     bugunTumu,
+    kredi: cekici.kredi,
+    krediYok: cekici.kredi < SMS_BILDIRIM_KREDI,
     // Geriye uyumluluk
     satinAlinanlar: kazandiklarim,
     baskasiAldi: kaybettiklerim,

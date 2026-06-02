@@ -44,11 +44,14 @@ interface TalepOzet {
 
 interface PanelData {
   bekleyen: TalepOzet[];
+  bekleyenGizli?: TalepOzet[];
   teklifVerdigim: TalepOzet[];
   kazandiklarim: TalepOzet[];
   kaybettiklerim: TalepOzet[];
   tercihEdilmedi: TalepOzet[];
   bugunTumu: TalepOzet[];
+  kredi?: number;
+  krediYok?: boolean;
   satinAlinanlar?: TalepOzet[];
   baskasiAldi?: TalepOzet[];
 }
@@ -58,6 +61,7 @@ const BADGE: Record<
   { label: string; className: string }
 > = {
   acik: { label: "Açık ihale", className: "bg-amber-50 text-amber-700" },
+  gizli: { label: "Kilitli", className: "bg-slate-100 text-slate-500" },
   teklif_verdim: { label: "Teklif verdim", className: "bg-blue-50 text-blue-700" },
   kazandim: { label: "Kazandım", className: "bg-emerald-50 text-emerald-700" },
   kaybettim: { label: "Kaybettim", className: "bg-slate-100 text-slate-600" },
@@ -134,6 +138,52 @@ function TalepKarti({
   return <Link href={`/cekici/talep/${talep.id}`}>{icerik}</Link>;
 }
 
+function GizliTalepKarti({
+  talep,
+  kredi,
+  yukleniyor,
+  onKatil,
+}: {
+  talep: TalepOzet;
+  kredi: number;
+  yukleniyor: boolean;
+  onKatil: (talepId: string) => void;
+}) {
+  const katilabilir = kredi >= 1;
+
+  return (
+    <button
+      type="button"
+      disabled={yukleniyor}
+      onClick={() => onKatil(talep.id)}
+      className="w-full text-left touch-manipulation disabled:opacity-60"
+    >
+      <Card className="relative overflow-hidden border border-dashed border-amber-300/80 bg-gradient-to-b from-slate-50 to-white p-0">
+        <div className="p-4 blur-[4px] opacity-50 select-none pointer-events-none">
+          <p className="font-semibold text-slate-800">Yeni müşteri talebi</p>
+          <p className="text-sm text-slate-500 mt-1">📍 {talep.bolge}</p>
+          <p className="text-sm text-slate-600 mt-2">Çekici ihtiyacı · detaylar gizli</p>
+        </div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/75 backdrop-blur-[2px] px-4 py-6">
+          <span className="text-2xl mb-2" aria-hidden>
+            🔒
+          </span>
+          <p className="text-sm font-semibold text-amber-900 text-center leading-snug">
+            {katilabilir
+              ? "1 kredi ile ihaleye katıl"
+              : "Kredi yükleyin, ihaleye katılın"}
+          </p>
+          <p className="text-xs text-slate-500 text-center mt-1">
+            {katilabilir
+              ? "Dokunun — müşteri bilgisi ve teklif açılır"
+              : "1 kredi = 1 talep (teklif ücretsiz)"}
+          </p>
+        </div>
+      </Card>
+    </button>
+  );
+}
+
 export default function CekiciPanelTabs() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -158,6 +208,7 @@ export default function CekiciPanelTabs() {
   const [panelEposta, setPanelEposta] = useState<string | null>(null);
   const [panelNext, setPanelNext] = useState("/panel");
   const [cikisYukleniyor, setCikisYukleniyor] = useState(false);
+  const [katilYukleniyor, setKatilYukleniyor] = useState<string | null>(null);
 
   const oturumuKapat = useCallback(async () => {
     setCikisYukleniyor(true);
@@ -175,6 +226,40 @@ export default function CekiciPanelTabs() {
       router.refresh();
     }
   }, [router]);
+
+  const ihaleyeKatil = useCallback(
+    async (talepId: string) => {
+      const mevcutKredi = data?.kredi ?? cekici?.kredi ?? 0;
+      if (mevcutKredi < 1) {
+        router.push("/cekici/kredi");
+        return;
+      }
+      setKatilYukleniyor(talepId);
+      try {
+        const res = await cekiciFetch(`/api/cekici/talep/${talepId}/katil`, {
+          method: "POST",
+        });
+        const body = await res.json();
+        if (!res.ok) {
+          if (body.yetersizKredi) {
+            router.push("/cekici/kredi");
+            return;
+          }
+          setFlash(body.error || "Katılım başarısız.");
+          return;
+        }
+        if (cekici && body.kredi != null) {
+          setCekici({ ...cekici, kredi: body.kredi });
+        }
+        router.push(`/cekici/talep/${talepId}`);
+      } catch {
+        setFlash("Bağlantı hatası.");
+      } finally {
+        setKatilYukleniyor(null);
+      }
+    },
+    [cekici, data?.kredi, router]
+  );
 
   const yukle = useCallback(async () => {
     const nextParam = searchParams.get("next");
@@ -284,19 +369,24 @@ export default function CekiciPanelTabs() {
               {panelEposta ?? "Yönetici hesabı"} ile giriş yaptınız.
             </p>
           </Card>
-          <Link href={panelNext.startsWith("/panel") ? panelNext : "/panel"}>
-            <Btn>📋 Yönetim paneline git</Btn>
-          </Link>
-          <Link href="/cekici/giris">
-            <Btn variant="outline">📱 Üye girişi (telefon / kayıt)</Btn>
-          </Link>
-          <Btn
-            variant="danger"
-            onClick={() => void oturumuKapat()}
-            disabled={cikisYukleniyor}
-          >
-            {cikisYukleniyor ? "Çıkış yapılıyor…" : "Çıkış yap"}
-          </Btn>
+          <div className="flex flex-col gap-3">
+            <Link
+              href={panelNext.startsWith("/panel") ? panelNext : "/panel"}
+              className="block"
+            >
+              <Btn>📋 Yönetim paneline git</Btn>
+            </Link>
+            <Link href="/cekici/giris" className="block">
+              <Btn variant="outline">📱 Üye girişi (telefon / kayıt)</Btn>
+            </Link>
+            <Btn
+              variant="danger"
+              onClick={() => void oturumuKapat()}
+              disabled={cikisYukleniyor}
+            >
+              {cikisYukleniyor ? "Çıkış yapılıyor…" : "Çıkış yap"}
+            </Btn>
+          </div>
         </div>
       </MobileShell>
     );
@@ -347,21 +437,45 @@ export default function CekiciPanelTabs() {
 
       {tab === "musteriler" && data && (
         <div className="space-y-6 animate-fade-in">
+          {data.krediYok && (data.bekleyenGizli?.length ?? 0) > 0 && (
+            <Card className="border-amber-200 bg-amber-50">
+              <p className="text-sm text-amber-900 leading-relaxed">
+                Bölgenizde kilitli talepler var.{" "}
+                <strong>1 kredi</strong> ile ihaleye katılabilir veya yeni talepler
+                için SMS alabilirsiniz (teklif ücretsiz).
+              </p>
+              <Link
+                href="/cekici/kredi"
+                className="inline-block mt-2 text-sm font-semibold text-amber-700 underline"
+              >
+                Kredi yükle
+              </Link>
+            </Card>
+          )}
+
           <section>
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
               Açık ihaleler
             </h2>
-            {data.bekleyen.length === 0 ? (
+            {data.bekleyen.length === 0 && (data.bekleyenGizli?.length ?? 0) === 0 ? (
               <Card>
                 <p className="text-sm text-slate-500 text-center py-2 leading-relaxed">
-                  Ayarlarınıza (bölge veya menzil) ve sorun tiplerinize uygun
-                  açık talep yok. Ayarlar sayfasını kontrol edin.
+                  Bölgenize uygun açık talep yok. Ayarlarınızı kontrol edin.
                 </p>
               </Card>
             ) : (
               <div className="space-y-2">
                 {data.bekleyen.map((t) => (
                   <TalepKarti key={t.id} talep={t} />
+                ))}
+                {(data.bekleyenGizli ?? []).map((t) => (
+                  <GizliTalepKarti
+                    key={t.id}
+                    talep={t}
+                    kredi={data.kredi ?? cekici.kredi}
+                    yukleniyor={katilYukleniyor === t.id}
+                    onKatil={ihaleyeKatil}
+                  />
                 ))}
               </div>
             )}
@@ -546,33 +660,32 @@ export default function CekiciPanelTabs() {
             </section>
           )}
 
-          {panelYetkili && (
-            <Link
-              href={panelNext.startsWith("/panel") ? panelNext : "/panel"}
-            >
-              <Btn variant="secondary">📋 Yönetim paneline git</Btn>
+          <div className="flex flex-col gap-3 pt-1">
+            {panelYetkili && (
+              <Link
+                href={panelNext.startsWith("/panel") ? panelNext : "/panel"}
+                className="block"
+              >
+                <Btn variant="secondary">📋 Yönetim paneline git</Btn>
+              </Link>
+            )}
+
+            <Link href="/cekici/ayarlar" className="block">
+              <Btn variant="secondary">📊 Ayarlar & Detaylı İstatistikler</Btn>
             </Link>
-          )}
 
-          <Link href="/cekici/ayarlar">
-            <Btn variant="secondary">📊 Ayarlar & Detaylı İstatistikler</Btn>
-          </Link>
+            <Link href="/cekici/kredi" className="block">
+              <Btn>💳 Kredi Satın Al</Btn>
+            </Link>
 
-          <Link href="/cekici/kredi">
-            <Btn>💳 Kredi Satın Al</Btn>
-          </Link>
-
-          <Link href="/demo/sms">
-            <Btn variant="secondary">📱 Demo SMS Kayıtları</Btn>
-          </Link>
-
-          <Btn
-            variant="danger"
-            onClick={() => void oturumuKapat()}
-            disabled={cikisYukleniyor}
-          >
-            {cikisYukleniyor ? "Çıkış yapılıyor…" : "Çıkış yap"}
-          </Btn>
+            <Btn
+              variant="danger"
+              onClick={() => void oturumuKapat()}
+              disabled={cikisYukleniyor}
+            >
+              {cikisYukleniyor ? "Çıkış yapılıyor…" : "Çıkış yap"}
+            </Btn>
+          </div>
         </div>
       )}
     </MobileShell>

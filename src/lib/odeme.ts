@@ -1,17 +1,22 @@
 import { randomUUID } from "crypto";
+import { krediPaketOdenecekTL, krediPaketBul } from "./kredi-fiyat";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { odemeFromRow, odemeToRow, type OdemeRow } from "./supabase/mappers";
 import type { BekleyenOdeme } from "./types";
 
 export async function olusturBekleyenOdeme(
   cekiciId: string,
-  miktar: number
+  paketTl: number
 ): Promise<BekleyenOdeme> {
+  const paket = krediPaketBul(paketTl);
+  if (!paket) {
+    throw new Error("Geçersiz kredi paketi.");
+  }
   const odeme: BekleyenOdeme = {
     id: randomUUID(),
     cekiciId,
-    miktar,
-    tutar: miktar * 50,
+    miktar: paket.kredi,
+    tutar: krediPaketOdenecekTL(paket),
     olusturulma: new Date().toISOString(),
     durum: "bekliyor",
   };
