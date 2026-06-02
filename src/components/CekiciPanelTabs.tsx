@@ -9,6 +9,7 @@ import { formatKredi } from "@/lib/talep-utils";
 import type { ListeDurumu } from "@/lib/types";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { useCekiciKonumSync } from "@/hooks/useCekiciKonumSync";
+import { KonumGuncellemeGostergesi } from "@/components/KonumGuncellemeGostergesi";
 
 type Tab = "musteriler" | "hesabim";
 
@@ -148,7 +149,7 @@ export default function CekiciPanelTabs() {
     menzilKm?: number;
   } | null>(null);
 
-  useCekiciKonumSync(cekici?.hizmetModu);
+  const konumSync = useCekiciKonumSync(cekici?.hizmetModu);
   const [data, setData] = useState<PanelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [flash, setFlash] = useState<string | null>(null);
@@ -311,6 +312,15 @@ export default function CekiciPanelTabs() {
 
   return (
     <MobileShell subtitle={`Hoş geldin, ${cekici.ad}`} footer={tabBar}>
+      {konumSync.aktif && (
+        <KonumGuncellemeGostergesi
+          aktif
+          gonderiliyor={konumSync.gonderiliyor}
+          hata={konumSync.hata}
+          sonGuncelleme={konumSync.sonGuncelleme}
+          onYenile={konumSync.yenile}
+        />
+      )}
       {cekici.hizmetModu === "konum" && (
         <Card className="mb-4 border-blue-200 bg-blue-50">
           <p className="text-sm text-blue-900 leading-relaxed">
