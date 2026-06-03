@@ -304,23 +304,41 @@ export default function CekiciPanelTabs() {
 
   useEffect(() => {
     const mesaj = searchParams.get("mesaj");
+    if (!mesaj) return;
+
     if (mesaj === "musteri-alindi") {
       setFlash("Teklifiniz kabul edildi! Müşteri bilgilerine ulaşabilirsiniz.");
       setTab("musteriler");
+      router.replace("/cekici/panel?tab=musteriler", { scroll: false });
+      return;
     }
     if (mesaj === "kredi-eklendi") {
-      const eklenen = searchParams.get("eklenen");
+      let eklenen: string | null = null;
+      try {
+        const kayit = sessionStorage.getItem("acil_odeme_basarili");
+        if (kayit) {
+          const s = JSON.parse(kayit) as { eklenenKredi?: number };
+          if (s.eklenenKredi != null) eklenen = String(s.eklenenKredi);
+          sessionStorage.removeItem("acil_odeme_basarili");
+        }
+      } catch {
+        /* ignore */
+      }
+      if (!eklenen) eklenen = searchParams.get("eklenen");
       setFlash(
         eklenen
           ? `${eklenen} kredi hesabınıza eklendi.`
           : "Kredi satın alma başarılı."
       );
       setTab("hesabim");
+      router.replace("/cekici/panel?tab=hesabim", { scroll: false });
+      return;
     }
     if (mesaj === "kayit-basarili") {
       setFlash("Kayıt başarılı! Hoş geldiniz.");
+      router.replace("/cekici/panel", { scroll: false });
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const tabBar = (
     <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-200 bg-white safe-bottom">

@@ -131,9 +131,14 @@ export default function OdemePage() {
       if (!res.ok) throw new Error(data.error);
 
       sessionStorage.removeItem(`odeme-${odemeId}`);
-      router.push(
-        `/cekici/panel?tab=hesabim&mesaj=kredi-eklendi&eklenen=${data.eklenenKredi}`
+      sessionStorage.setItem(
+        "acil_odeme_basarili",
+        JSON.stringify({
+          eklenenKredi: data.eklenenKredi,
+          toplamKredi: data.toplamKredi,
+        })
       );
+      router.replace("/cekici/panel?tab=hesabim&mesaj=kredi-eklendi");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Ödeme başarısız.");
     } finally {
