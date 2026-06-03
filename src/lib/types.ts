@@ -91,6 +91,10 @@ export interface Talep {
   sorun: string;
   sorunTipi?: string;
   sorunDetay?: string;
+  /** Örn. Audi A3 sedan — çekici taleplerinde */
+  aracModeli?: string;
+  /** Arıza / lastik / kaza fotoğraf URL'leri */
+  fotografUrls?: string[];
   durum: TalepDurumu;
   olusturulma: string;
   ihaleBitis: string;

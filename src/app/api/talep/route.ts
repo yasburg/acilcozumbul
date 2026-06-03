@@ -6,7 +6,13 @@ import { ensureSeedData } from "@/lib/seed";
 import { notifyCekiciler, notifyMusteri } from "@/lib/sms";
 import { IHALE_SURE_DK } from "@/lib/ihale";
 import { parseIlIlce } from "@/lib/konum-parse";
-import { sorunMetniOlustur, sorunTipiBul } from "@/lib/sorun-tipleri";
+import {
+  sorunAracModeliGerekliMi,
+  sorunFotografGerekliMi,
+  sorunMetniOlustur,
+  sorunTipiBul,
+} from "@/lib/sorun-tipleri";
+import { talepFotografYukle } from "@/lib/talep-fotograf";
 import { telefonNormalize } from "@/lib/telefon";
 import type { Talep } from "@/lib/types";
 
@@ -14,7 +20,18 @@ export async function POST(request: NextRequest) {
   await ensureSeedData();
 
   const body = await request.json();
-  const { ad, soyad, telefon, konum, hedefKonum, sorunTipi, sorunDetay, sorun } = body;
+  const {
+    ad,
+    soyad,
+    telefon,
+    konum,
+    hedefKonum,
+    sorunTipi,
+    sorunDetay,
+    sorun,
+    aracModeli,
+    fotograf,
+  } = body;
 
   const tip = sorunTipi?.trim() || "diger";
   if (!sorunTipiBul(tip) && !sorun) {
@@ -27,6 +44,20 @@ export async function POST(request: NextRequest) {
   if (tip === "diger" && !sorunDetay?.trim() && !sorun?.trim()) {
     return NextResponse.json(
       { error: "Lütfen sorununuzu kısaca açıklayın." },
+      { status: 400 }
+    );
+  }
+
+  if (sorunAracModeliGerekliMi(tip) && !aracModeli?.trim()) {
+    return NextResponse.json(
+      { error: "Araç modelini girin (ör. Audi A3 sedan)." },
+      { status: 400 }
+    );
+  }
+
+  if (sorunFotografGerekliMi(tip) && !fotograf?.trim()) {
+    return NextResponse.json(
+      { error: "Arıza fotoğrafı gerekli." },
       { status: 400 }
     );
   }
@@ -57,8 +88,27 @@ export async function POST(request: NextRequest) {
   const ihaleBitis = new Date(olusturulma.getTime() + IHALE_SURE_DK * 60 * 1000);
   const { il: konumIl, ilce: konumIlce } = parseIlIlce(konum.adres.trim());
 
+  const talepId = randomUUID();
+  const fotografUrls: string[] = [];
+  if (fotograf?.trim()) {
+    const url = await talepFotografYukle(talepId, fotograf.trim());
+    if (url) fotografUrls.push(url);
+    else if (sorunFotografGerekliMi(tip)) {
+      return NextResponse.json(
+        { error: "Fotoğraf yüklenemedi. Lütfen tekrar deneyin." },
+        { status: 400 }
+      );
+    }
+  }
+
+  const modelMetni = aracModeli?.trim();
+  const sorunTam =
+    modelMetni && sorunAracModeliGerekliMi(tip)
+      ? `${sorunMetni} · Araç: ${modelMetni}`
+      : sorunMetni;
+
   const talep: Talep = {
-    id: randomUUID(),
+    id: talepId,
     ad: ad.trim(),
     soyad: soyad.trim(),
     telefon: telefon.trim(),
@@ -74,9 +124,11 @@ export async function POST(request: NextRequest) {
       lng: hedefKonum.lng ?? 0,
       adres: hedefKonum.adres.trim(),
     },
-    sorun: sorunMetni,
+    sorun: sorunTam,
     sorunTipi: tip,
     sorunDetay: sorunDetay?.trim(),
+    aracModeli: modelMetni,
+    fotografUrls: fotografUrls.length ? fotografUrls : undefined,
     durum: "ihalede",
     olusturulma: olusturulma.toISOString(),
     ihaleBitis: ihaleBitis.toISOString(),
@@ -94,5 +146,8 @@ export async function POST(request: NextRequest) {
   await addTalep(talep);
   await notifyMusteri(talep, "talep_alindi", baseUrl);
 
-  return NextResponse.json({ id: talep.id, bildirilenSayisi: bildirilenIds.length });
+  return NextResponse.json({
+    id: talep.id,
+    bildirilenSayisi: bildirilenIds.length,
+  });
 }

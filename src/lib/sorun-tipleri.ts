@@ -67,6 +67,37 @@ export function sorunCagriButonEtiketi(sorunTipi?: string): string {
   return `${tip?.icon ?? "🚛"} ${metin}`;
 }
 
+/** Fotoğraf istenen sorun tipleri (çekici / arıza / kaza vb.) */
+export const SORUN_FOTOGRAF_TIPLERI: SorunTipiId[] = [
+  "ariza",
+  "lastik",
+  "kaza",
+  "cekici",
+];
+
+/** Çekici / kurtarma — araç modeli istenen tipler */
+export const SORUN_ARAC_MODELI_TIPLERI: SorunTipiId[] = ["ariza", "kaza", "cekici"];
+
+/** Konum adımında fotoğraf alanı göster (zorunlu veya isteğe bağlı) */
+export function sorunFotografAlaniGoster(sorunTipi?: string): boolean {
+  if (!sorunTipi?.trim()) return false;
+  const id = talepSorunTipi({ sorunTipi });
+  return (
+    SORUN_FOTOGRAF_TIPLERI.includes(id) ||
+    SORUN_ARAC_MODELI_TIPLERI.includes(id)
+  );
+}
+
+export function sorunFotografGerekliMi(sorunTipi?: string): boolean {
+  const id = talepSorunTipi({ sorunTipi });
+  return SORUN_FOTOGRAF_TIPLERI.includes(id);
+}
+
+export function sorunAracModeliGerekliMi(sorunTipi?: string): boolean {
+  const id = talepSorunTipi({ sorunTipi });
+  return SORUN_ARAC_MODELI_TIPLERI.includes(id);
+}
+
 export function sorunMetniOlustur(sorunTipi: string, sorunDetay?: string): string {
   const tip = sorunTipiBul(sorunTipi);
   const baslik = tip?.label ?? sorunTipi;

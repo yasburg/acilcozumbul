@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { CekiciRotaPanel } from "@/components/CekiciRotaPanel";
 import { koordinatGecerli } from "@/lib/koordinat";
+import { useKazananKonumPaylas } from "@/hooks/useKazananKonumPaylas";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
@@ -19,7 +20,12 @@ interface TalepDurum {
   kaybettim?: boolean;
   tercihEdilmedi?: boolean;
   mesaj?: string;
-  onizleme?: { bolge: string; sorunOzet: string; hedefBolge?: string };
+  onizleme?: {
+    bolge: string;
+    sorunOzet: string;
+    hedefBolge?: string;
+    aracModeli?: string;
+  };
   teklifUcretsiz?: boolean;
   erisimYok?: boolean;
   kredi?: number;
@@ -40,6 +46,8 @@ interface TalepDurum {
   konum?: { adres?: string; lat: number; lng: number };
   hedefKonum?: { adres?: string; lat: number; lng: number };
   sorun?: string;
+  aracModeli?: string;
+  fotografUrls?: string[];
 }
 
 export default function CekiciTalepClient() {
@@ -211,6 +219,8 @@ export default function CekiciTalepClient() {
     setSure(String(Math.max(5, dk)));
   }, []);
 
+  useKazananKonumPaylas(id, !!talep?.kazandim);
+
   return (
     <MobileShell
       showBrand={false}
@@ -362,6 +372,31 @@ export default function CekiciTalepClient() {
                   </p>
                 )}
                 <p className="text-sm text-slate-600">{talep.onizleme!.sorunOzet}</p>
+                {talep.onizleme!.aracModeli && (
+                  <p className="text-sm text-slate-700 mt-2">
+                    🚗 {talep.onizleme!.aracModeli}
+                  </p>
+                )}
+                {talep.fotografUrls && talep.fotografUrls.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {talep.fotografUrls.map((url) => (
+                      <a
+                        key={url}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block rounded-lg overflow-hidden border border-slate-200"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt="Arıza fotoğrafı"
+                          className="w-full max-h-40 object-cover"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                )}
                 <p className="text-xs text-slate-500 mt-3 border-t border-slate-100 pt-3">
                   Tam adres ve harita, ihaleyi kazandığınızda görünür.
                 </p>
@@ -441,6 +476,32 @@ export default function CekiciTalepClient() {
                 <p className="text-sm text-slate-500 border-t border-slate-100 pt-3 mt-3">
                   {talep.sorun}
                 </p>
+                {talep.aracModeli && (
+                  <p className="text-sm text-slate-700 mt-2">
+                    🚗 {talep.aracModeli}
+                  </p>
+                )}
+                {talep.fotografUrls && talep.fotografUrls.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs text-slate-500">Arıza fotoğrafı</p>
+                    {talep.fotografUrls.map((url) => (
+                      <a
+                        key={url}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block rounded-lg overflow-hidden border border-slate-200"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt="Arıza fotoğrafı"
+                          className="w-full max-h-48 object-cover"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                )}
                 {talep.benimTeklif && (
                   <p className="text-sm font-semibold text-emerald-700 mt-3">
                     Teklifiniz: {talep.benimTeklif.fiyat} TL

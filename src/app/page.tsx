@@ -5,9 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { SorunSecimi } from "@/components/SorunSecimi";
-import { Btn, Field, Card, Spinner } from "@/components/ui";
+import { ArizaFotografAlani } from "@/components/ArizaFotografAlani";
+import { Btn, Field, Card, Spinner, TextArea } from "@/components/ui";
 import {
+  sorunAracModeliGerekliMi,
   sorunCagriButonEtiketi,
+  sorunFotografAlaniGoster,
+  sorunFotografGerekliMi,
   sorunMetniOlustur,
   sorunTipiBul,
 } from "@/lib/sorun-tipleri";
@@ -34,9 +38,9 @@ import { googleMapsYapilandirildi } from "@/lib/google-maps";
 import type { KonumOneri } from "@/lib/hedef-oneri-data";
 import type { HedefOneriKaynak } from "@/lib/konum-oneri";
 
-type Step = "bilgi" | "konum" | "sorun" | "hedef";
+type Step = "bilgi" | "konum" | "sorun" | "detay" | "hedef";
 
-const STEP_SIRA: Step[] = ["sorun", "bilgi", "konum", "hedef"];
+const STEP_SIRA: Step[] = ["sorun", "bilgi", "konum", "detay", "hedef"];
 const OTP_BEKLEYEN_KEY = "acilcozum_otp_bekleyen";
 
 export default function HomePage() {
@@ -66,6 +70,8 @@ export default function HomePage() {
   const [konumIzniBekleniyor, setKonumIzniBekleniyor] = useState(false);
   const sorunDevamRef = useRef<HTMLDivElement>(null);
   const konumIsimRef = useRef<HTMLDivElement>(null);
+  const aracModeliRef = useRef<HTMLDivElement>(null);
+  const fotografRef = useRef<HTMLDivElement>(null);
   const arizaAdresRef = useRef<HTMLInputElement>(null);
   const konumGpsIlkDeneme = useRef(false);
   const stepRef = useRef<Step>("sorun");
@@ -74,6 +80,9 @@ export default function HomePage() {
   const oneriOffsetRef = useRef(0);
   const hedefOneriBaslatildi = useRef(false);
   const [adSoyadHatasi, setAdSoyadHatasi] = useState(false);
+  const [aracModeliHatasi, setAracModeliHatasi] = useState(false);
+  const [fotografHatasi, setFotografHatasi] = useState(false);
+  const [sorunDetayHatasi, setSorunDetayHatasi] = useState(false);
   const [arizaAdresDuzenle, setArizaAdresDuzenle] = useState(false);
 
   const [form, setForm] = useState({
@@ -88,7 +97,10 @@ export default function HomePage() {
     hedefAdres: "",
     sorunTipi: "",
     sorunDetay: "",
+    aracModeli: "",
   });
+  const [fotografOnizleme, setFotografOnizleme] = useState<string | null>(null);
+  const [fotografData, setFotografData] = useState<string | null>(null);
 
   useEffect(() => {
     setGpsGuvenli(konumGuvenliMi());
@@ -110,6 +122,11 @@ export default function HomePage() {
   gpsYukleniyorRef.current = gpsYukleniyor;
 
   useEffect(() => {
+    if (step !== "detay") {
+      setAracModeliHatasi(false);
+      setFotografHatasi(false);
+      setSorunDetayHatasi(false);
+    }
     if (step !== "konum") {
       setAdSoyadHatasi(false);
       setArizaAdresDuzenle(false);
@@ -251,9 +268,65 @@ export default function HomePage() {
     });
   }
 
+  function detayAdimiDevam(): boolean {
+    const detayEksik =
+      form.sorunTipi === "diger" && !form.sorunDetay.trim();
+    const aracEksik =
+      sorunAracModeliGerekliMi(form.sorunTipi) && !form.aracModeli.trim();
+    const fotografEksik =
+      sorunFotografGerekliMi(form.sorunTipi) && !fotografData;
+
+    setSorunDetayHatasi(detayEksik);
+    if (detayEksik) {
+      setError("Lütfen sorununuzu kısaca açıklayın.");
+      return false;
+    }
+    if (aracEksik || fotografEksik) {
+      konumZorunluAlanHatasiGoster(aracEksik, fotografEksik);
+      return false;
+    }
+    setError("");
+    setAracModeliHatasi(false);
+    setFotografHatasi(false);
+    setSorunDetayHatasi(false);
+    return true;
+  }
+
+  function konumZorunluAlanHatasiGoster(
+    aracEksik: boolean,
+    fotografEksik: boolean
+  ) {
+    setAracModeliHatasi(aracEksik);
+    setFotografHatasi(fotografEksik);
+
+    const parcalar: string[] = [];
+    if (fotografEksik) parcalar.push("arıza fotoğrafı");
+    if (aracEksik) parcalar.push("araç modeli");
+    setError(
+      `Devam etmek için ${parcalar.join(" ve ")} zorunludur — lütfen doldurun.`
+    );
+
+    const hedef = fotografEksik
+      ? fotografRef.current
+      : aracEksik
+        ? aracModeliRef.current
+        : null;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        scrollBelowStickyHeader(hedef);
+      });
+    });
+  }
+
   function update(field: string, value: string | number) {
     if (field === "ad" || field === "soyad") {
       setAdSoyadHatasi(false);
+    }
+    if (field === "aracModeli") {
+      setAracModeliHatasi(false);
+    }
+    if (field === "sorunDetay") {
+      setSorunDetayHatasi(false);
     }
     setForm((f) => {
       const next = { ...f, [field]: value };
@@ -279,11 +352,6 @@ export default function HomePage() {
     if (hedefIdx > sorunIdx) {
       if (!form.sorunTipi) {
         setError("Lütfen sorununuzu seçin.");
-        setStep("sorun");
-        return;
-      }
-      if (form.sorunTipi === "diger" && !form.sorunDetay.trim()) {
-        setError("Lütfen sorununuzu kısaca açıklayın.");
         setStep("sorun");
         return;
       }
@@ -737,7 +805,17 @@ export default function HomePage() {
     }
     if (form.sorunTipi === "diger" && !form.sorunDetay.trim()) {
       setError("Lütfen sorununuzu kısaca açıklayın.");
-      setStep("sorun");
+      setStep("detay");
+      return;
+    }
+    if (sorunAracModeliGerekliMi(form.sorunTipi) && !form.aracModeli.trim()) {
+      setError("Araç modelini girin (ör. Audi A3 sedan).");
+      setStep("detay");
+      return;
+    }
+    if (sorunFotografGerekliMi(form.sorunTipi) && !fotografData) {
+      setError("Arıza fotoğrafı gerekli.");
+      setStep("detay");
       return;
     }
     if (!form.hedefAdres) {
@@ -763,11 +841,21 @@ export default function HomePage() {
           },
           sorunTipi: form.sorunTipi,
           sorunDetay: form.sorunDetay,
+          aracModeli: form.aracModeli.trim() || undefined,
+          fotograf: fotografData || undefined,
           sorun: sorunMetniOlustur(form.sorunTipi, form.sorunDetay),
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Bir hata oluştu.");
+      try {
+        sessionStorage.setItem(
+          `acil_bekle_${data.id}`,
+          String(data.bildirilenSayisi ?? 0)
+        );
+      } catch {
+        /* ignore */
+      }
       router.push(`/bekle/${data.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Talep gönderilemedi.");
@@ -780,7 +868,8 @@ export default function HomePage() {
     { key: "sorun", label: "1" },
     { key: "bilgi", label: "2" },
     { key: "konum", label: "3" },
-    { key: "hedef", label: "4" },
+    { key: "detay", label: "4" },
+    { key: "hedef", label: "5" },
   ];
 
   const sorunLabel = form.sorunTipi
@@ -837,7 +926,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {bilgiMesaj && (step === "bilgi" || step === "konum") && (
+      {bilgiMesaj && (step === "bilgi" || step === "detay" || step === "konum") && (
         <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
           {bilgiMesaj}
         </div>
@@ -847,14 +936,15 @@ export default function HomePage() {
         <div className="space-y-4 animate-fade-in">
           <h2 className="text-xl font-bold">Sorununuz</h2>
           <p className="text-slate-500 text-sm">
-            Önce aracınızdaki sorunu seçin; ardından telefon doğrulaması ve konum
-            bilgileri istenecek.
+            Önce aracınızdaki sorunu seçin; ardından telefon doğrulaması,
+            konum ve sorun detayları istenecek.
           </p>
           <SorunSecimi
             seciliTip={form.sorunTipi}
             detay={form.sorunDetay}
             onTipSec={(id) => update("sorunTipi", id)}
             onDetayChange={(v) => update("sorunDetay", v)}
+            sadeceTipSecimi
           />
           <div ref={sorunDevamRef} className="flex gap-3 pt-2 scroll-mt-4">
             <Btn
@@ -864,17 +954,10 @@ export default function HomePage() {
                   setError("Lütfen sorununuzu seçin.");
                   return;
                 }
-                if (form.sorunTipi === "diger" && !form.sorunDetay.trim()) {
-                  setError("Lütfen sorununuzu kısaca açıklayın.");
-                  return;
-                }
                 setError("");
                 adimGit("bilgi");
               }}
-              disabled={
-                !form.sorunTipi ||
-                (form.sorunTipi === "diger" && !form.sorunDetay.trim())
-              }
+              disabled={!form.sorunTipi}
             >
               Devam Et
             </Btn>
@@ -888,7 +971,7 @@ export default function HomePage() {
           <p className="text-slate-500 text-sm">
             {telefonDogrulandi
               ? "Telefonunuz doğrulandı. Arıza konumuna geçebilirsiniz."
-              : "SMS kodu ile telefonunuzu doğrulayın. Ad ve soyad bir sonraki adımda."}
+              : "SMS kodu ile telefonunuzu doğrulayın. Konum ve araç bilgileri sonraki adımlarda."}
           </p>
           {sorunLabel && (
             <Card className="bg-slate-50 border-slate-200">
@@ -1042,6 +1125,118 @@ export default function HomePage() {
         </div>
       )}
 
+      {step === "detay" && (
+        <div className="space-y-4 animate-fade-in">
+          <h2 className="text-xl font-bold">Sorun Detayı</h2>
+          <p className="text-slate-500 text-sm">
+            Aracınız ve arıza hakkında bilgi verin — çekici doğru teklif
+            verebilsin.
+          </p>
+
+          {sorunLabel && (
+            <Card className="bg-slate-50 border-slate-200">
+              <p className="text-xs text-slate-500">Seçilen sorun</p>
+              <p className="text-sm font-medium text-slate-900">{sorunLabel}</p>
+            </Card>
+          )}
+
+          {sorunFotografAlaniGoster(form.sorunTipi) && (
+            <div ref={fotografRef} className="scroll-mt-44">
+              <ArizaFotografAlani
+                onizleme={fotografOnizleme}
+                invalid={fotografHatasi}
+                zorunlu={sorunFotografGerekliMi(form.sorunTipi)}
+                onDegisti={(dataUrl) => {
+                  setFotografOnizleme(dataUrl);
+                  setFotografData(dataUrl);
+                  if (dataUrl) setFotografHatasi(false);
+                }}
+              />
+              {fotografHatasi && (
+                <p className="text-sm text-red-600 mt-1" role="alert">
+                  Arıza fotoğrafı zorunludur — çekici doğru teklif verebilsin.
+                </p>
+              )}
+            </div>
+          )}
+
+          {sorunAracModeliGerekliMi(form.sorunTipi) && (
+            <div ref={aracModeliRef} className="scroll-mt-44">
+              <Field
+                label="Araç modeli"
+                placeholder="Örn. Audi A3 sedan, Renault Clio hatchback"
+                value={form.aracModeli}
+                onChange={(e) => update("aracModeli", e.target.value)}
+                invalid={aracModeliHatasi}
+                required
+              />
+              {aracModeliHatasi && (
+                <p className="text-sm text-red-600 mt-1" role="alert">
+                  Araç modeli zorunludur (ör. Audi A3 sedan).
+                </p>
+              )}
+            </div>
+          )}
+
+          {form.sorunTipi === "diger" ? (
+            <label className="block space-y-1.5">
+              <span
+                className={`text-sm font-medium ${sorunDetayHatasi ? "text-red-700" : "text-slate-700"}`}
+              >
+                Sorununuzu açıklayın
+              </span>
+              <textarea
+                rows={3}
+                placeholder="Sorununuzu kısaca yazın…"
+                value={form.sorunDetay}
+                onChange={(e) => update("sorunDetay", e.target.value)}
+                aria-invalid={sorunDetayHatasi || undefined}
+                className={`w-full rounded-xl bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 resize-none ${
+                  sorunDetayHatasi
+                    ? "border-red-500 ring-red-500/30 focus:ring-red-500/40"
+                    : "border-slate-200 focus:ring-amber-500/40 focus:border-amber-500"
+                }`}
+              />
+              {sorunDetayHatasi && (
+                <p className="text-sm text-red-600" role="alert">
+                  Sorun açıklaması zorunludur.
+                </p>
+              )}
+            </label>
+          ) : (
+            <TextArea
+              label="Ek detay (isteğe bağlı)"
+              placeholder="Örn: Otoyol km 42, sağ şeritteyim"
+              value={form.sorunDetay}
+              onChange={(e) => update("sorunDetay", e.target.value)}
+              rows={2}
+            />
+          )}
+
+          {(aracModeliHatasi || fotografHatasi || sorunDetayHatasi) && error && (
+            <div
+              className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
+              role="alert"
+            >
+              {error}
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <Btn variant="outline" onClick={() => adimGit("konum")}>
+              Geri
+            </Btn>
+            <Btn
+              onClick={() => {
+                if (detayAdimiDevam()) adimGit("hedef");
+              }}
+            >
+              Devam Et
+            </Btn>
+          </div>
+        </div>
+      )}
+
       {step === "konum" && (
         <div className="space-y-4">
           <h2 className="text-xl font-bold">Arıza Konumu</h2>
@@ -1179,6 +1374,7 @@ export default function HomePage() {
               )}
             </>
           )}
+
           <div className="space-y-2">
             <div className="flex gap-3">
               <Btn variant="outline" onClick={() => adimGit("bilgi")}>
@@ -1186,6 +1382,7 @@ export default function HomePage() {
               </Btn>
               <Btn
                 onClick={async () => {
+                  setError("");
                   if (!arızaKonumuHazir) {
                     setError(
                       "Arıza konumu gerekli. GPS paylaşın veya arıza adresini yazın."
@@ -1198,7 +1395,8 @@ export default function HomePage() {
                   }
                   setAdSoyadHatasi(false);
                   if (gpsYukleniyor) gpsIptal();
-                  if (await adresKoordinatDoldur(false)) adimGit("hedef");
+                  const ok = await adresKoordinatDoldur(false);
+                  if (ok) adimGit("detay");
                 }}
                 disabled={devamEtEngelli}
               >
@@ -1388,7 +1586,7 @@ export default function HomePage() {
             </Card>
           )}
           <div className="flex gap-3">
-            <Btn variant="outline" onClick={() => adimGit("konum")}>
+            <Btn variant="outline" onClick={() => adimGit("detay")}>
               Geri
             </Btn>
             <Btn

@@ -6,11 +6,13 @@ import { ensureSeedData } from "@/lib/seed";
 import { cekiciTalepBolgesineUygunMu } from "@/lib/cekici-bolge";
 import { cekiciTalepSorununaUygunMu } from "@/lib/cekici-sorun";
 import {
+  aktifTeklifler,
   cekiciHaricMi,
   cekiciTalebeBildirildiMi,
   cekiciTeklifVerebilirMi,
   SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
+import { notifyMusteri } from "@/lib/sms";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Teklif } from "@/lib/types";
 
@@ -120,6 +122,17 @@ export async function POST(
   talep.teklifler = [...(talep.teklifler ?? []), teklif];
 
   await updateTalep(talep);
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+  const aktifSayi = aktifTeklifler(talep).length;
+  if (aktifSayi >= 1 && !talep.kazananCekiciId) {
+    await notifyMusteri(talep, "yeni_teklif", baseUrl, {
+      fiyat: teklif.fiyat,
+      cekiciAd: teklif.cekiciAd.split(" ")[0],
+    }).catch(() => {});
+  }
 
   return NextResponse.json({
     teklifId: teklif.id,

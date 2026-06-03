@@ -59,6 +59,8 @@ export async function GET(
       konum: talep.konum,
       hedefKonum: talep.hedefKonum,
       sorun: talep.sorun,
+      aracModeli: talep.aracModeli,
+      fotografUrls: talep.fotografUrls,
       olusturulma: talep.olusturulma,
       benimTeklif: benimTeklifim,
     });
@@ -156,7 +158,9 @@ export async function GET(
       bolge: talepBolge(talep),
       sorunOzet: talepSorunOzet(talep.sorun),
       hedefBolge: talep.hedefKonum?.adres.split(",").slice(-2).join(",").trim(),
+      aracModeli: talep.aracModeli,
     },
+    fotografUrls: talep.fotografUrls,
     teklifUcretsiz: true,
     ...rotaKoordinatlari(talep),
     kredi: cekici.kredi,

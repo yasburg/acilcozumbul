@@ -48,6 +48,8 @@ export type TalepRow = {
   sorun: string;
   sorun_tipi: string | null;
   sorun_detay: string | null;
+  arac_modeli: string | null;
+  fotograf_urls: string[];
   durum: string;
   olusturulma: string;
   ihale_bitis: string;
@@ -135,6 +137,8 @@ export function talepFromRow(r: TalepRow): Talep {
     sorun: r.sorun,
     sorunTipi: r.sorun_tipi ?? undefined,
     sorunDetay: r.sorun_detay ?? undefined,
+    aracModeli: r.arac_modeli ?? undefined,
+    fotografUrls: r.fotograf_urls?.length ? r.fotograf_urls : undefined,
     durum: r.durum as Talep["durum"],
     olusturulma: r.olusturulma,
     ihaleBitis: r.ihale_bitis,
@@ -162,6 +166,8 @@ export function talepToRow(t: Talep): TalepRow {
     sorun: t.sorun,
     sorun_tipi: t.sorunTipi ?? null,
     sorun_detay: t.sorunDetay ?? null,
+    arac_modeli: t.aracModeli ?? null,
+    fotograf_urls: t.fotografUrls ?? [],
     durum: t.durum,
     olusturulma: t.olusturulma,
     ihale_bitis: t.ihaleBitis,

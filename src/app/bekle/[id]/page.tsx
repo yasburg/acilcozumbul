@@ -1,12 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
 import { MemnuniyetBekle } from "@/components/MemnuniyetBekle";
 import { MemnuniyetFormu } from "@/components/MemnuniyetFormu";
 import { PuanGostergesi } from "@/components/PuanGostergesi";
+import { IhaleBekleAnimasyon } from "@/components/IhaleBekleAnimasyon";
+import { MusteriCekiciTakipHarita } from "@/components/MusteriCekiciTakipHarita";
+import { koordinatGecerli } from "@/lib/koordinat";
+import {
+  musteriBildirimIzniIste,
+  musteriYeniTeklifBildir,
+} from "@/lib/musteri-bildirim";
 
 type Durum =
   | "ihale_bekliyor"
@@ -56,6 +63,29 @@ export default function BeklePage() {
   const [ihaleBitis, setIhaleBitis] = useState<string | null>(null);
   const [memnuniyet, setMemnuniyet] = useState<MemnuniyetState | null>(null);
   const [memnuniyetYenile, setMemnuniyetYenile] = useState(0);
+  const [operatorSayisi, setOperatorSayisi] = useState(0);
+  const [animasyonBitti, setAnimasyonBitti] = useState(false);
+  const [musteriKonum, setMusteriKonum] = useState<{
+    lat: number;
+    lng: number;
+    adres: string;
+  } | null>(null);
+  const [hedefKonum, setHedefKonum] = useState<{
+    lat: number;
+    lng: number;
+    adres: string;
+  } | null>(null);
+  const oncekiTeklifSayisi = useRef(0);
+
+  useEffect(() => {
+    try {
+      const kayitli = sessionStorage.getItem(`acil_bekle_${id}`);
+      if (kayitli != null) setOperatorSayisi(Number(kayitli) || 0);
+    } catch {
+      /* ignore */
+    }
+    void musteriBildirimIzniIste();
+  }, [id]);
 
   useEffect(() => {
     let aktif = true;
@@ -76,6 +106,12 @@ export default function BeklePage() {
         }
         const data = await durumRes.json();
 
+        if (data.bildirilenSayisi != null) {
+          setOperatorSayisi(data.bildirilenSayisi);
+        }
+        if (data.konum) setMusteriKonum(data.konum);
+        if (data.hedefKonum) setHedefKonum(data.hedefKonum);
+
         if (data.tamamlandi) {
           setDurum("tamamlandi");
           setCekiciAd(data.cekiciAd ?? null);
@@ -94,6 +130,8 @@ export default function BeklePage() {
           setDurum("yeniden_araniyor");
           setCekiciAd(null);
           setTeklifler([]);
+          setAnimasyonBitti(false);
+          oncekiTeklifSayisi.current = 0;
           const teklifRes = await fetch(`/api/talep/${id}/teklifler`);
           if (teklifRes.ok) {
             const teklifData = await teklifRes.json();
@@ -122,9 +160,18 @@ export default function BeklePage() {
         const teklifRes = await fetch(`/api/talep/${id}/teklifler`);
         if (teklifRes.ok) {
           const teklifData = await teklifRes.json();
+          const yeniSayi = teklifData.teklifler?.length ?? 0;
+          if (yeniSayi > oncekiTeklifSayisi.current && yeniSayi > 0) {
+            const son = teklifData.teklifler[teklifData.teklifler.length - 1];
+            if (son) {
+              musteriYeniTeklifBildir(son.fiyat, son.cekiciAd);
+            }
+          }
+          oncekiTeklifSayisi.current = yeniSayi;
           setTeklifler(teklifData.teklifler ?? []);
           setIhaleBitis(teklifData.ihaleBitis ?? null);
-          if ((teklifData.teklifler?.length ?? 0) > 0) {
+          if (yeniSayi > 0) {
+            setAnimasyonBitti(true);
             setDurum("teklif_sec");
           } else {
             setDurum("ihale_bekliyor");
@@ -256,6 +303,11 @@ export default function BeklePage() {
   }
 
   if (durum === "anlasma_bekliyor") {
+    const takipKonum =
+      musteriKonum && koordinatGecerli(musteriKonum) ? musteriKonum : null;
+    const takipHedef =
+      hedefKonum && koordinatGecerli(hedefKonum) ? hedefKonum : null;
+
     return (
       <MobileShell>
         <div className="space-y-6 py-4">
@@ -271,6 +323,14 @@ export default function BeklePage() {
               Sizi arayacak veya aradı. Anlaşma durumunuzu bildirin:
             </p>
           </div>
+
+          {takipKonum && (
+            <MusteriCekiciTakipHarita
+              talepId={id}
+              musteriKonum={takipKonum}
+              hedefKonum={takipHedef}
+            />
+          )}
 
           {mesaj && (
             <Card className="bg-amber-50 border-amber-200">
@@ -396,7 +456,7 @@ export default function BeklePage() {
 
   return (
     <MobileShell>
-      <div className="flex flex-col items-center justify-center min-h-[65dvh] text-center">
+      <div className="flex flex-col items-center justify-center min-h-[65dvh] text-center px-4">
         {durum === "yeniden_araniyor" && (
           <Card className="w-full mb-6 bg-amber-50 border-amber-200">
             <p className="text-sm text-amber-900">
@@ -405,20 +465,34 @@ export default function BeklePage() {
           </Card>
         )}
 
-        <div className="relative w-32 h-32 mb-8">
-          <div className="absolute inset-0 rounded-full border-4 border-amber-200 animate-ping" />
-          <div className="absolute inset-4 rounded-full border-4 border-amber-400/60 animate-pulse" />
-          <div className="absolute inset-0 flex items-center justify-center text-5xl animate-bounce">
-            🚛
-          </div>
-        </div>
-        <h2 className="text-xl font-bold text-slate-900 mb-2">
-          Çekiciler teklif veriyor
-        </h2>
+        {!animasyonBitti && teklifler.length === 0 ? (
+          <IhaleBekleAnimasyon
+            operatorSayisi={operatorSayisi}
+            onTamamlandi={() => setAnimasyonBitti(true)}
+          />
+        ) : (
+          <>
+            <div className="relative w-32 h-32 mb-8">
+              <div className="absolute inset-0 rounded-full border-4 border-amber-200 animate-ping" />
+              <div className="absolute inset-4 rounded-full border-4 border-amber-400/60 animate-pulse" />
+              <div className="absolute inset-0 flex items-center justify-center text-5xl animate-bounce">
+                🚛
+              </div>
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">
+              {teklifler.length > 0
+                ? "Teklifler geliyor"
+                : "Çekiciler teklif veriyor"}
+            </h2>
+          </>
+        )}
+
         <p className="text-slate-500 text-sm mb-2">
           {teklifler.length > 0
             ? `${teklifler.length} teklif alındı`
-            : "Lütfen bekleyin…"}
+            : animasyonBitti
+              ? "Teklifler bekleniyor…"
+              : "Operatörler bilgilendiriliyor…"}
         </p>
         {ihaleBitis && (
           <p className="text-xs text-slate-400 mb-6">
@@ -429,17 +503,21 @@ export default function BeklePage() {
             })}
           </p>
         )}
-        <div className="flex gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className="w-2 h-2 rounded-full bg-amber-500 animate-bounce"
-              style={{ animationDelay: `${i * 0.15}s` }}
-            />
-          ))}
-        </div>
+        {(animasyonBitti || teklifler.length > 0) && (
+          <div className="flex gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="w-2 h-2 rounded-full bg-amber-500 animate-bounce"
+                style={{ animationDelay: `${i * 0.15}s` }}
+              />
+            ))}
+          </div>
+        )}
         <p className="text-xs text-slate-400 mt-10 max-w-xs">
-          Yakındaki çekicilere SMS gönderildi. Teklifler geldikçe burada listelenecek.
+          {operatorSayisi > 0
+            ? `${operatorSayisi} operatöre bildirim gönderildi. Yeni teklif gelince SMS alabilirsiniz.`
+            : "Yakındaki operatörler aranıyor. Teklifler geldikçe burada listelenecek."}
         </p>
       </div>
     </MobileShell>

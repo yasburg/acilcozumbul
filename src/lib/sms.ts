@@ -55,8 +55,14 @@ export async function notifyCekiciler(
 
 export async function notifyMusteri(
   talep: Talep,
-  tip: "talep_alindi" | "cekici_bulundu" | "yeniden_arama" | "anlasildi",
-  baseUrl: string
+  tip:
+    | "talep_alindi"
+    | "cekici_bulundu"
+    | "yeniden_arama"
+    | "anlasildi"
+    | "yeni_teklif",
+  baseUrl: string,
+  ek?: { fiyat?: number; cekiciAd?: string }
 ): Promise<void> {
   const bekleLink = `${baseUrl}/bekle/${talep.id}`;
   const mesajlar: Record<typeof tip, string> = {
@@ -64,6 +70,7 @@ export async function notifyMusteri(
     cekici_bulundu: `acilcozumbul.com: Çekici seçtiniz! Kısa süre içinde sizi arayacak. Takip: ${bekleLink}`,
     yeniden_arama: `acilcozumbul.com: Yeni çekici aranıyor. Lütfen bekleyin. Takip: ${bekleLink}`,
     anlasildi: `acilcozumbul.com: Çekici ile anlaşmanız kaydedildi. İyi yolculuklar!`,
+    yeni_teklif: `acilcozumbul.com: Yeni teklif: ${ek?.fiyat ?? "?"} TL (${ek?.cekiciAd ?? "Çekici"}). Seçmek için: ${bekleLink}`,
   };
 
   await sendSms(talep.telefon, mesajlar[tip], {

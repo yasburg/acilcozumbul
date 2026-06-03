@@ -8,6 +8,8 @@ interface SorunSecimiProps {
   detay: string;
   onTipSec: (id: string) => void;
   onDetayChange: (detay: string) => void;
+  /** Yalnızca sorun tipi seçimi (detay alanları gizlenir) */
+  sadeceTipSecimi?: boolean;
 }
 
 export function SorunSecimi({
@@ -15,6 +17,7 @@ export function SorunSecimi({
   detay,
   onTipSec,
   onDetayChange,
+  sadeceTipSecimi = false,
 }: SorunSecimiProps) {
   return (
     <div className="space-y-4">
@@ -49,7 +52,7 @@ export function SorunSecimi({
         })}
       </div>
 
-      {seciliTip === "diger" && (
+      {!sadeceTipSecimi && seciliTip === "diger" && (
         <TextArea
           label="Açıklama"
           placeholder="Sorununuzu kısaca yazın…"
@@ -59,7 +62,7 @@ export function SorunSecimi({
         />
       )}
 
-      {seciliTip && seciliTip !== "diger" && (
+      {!sadeceTipSecimi && seciliTip && seciliTip !== "diger" && (
         <TextArea
           label="Ek detay (isteğe bağlı)"
           placeholder="Örn: Otoyol km 42, sağ şeritteyim"

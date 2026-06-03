@@ -54,6 +54,7 @@ export async function GET(
     ihaleAcik,
     ihaleBitis: talep.ihaleBitis,
     teklifSayisi: teklifler.length,
+    bildirilenSayisi: talep.bildirilenCekiciIds?.length ?? 0,
     kazananSecildi,
     anlasmaBekliyor,
     yenidenAranıyor,
@@ -61,6 +62,7 @@ export async function GET(
     cekiciAd,
     kazananFiyat: kazananTeklif?.fiyat,
     anlasmaDurumu: talep.anlasmaDurumu,
+    konum: talep.konum,
     hedefKonum: talep.hedefKonum,
     memnuniyet,
   });
