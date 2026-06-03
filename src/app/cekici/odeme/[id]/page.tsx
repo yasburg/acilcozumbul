@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
@@ -21,8 +21,11 @@ export default function OdemePage() {
   const [sirketUnvan, setSirketUnvan] = useState("");
   const [vergiNo, setVergiNo] = useState("");
   const [kartNo, setKartNo] = useState("");
-  const [sonKullanma, setSonKullanma] = useState("");
+  const [sktAy, setSktAy] = useState("");
+  const [sktYil, setSktYil] = useState("");
   const [cvv, setCvv] = useState("");
+  const sktYilRef = useRef<HTMLInputElement>(null);
+  const cvvRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [garantiAktif, setGarantiAktif] = useState(false);
@@ -70,7 +73,9 @@ export default function OdemePage() {
         setGarantiAktif(Boolean(a.garantiAktif));
         if (a.smokeKart) {
           setKartNo(a.smokeKart.kartNo);
-          setSonKullanma(a.smokeKart.sonKullanma);
+          const [ay, yil] = String(a.smokeKart.sonKullanma).split("/");
+          setSktAy((ay ?? "").replace(/\D/g, "").slice(0, 2));
+          setSktYil((yil ?? "").replace(/\D/g, "").slice(-2));
           setCvv(a.smokeKart.cvv);
           setSmokeDolduruldu(true);
         }
@@ -83,8 +88,22 @@ export default function OdemePage() {
     };
   }, [odemeId, router]);
 
+  function sktAyDegistir(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setSktAy(v);
+    if (v.length === 2) sktYilRef.current?.focus();
+  }
+
+  function sktYilDegistir(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setSktYil(v);
+    if (v.length === 2) cvvRef.current?.focus();
+  }
+
   async function odemeYap(e: React.FormEvent) {
     e.preventDefault();
+    const sonKullanma =
+      sktAy && sktYil ? `${sktAy.padStart(2, "0")}/${sktYil}` : "";
     if (!kartNo || !sonKullanma || !cvv) {
       setError("Kart bilgilerini doldurun.");
       return;
@@ -216,20 +235,36 @@ export default function OdemePage() {
             onChange={(e) => setKartNo(e.target.value)}
             inputMode="numeric"
           />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <Field
-              label="Son Kullanma"
-              placeholder="12/28"
-              value={sonKullanma}
-              onChange={(e) => setSonKullanma(e.target.value)}
+              label="Ay"
+              placeholder="12"
+              value={sktAy}
+              onChange={sktAyDegistir}
+              inputMode="numeric"
+              maxLength={2}
+              autoComplete="cc-exp-month"
             />
             <Field
+              ref={sktYilRef}
+              label="Yıl"
+              placeholder="28"
+              value={sktYil}
+              onChange={sktYilDegistir}
+              inputMode="numeric"
+              maxLength={2}
+              autoComplete="cc-exp-year"
+            />
+            <Field
+              ref={cvvRef}
               label="CVV"
               placeholder="123"
               type="password"
               maxLength={4}
               value={cvv}
-              onChange={(e) => setCvv(e.target.value)}
+              onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              inputMode="numeric"
+              autoComplete="cc-csc"
             />
           </div>
         </Card>
