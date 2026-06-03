@@ -7,6 +7,7 @@ import {
   memnuniyetDurumuHesapla,
   memnuniyetSmsGonderGerekirse,
 } from "@/lib/memnuniyet";
+import { smsBaseUrl } from "@/lib/sms-base-url";
 
 export async function GET(
   _request: NextRequest,
@@ -42,9 +43,9 @@ export async function GET(
   const memnuniyet = memnuniyetDurumuHesapla(talep, degerlendirme);
 
   if (memnuniyet.formAcik) {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      `${_request.nextUrl.protocol}//${_request.nextUrl.host}`;
+    const baseUrl = smsBaseUrl(
+      `${_request.nextUrl.protocol}//${_request.nextUrl.host}`
+    );
     await memnuniyetSmsGonderGerekirse(talep, baseUrl).catch(() => {});
   }
 

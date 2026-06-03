@@ -4,6 +4,7 @@ import { ensureSeedData } from "@/lib/seed";
 import { teklifFiyatDegistiMi } from "@/lib/cekici-puan";
 import { kaybedenTeklifleriIsaretle } from "@/lib/ihale";
 import { notifyMusteri } from "@/lib/sms";
+import { smsBaseUrl } from "@/lib/sms-base-url";
 
 export async function POST(
   request: NextRequest,
@@ -53,9 +54,9 @@ export async function POST(
   await kaybedenTeklifleriIsaretle(talep, teklif.id);
 
   const cekici = await getCekiciById(teklif.cekiciId);
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+  const baseUrl = smsBaseUrl(
+    `${request.nextUrl.protocol}//${request.nextUrl.host}`
+  );
   await notifyMusteri(talep, "cekici_bulundu", baseUrl);
 
   return NextResponse.json({

@@ -13,6 +13,7 @@ import {
   SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
 import { notifyMusteri } from "@/lib/sms";
+import { smsBaseUrl } from "@/lib/sms-base-url";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Teklif } from "@/lib/types";
 
@@ -123,9 +124,9 @@ export async function POST(
 
   await updateTalep(talep);
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+  const baseUrl = smsBaseUrl(
+    `${request.nextUrl.protocol}//${request.nextUrl.host}`
+  );
   const aktifSayi = aktifTeklifler(talep).length;
   if (aktifSayi >= 1 && !talep.kazananCekiciId) {
     await notifyMusteri(talep, "yeni_teklif", baseUrl, {

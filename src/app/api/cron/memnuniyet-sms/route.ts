@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { topluMemnuniyetSmsGonder } from "@/lib/memnuniyet";
+import { smsBaseUrl } from "@/lib/sms-base-url";
 
 /**
  * Zamanı gelen memnuniyet SMS'lerini gönderir.
@@ -20,9 +21,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+  const baseUrl = smsBaseUrl(
+    `${request.nextUrl.protocol}//${request.nextUrl.host}`
+  );
 
   const gonderilen = await topluMemnuniyetSmsGonder(baseUrl);
 

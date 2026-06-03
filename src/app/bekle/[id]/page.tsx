@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
-import { MemnuniyetBekle } from "@/components/MemnuniyetBekle";
 import { MemnuniyetFormu } from "@/components/MemnuniyetFormu";
 import { PuanGostergesi } from "@/components/PuanGostergesi";
 import { IhaleBekleAnimasyon } from "@/components/IhaleBekleAnimasyon";
@@ -20,7 +19,7 @@ type Durum =
   | "teklif_sec"
   | "cekici_bulundu"
   | "anlasma_bekliyor"
-  | "tamamlandi"
+  | "anlasildi"
   | "yeniden_araniyor";
 
 interface TeklifOzet {
@@ -76,6 +75,7 @@ export default function BeklePage() {
     adres: string;
   } | null>(null);
   const oncekiTeklifSayisi = useRef(0);
+  const anlasildiRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -113,20 +113,16 @@ export default function BeklePage() {
         if (data.hedefKonum) setHedefKonum(data.hedefKonum);
 
         if (data.tamamlandi) {
-          setDurum("tamamlandi");
+          anlasildiRef.current = true;
+          setDurum("anlasildi");
           setCekiciAd(data.cekiciAd ?? null);
-          let mem = data.memnuniyet ?? null;
-          if (!mem) {
-            const mRes = await fetch(`/api/talep/${id}/memnuniyet`);
-            if (mRes.ok) mem = await mRes.json();
-          }
-          if (mem) setMemnuniyet(mem);
-          if (mem?.degerlendirildi || mem?.formAcik) return;
-          if (mem?.beklemede) planla(10000);
+          if (data.memnuniyet) setMemnuniyet(data.memnuniyet);
+          planla(30_000);
           return;
         }
 
         if (data.yenidenAranıyor) {
+          anlasildiRef.current = false;
           setDurum("yeniden_araniyor");
           setCekiciAd(null);
           setTeklifler([]);
@@ -142,7 +138,7 @@ export default function BeklePage() {
           return;
         }
 
-        if (data.kazananSecildi && data.anlasmaBekliyor) {
+        if (data.kazananSecildi && data.anlasmaBekliyor && !anlasildiRef.current) {
           setDurum("anlasma_bekliyor");
           setCekiciAd(data.cekiciAd ?? "Çekici");
           setKazananFiyat(data.kazananFiyat ?? null);
@@ -230,11 +226,11 @@ export default function BeklePage() {
       if (!res.ok) throw new Error(data.error);
 
       if (sonuc === "anlasti") {
-        setDurum("tamamlandi");
-        setMesaj("Anlaşma kaydedildi. İyi yolculuklar!");
-        const mRes = await fetch(`/api/talep/${id}/memnuniyet`);
-        if (mRes.ok) setMemnuniyet(await mRes.json());
+        anlasildiRef.current = true;
+        setDurum("anlasildi");
+        setMesaj("");
       } else {
+        anlasildiRef.current = false;
         setDurum("yeniden_araniyor");
         setCekiciAd(null);
         setTeklifler([]);
@@ -247,80 +243,35 @@ export default function BeklePage() {
     }
   }
 
-  if (durum === "tamamlandi") {
-    const formAcik = memnuniyet?.formAcik && !memnuniyet.degerlendirildi;
-    const bekle = memnuniyet?.beklemede && !memnuniyet.degerlendirildi;
-    const degerlendirildi = memnuniyet?.degerlendirildi;
-
-    return (
-      <MobileShell>
-        <div className="space-y-6 py-4 max-w-md mx-auto">
-          <div className="text-center">
-            <div className="text-5xl mb-3">🎉</div>
-            <h2 className="text-2xl font-bold text-emerald-700">İşlem Tamamlandı</h2>
-            <p className="text-slate-600 text-sm mt-2">
-              Çekici ile anlaştınız. Güvenli yolculuklar dileriz.
-            </p>
-          </div>
-
-          {degerlendirildi && (
-            <Card className="bg-emerald-50 border-emerald-200 text-center py-4 space-y-1">
-              <p className="text-sm text-emerald-800 font-medium">
-                ✓ Değerlendirmeniz alındı
-              </p>
-              {memnuniyet?.puanGenel != null && (
-                <p className="text-xs text-emerald-700">
-                  Genel {memnuniyet.puanGenel}/5 · Fiyat {memnuniyet.puanFiyat}/5
-                  · Süre {memnuniyet.puanSure}/5
-                </p>
-              )}
-            </Card>
-          )}
-
-          {bekle && memnuniyet && (
-            <MemnuniyetBekle
-              kalanMs={memnuniyet.kalanMs}
-              onSureDoldu={() => setMemnuniyetYenile((n) => n + 1)}
-            />
-          )}
-
-          {formAcik && (
-            <MemnuniyetFormu
-              talepId={id}
-              cekiciAd={cekiciAd ?? undefined}
-              onTamamlandi={() => setMemnuniyetYenile((n) => n + 1)}
-            />
-          )}
-
-          {!memnuniyet && (
-            <p className="text-xs text-slate-400 text-center">
-              Değerlendirme durumu yükleniyor…
-            </p>
-          )}
-        </div>
-      </MobileShell>
-    );
-  }
-
-  if (durum === "anlasma_bekliyor") {
+  if (durum === "anlasma_bekliyor" || durum === "anlasildi") {
+    const anlasildi = durum === "anlasildi";
     const takipKonum =
       musteriKonum && koordinatGecerli(musteriKonum) ? musteriKonum : null;
     const takipHedef =
       hedefKonum && koordinatGecerli(hedefKonum) ? hedefKonum : null;
+    const formAcik =
+      anlasildi && memnuniyet?.formAcik && !memnuniyet.degerlendirildi;
+    const degerlendirildi = anlasildi && memnuniyet?.degerlendirildi;
 
     return (
       <MobileShell>
         <div className="space-y-6 py-4">
           <div className="text-center">
-            <div className="text-5xl mb-4">🚛</div>
-            <h2 className="text-xl font-bold text-slate-900">Çekici Seçildi!</h2>
+            <div className="text-5xl mb-4">{anlasildi ? "✅" : "🚛"}</div>
+            <h2 className="text-xl font-bold text-slate-900">
+              {anlasildi ? "Anlaşma sağlandı" : "Çekici Seçildi!"}
+            </h2>
             <p className="text-slate-600 mt-2 text-sm">
               <strong>{cekiciAd}</strong>
               {kazananFiyat != null && (
                 <> · <span className="text-amber-600">{kazananFiyat} TL</span></>
               )}
-              <br />
-              Sizi arayacak veya aradı. Anlaşma durumunuzu bildirin:
+              {!anlasildi && (
+                <>
+                  <br />
+                  Sizi arayacak veya aradı. Anlaşma durumunuzu bildirin:
+                </>
+              )}
             </p>
           </div>
 
@@ -332,18 +283,69 @@ export default function BeklePage() {
             />
           )}
 
-          {mesaj && (
+          {!anlasildi && mesaj && (
             <Card className="bg-amber-50 border-amber-200">
               <p className="text-sm text-amber-900">{mesaj}</p>
             </Card>
           )}
 
-          <Btn variant="success" onClick={() => anlasmaBildir("anlasti")} disabled={islem}>
-            ✅ Çekici ile anlaştım
-          </Btn>
-          <Btn variant="danger" onClick={() => anlasmaBildir("anlasamadi")} disabled={islem}>
-            ❌ Anlaşamadım — başka çekici ara
-          </Btn>
+          {!anlasildi && (
+            <>
+              <Btn
+                variant="success"
+                onClick={() => anlasmaBildir("anlasti")}
+                disabled={islem}
+              >
+                ✅ Çekici ile anlaştım
+              </Btn>
+              <Btn
+                variant="danger"
+                onClick={() => anlasmaBildir("anlasamadi")}
+                disabled={islem}
+              >
+                ❌ Anlaşamadım — başka çekici ara
+              </Btn>
+            </>
+          )}
+
+          {anlasildi && (
+            <>
+              <Card className="bg-emerald-50 border-emerald-200">
+                <p className="text-sm font-medium text-emerald-900">
+                  {cekiciAd} sizi birazdan arayacak.
+                </p>
+                <p className="text-xs text-emerald-800 mt-2 leading-relaxed">
+                  Yoldayken çekiciyi yukarıdaki haritadan canlı takip
+                  edebilirsiniz.
+                </p>
+              </Card>
+
+              <Card className="bg-slate-50 border-slate-200">
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Çekiciyi değerlendirmek ve sonraki müşterilere hizmet
+                  kalitesini arttırmak için size{" "}
+                  <strong>3 saat sonra</strong> gönderilecek değerlendirme
+                  formunu doldurmanızı rica ederiz.
+                </p>
+              </Card>
+
+              {degerlendirildi && (
+                <Card className="bg-emerald-50 border-emerald-200 text-center py-4">
+                  <p className="text-sm text-emerald-800 font-medium">
+                    ✓ Değerlendirmeniz alındı, teşekkürler!
+                  </p>
+                </Card>
+              )}
+
+              {formAcik && (
+                <MemnuniyetFormu
+                  talepId={id}
+                  cekiciAd={cekiciAd ?? undefined}
+                  onTamamlandi={() => setMemnuniyetYenile((n) => n + 1)}
+                />
+              )}
+            </>
+          )}
         </div>
       </MobileShell>
     );

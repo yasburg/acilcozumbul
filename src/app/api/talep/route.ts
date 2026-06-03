@@ -13,6 +13,7 @@ import {
   sorunTipiBul,
 } from "@/lib/sorun-tipleri";
 import { talepFotografYukle } from "@/lib/talep-fotograf";
+import { smsBaseUrl } from "@/lib/sms-base-url";
 import { telefonNormalize } from "@/lib/telefon";
 import type { Talep } from "@/lib/types";
 
@@ -136,9 +137,9 @@ export async function POST(request: NextRequest) {
     teklifler: [],
   };
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+  const baseUrl = smsBaseUrl(
+    `${request.nextUrl.protocol}//${request.nextUrl.host}`
+  );
 
   const bildirilenIds = await notifyCekiciler(talep, baseUrl);
   talep.bildirilenCekiciIds = bildirilenIds;

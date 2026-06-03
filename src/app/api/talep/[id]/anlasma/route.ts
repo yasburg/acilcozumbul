@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCekiciById, getTalepById, updateTalep } from "@/lib/db";
 import { notifyCekiciIptal, notifyCekiciler, notifyMusteri } from "@/lib/sms";
+import { smsBaseUrl } from "@/lib/sms-base-url";
 import { ensureSeedData } from "@/lib/seed";
 import { IHALE_SURE_DK } from "@/lib/ihale";
 
@@ -28,9 +29,9 @@ export async function POST(
     );
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+  const baseUrl = smsBaseUrl(
+    `${request.nextUrl.protocol}//${request.nextUrl.host}`
+  );
 
   if (sonuc === "anlasti") {
     talep.durum = "anlaşıldı";

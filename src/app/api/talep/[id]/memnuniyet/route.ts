@@ -7,12 +7,10 @@ import {
   memnuniyetSmsGonderGerekirse,
 } from "@/lib/memnuniyet";
 import { ensureSeedData } from "@/lib/seed";
+import { smsBaseUrl } from "@/lib/sms-base-url";
 
 function baseUrlFrom(request: NextRequest): string {
-  return (
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    `${request.nextUrl.protocol}//${request.nextUrl.host}`
-  );
+  return smsBaseUrl(`${request.nextUrl.protocol}//${request.nextUrl.host}`);
 }
 
 export async function GET(
