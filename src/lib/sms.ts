@@ -1,6 +1,7 @@
 import { getCekiciler } from "./db";
 import { filtreleCekicilerBolge } from "./cekici-bolge";
 import { filtreleCekicilerSorun } from "./cekici-sorun";
+import { cekiciMusaitMi } from "./cekici-musaitlik";
 import { SMS_BILDIRIM_KREDI } from "./ihale";
 import { sendSms } from "./sms-provider";
 import type { Cekici, Talep } from "./types";
@@ -18,7 +19,11 @@ export async function notifyCekiciler(
     filtreleCekicilerBolge(tumCekiciler, talep),
     talep
   ).filter(
-    (c) => c.aktif && !haric.has(c.id) && c.kredi >= SMS_BILDIRIM_KREDI
+    (c) =>
+      c.aktif &&
+      !haric.has(c.id) &&
+      c.kredi >= SMS_BILDIRIM_KREDI &&
+      cekiciMusaitMi(c)
   );
 
   const bildirilenIds: string[] = [];

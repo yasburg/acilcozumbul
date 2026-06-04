@@ -41,6 +41,10 @@ export type CekiciRow = {
   belge_gonderim?: string | null;
   rozet_aktif?: boolean | null;
   rozet_odeme_tarihi?: string | null;
+  musaitlik_aktif?: boolean | null;
+  musaitlik_baslangic?: string | null;
+  musaitlik_bitis?: string | null;
+  musaitlik_gunler?: number[] | null;
 };
 
 export type TalepRow = {
@@ -106,6 +110,10 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     belgeGonderim: r.belge_gonderim ?? undefined,
     rozetAktif: Boolean(r.rozet_aktif),
     rozetOdemeTarihi: r.rozet_odeme_tarihi ?? undefined,
+    musaitlikAktif: Boolean(r.musaitlik_aktif),
+    musaitlikBaslangic: r.musaitlik_baslangic ?? undefined,
+    musaitlikBitis: r.musaitlik_bitis ?? undefined,
+    musaitlikGunler: r.musaitlik_gunler ?? undefined,
   };
 }
 
@@ -142,6 +150,10 @@ export function cekiciToRow(c: Cekici): CekiciRow {
     belge_gonderim: c.belgeGonderim ?? null,
     rozet_aktif: c.rozetAktif ?? false,
     rozet_odeme_tarihi: c.rozetOdemeTarihi ?? null,
+    musaitlik_aktif: c.musaitlikAktif ?? false,
+    musaitlik_baslangic: c.musaitlikBaslangic ?? null,
+    musaitlik_bitis: c.musaitlikBitis ?? null,
+    musaitlik_gunler: c.musaitlikGunler ?? null,
   };
 }
 
@@ -214,6 +226,7 @@ export type SmsLogRow = {
   alici_tipi: string | null;
   gonderildi: boolean;
   saglayici: string | null;
+  hata: string | null;
 };
 
 export function smsFromRow(r: SmsLogRow): SmsKaydi {
@@ -228,6 +241,7 @@ export function smsFromRow(r: SmsLogRow): SmsKaydi {
     aliciTipi: (r.alici_tipi as SmsKaydi["aliciTipi"]) ?? undefined,
     gonderildi: r.gonderildi,
     saglayici: r.saglayici ?? undefined,
+    hata: r.hata ?? undefined,
   };
 }
 
@@ -243,6 +257,7 @@ export function smsToRow(s: SmsKaydi): SmsLogRow {
     alici_tipi: s.aliciTipi ?? null,
     gonderildi: s.gonderildi ?? false,
     saglayici: s.saglayici ?? null,
+    hata: s.hata ?? null,
   };
 }
 

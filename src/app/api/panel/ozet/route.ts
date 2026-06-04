@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getCekiciler, getSmsLog, getTalepler } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
+import { funnelOzetHesapla } from "@/lib/funnel";
 import { smsDurumu } from "@/lib/sms-provider";
+import { smsSaglikOzet } from "@/lib/sms-saglik";
 
 export async function GET() {
   await ensureSeedData();
@@ -12,6 +14,7 @@ export async function GET() {
   ]);
 
   const smsGonderilen = smsLog.filter((s) => s.gonderildi).length;
+  const huni = await funnelOzetHesapla(talepler, 30);
 
   return NextResponse.json({
     cekiciSayisi: cekiciler.length,
@@ -19,5 +22,7 @@ export async function GET() {
     smsSayisi: smsLog.length,
     smsGonderilen,
     smsDurum: smsDurumu(),
+    huni,
+    smsSaglik: smsSaglikOzet(smsLog, 24),
   });
 }

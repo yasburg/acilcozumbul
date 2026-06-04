@@ -4,6 +4,12 @@ import { addTalep } from "@/lib/db";
 import { getDogrulanmisTelefon } from "@/lib/musteri-auth";
 import { ensureSeedData } from "@/lib/seed";
 import { notifyCekiciler, notifyMusteri } from "@/lib/sms";
+import { funnelOlayKaydet } from "@/lib/funnel";
+import {
+  guvenlikOlayiKaydet,
+  talepFraudKontrol,
+} from "@/lib/talep-fraud";
+import { ipHash, istekIp } from "@/lib/request-ip";
 import { IHALE_SURE_DK } from "@/lib/ihale";
 import { parseIlIlce } from "@/lib/konum-parse";
 import {
@@ -85,6 +91,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const ip = istekIp(request);
+  const hash = ipHash(ip);
+  const telNorm = telefonNormalize(telefon);
+
+  const fraud = await talepFraudKontrol(telNorm, hash);
+  if (!fraud.ok) {
+    return NextResponse.json({ error: fraud.hata }, { status: 429 });
+  }
+
   const olusturulma = new Date();
   const ihaleBitis = new Date(olusturulma.getTime() + IHALE_SURE_DK * 60 * 1000);
   const { il: konumIl, ilce: konumIlce } = parseIlIlce(konum.adres.trim());
@@ -146,6 +161,19 @@ export async function POST(request: NextRequest) {
 
   await addTalep(talep);
   await notifyMusteri(talep, "talep_alindi", baseUrl);
+
+  await guvenlikOlayiKaydet({
+    anahtar: hash ? `ip:${hash}` : `tel:${telNorm}`,
+    olayTipi: "talep_olustur",
+    ipHash: hash,
+    telefon: telNorm,
+  });
+  await funnelOlayKaydet({
+    olay: "talep_olustur",
+    telefon: telNorm,
+    ipHash: hash,
+    talepId: talep.id,
+  });
 
   return NextResponse.json({
     id: talep.id,

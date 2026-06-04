@@ -212,6 +212,7 @@ async function logSmsKaydi(
     aliciTipi: meta.aliciTipi,
     gonderildi: sonuc.basarili,
     saglayici: sonuc.saglayici,
+    hata: sonuc.hata,
   });
 }
 

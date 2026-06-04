@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { bekleyenOtpBilgisi, otpGonder } from "@/lib/musteri-otp";
+import { funnelOlayKaydet } from "@/lib/funnel";
+import { guvenlikOlayiKaydet, otpFraudKontrol } from "@/lib/talep-fraud";
+import { ipHash, istekIp } from "@/lib/request-ip";
 import { telefonNormalize } from "@/lib/telefon";
 import { sendSms } from "@/lib/sms-provider";
 import { telefonMaskele } from "@/lib/telefon";
 
 export async function POST(request: NextRequest) {
   const { telefon } = await request.json();
+  const ip = istekIp(request);
+  const hash = ipHash(ip);
+
+  const fraud = await otpFraudKontrol(hash);
+  if (!fraud.ok) {
+    return NextResponse.json({ error: fraud.hata }, { status: 429 });
+  }
+
   const sonuc = await otpGonder(telefon ?? "");
 
   if (!sonuc.ok) {
@@ -21,6 +32,19 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ error: sonuc.hata }, { status: 400 });
   }
+
+  const telNorm = telefonNormalize(sonuc.telefon);
+  await guvenlikOlayiKaydet({
+    anahtar: hash ? `ip:${hash}` : `tel:${telNorm}`,
+    olayTipi: "otp_gonder",
+    ipHash: hash,
+    telefon: telNorm,
+  });
+  await funnelOlayKaydet({
+    olay: "otp_gonder",
+    telefon: telNorm,
+    ipHash: hash,
+  });
 
   const smsMesaj = `acilcozumbul.com doğrulama kodunuz: ${sonuc.kod}. 5 dakika geçerlidir.`;
   const sms = await sendSms(sonuc.telefon, smsMesaj, {

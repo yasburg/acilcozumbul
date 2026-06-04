@@ -45,6 +45,14 @@ type Step = "bilgi" | "konum" | "sorun" | "detay" | "hedef";
 const STEP_SIRA: Step[] = ["sorun", "bilgi", "konum", "detay", "hedef"];
 const OTP_BEKLEYEN_KEY = "acilcozum_otp_bekleyen";
 
+function funnelKaydet(olay: string, telefon?: string) {
+  void fetch("/api/musteri/funnel", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ olay, telefon }),
+  });
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("sorun");
@@ -107,6 +115,7 @@ export default function HomePage() {
 
   useEffect(() => {
     setGpsGuvenli(konumGuvenliMi());
+    funnelKaydet("form_basla");
   }, []);
 
   useEffect(() => {

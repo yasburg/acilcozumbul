@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { BolgeAyarlari } from "@/components/BolgeAyarlari";
+import { MusaitlikAyarlari } from "@/components/cekici/MusaitlikAyarlari";
 import { SorunTipiSecimi } from "@/components/SorunTipiSecimi";
 import { Btn, Card } from "@/components/ui";
 import type { SorunTipi } from "@/lib/sorun-tipleri";
@@ -234,6 +235,8 @@ export default function AyarlarPage() {
               </Btn>
             </div>
           </section>
+
+          <MusaitlikAyarlari />
 
           {stats && (
             <>

@@ -80,6 +80,12 @@ export interface Cekici {
   belgeGonderim?: string;
   rozetAktif?: boolean;
   rozetOdemeTarihi?: string;
+  /** true ise yalnızca belirtilen saat/günlerde SMS alır */
+  musaitlikAktif?: boolean;
+  musaitlikBaslangic?: string;
+  musaitlikBitis?: string;
+  /** 1=Pzt … 7=Paz; boş = her gün */
+  musaitlikGunler?: number[];
 }
 
 export type OdemeFatura = {
@@ -145,6 +151,7 @@ export interface SmsKaydi {
   aliciTipi?: "cekici" | "musteri";
   gonderildi?: boolean;
   saglayici?: string;
+  hata?: string;
 }
 
 export interface BekleyenOdeme {

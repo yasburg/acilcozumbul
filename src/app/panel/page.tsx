@@ -13,6 +13,22 @@ interface Ozet {
   smsSayisi: number;
   smsGonderilen: number;
   smsDurum: { gercekGonderim: boolean; saglayici: string };
+  huni?: {
+    gun: number;
+    formBasla: number;
+    otpGonder: number;
+    otpDogrulandi: number;
+    talepOlustur: number;
+    teklifVar: number;
+    kazanan: number;
+  };
+  smsSaglik?: {
+    pencereSaat: number;
+    hataOraniYuzde: number;
+    alarm: boolean;
+    basarisiz: number;
+    toplam: number;
+  };
 }
 
 function hataMesajiFromParam(hata: string | null): string {
@@ -124,7 +140,9 @@ function PanelIcerik() {
       <Card
         className={
           ozet.smsDurum.gercekGonderim
-            ? "bg-emerald-50 border-emerald-200"
+            ? ozet.smsSaglik?.alarm
+              ? "bg-red-50 border-red-200"
+              : "bg-emerald-50 border-emerald-200"
             : "bg-amber-50 border-amber-200"
         }
       >
@@ -134,7 +152,59 @@ function PanelIcerik() {
             ? `Aktif (${ozet.smsDurum.saglayici})`
             : "Yapılandırılmamış — gönderim yapılmaz"}
         </p>
+        {ozet.smsSaglik && ozet.smsSaglik.toplam > 0 && (
+          <p
+            className={`text-xs mt-1 ${
+              ozet.smsSaglik.alarm ? "text-red-700 font-semibold" : "text-slate-600"
+            }`}
+          >
+            Son 24 saat hata oranı: %{ozet.smsSaglik.hataOraniYuzde} (
+            {ozet.smsSaglik.basarisiz}/{ozet.smsSaglik.toplam})
+            {ozet.smsSaglik.alarm && " — alarm eşiği aşıldı"}
+          </p>
+        )}
       </Card>
+
+      {ozet.huni && (
+        <Card>
+          <h3 className="font-semibold text-slate-800 mb-1">
+            Talep hunisi (son {ozet.huni.gun} gün)
+          </h3>
+          <p className="text-xs text-slate-500 mb-4">
+            Form başlangıcı → OTP → talep → en az 1 teklif → kazanan
+          </p>
+          <div className="space-y-2">
+            {[
+              { label: "Form başladı", v: ozet.huni.formBasla },
+              { label: "OTP gönderildi", v: ozet.huni.otpGonder },
+              { label: "OTP doğrulandı", v: ozet.huni.otpDogrulandi },
+              { label: "Talep oluştu", v: ozet.huni.talepOlustur },
+              { label: "≥1 teklif", v: ozet.huni.teklifVar },
+              { label: "Kazanan belli", v: ozet.huni.kazanan },
+            ].map((adim, i, arr) => {
+              const ust = i > 0 ? arr[i - 1].v : null;
+              const oran =
+                ust && ust > 0 ? Math.round((adim.v / ust) * 100) : null;
+              return (
+                <div
+                  key={adim.label}
+                  className="flex items-center justify-between gap-3 text-sm border-b border-slate-100 pb-2 last:border-0"
+                >
+                  <span className="text-slate-600">{adim.label}</span>
+                  <span className="font-semibold text-slate-900 tabular-nums">
+                    {adim.v}
+                    {oran != null && (
+                      <span className="text-xs font-normal text-slate-400 ml-1">
+                        ({oran}%)
+                      </span>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-3">
         {kartlar.map((k) => (
