@@ -30,6 +30,7 @@ export async function GET(
     kurumsal: bekleyen.kurumsal,
     sirketUnvan: bekleyen.sirketUnvan,
     vergiNo: bekleyen.vergiNo,
+    odemeTipi: bekleyen.odemeTipi ?? "kredi",
     garantiAktif: garantiYapilandirildi(),
   });
 }

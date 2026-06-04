@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BrandLogoYazili } from "@/components/BrandLogo";
@@ -8,14 +9,33 @@ import { PanelNav } from "@/components/PanelNav";
 export function PanelChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [panelYetkili, setPanelYetkili] = useState<boolean | null>(null);
 
-  if (pathname === "/panel/giris") {
+  useEffect(() => {
+    let iptal = false;
+    void fetch("/api/panel/oturum", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : { yetkili: false }))
+      .then((d) => {
+        if (!iptal) setPanelYetkili(!!d.yetkili);
+      })
+      .catch(() => {
+        if (!iptal) setPanelYetkili(false);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [pathname]);
+
+  if (
+    pathname === "/panel/giris" ||
+    (pathname === "/panel" && panelYetkili !== true)
+  ) {
     return <>{children}</>;
   }
 
   async function cikis() {
     await fetch("/api/panel/cikis", { method: "POST" });
-    router.replace("/cekici/giris?eposta=1");
+    router.replace("/panel");
     router.refresh();
   }
 

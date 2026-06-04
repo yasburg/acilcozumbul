@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTalepById } from "@/lib/db";
+import { getCekiciById, getTalepById } from "@/lib/db";
+import { teklifleriSirala } from "@/lib/teklif-siralama";
 import { cekiciPuanOzeti, teklifFiyatDegistiMi } from "@/lib/cekici-puan";
 import { ensureSeedData } from "@/lib/seed";
 import { aktifTeklifler, ihaleAcikMi } from "@/lib/ihale";
@@ -18,11 +19,20 @@ export async function GET(
 
   const aktif = aktifTeklifler(talep);
 
-  const teklifler = await Promise.all(
+  const rozetCache = new Map<string, boolean>();
+
+  const tekliflerHam = await Promise.all(
     aktif.map(async (t) => {
       const puan = await cekiciPuanOzeti(t.cekiciId);
       const fiyatDegisti = teklifFiyatDegistiMi(t);
       const ilkFiyat = t.ilkFiyat ?? t.fiyat;
+
+      let onayliCekici = rozetCache.get(t.cekiciId);
+      if (onayliCekici === undefined) {
+        const c = await getCekiciById(t.cekiciId);
+        onayliCekici = Boolean(c?.rozetAktif);
+        rozetCache.set(t.cekiciId, onayliCekici);
+      }
 
       return {
         id: t.id,
@@ -38,6 +48,7 @@ export async function GET(
         tahminiSureDk: t.tahminiSureDk,
         mesaj: t.mesaj,
         tarih: t.tarih,
+        onayliCekici,
         tercihPuani: puan.gorunurTercihPuani ?? puan.tercihPuani,
         tercihYuzde: puan.tercihYuzde,
         hizmetPuani: puan.hizmetPuani,
@@ -47,6 +58,8 @@ export async function GET(
       };
     })
   );
+
+  const teklifler = teklifleriSirala(tekliflerHam);
 
   return NextResponse.json({
     teklifler,

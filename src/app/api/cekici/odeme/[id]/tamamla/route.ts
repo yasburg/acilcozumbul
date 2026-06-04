@@ -126,6 +126,21 @@ export async function POST(
     return NextResponse.json({ error: "Çekici bulunamadı." }, { status: 404 });
   }
 
+  if (bekleyen.odemeTipi === "rozet") {
+    guncelCekici.rozetAktif = true;
+    guncelCekici.rozetOdemeTarihi = new Date().toISOString();
+    await updateCekici(guncelCekici);
+    await tamamlaOdeme(id);
+
+    return NextResponse.json({
+      success: true,
+      rozetAktif: true,
+      odemeTipi: "rozet",
+      referans,
+      demo,
+    });
+  }
+
   guncelCekici.kredi += bekleyen.miktar;
   await updateCekici(guncelCekici);
   await tamamlaOdeme(id);
@@ -153,6 +168,7 @@ export async function POST(
 
   return NextResponse.json({
     success: true,
+    odemeTipi: "kredi",
     eklenenKredi: bekleyen.miktar,
     toplamKredi: guncelCekici.kredi,
     referans,

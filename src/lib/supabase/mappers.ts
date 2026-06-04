@@ -34,6 +34,13 @@ export type CekiciRow = {
   kayit_tarihi: string;
   fatura_eposta?: string | null;
   fatura_eposta_dogrulandi?: string | null;
+  belge_ruhsat_url?: string | null;
+  belge_cekici_url?: string | null;
+  belge_durum?: string | null;
+  belge_red_nedeni?: string | null;
+  belge_gonderim?: string | null;
+  rozet_aktif?: boolean | null;
+  rozet_odeme_tarihi?: string | null;
 };
 
 export type TalepRow = {
@@ -92,6 +99,13 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     kayitTarihi: r.kayit_tarihi,
     faturaEposta: r.fatura_eposta ?? undefined,
     faturaEpostaDogrulandi: r.fatura_eposta_dogrulandi ?? undefined,
+    belgeRuhsatUrl: r.belge_ruhsat_url ?? undefined,
+    belgeCekiciUrl: r.belge_cekici_url ?? undefined,
+    belgeDurum: (r.belge_durum as Cekici["belgeDurum"]) ?? "yok",
+    belgeRedNedeni: r.belge_red_nedeni ?? undefined,
+    belgeGonderim: r.belge_gonderim ?? undefined,
+    rozetAktif: Boolean(r.rozet_aktif),
+    rozetOdemeTarihi: r.rozet_odeme_tarihi ?? undefined,
   };
 }
 
@@ -121,6 +135,13 @@ export function cekiciToRow(c: Cekici): CekiciRow {
     kayit_tarihi: c.kayitTarihi,
     fatura_eposta: c.faturaEposta ?? null,
     fatura_eposta_dogrulandi: c.faturaEpostaDogrulandi ?? null,
+    belge_ruhsat_url: c.belgeRuhsatUrl ?? null,
+    belge_cekici_url: c.belgeCekiciUrl ?? null,
+    belge_durum: c.belgeDurum ?? "yok",
+    belge_red_nedeni: c.belgeRedNedeni ?? null,
+    belge_gonderim: c.belgeGonderim ?? null,
+    rozet_aktif: c.rozetAktif ?? false,
+    rozet_odeme_tarihi: c.rozetOdemeTarihi ?? null,
   };
 }
 
@@ -239,6 +260,8 @@ export type OdemeRow = {
   kurumsal?: boolean | null;
   sirket_unvan?: string | null;
   vergi_no?: string | null;
+  odeme_tipi?: string | null;
+  liste_fiyati?: number | null;
 };
 
 export function odemeFromRow(r: OdemeRow): BekleyenOdeme {
@@ -248,6 +271,13 @@ export function odemeFromRow(r: OdemeRow): BekleyenOdeme {
     miktar: Number(r.miktar),
     tutar: Number(r.tutar),
     paketTl: r.paket_tl != null ? Number(r.paket_tl) : undefined,
+    listeFiyati:
+      r.liste_fiyati != null
+        ? Number(r.liste_fiyati)
+        : r.paket_tl != null
+          ? Number(r.paket_tl)
+          : undefined,
+    odemeTipi: (r.odeme_tipi === "rozet" ? "rozet" : "kredi") as BekleyenOdeme["odemeTipi"],
     olusturulma: r.olusturulma,
     durum: r.durum as BekleyenOdeme["durum"],
     faturaEposta: r.fatura_eposta ?? undefined,
@@ -266,6 +296,8 @@ export function odemeToRow(o: BekleyenOdeme): OdemeRow {
     miktar: o.miktar,
     tutar: o.tutar,
     paket_tl: o.paketTl ?? null,
+    liste_fiyati: o.listeFiyati ?? null,
+    odeme_tipi: o.odemeTipi ?? "kredi",
     olusturulma: o.olusturulma,
     durum: o.durum,
     fatura_eposta: o.faturaEposta ?? null,

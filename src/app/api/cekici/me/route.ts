@@ -20,5 +20,7 @@ export async function GET() {
     menzilKm: cekici.menzilKm ?? 30,
     faturaEposta: cekici.faturaEposta ?? null,
     faturaEpostaDogrulandi: Boolean(cekici.faturaEpostaDogrulandi),
+    belgeDurum: cekici.belgeDurum ?? "yok",
+    rozetAktif: Boolean(cekici.rozetAktif),
   });
 }

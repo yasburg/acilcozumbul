@@ -10,7 +10,7 @@ import {
   type SmsLogRow,
   type TalepRow,
 } from "./supabase/mappers";
-import type { Cekici, SmsKaydi, Talep } from "./types";
+import type { BelgeDurum, Cekici, SmsKaydi, Talep } from "./types";
 
 export async function getCekiciler(): Promise<Cekici[]> {
   const { data, error } = await getSupabaseAdmin()
@@ -88,6 +88,26 @@ export async function updateCekici(cekici: Cekici): Promise<void> {
     .update(cekiciToRow(cekici))
     .eq("id", cekici.id);
   if (error) throw error;
+}
+
+export async function updateCekiciBelgeDurum(
+  id: string,
+  patch: { belgeDurum: BelgeDurum; belgeRedNedeni?: string | null }
+): Promise<BelgeDurum> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .update({
+      belge_durum: patch.belgeDurum,
+      belge_red_nedeni:
+        patch.belgeDurum === "reddedildi"
+          ? (patch.belgeRedNedeni?.trim() ?? null)
+          : null,
+    })
+    .eq("id", id)
+    .select("belge_durum")
+    .single();
+  if (error) throw error;
+  return (data.belge_durum as BelgeDurum) ?? patch.belgeDurum;
 }
 
 export async function saveCekiciler(cekiciler: Cekici[]): Promise<void> {

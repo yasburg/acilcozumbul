@@ -6,6 +6,8 @@ import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
 import { MemnuniyetFormu } from "@/components/MemnuniyetFormu";
 import { PuanGostergesi } from "@/components/PuanGostergesi";
+import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
+import { teklifleriSirala } from "@/lib/teklif-siralama";
 import { IhaleBekleAnimasyon } from "@/components/IhaleBekleAnimasyon";
 import { MusteriCekiciTakipHarita } from "@/components/MusteriCekiciTakipHarita";
 import { koordinatGecerli } from "@/lib/koordinat";
@@ -37,6 +39,7 @@ interface TeklifOzet {
   hizmetDegerlendirmeAdet?: number;
   fiyatGarantiPuani: number;
   fiyatGarantiYuzde: number;
+  onayliCekici?: boolean;
 }
 
 interface MemnuniyetState {
@@ -358,7 +361,7 @@ export default function BeklePage() {
           <div className="text-center mb-2">
             <h2 className="text-xl font-bold text-slate-900">Gelen Teklifler</h2>
             <p className="text-slate-500 text-sm mt-1">
-              Size en uygun teklifi seçin
+              Onaylı çekici teklifleri üstte listelenir
             </p>
           </div>
 
@@ -369,9 +372,7 @@ export default function BeklePage() {
           )}
 
           <div className="space-y-3">
-            {teklifler
-              .sort((a, b) => a.fiyat - b.fiyat)
-              .map((t) => (
+            {teklifleriSirala(teklifler).map((t) => (
                 <Card
                   key={t.id}
                   className={`border-slate-200 overflow-hidden ${
@@ -407,7 +408,10 @@ export default function BeklePage() {
                     </div>
 
                     <div>
-                      <p className="font-semibold text-slate-900">{t.cekiciAd}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-slate-900">{t.cekiciAd}</p>
+                        {t.onayliCekici && <OnayliCekiciRozeti kucuk />}
+                      </div>
                       <p className="text-2xl font-bold text-amber-600 mt-1">
                         {t.fiyat} TL
                       </p>

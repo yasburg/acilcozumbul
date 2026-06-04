@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Btn } from "@/components/ui";
+import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 import { formatKredi } from "@/lib/talep-utils";
 import type { CekiciPanelOzet } from "@/lib/panel";
+import type { BelgeDurum } from "@/lib/types";
 
 type CekiciDetay = CekiciPanelOzet & { token: string };
 
@@ -15,6 +17,10 @@ export default function PanelCekiciDetayPage() {
   const [cekici, setCekici] = useState<CekiciDetay | null>(null);
   const [loading, setLoading] = useState(true);
   const [oturumYukleniyor, setOturumYukleniyor] = useState(false);
+  const [belgeIslem, setBelgeIslem] = useState(false);
+  const [redNedeni, setRedNedeni] = useState("");
+  const [mesaj, setMesaj] = useState("");
+  const [hata, setHata] = useState("");
 
   useEffect(() => {
     fetch(`/api/panel/cekiciler/${id}`)
@@ -26,6 +32,52 @@ export default function PanelCekiciDetayPage() {
       .catch(() => setCekici(null))
       .finally(() => setLoading(false));
   }, [id]);
+
+  async function belgeKarar(belgeDurum: "onaylandi" | "reddedildi") {
+    setBelgeIslem(true);
+    setMesaj("");
+    setHata("");
+    try {
+      const res = await fetch(`/api/panel/cekiciler/${id}/belge`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          belgeDurum,
+          belgeRedNedeni: belgeDurum === "reddedildi" ? redNedeni : undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string" ? data.error : "İşlem başarısız."
+        );
+      }
+
+      setMesaj(typeof data.mesaj === "string" ? data.mesaj : "Kaydedildi.");
+      setCekici((prev) =>
+        prev
+          ? {
+              ...prev,
+              belgeDurum: data.belgeDurum ?? belgeDurum,
+              belgeRedNedeni:
+                belgeDurum === "reddedildi" ? redNedeni.trim() : undefined,
+            }
+          : prev
+      );
+
+      const yenile = await fetch(`/api/panel/cekiciler/${id}`, {
+        credentials: "include",
+      });
+      if (yenile.ok) {
+        setCekici(await yenile.json());
+      }
+    } catch (e) {
+      setHata(e instanceof Error ? e.message : "İşlem başarısız.");
+    } finally {
+      setBelgeIslem(false);
+    }
+  }
 
   async function paneleGec() {
     setOturumYukleniyor(true);
@@ -58,19 +110,41 @@ export default function PanelCekiciDetayPage() {
     );
   }
 
+  const belgeDurum = (cekici.belgeDurum ?? "yok") as BelgeDurum;
+
   return (
     <div className="space-y-4 max-w-xl">
       <Link href="/panel/cekiciler" className="text-sm text-amber-600 font-medium">
         ← Çekiciler
       </Link>
 
-      <h2 className="text-2xl font-bold">{cekici.ad}</h2>
+      <div className="flex flex-wrap items-center gap-2">
+        <h2 className="text-2xl font-bold">{cekici.ad}</h2>
+        {cekici.rozetAktif && <OnayliCekiciRozeti />}
+      </div>
+
+      {hata && (
+        <Card className="border-red-200 bg-red-50">
+          <p className="text-sm text-red-700">{hata}</p>
+        </Card>
+      )}
+
+      {mesaj && (
+        <Card className="border-emerald-200 bg-emerald-50">
+          <p className="text-sm text-emerald-800">{mesaj}</p>
+        </Card>
+      )}
 
       <Card className="space-y-3 text-sm">
         <Row label="Telefon" value={cekici.telefon} />
         <Row label="Şehir" value={cekici.sehir} />
         <Row label="Kredi" value={formatKredi(cekici.kredi)} />
         <Row label="Durum" value={cekici.aktif ? "Aktif" : "Pasif"} />
+        <Row label="Belge durumu" value={belgeDurumEtiket(belgeDurum)} />
+        <Row
+          label="Rozet"
+          value={cekici.rozetAktif ? "Aktif (onaylı çekici)" : "Yok"}
+        />
         <Row
           label="Kayıt"
           value={new Date(cekici.kayitTarihi).toLocaleString("tr-TR")}
@@ -85,21 +159,60 @@ export default function PanelCekiciDetayPage() {
                 ? Object.entries(cekici.hizmetBolgeleri)
                     .map(([il, ilceler]) => `${il}: ${ilceler.join(", ")}`)
                     .join(" · ")
-                : cekici.hizmetIlceleri?.length
-                  ? cekici.hizmetIlceleri.join(", ")
-                  : "Seçilmemiş"
+                : "Seçilmemiş"
           }
         />
         <Row label="Token" value={cekici.tokenOnizleme} mono />
       </Card>
 
+      {(cekici.belgeRuhsatUrl || cekici.belgeCekiciUrl) && (
+        <Card className="space-y-3">
+          <p className="font-semibold text-slate-900">Yüklenen belgeler</p>
+          {cekici.belgeRuhsatUrl && (
+            <BelgeLink label="Ruhsat" url={cekici.belgeRuhsatUrl} />
+          )}
+          {cekici.belgeCekiciUrl && (
+            <BelgeLink label="Çekici belgesi" url={cekici.belgeCekiciUrl} />
+          )}
+          {cekici.belgeGonderim && (
+            <p className="text-xs text-slate-500">
+              Gönderim: {new Date(cekici.belgeGonderim).toLocaleString("tr-TR")}
+            </p>
+          )}
+          {belgeDurum === "beklemede" && (
+            <div className="flex flex-col gap-2 pt-2">
+              <Btn
+                onClick={() => void belgeKarar("onaylandi")}
+                disabled={belgeIslem}
+              >
+                Belgeleri onayla
+              </Btn>
+              <textarea
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                placeholder="Red nedeni (reddetmek için)"
+                value={redNedeni}
+                onChange={(e) => setRedNedeni(e.target.value)}
+                rows={2}
+              />
+              <Btn
+                variant="danger"
+                onClick={() => void belgeKarar("reddedildi")}
+                disabled={belgeIslem || !redNedeni.trim()}
+              >
+                Belgeleri reddet
+              </Btn>
+            </div>
+          )}
+          {belgeDurum === "reddedildi" && cekici.belgeRedNedeni && (
+            <p className="text-sm text-red-700">Red: {cekici.belgeRedNedeni}</p>
+          )}
+        </Card>
+      )}
+
       <div className="space-y-2">
         <Btn onClick={paneleGec} disabled={oturumYukleniyor}>
           {oturumYukleniyor ? "Açılıyor…" : "Çekici paneline git"}
         </Btn>
-        <p className="text-xs text-slate-500">
-          Bu hesap olarak giriş yapar; /cekici/panel ekranını görürsünüz.
-        </p>
         <Link
           href="/cekici/ayarlar"
           className="block text-center text-sm text-amber-600 font-medium py-2"
@@ -108,6 +221,32 @@ export default function PanelCekiciDetayPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+function belgeDurumEtiket(d: BelgeDurum): string {
+  switch (d) {
+    case "beklemede":
+      return "İncelemede";
+    case "onaylandi":
+      return "Onaylandı";
+    case "reddedildi":
+      return "Reddedildi";
+    default:
+      return "Yüklenmedi";
+  }
+}
+
+function BelgeLink({ label, url }: { label: string; url: string }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block text-amber-700 underline text-sm"
+    >
+      {label} — görüntüle
+    </a>
   );
 }
 

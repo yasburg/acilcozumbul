@@ -9,6 +9,7 @@ import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card, Field } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
+import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 
 interface TalepDurum {
   id: string;
@@ -45,6 +46,7 @@ interface TalepDurum {
   sorun?: string;
   aracModeli?: string;
   fotografUrls?: string[];
+  onayliCekici?: boolean;
 }
 
 export default function CekiciTalepClient() {
@@ -256,9 +258,12 @@ export default function CekiciTalepClient() {
                 />
               )}
               <Card className="border-amber-200 bg-amber-50">
-                <p className="text-xs text-amber-700 uppercase tracking-wide mb-2">
-                  Teklifiniz
-                </p>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <p className="text-xs text-amber-700 uppercase tracking-wide">
+                    Teklifiniz
+                  </p>
+                  {talep.onayliCekici && <OnayliCekiciRozeti kucuk />}
+                </div>
                 <p className="text-2xl font-bold text-amber-600">
                   {talep.benimTeklif.fiyat} TL
                 </p>

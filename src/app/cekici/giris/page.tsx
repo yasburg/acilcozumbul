@@ -7,7 +7,6 @@ import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, SifreAlani, Card } from "@/components/ui";
 import { epostaGecerliMi } from "@/lib/eposta";
 import { cekiciFetch } from "@/lib/cekici-fetch";
-import { createClient } from "@/lib/supabase/client";
 import { TELEFON_ORNEK_GIRISLERI } from "@/lib/telefon";
 
 function epostaGibiMi(deger: string): boolean {
@@ -23,49 +22,16 @@ function GirisIcerik() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const panelNext = searchParams.get("next") || "/panel";
-  const hataParam = searchParams.get("hata");
-  const yapilandirmaHata =
-    hataParam === "supabase-yok"
-      ? "Supabase anahtarları tanımlı değil."
-      : hataParam === "yetkisiz"
-        ? "Bu e-postanın panele erişim yetkisi yok."
-        : "";
-
   useEffect(() => {
-    if (searchParams.get("eposta") === "1") {
-      setTelefon((v) => (v.includes("@") ? v : ""));
-    }
-  }, [searchParams]);
-
-  async function yoneticiGiris(eposta: string, sifreDeger: string) {
-    const supabase = createClient();
-    const { error: authErr } = await supabase.auth.signInWithPassword({
-      email: eposta.trim(),
-      password: sifreDeger,
-    });
-    if (authErr) {
-      throw new Error(
-        authErr.message === "Invalid login credentials"
-          ? "E-posta veya şifre hatalı."
-          : authErr.message
-      );
-    }
-
-    const oturum = await fetch("/api/panel/oturum", { credentials: "include" });
-    const data = await oturum.json();
-    if (!data.yetkili) {
-      await supabase.auth.signOut();
-      throw new Error("Bu hesabın yönetim paneline erişim yetkisi yok.");
-    }
-
-    router.refresh();
-    const hedef =
-      panelNext.startsWith("/panel") && panelNext !== "/panel/giris"
-        ? panelNext
-        : "/panel";
-    router.push(hedef);
-  }
+    if (searchParams.get("eposta") !== "1") return;
+    const params = new URLSearchParams();
+    const next = searchParams.get("next");
+    const hata = searchParams.get("hata");
+    if (next) params.set("next", next);
+    if (hata) params.set("hata", hata);
+    const q = params.toString();
+    router.replace(q ? `/panel?${q}` : "/panel");
+  }, [searchParams, router]);
 
   async function uyeGiris(kimlik: string, sifreDeger: string) {
     const epostaIle = epostaGecerliMi(kimlik);
@@ -91,14 +57,6 @@ function GirisIcerik() {
     setError("");
     const kimlik = telefon.trim();
     try {
-      if (epostaGibiMi(kimlik)) {
-        if (searchParams.get("eposta") === "1") {
-          await yoneticiGiris(kimlik, sifre);
-          return;
-        }
-        await uyeGiris(kimlik, sifre);
-        return;
-      }
       await uyeGiris(kimlik, sifre);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Giriş başarısız.";
@@ -112,6 +70,14 @@ function GirisIcerik() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (searchParams.get("eposta") === "1") {
+    return (
+      <MobileShell subtitle="Yönlendiriliyor…">
+        <p className="text-center text-slate-500 py-12">Panele yönlendiriliyor…</p>
+      </MobileShell>
+    );
   }
 
   return (
@@ -128,9 +94,9 @@ function GirisIcerik() {
           </Card>
         )}
 
-      {(yapilandirmaHata || error) && (
+      {error && (
         <Card className="border-red-200 bg-red-50 mb-4">
-          <p className="text-red-700 text-sm">{yapilandirmaHata || error}</p>
+          <p className="text-red-700 text-sm">{error}</p>
         </Card>
       )}
 

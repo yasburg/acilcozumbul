@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui";
+import { PanelGirisForm } from "@/components/panel/PanelGirisForm";
+import { supabaseYapilandirmaHataMesaji } from "@/lib/supabase/env";
 
 interface Ozet {
   cekiciSayisi: number;
@@ -12,18 +15,74 @@ interface Ozet {
   smsDurum: { gercekGonderim: boolean; saglayici: string };
 }
 
-export default function PanelOzetPage() {
+function hataMesajiFromParam(hata: string | null): string {
+  if (hata === "supabase-yok") {
+    return (
+      supabaseYapilandirmaHataMesaji() ||
+      "Supabase anahtarları tanımlı değil."
+    );
+  }
+  if (hata === "yetkisiz") return "Bu e-postanın panele erişim yetkisi yok.";
+  return "";
+}
+
+function PanelIcerik() {
+  const searchParams = useSearchParams();
+  const nextHref = searchParams.get("next") || "/panel";
+  const hataParam = searchParams.get("hata");
+
+  const [yetkili, setYetkili] = useState<boolean | null>(null);
   const [ozet, setOzet] = useState<Ozet | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [ozetYukleniyor, setOzetYukleniyor] = useState(false);
 
   useEffect(() => {
-    fetch("/api/panel/ozet")
-      .then((r) => r.json())
-      .then(setOzet)
-      .finally(() => setLoading(false));
+    let iptal = false;
+    void fetch("/api/panel/oturum", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : { yetkili: false }))
+      .then((d) => {
+        if (!iptal) setYetkili(!!d.yetkili);
+      })
+      .catch(() => {
+        if (!iptal) setYetkili(false);
+      });
+    return () => {
+      iptal = true;
+    };
   }, []);
 
-  if (loading) {
+  useEffect(() => {
+    if (yetkili !== true) return;
+    let iptal = false;
+    setOzetYukleniyor(true);
+    void fetch("/api/panel/ozet", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!iptal) setOzet(d);
+      })
+      .finally(() => {
+        if (!iptal) setOzetYukleniyor(false);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [yetkili]);
+
+  if (yetkili === null) {
+    return (
+      <p className="text-slate-500 text-sm py-12 text-center">Yükleniyor…</p>
+    );
+  }
+
+  if (!yetkili) {
+    return (
+      <PanelGirisForm
+        nextHref={nextHref}
+        hataMesaji={hataMesajiFromParam(hataParam)}
+      />
+    );
+  }
+
+  if (ozetYukleniyor) {
     return <p className="text-slate-500 text-sm">Yükleniyor…</p>;
   }
 
@@ -120,5 +179,17 @@ export default function PanelOzetPage() {
         </ul>
       </Card>
     </div>
+  );
+}
+
+export default function PanelPage() {
+  return (
+    <Suspense
+      fallback={
+        <p className="text-slate-500 text-sm py-12 text-center">Yükleniyor…</p>
+      }
+    >
+      <PanelIcerik />
+    </Suspense>
   );
 }

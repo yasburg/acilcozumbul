@@ -41,6 +41,11 @@ export interface Teklif {
 
 export type HizmetBolgeModu = "il_ilce" | "konum";
 
+/** Ruhsat / çekici belgesi admin onay akışı */
+export type BelgeDurum = "yok" | "beklemede" | "onaylandi" | "reddedildi";
+
+export type OdemeTipi = "kredi" | "rozet";
+
 /** İl adı → seçili ilçe listesi */
 export type HizmetBolgeleri = Record<string, string[]>;
 
@@ -68,6 +73,13 @@ export interface Cekici {
   kayitTarihi: string;
   faturaEposta?: string;
   faturaEpostaDogrulandi?: string;
+  belgeRuhsatUrl?: string;
+  belgeCekiciUrl?: string;
+  belgeDurum?: BelgeDurum;
+  belgeRedNedeni?: string;
+  belgeGonderim?: string;
+  rozetAktif?: boolean;
+  rozetOdemeTarihi?: string;
 }
 
 export type OdemeFatura = {
@@ -142,6 +154,7 @@ export interface BekleyenOdeme {
   tutar: number;
   paketTl?: number;
   listeFiyati?: number;
+  odemeTipi?: OdemeTipi;
   olusturulma: string;
   durum: "bekliyor" | "tamamlandi";
   faturaEposta?: string;

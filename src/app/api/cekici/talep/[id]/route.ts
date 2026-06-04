@@ -113,6 +113,7 @@ export async function GET(
       },
       ...rotaKoordinatlari(talep),
       kredi: cekici.kredi,
+      onayliCekici: Boolean(cekici.rozetAktif),
     });
   }
 
@@ -152,5 +153,6 @@ export async function GET(
     teklifUcretsiz: true,
     ...rotaKoordinatlari(talep),
     kredi: cekici.kredi,
+    onayliCekici: Boolean(cekici.rozetAktif),
   });
 }

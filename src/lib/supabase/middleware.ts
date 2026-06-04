@@ -7,11 +7,13 @@ import {
 
 export async function updatePanelSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const isGiris = pathname === "/panel/giris";
+  const isPanelGiris =
+    pathname === "/panel" || pathname === "/panel/giris";
   const isPanelPage = pathname.startsWith("/panel");
   const isPanelApi = pathname.startsWith("/api/panel");
   const isCikisApi = pathname === "/api/panel/cikis";
   const isOturumApi = pathname === "/api/panel/oturum";
+  const isGirisApi = pathname === "/api/panel/giris";
 
   if (!isPanelPage && !isPanelApi) {
     return NextResponse.next({ request });
@@ -24,10 +26,9 @@ export async function updatePanelSession(request: NextRequest) {
         { status: 503 }
       );
     }
-    if (isPanelPage && !isGiris) {
+    if (isPanelPage && !isPanelGiris) {
       const url = request.nextUrl.clone();
-      url.pathname = "/cekici/giris";
-      url.searchParams.set("eposta", "1");
+      url.pathname = "/panel";
       url.searchParams.set("hata", "supabase-yok");
       return NextResponse.redirect(url);
     }
@@ -65,35 +66,30 @@ export async function updatePanelSession(request: NextRequest) {
 
   if (user && !yetkili) {
     await supabase.auth.signOut();
-    if (isPanelPage && !isGiris) {
+    if (isPanelPage && !isPanelGiris) {
       const url = request.nextUrl.clone();
-      url.pathname = "/cekici/giris";
-      url.searchParams.set("eposta", "1");
+      url.pathname = "/panel";
       url.searchParams.set("hata", "yetkisiz");
       return NextResponse.redirect(url);
     }
   }
 
-  if (!yetkili && isPanelApi && !isCikisApi && !isOturumApi) {
+  if (!yetkili && isPanelApi && !isCikisApi && !isOturumApi && !isGirisApi) {
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
   }
 
-  if (!yetkili && isPanelPage && !isGiris) {
+  if (!yetkili && isPanelPage && !isPanelGiris) {
     const url = request.nextUrl.clone();
-    url.pathname = "/cekici/giris";
-    url.searchParams.set("eposta", "1");
-    const next = pathname === "/panel" ? "" : pathname;
-    if (next) url.searchParams.set("next", next);
+    url.pathname = "/panel";
+    url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (yetkili && isGiris) {
+  if (yetkili && pathname === "/panel/giris") {
     const url = request.nextUrl.clone();
     const next = request.nextUrl.searchParams.get("next");
-    url.pathname = "/cekici/giris";
+    url.pathname = next?.startsWith("/panel") ? next : "/panel";
     url.search = "";
-    if (next?.startsWith("/panel")) url.searchParams.set("next", next);
-    url.searchParams.set("eposta", "1");
     return NextResponse.redirect(url);
   }
 

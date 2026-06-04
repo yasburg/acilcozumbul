@@ -1,8 +1,22 @@
+export function supabaseEksikEnvAlanlari(): string[] {
+  const eksik: string[] = [];
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) {
+    eksik.push("NEXT_PUBLIC_SUPABASE_URL");
+  }
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()) {
+    eksik.push("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+  }
+  return eksik;
+}
+
 export function supabaseYapilandirildi(): boolean {
-  return !!(
-    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
-  );
+  return supabaseEksikEnvAlanlari().length === 0;
+}
+
+export function supabaseYapilandirmaHataMesaji(): string {
+  const eksik = supabaseEksikEnvAlanlari();
+  if (eksik.length === 0) return "";
+  return `.env dosyanıza ekleyin: ${eksik.join(", ")} (Supabase Dashboard → Project Settings → API).`;
 }
 
 /** Virgülle ayrılmış izinli yönetici e-postaları (boş = Supabase’de oturum açan herkes) */

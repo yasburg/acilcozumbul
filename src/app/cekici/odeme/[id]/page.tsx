@@ -6,7 +6,7 @@ import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 
-const ODEME_ADIMLARI = [
+const KREDI_ODEME_ADIMLARI = [
   "Kart doğrulanıyor",
   "Kart doğrulandı",
   "Bankayla iletişim kuruluyor",
@@ -15,11 +15,26 @@ const ODEME_ADIMLARI = [
   "Kredileriniz hesabınıza yüklendi",
 ] as const;
 
+const ROZET_ODEME_ADIMLARI = [
+  "Kart doğrulanıyor",
+  "Kart doğrulandı",
+  "Bankayla iletişim kuruluyor",
+  "Kart onaylandı",
+  "Ödeme gerçekleşti",
+  "Onaylı çekici rozetiniz aktifleştirildi",
+] as const;
+
 function bekle(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
-function OdemeIslemAnimasyon({ aktifAdim }: { aktifAdim: number }) {
+function OdemeIslemAnimasyon({
+  aktifAdim,
+  adimlar,
+}: {
+  aktifAdim: number;
+  adimlar: readonly string[];
+}) {
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm px-6"
@@ -29,7 +44,7 @@ function OdemeIslemAnimasyon({ aktifAdim }: { aktifAdim: number }) {
     >
       <div className="w-14 h-14 rounded-full border-4 border-amber-200 border-t-amber-500 animate-spin mb-8" />
       <ul className="w-full max-w-sm space-y-3">
-        {ODEME_ADIMLARI.map((adim, i) => {
+        {adimlar.map((adim, i) => {
           const tamam = i < aktifAdim;
           const suAn = i === aktifAdim;
           return (
@@ -82,6 +97,10 @@ export default function OdemePage() {
   const [error, setError] = useState("");
   const [garantiAktif, setGarantiAktif] = useState(false);
   const [smokeDolduruldu, setSmokeDolduruldu] = useState(false);
+  const [odemeTipi, setOdemeTipi] = useState<"kredi" | "rozet">("kredi");
+
+  const odemeAdimlari =
+    odemeTipi === "rozet" ? ROZET_ODEME_ADIMLARI : KREDI_ODEME_ADIMLARI;
 
   useEffect(() => {
     let iptal = false;
@@ -101,6 +120,7 @@ export default function OdemePage() {
         setMiktar(d.miktar);
         setTutar(d.tutar);
         setListeFiyati(Number(d.listeFiyati) || d.tutar);
+        setOdemeTipi(d.odemeTipi === "rozet" ? "rozet" : "kredi");
         setEposta(d.faturaEposta ?? meData.faturaEposta ?? "");
         setAdres(d.faturaAdres ?? "");
         setTcKimlik(d.faturaTcKimlik ?? "");
@@ -115,6 +135,7 @@ export default function OdemePage() {
           setMiktar(s.miktar);
           setTutar(s.tutar);
           setListeFiyati(Number(s.listeFiyati) || s.tutar);
+          setOdemeTipi(s.odemeTipi === "rozet" ? "rozet" : "kredi");
           setEposta(s.eposta ?? meData.faturaEposta ?? "");
           setGarantiAktif(Boolean(s.garantiAktif));
         } else if (!iptal) {
@@ -157,7 +178,7 @@ export default function OdemePage() {
   }
 
   async function odemeAdimlariniOynat(iptalRef: { value: boolean }) {
-    for (let i = 0; i < ODEME_ADIMLARI.length; i++) {
+    for (let i = 0; i < odemeAdimlari.length; i++) {
       if (iptalRef.value) return;
       setAnimasyonAdim(i);
       await bekle(1000);
@@ -204,6 +225,12 @@ export default function OdemePage() {
       await animasyonGorev;
 
       sessionStorage.removeItem(`odeme-${odemeId}`);
+
+      if (data.odemeTipi === "rozet" || odemeTipi === "rozet") {
+        router.replace("/cekici/panel?tab=hesabim&mesaj=rozet-aktif");
+        return;
+      }
+
       sessionStorage.setItem(
         "acil_odeme_basarili",
         JSON.stringify({
@@ -231,7 +258,13 @@ export default function OdemePage() {
   return (
     <MobileShell
       showBrand={false}
-      backHref={odemeAnimasyon ? undefined : "/cekici/kredi"}
+      backHref={
+        odemeAnimasyon
+          ? undefined
+          : odemeTipi === "rozet"
+            ? "/cekici/panel?tab=hesabim"
+            : "/cekici/kredi"
+      }
       backLabel="İptal"
       subtitle={
         garantiAktif
@@ -239,7 +272,9 @@ export default function OdemePage() {
           : "Güvenli Ödeme — Sanal POS (Demo)"
       }
     >
-      {odemeAnimasyon && <OdemeIslemAnimasyon aktifAdim={animasyonAdim} />}
+      {odemeAnimasyon && (
+        <OdemeIslemAnimasyon aktifAdim={animasyonAdim} adimlar={odemeAdimlari} />
+      )}
 
       <div className="rounded-t-2xl bg-gradient-to-r from-slate-800 to-slate-700 text-white p-4 mb-6 -mx-4 mt-2">
         <p className="text-xs opacity-80">acilcozumbul.com</p>
@@ -248,10 +283,25 @@ export default function OdemePage() {
         {listeFiyati > tutar && (
           <p className="text-xs opacity-75 line-through">{listeFiyati} ₺</p>
         )}
-        {miktar > 0 && (
-          <p className="text-sm opacity-90">{miktar} kredi satın alımı</p>
+        {odemeTipi === "rozet" ? (
+          <p className="text-sm opacity-90 mt-1">
+            Onaylı çekici rozeti — teklifleriniz üst sıralarda
+          </p>
+        ) : (
+          miktar > 0 && (
+            <p className="text-sm opacity-90">{miktar} kredi satın alımı</p>
+          )
         )}
       </div>
+
+      {odemeTipi === "rozet" && (
+        <Card className="border-emerald-200 bg-emerald-50 mb-4">
+          <p className="text-sm text-emerald-900 leading-relaxed">
+            Ödeme sonrası hesabınızda doğrulanmış rozet görünür ve müşterilere
+            verdiğiniz teklifler listede öncelikli sıralanır.
+          </p>
+        </Card>
+      )}
 
       {error && !odemeAnimasyon && (
         <Card className="border-red-200 bg-red-50 mb-4">

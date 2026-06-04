@@ -10,6 +10,8 @@ import type { ListeDurumu } from "@/lib/types";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { useCekiciKonumSync } from "@/hooks/useCekiciKonumSync";
 import { KonumGuncellemeGostergesi } from "@/components/KonumGuncellemeGostergesi";
+import { OnayliCekiciHesap } from "@/components/cekici/OnayliCekiciHesap";
+import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 
 type Tab = "musteriler" | "hesabim";
 
@@ -197,6 +199,7 @@ export default function CekiciPanelTabs() {
     telefon: string;
     hizmetModu?: string;
     menzilKm?: number;
+    rozetAktif?: boolean;
   } | null>(null);
 
   const konumSync = useCekiciKonumSync(cekici?.hizmetModu);
@@ -310,6 +313,14 @@ export default function CekiciPanelTabs() {
       setFlash("Teklifiniz kabul edildi! Müşteri bilgilerine ulaşabilirsiniz.");
       setTab("musteriler");
       router.replace("/cekici/panel?tab=musteriler", { scroll: false });
+      return;
+    }
+    if (mesaj === "rozet-aktif") {
+      setFlash(
+        "Onaylı çekici rozetiniz aktif. Teklifleriniz müşteri ekranında üst sıralarda görünür."
+      );
+      setTab("hesabim");
+      router.replace("/cekici/panel?tab=hesabim", { scroll: false });
       return;
     }
     if (mesaj === "kredi-eklendi") {
@@ -606,7 +617,10 @@ export default function CekiciPanelTabs() {
       {tab === "hesabim" && (
         <div className="space-y-4 animate-fade-in">
           <Card>
-            <p className="text-xs text-slate-500 uppercase tracking-wide">Krediniz</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-slate-500 uppercase tracking-wide">Krediniz</p>
+              {cekici.rozetAktif && <OnayliCekiciRozeti kucuk />}
+            </div>
             <p className="text-4xl font-bold text-amber-600 mt-1">
               {formatKredi(cekici.kredi)}
             </p>
@@ -615,6 +629,8 @@ export default function CekiciPanelTabs() {
             </p>
             <p className="text-sm text-slate-600">{cekici.telefon}</p>
           </Card>
+
+          <OnayliCekiciHesap />
 
           {istatistik && (
             <section>

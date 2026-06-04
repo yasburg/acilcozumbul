@@ -1,5 +1,9 @@
 import { randomUUID } from "crypto";
 import { krediPaketOdenecekTL, krediPaketBul } from "./kredi-fiyat";
+import {
+  ROZET_INDIRIMLI_FIYAT_TL,
+  ROZET_LISTE_FIYAT_TL,
+} from "./rozet";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { odemeFromRow, odemeToRow, type OdemeRow } from "./supabase/mappers";
 import type { BekleyenOdeme, OdemeFatura } from "./types";
@@ -20,6 +24,29 @@ export async function olusturBekleyenOdeme(
     tutar: krediPaketOdenecekTL(paket),
     paketTl: paket.tutarTL,
     listeFiyati: paket.tutarTL,
+    odemeTipi: "kredi",
+    olusturulma: new Date().toISOString(),
+    durum: "bekliyor",
+    faturaEposta: faturaEposta.toLowerCase(),
+  };
+  const { error } = await getSupabaseAdmin()
+    .from("odeme_bekleyen")
+    .insert(odemeToRow(odeme));
+  if (error) throw error;
+  return odeme;
+}
+
+export async function olusturBekleyenRozetOdeme(
+  cekiciId: string,
+  faturaEposta: string
+): Promise<BekleyenOdeme> {
+  const odeme: BekleyenOdeme = {
+    id: randomUUID(),
+    cekiciId,
+    miktar: 0,
+    tutar: ROZET_INDIRIMLI_FIYAT_TL,
+    listeFiyati: ROZET_LISTE_FIYAT_TL,
+    odemeTipi: "rozet",
     olusturulma: new Date().toISOString(),
     durum: "bekliyor",
     faturaEposta: faturaEposta.toLowerCase(),
