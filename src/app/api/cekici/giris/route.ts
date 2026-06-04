@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCekiciByTelefon } from "@/lib/db";
+import {
+  getCekiciByDogrulanmisFaturaEposta,
+  getCekiciByTelefon,
+} from "@/lib/db";
 import { CEKICI_COOKIE } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
+import { epostaGecerliMi, epostaNormalize } from "@/lib/eposta";
 import {
   telefonDogrulamaHatasi,
   telefonGecerliMi,
@@ -11,26 +15,58 @@ import {
 export async function POST(request: NextRequest) {
   await ensureSeedData();
   const body = await request.json();
-  const { telefon, sifre } = body;
+  const { telefon, eposta, sifre } = body;
+  const sifreDeger = String(sifre ?? "").trim();
+
+  if (!sifreDeger) {
+    return NextResponse.json({ error: "Şifre gerekli." }, { status: 400 });
+  }
+
+  const epostaKimlik = epostaGecerliMi(String(eposta ?? ""))
+    ? epostaNormalize(String(eposta))
+    : epostaGecerliMi(String(telefon ?? ""))
+      ? epostaNormalize(String(telefon))
+      : null;
 
   let cekici;
+  let epostaGiris = false;
 
-  if (telefon && sifre) {
-    if (!telefonGecerliMi(telefon)) {
+  if (epostaKimlik) {
+    epostaGiris = true;
+    cekici = await getCekiciByDogrulanmisFaturaEposta(epostaKimlik);
+    if (!cekici) {
       return NextResponse.json(
-        { error: telefonDogrulamaHatasi(telefon) },
-        { status: 400 }
+        {
+          error:
+            "Bu e-posta ile kayıtlı doğrulanmış üye bulunamadı. Önce kredi ödemesinde fatura e-postanızı doğrulayın.",
+        },
+        { status: 401 }
       );
     }
+  } else if (telefon && telefonGecerliMi(telefon)) {
     const tel = telefonNormalize(telefon);
     cekici = await getCekiciByTelefon(tel);
-    if (cekici && cekici.sifre !== String(sifre).trim()) {
-      return NextResponse.json({ error: "Telefon veya şifre hatalı." }, { status: 401 });
-    }
   } else {
     return NextResponse.json(
-      { error: "Telefon ve şifre gerekli." },
+      {
+        error: epostaGecerliMi(String(telefon ?? ""))
+          ? "Bu e-posta doğrulanmamış veya kayıtlı değil."
+          : telefon
+            ? telefonDogrulamaHatasi(telefon)
+            : "Telefon veya doğrulanmış e-posta girin.",
+      },
       { status: 400 }
+    );
+  }
+
+  if (cekici && cekici.sifre !== sifreDeger) {
+    return NextResponse.json(
+      {
+        error: epostaGiris
+          ? "E-posta veya şifre hatalı."
+          : "Telefon veya şifre hatalı.",
+      },
+      { status: 401 }
     );
   }
 

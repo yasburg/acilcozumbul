@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
-import { Btn, Field, Card } from "@/components/ui";
+import { Btn, Field, SifreAlani, Card } from "@/components/ui";
 import { telefonMaskele } from "@/lib/telefon";
 
 type Adim = "telefon" | "sifre" | "tamam";
@@ -142,17 +142,15 @@ export default function SifremiUnuttumPage() {
             value={kod}
             onChange={(e) => setKod(e.target.value.replace(/\D/g, "").slice(0, 6))}
           />
-          <Field
+          <SifreAlani
             label="Yeni şifre"
-            type="password"
             autoComplete="new-password"
             placeholder="En az 6 karakter"
             value={yeniSifre}
             onChange={(e) => setYeniSifre(e.target.value)}
           />
-          <Field
+          <SifreAlani
             label="Yeni şifre tekrar"
-            type="password"
             autoComplete="new-password"
             value={yeniSifreTekrar}
             onChange={(e) => setYeniSifreTekrar(e.target.value)}

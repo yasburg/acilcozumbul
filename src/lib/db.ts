@@ -61,6 +61,20 @@ export async function getCekiciByTelefon(
   return data ? cekiciFromRow(data as CekiciRow) : undefined;
 }
 
+/** Ödeme akışında doğrulanmış fatura e-postası ile giriş */
+export async function getCekiciByDogrulanmisFaturaEposta(
+  eposta: string
+): Promise<Cekici | undefined> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .select("*")
+    .eq("fatura_eposta", eposta)
+    .not("fatura_eposta_dogrulandi", "is", null)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? cekiciFromRow(data as CekiciRow) : undefined;
+}
+
 export async function addCekici(cekici: Cekici): Promise<void> {
   const { error } = await getSupabaseAdmin()
     .from("cekiciler")

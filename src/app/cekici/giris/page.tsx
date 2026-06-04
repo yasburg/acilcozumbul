@@ -4,7 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
-import { Btn, Field, Card } from "@/components/ui";
+import { Btn, Field, SifreAlani, Card } from "@/components/ui";
+import { epostaGecerliMi } from "@/lib/eposta";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { createClient } from "@/lib/supabase/client";
 import { TELEFON_ORNEK_GIRISLERI } from "@/lib/telefon";
@@ -67,13 +68,15 @@ function GirisIcerik() {
   }
 
   async function uyeGiris(kimlik: string, sifreDeger: string) {
+    const epostaIle = epostaGecerliMi(kimlik);
     const res = await cekiciFetch("/api/cekici/giris", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        telefon: kimlik.trim(),
-        sifre: sifreDeger,
-      }),
+      body: JSON.stringify(
+        epostaIle
+          ? { eposta: kimlik.trim(), sifre: sifreDeger }
+          : { telefon: kimlik.trim(), sifre: sifreDeger }
+      ),
     });
     const d = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -89,7 +92,11 @@ function GirisIcerik() {
     const kimlik = telefon.trim();
     try {
       if (epostaGibiMi(kimlik)) {
-        await yoneticiGiris(kimlik, sifre);
+        if (searchParams.get("eposta") === "1") {
+          await yoneticiGiris(kimlik, sifre);
+          return;
+        }
+        await uyeGiris(kimlik, sifre);
         return;
       }
       await uyeGiris(kimlik, sifre);
@@ -129,8 +136,8 @@ function GirisIcerik() {
 
       <div className="space-y-4">
         <p className="text-sm text-slate-600 leading-relaxed">
-          Üye hesabı için telefon numaranızı veya e-postanızı ve şifrenizi
-          girin.
+          Üye hesabı için telefon numaranızı ve şifrenizi girin. Kredi ödemesinde
+          doğruladığınız fatura e-postası ile de giriş yapabilirsiniz.
         </p>
         <p className="text-xs text-slate-500 leading-relaxed">
           Kabul edilen telefon girişleri:{" "}
@@ -150,9 +157,8 @@ function GirisIcerik() {
           value={telefon}
           onChange={(e) => setTelefon(e.target.value)}
         />
-        <Field
+        <SifreAlani
           label="Şifre"
-          type="password"
           autoComplete="current-password"
           value={sifre}
           onChange={(e) => setSifre(e.target.value)}

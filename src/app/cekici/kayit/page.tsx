@@ -4,7 +4,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
-import { Btn, Field, Card } from "@/components/ui";
+import { Btn, Field, SifreAlani, Card } from "@/components/ui";
 import { KayitKontenjanBilgi } from "@/components/KayitKontenjanBilgi";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { DESTEKLENEN_ILLER } from "@/lib/il-ilce";
@@ -114,16 +114,16 @@ function KayitIcerik() {
             ))}
           </select>
         </label>
-        <Field
+        <SifreAlani
           label="Şifre"
-          type="password"
           placeholder="En az 6 karakter"
+          autoComplete="new-password"
           value={form.sifre}
           onChange={(e) => setForm((f) => ({ ...f, sifre: e.target.value }))}
         />
-        <Field
+        <SifreAlani
           label="Şifre Tekrar"
-          type="password"
+          autoComplete="new-password"
           value={form.sifreTekrar}
           onChange={(e) => setForm((f) => ({ ...f, sifreTekrar: e.target.value }))}
         />
