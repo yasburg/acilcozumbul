@@ -1,8 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-/** Route Handler’da Supabase oturum çerezlerini doğru yazmak için */
+type CookieToSet = {
+  name: string;
+  value: string;
+  options?: Parameters<NextResponse["cookies"]["set"]>[2];
+};
+
+/** Route Handler'da Supabase oturum çerezlerini doğru yazmak için */
 export function createSupabaseRouteHandlerClient(request: NextRequest) {
+  const pendingCookies = new Map<string, CookieToSet>();
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -14,13 +21,12 @@ export function createSupabaseRouteHandlerClient(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            pendingCookies.set(name, { name, value, options });
+            response = NextResponse.next({ request });
+            response.cookies.set(name, value, options);
+          });
         },
       },
     }
@@ -29,8 +35,8 @@ export function createSupabaseRouteHandlerClient(request: NextRequest) {
   return {
     supabase,
     applyCookies(json: NextResponse) {
-      response.cookies.getAll().forEach((c) => {
-        json.cookies.set(c.name, c.value);
+      pendingCookies.forEach(({ name, value, options }) => {
+        json.cookies.set(name, value, options);
       });
       return json;
     },

@@ -7,6 +7,7 @@ import {
   cekiciHaricMi,
   cekiciTalebeBildirildiMi,
   cekiciTeklifVerdiMi,
+  cekiciYeterliBildirimKredisi,
   SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
 import {
@@ -108,7 +109,7 @@ export async function GET() {
     tercihEdilmedi,
     bugunTumu,
     kredi: cekici.kredi,
-    krediYok: cekici.kredi < SMS_BILDIRIM_KREDI,
+    krediYok: !cekiciYeterliBildirimKredisi(cekici.kredi),
     // Geriye uyumluluk
     satinAlinanlar: kazandiklarim,
     baskasiAldi: kaybettiklerim,

@@ -1,10 +1,24 @@
 import { getCekiciler } from "./db";
-import { filtreleCekicilerBolge } from "./cekici-bolge";
-import { filtreleCekicilerSorun } from "./cekici-sorun";
-import { cekiciMusaitMi } from "./cekici-musaitlik";
-import { SMS_BILDIRIM_KREDI } from "./ihale";
-import { sendSms } from "./sms-provider";
+import { cekiciTalepSmsAdayiMi } from "./ihale";
+import { sendSms, smsInfraHatasiMi } from "./sms-provider";
 import type { Cekici, Talep } from "./types";
+
+export function cekiciTalepSmsMetni(
+  talep: Talep,
+  cekici: Cekici,
+  baseUrl: string,
+  yenidenArama = false
+): { mesaj: string; link: string } {
+  const link = `${baseUrl}/cekici/talep/${talep.id}?t=${cekici.token}`;
+  const hedef = talep.hedefKonum?.adres
+    ? ` → ${talep.hedefKonum.adres.split(",").slice(0, 2).join(",")}`
+    : "";
+  const bolge = talep.konumIlce ? ` [${talep.konumIlce}]` : "";
+  const mesaj = yenidenArama
+    ? `${talep.ad} ${talep.soyad.charAt(0)}. müşteri yeni çekici arıyor${bolge} (${talep.konum.adres}${hedef}). Teklif: ${link}`
+    : `${talep.ad} ${talep.soyad.charAt(0)}. yolda kaldı${bolge} (${talep.konum.adres}${hedef}). Teklif ver: ${link}`;
+  return { mesaj, link };
+}
 
 export async function notifyCekiciler(
   talep: Talep,
@@ -14,33 +28,17 @@ export async function notifyCekiciler(
 ): Promise<string[]> {
   const tumCekiciler = await getCekiciler();
   const haric = new Set(haricTutulan);
+  const yeniden = options?.yenidenArama ?? false;
 
-  const bolgeVeSorunaUygun = filtreleCekicilerSorun(
-    filtreleCekicilerBolge(tumCekiciler, talep),
-    talep
-  ).filter(
-    (c) =>
-      c.aktif &&
-      !haric.has(c.id) &&
-      c.kredi >= SMS_BILDIRIM_KREDI &&
-      cekiciMusaitMi(c)
+  const adaylar = tumCekiciler.filter(
+    (c) => !haric.has(c.id) && cekiciTalepSmsAdayiMi(talep, c)
   );
 
   const bildirilenIds: string[] = [];
-  const yeniden = options?.yenidenArama ?? false;
 
   await Promise.all(
-    bolgeVeSorunaUygun.map(async (cekici: Cekici) => {
-      const link = `${baseUrl}/cekici/talep/${talep.id}?t=${cekici.token}`;
-      const hedef = talep.hedefKonum?.adres
-        ? ` → ${talep.hedefKonum.adres.split(",").slice(0, 2).join(",")}`
-        : "";
-      const bolge = talep.konumIlce
-        ? ` [${talep.konumIlce}]`
-        : "";
-      const mesaj = yeniden
-        ? `${talep.ad} ${talep.soyad.charAt(0)}. müşteri yeni çekici arıyor${bolge} (${talep.konum.adres}${hedef}). Teklif: ${link}`
-        : `${talep.ad} ${talep.soyad.charAt(0)}. yolda kaldı${bolge} (${talep.konum.adres}${hedef}). Teklif ver: ${link}`;
+    adaylar.map(async (cekici: Cekici) => {
+      const { mesaj, link } = cekiciTalepSmsMetni(talep, cekici, baseUrl, yeniden);
 
       const sonuc = await sendSms(cekici.telefon, mesaj, {
         aliciTipi: "cekici",
@@ -49,7 +47,7 @@ export async function notifyCekiciler(
         link,
       });
 
-      if (sonuc.basarili) {
+      if (sonuc.basarili || smsInfraHatasiMi(sonuc)) {
         bildirilenIds.push(cekici.id);
       }
     })

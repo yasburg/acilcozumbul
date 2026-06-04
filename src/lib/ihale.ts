@@ -1,23 +1,42 @@
 import { updateTalep } from "./db";
 import { cekiciTalepBolgesineUygunMu } from "./cekici-bolge";
+import { cekiciMusaitMi } from "./cekici-musaitlik";
 import { cekiciTalepSorununaUygunMu } from "./cekici-sorun";
 import type { Cekici, Talep, Teklif } from "./types";
 
 /** Çekiciye talep bildirimi SMS'i başına düşen kredi (panelde görünürlük de buna bağlı) */
 export const SMS_BILDIRIM_KREDI = 1;
 
+export function cekiciYeterliBildirimKredisi(kredi: number): boolean {
+  return Number(kredi) >= SMS_BILDIRIM_KREDI - 1e-9;
+}
+
 /** SMS gönderildi ve 1 kredi düşüldüyse true */
 export function cekiciTalebeBildirildiMi(talep: Talep, cekiciId: string): boolean {
   return (talep.bildirilenCekiciIds ?? []).includes(cekiciId);
 }
 
-/** Açık ihale — bölge/sorun uygun (SMS veya manuel katılım öncesi) */
-export function cekiciAcikTalepUygunMu(talep: Talep, cekici: Cekici): boolean {
+/** Açık ihale — bölge/sorun/müsaitlik uygun */
+export function cekiciAcikTalepUygunMu(
+  talep: Talep,
+  cekici: Cekici,
+  now?: Date
+): boolean {
   return (
     ihaleAcikMi(talep) &&
     !cekiciHaricMi(talep, cekici.id) &&
     cekiciTalepBolgesineUygunMu(cekici, talep) &&
-    cekiciTalepSorununaUygunMu(cekici, talep)
+    cekiciTalepSorununaUygunMu(cekici, talep) &&
+    cekiciMusaitMi(cekici, now)
+  );
+}
+
+/** Otomatik SMS gönderilecek çekici (kredi + uygunluk) */
+export function cekiciTalepSmsAdayiMi(talep: Talep, cekici: Cekici): boolean {
+  return (
+    cekici.aktif &&
+    cekiciAcikTalepUygunMu(talep, cekici) &&
+    cekiciYeterliBildirimKredisi(cekici.kredi)
   );
 }
 export const IHALE_SURE_DK = 60;

@@ -5,8 +5,12 @@ import { ensureSeedData } from "@/lib/seed";
 import {
   cekiciAcikTalepUygunMu,
   cekiciTalebeBildirildiMi,
+  cekiciYeterliBildirimKredisi,
   SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
+import { smsBaseUrl } from "@/lib/sms-base-url";
+import { cekiciTalepSmsMetni } from "@/lib/sms";
+import { sendSms } from "@/lib/sms-provider";
 
 /** 1 kredi ile ihaleye katıl (panelde gizli talebi aç) */
 export async function POST(
@@ -36,7 +40,7 @@ export async function POST(
     return NextResponse.json({ success: true, zatenAcik: true });
   }
 
-  if (cekici.kredi < SMS_BILDIRIM_KREDI) {
+  if (!cekiciYeterliBildirimKredisi(cekici.kredi)) {
     return NextResponse.json(
       {
         error: "İhaleye katılmak için en az 1 kredi gerekir.",
@@ -54,6 +58,18 @@ export async function POST(
     ...new Set([...(talep.bildirilenCekiciIds ?? []), cekici.id]),
   ];
   await updateTalep(talep);
+
+  const baseUrl = smsBaseUrl(
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.acilcozumbul.com"
+  );
+  const { mesaj, link } = cekiciTalepSmsMetni(talep, cekici, baseUrl);
+  await sendSms(cekici.telefon, mesaj, {
+    aliciTipi: "cekici",
+    cekiciId: cekici.id,
+    talepId: talep.id,
+    link,
+    krediDus: false,
+  });
 
   return NextResponse.json({
     success: true,

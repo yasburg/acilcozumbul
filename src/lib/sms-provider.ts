@@ -1,5 +1,5 @@
 import { addSmsKaydi, getCekiciById, updateCekici } from "./db";
-import { SMS_BILDIRIM_KREDI } from "./ihale";
+import { cekiciYeterliBildirimKredisi, SMS_BILDIRIM_KREDI } from "./ihale";
 import { randomUUID } from "crypto";
 
 export type SmsAliciTipi = "cekici" | "musteri";
@@ -9,6 +9,17 @@ export interface SmsGonderimSonuc {
   basarili: boolean;
   saglayici: SmsSaglayici;
   hata?: string;
+}
+
+/** SMS gitti ama altyapı/demo hatası — panelde talep yine açılsın */
+export function smsInfraHatasiMi(sonuc: SmsGonderimSonuc): boolean {
+  if (sonuc.basarili) return false;
+  const h = sonuc.hata ?? "";
+  if (!h) return true;
+  if (h.includes("Yetersiz kredi")) return false;
+  if (h.includes("Çekici bulunamadı")) return false;
+  if (h.includes("Geçersiz telefon")) return false;
+  return true;
 }
 
 const NETGSM_XML_URL = "https://api.netgsm.com.tr/sms/send/xml";
@@ -131,14 +142,18 @@ export async function sendSms(
     cekiciId?: string;
     talepId?: string;
     link?: string;
+    /** false ise kredi düşülmez (manuel katılım sonrası SMS) */
+    krediDus?: boolean;
   }
 ): Promise<SmsGonderimSonuc> {
-  let sonuc: SmsGonderimSonuc;
+  const krediDus =
+    meta.aliciTipi === "cekici" && meta.krediDus !== false;
+  let cekiciIdForKredi: string | undefined;
 
   if (meta.aliciTipi === "cekici" && meta.cekiciId) {
     const cekici = await getCekiciById(meta.cekiciId);
     if (!cekici) {
-      sonuc = {
+      const sonuc: SmsGonderimSonuc = {
         basarili: false,
         saglayici: "demo",
         hata: "Çekici bulunamadı",
@@ -146,8 +161,8 @@ export async function sendSms(
       await logSmsKaydi(telefon, mesaj, meta, sonuc);
       return sonuc;
     }
-    if (cekici.kredi < SMS_BILDIRIM_KREDI) {
-      sonuc = {
+    if (krediDus && !cekiciYeterliBildirimKredisi(cekici.kredi)) {
+      const sonuc: SmsGonderimSonuc = {
         basarili: false,
         saglayici: "demo",
         hata: "Yetersiz kredi (SMS bildirimi için 1 kredi gerekir)",
@@ -155,9 +170,10 @@ export async function sendSms(
       await logSmsKaydi(telefon, mesaj, meta, sonuc);
       return sonuc;
     }
-    cekici.kredi -= SMS_BILDIRIM_KREDI;
-    await updateCekici(cekici);
+    cekiciIdForKredi = cekici.id;
   }
+
+  let sonuc: SmsGonderimSonuc;
 
   if (netgsmYapilandirildi()) {
     sonuc = await netgsmXmlGonder(telefon, mesaj);
@@ -169,14 +185,10 @@ export async function sendSms(
     };
   }
 
-  if (
-    !sonuc.basarili &&
-    meta.aliciTipi === "cekici" &&
-    meta.cekiciId
-  ) {
-    const cekici = await getCekiciById(meta.cekiciId);
+  if (sonuc.basarili && krediDus && cekiciIdForKredi) {
+    const cekici = await getCekiciById(cekiciIdForKredi);
     if (cekici) {
-      cekici.kredi += SMS_BILDIRIM_KREDI;
+      cekici.kredi -= SMS_BILDIRIM_KREDI;
       await updateCekici(cekici);
     }
   }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BrandLogoYazili } from "@/components/BrandLogo";
 import { Btn, Field, SifreAlani, Card } from "@/components/ui";
@@ -9,10 +8,15 @@ import { Btn, Field, SifreAlani, Card } from "@/components/ui";
 type PanelGirisFormProps = {
   nextHref?: string;
   hataMesaji?: string;
+  /** Oturum çerezi yazıldıktan sonra panel state'ini güncellemek için */
+  onBasarili?: () => void | Promise<void>;
 };
 
-export function PanelGirisForm({ nextHref = "/panel", hataMesaji }: PanelGirisFormProps) {
-  const router = useRouter();
+export function PanelGirisForm({
+  nextHref = "/panel",
+  hataMesaji,
+  onBasarili,
+}: PanelGirisFormProps) {
   const [eposta, setEposta] = useState("");
   const [sifre, setSifre] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,11 +45,10 @@ export function PanelGirisForm({ nextHref = "/panel", hataMesaji }: PanelGirisFo
           ? nextHref
           : "/panel";
 
-      router.refresh();
-      router.replace(hedef);
+      await onBasarili?.();
+      window.location.replace(hedef);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Giriş başarısız.");
-    } finally {
       setLoading(false);
     }
   }

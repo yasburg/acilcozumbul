@@ -7,6 +7,7 @@ import {
   cekiciTalebeBildirildiMi,
   cekiciTeklifVerdiMi,
   cekiciTeklifVerebilirMi,
+  cekiciYeterliBildirimKredisi,
   ihaleAcikMi,
   SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
@@ -132,9 +133,9 @@ export async function GET(
       erisimYok: true,
       kredi: cekici.kredi,
       mesaj:
-        cekici.kredi < SMS_BILDIRIM_KREDI
+        !cekiciYeterliBildirimKredisi(cekici.kredi)
           ? "Krediniz yok. Yeni talep SMS'i ve panel listesi için kredi yükleyin (1 kredi = 1 bildirim)."
-          : "Bu talep size SMS ile bildirilmedi.",
+          : "Bu talep size SMS ile bildirilmedi. Müşteriler sekmesinden 1 kredi ile katılabilirsiniz.",
     });
   }
 

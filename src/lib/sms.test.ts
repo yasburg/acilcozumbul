@@ -11,9 +11,13 @@ vi.mock("./db", () => ({
   getCekiciler: (...args: unknown[]) => getCekiciler(...args),
 }));
 
-vi.mock("./sms-provider", () => ({
-  sendSms: (...args: unknown[]) => sendSms(...args),
-}));
+vi.mock("./sms-provider", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./sms-provider")>();
+  return {
+    ...actual,
+    sendSms: (...args: unknown[]) => sendSms(...args),
+  };
+});
 
 describe("D — Çekici SMS (mock)", () => {
   beforeEach(() => {
@@ -103,8 +107,26 @@ describe("D — Çekici SMS (mock)", () => {
     expect(mesaj).toContain("/cekici/talep/t99");
   });
 
-  it("D9: SMS başarısız → bildirilenIds'e eklenmez", async () => {
-    sendSms.mockResolvedValue({ basarili: false, saglayici: "mock", hata: "fail" });
+  it("D9: altyapı hatası → panelde açık sayılır (kredi düşülmez)", async () => {
+    sendSms.mockResolvedValue({
+      basarili: false,
+      saglayici: "mock",
+      hata: "Netgsm yapılandırılmamış",
+    });
+    getCekiciler.mockResolvedValue([cekiciFixture({ id: "c1" })]);
+    const ids = await notifyCekiciler(
+      talepFixture({ konumIl: "İstanbul", konumIlce: "Kadıköy" }),
+      "http://localhost:3000"
+    );
+    expect(ids).toEqual(["c1"]);
+  });
+
+  it("D9b: yetersiz kredi hatası → bildirilenIds'e eklenmez", async () => {
+    sendSms.mockResolvedValue({
+      basarili: false,
+      saglayici: "mock",
+      hata: "Yetersiz kredi (SMS bildirimi için 1 kredi gerekir)",
+    });
     getCekiciler.mockResolvedValue([cekiciFixture({ id: "c1" })]);
     const ids = await notifyCekiciler(
       talepFixture({ konumIl: "İstanbul", konumIlce: "Kadıköy" }),
