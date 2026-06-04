@@ -21,6 +21,14 @@ export async function getCekiciler(): Promise<Cekici[]> {
   return (data as CekiciRow[]).map(cekiciFromRow);
 }
 
+export async function countCekiciler(): Promise<number> {
+  const { count, error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .select("*", { count: "exact", head: true });
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function getCekiciById(id: string): Promise<Cekici | undefined> {
   const { data, error } = await getSupabaseAdmin()
     .from("cekiciler")

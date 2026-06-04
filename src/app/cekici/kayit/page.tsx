@@ -1,15 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
+import { KayitKontenjanBilgi } from "@/components/KayitKontenjanBilgi";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { DESTEKLENEN_ILLER } from "@/lib/il-ilce";
-
-export default function CekiciKayitPage() {
+import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
+import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
+function KayitIcerik() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const onizlemeRaw = searchParams.get("onizleme");
+  const onizlemeGercekKayit =
+    process.env.NODE_ENV === "development" && onizlemeRaw
+      ? Number.parseInt(onizlemeRaw, 10)
+      : undefined;
   const [form, setForm] = useState({
     ad: "",
     telefon: "",
@@ -19,10 +27,18 @@ export default function CekiciKayitPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [yasalOnay, setYasalOnay] = useState(false);
+
+  const formGonderilebilir = !loading && yasalOnay;
 
   async function kayitOl(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (!yasalOnay) {
+      setError("Kayıt için yasal metinleri onaylayın.");
+      return;
+    }
 
     if (form.sifre !== form.sifreTekrar) {
       setError("Şifreler eşleşmiyor.");
@@ -53,7 +69,17 @@ export default function CekiciKayitPage() {
   }
 
   return (
-    <MobileShell subtitle="Çekici kaydı — acilcozumbul.com">
+    <MobileShell
+      subtitle="Hizmet veren kaydı — acilcozumbul.com"
+      backHref="/cekici/giris"
+      footer={<YasalSiteFooter />}
+    >
+      <KayitKontenjanBilgi
+        onizlemeGercekKayit={
+          Number.isFinite(onizlemeGercekKayit) ? onizlemeGercekKayit : undefined
+        }
+      />
+
       {error && (
         <Card className="border-red-200 bg-red-50 mb-4">
           <p className="text-red-700 text-sm">{error}</p>
@@ -102,12 +128,19 @@ export default function CekiciKayitPage() {
           onChange={(e) => setForm((f) => ({ ...f, sifreTekrar: e.target.value }))}
         />
 
+        <YasalOnayKutusu
+          checked={yasalOnay}
+          onChange={setYasalOnay}
+          rol="hizmet-veren"
+        />
+
         <p className="text-xs text-slate-500">
           Kayıt ücretsizdir. Kredi yükleyerek bölgenizdeki talep SMS bildirimlerini
-          alırsınız (1 kredi = 1 bildirim ve panelde talep görünürlüğü). Teklif vermek ücretsizdir.
+          alırsınız (1 kredi = 1 bildirim ve panelde talep görünürlüğü). Teklif
+          vermek ücretsizdir.
         </p>
 
-        <Btn type="submit" disabled={loading}>
+        <Btn type="submit" disabled={!formGonderilebilir}>
           {loading ? "Kayıt yapılıyor…" : "Kayıt Ol"}
         </Btn>
       </form>
@@ -119,5 +152,19 @@ export default function CekiciKayitPage() {
         </Link>
       </p>
     </MobileShell>
+  );
+}
+
+export default function CekiciKayitPage() {
+  return (
+    <Suspense
+      fallback={
+        <MobileShell subtitle="Hizmet veren kaydı" backHref="/cekici/giris">
+          <p className="text-center text-slate-500 py-12">Yükleniyor…</p>
+        </MobileShell>
+      }
+    >
+      <KayitIcerik />
+    </Suspense>
   );
 }

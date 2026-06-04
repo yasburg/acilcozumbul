@@ -19,8 +19,6 @@ function GirisIcerik() {
 
   const [telefon, setTelefon] = useState("");
   const [sifre, setSifre] = useState("");
-  const [token, setToken] = useState("");
-  const [smsMod, setSmsMod] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -68,18 +66,13 @@ function GirisIcerik() {
     router.push(hedef);
   }
 
-  async function uyeGiris(opts?: {
-    telefon?: string;
-    sifre?: string;
-    token?: string;
-  }) {
+  async function uyeGiris(kimlik: string, sifreDeger: string) {
     const res = await cekiciFetch("/api/cekici/giris", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        telefon: (opts?.telefon ?? telefon).trim(),
-        sifre: opts?.sifre ?? sifre,
-        token: opts?.token ?? (smsMod ? token : undefined),
+        telefon: kimlik.trim(),
+        sifre: sifreDeger,
       }),
     });
     const d = await res.json().catch(() => ({}));
@@ -99,7 +92,7 @@ function GirisIcerik() {
         await yoneticiGiris(kimlik, sifre);
         return;
       }
-      await uyeGiris({ telefon: kimlik, sifre });
+      await uyeGiris(kimlik, sifre);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Giriş başarısız.";
       if (msg === "Failed to fetch" || msg.includes("NetworkError")) {
@@ -149,56 +142,32 @@ function GirisIcerik() {
           ))}
         </p>
 
-        {!smsMod ? (
-          <>
-            <Field
-              label="Telefon veya e-posta"
-              type="text"
-              autoComplete="username"
-              placeholder="05XX XXX XX XX veya ornek@mail.com"
-              value={telefon}
-              onChange={(e) => setTelefon(e.target.value)}
-            />
-            <Field
-              label="Şifre"
-              type="password"
-              autoComplete="current-password"
-              value={sifre}
-              onChange={(e) => setSifre(e.target.value)}
-            />
-            <Btn onClick={() => void girisOturumAc()} disabled={loading}>
-              {loading ? "Giriş yapılıyor…" : "Giriş Yap"}
-            </Btn>
-            <button
-              type="button"
-              onClick={() => setSmsMod(true)}
-              className="w-full text-sm text-slate-500 underline"
-            >
-              SMS linki ile giriş (üye)
-            </button>
-          </>
-        ) : (
-          <>
-            <Field
-              label="SMS linkindeki token"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-            />
-            <Btn
-              onClick={() => void uyeGiris()}
-              disabled={loading || !token}
-            >
-              Token ile Giriş
-            </Btn>
-            <button
-              type="button"
-              onClick={() => setSmsMod(false)}
-              className="w-full text-sm text-slate-500 underline"
-            >
-              Telefon / e-posta ile giriş
-            </button>
-          </>
-        )}
+        <Field
+          label="Telefon veya e-posta"
+          type="text"
+          autoComplete="username"
+          placeholder="05XX XXX XX XX veya ornek@mail.com"
+          value={telefon}
+          onChange={(e) => setTelefon(e.target.value)}
+        />
+        <Field
+          label="Şifre"
+          type="password"
+          autoComplete="current-password"
+          value={sifre}
+          onChange={(e) => setSifre(e.target.value)}
+        />
+        <div className="flex justify-end">
+          <Link
+            href="/cekici/sifremi-unuttum"
+            className="text-sm text-amber-600 font-medium"
+          >
+            Şifremi unuttum
+          </Link>
+        </div>
+        <Btn onClick={() => void girisOturumAc()} disabled={loading}>
+          {loading ? "Giriş yapılıyor…" : "Giriş Yap"}
+        </Btn>
       </div>
 
       <p className="text-center text-sm text-slate-500 mt-6">

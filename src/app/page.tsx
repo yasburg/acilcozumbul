@@ -17,6 +17,8 @@ import {
 } from "@/lib/sorun-tipleri";
 import { KonumIzniYardim } from "@/components/KonumIzniYardim";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
+import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
+import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import {
   geocodeAdres,
   cihazPlatformu,
@@ -84,6 +86,7 @@ export default function HomePage() {
   const [fotografHatasi, setFotografHatasi] = useState(false);
   const [sorunDetayHatasi, setSorunDetayHatasi] = useState(false);
   const [arizaAdresDuzenle, setArizaAdresDuzenle] = useState(false);
+  const [yasalOnay, setYasalOnay] = useState(false);
 
   const [form, setForm] = useState({
     ad: "",
@@ -357,6 +360,12 @@ export default function HomePage() {
       }
     }
 
+    if (hedefIdx > sorunIdx && !yasalOnay) {
+      setError("Devam etmek için yasal metinleri onaylayın.");
+      setStep("sorun");
+      return;
+    }
+
     if (hedefIdx > bilgiIdx && !telefonDogrulandi) {
       setError("Devam etmek için telefon doğrulaması gerekli.");
       setKodGirisAcik(true);
@@ -393,6 +402,10 @@ export default function HomePage() {
   async function kodGonder() {
     setError("");
     setBilgiMesaj("");
+    if (!yasalOnay) {
+      setError("SMS göndermek için yasal metinleri onaylayın.");
+      return;
+    }
     if (!form.telefon.trim()) {
       setError("Telefon numarası girin (05XX XXX XX XX).");
       return;
@@ -782,6 +795,11 @@ export default function HomePage() {
       const ok = await adresKoordinatDoldur(false);
       if (!ok) return;
     }
+    if (!yasalOnay) {
+      setError("Talep göndermek için yasal metinleri onaylayın.");
+      setStep("sorun");
+      return;
+    }
     if (!telefonDogrulandi) {
       setError("Telefon doğrulaması gerekli.");
       setKodGirisAcik(true);
@@ -904,6 +922,7 @@ export default function HomePage() {
     <MobileShell
       subtitle="Yolda mı kaldınız? Hemen en hızlı ve uygun teklifleri alın."
       subtitleAlign="right"
+      footer={<YasalSiteFooter />}
     >
 
       <div className="flex gap-1.5 mb-6">
@@ -946,10 +965,16 @@ export default function HomePage() {
             onDetayChange={(v) => update("sorunDetay", v)}
             sadeceTipSecimi
           />
+          <YasalOnayKutusu checked={yasalOnay} onChange={setYasalOnay} />
+
           <div ref={sorunDevamRef} className="flex gap-3 pt-2 scroll-mt-4">
             <Btn
               className="w-full"
               onClick={() => {
+                if (!yasalOnay) {
+                  setError("Devam etmek için yasal metinleri onaylayın.");
+                  return;
+                }
                 if (!form.sorunTipi) {
                   setError("Lütfen sorununuzu seçin.");
                   return;
@@ -957,7 +982,7 @@ export default function HomePage() {
                 setError("");
                 adimGit("bilgi");
               }}
-              disabled={!form.sorunTipi}
+              disabled={!form.sorunTipi || !yasalOnay}
             >
               Devam Et
             </Btn>
@@ -1002,6 +1027,10 @@ export default function HomePage() {
               onSubmit={(e) => {
                 e.preventDefault();
                 if (loading) return;
+                if (!yasalOnay) {
+                  setError("Devam etmek için yasal metinleri onaylayın.");
+                  return;
+                }
                 if (kodGirisAcik) {
                   if (otpKod.length === 6) void kodDogrula();
                   else setError("6 haneli doğrulama kodunu girin.");
