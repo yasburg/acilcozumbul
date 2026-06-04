@@ -5,6 +5,7 @@ type Props = {
   checked: boolean;
   onChange: (checked: boolean) => void;
   disabled?: boolean;
+  invalid?: boolean;
   /** müşteri | hizmet-veren */
   rol?: "musteri" | "hizmet-veren";
 };
@@ -13,6 +14,7 @@ export function YasalOnayKutusu({
   checked,
   onChange,
   disabled = false,
+  invalid = false,
   rol = "musteri",
 }: Props) {
   const rolMetin =
@@ -25,9 +27,11 @@ export function YasalOnayKutusu({
       className={`flex items-start gap-3 rounded-xl border px-4 py-3 cursor-pointer ${
         disabled
           ? "border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed"
-          : checked
-            ? "border-amber-300 bg-amber-50/50"
-            : "border-slate-200 bg-white"
+          : invalid
+            ? "border-red-500 bg-red-50/50 ring-2 ring-red-200"
+            : checked
+              ? "border-amber-300 bg-amber-50/50"
+              : "border-slate-200 bg-white"
       }`}
     >
       <input
