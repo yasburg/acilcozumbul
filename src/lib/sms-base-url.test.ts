@@ -1,22 +1,36 @@
 import { describe, expect, it } from "vitest";
-import { smsBaseUrl, yerelVeyaOzelAgUrl } from "./sms-base-url";
+import { smsBaseUrl, smsHostNormalize, yerelVeyaOzelAgUrl } from "./sms-base-url";
 
 describe("smsBaseUrl", () => {
-  it("LAN IP yerine canlı domain döner", () => {
+  it("LAN IP yerine www canlı domain döner", () => {
     expect(smsBaseUrl("https://10.55.33.167:3000")).toBe(
-      "https://acilcozumbul.com"
+      "https://www.acilcozumbul.com"
     );
   });
 
-  it("localhost yerine canlı domain döner", () => {
+  it("localhost yerine www canlı domain döner", () => {
     expect(smsBaseUrl("http://localhost:3000")).toBe(
-      "https://acilcozumbul.com"
+      "https://www.acilcozumbul.com"
     );
   });
 
-  it("public domain korunur", () => {
+  it("apex domain www'ye normalize edilir", () => {
     expect(smsBaseUrl("https://acilcozumbul.com")).toBe(
-      "https://acilcozumbul.com"
+      "https://www.acilcozumbul.com"
+    );
+  });
+
+  it("www domain korunur", () => {
+    expect(smsBaseUrl("https://www.acilcozumbul.com")).toBe(
+      "https://www.acilcozumbul.com"
+    );
+  });
+});
+
+describe("smsHostNormalize", () => {
+  it("apex hostu www yapar", () => {
+    expect(smsHostNormalize("https://acilcozumbul.com")).toBe(
+      "https://www.acilcozumbul.com"
     );
   });
 });

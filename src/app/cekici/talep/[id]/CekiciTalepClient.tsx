@@ -32,12 +32,9 @@ interface TalepDurum {
   benimTeklif?: {
     fiyat: number;
     ilkFiyat?: number;
-    fiyatDegisti?: boolean;
     tahminiSureDk: number;
     mesaj?: string;
   };
-  fiyatDegisti?: boolean;
-  fiyatDegistiUyari?: string;
   teklifSayisi?: number;
   ihaleBitis?: string;
   ad?: string;
@@ -67,8 +64,6 @@ export default function CekiciTalepClient() {
   const [fiyat, setFiyat] = useState("");
   const [sure, setSure] = useState("30");
   const [mesaj, setMesaj] = useState("");
-  const [fiyatGuncelle, setFiyatGuncelle] = useState(false);
-  const [yeniFiyat, setYeniFiyat] = useState("");
 
   const yukle = useCallback(async () => {
     setError("");
@@ -121,32 +116,6 @@ export default function CekiciTalepClient() {
     return () => clearInterval(interval);
   }, [yukle]);
 
-  async function fiyatGuncelleGonder() {
-    const fiyatNum = Number(yeniFiyat);
-    if (!fiyatNum || fiyatNum < 100) {
-      setError("Geçerli bir fiyat girin (min. 100 TL).");
-      return;
-    }
-    setIslem(true);
-    setError("");
-    try {
-      const res = await cekiciFetch(`/api/cekici/talep/${id}/teklif`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fiyat: fiyatNum }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      if (data.uyari) setError(data.uyari);
-      setFiyatGuncelle(false);
-      await yukle();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Fiyat güncellenemedi.");
-    } finally {
-      setIslem(false);
-    }
-  }
-
   async function teklifVer() {
     const fiyatNum = Number(fiyat);
     if (!fiyatNum || fiyatNum < 100) {
@@ -178,7 +147,6 @@ export default function CekiciTalepClient() {
       }
       if (cekici && data.kredi != null) setCekici({ ...cekici, kredi: data.kredi });
       setTeklifGonderildi(true);
-      setFiyatGuncelle(false);
       await yukle();
     } catch {
       setError("Teklif gönderilemedi.");
@@ -287,17 +255,6 @@ export default function CekiciTalepClient() {
                   compact
                 />
               )}
-              {talep.fiyatDegisti && (
-                <Card className="border-red-200 bg-red-50">
-                  <p className="text-sm font-semibold text-red-800">
-                    ⚠️ Fiyat değişikliği uyarısı
-                  </p>
-                  <p className="text-xs text-red-700 mt-2 leading-relaxed">
-                    {talep.fiyatDegistiUyari ??
-                      "Teklif fiyatını değiştirdiniz. Müşteri bu teklifle sizi seçemez."}
-                  </p>
-                </Card>
-              )}
               <Card className="border-amber-200 bg-amber-50">
                 <p className="text-xs text-amber-700 uppercase tracking-wide mb-2">
                   Teklifiniz
@@ -305,12 +262,6 @@ export default function CekiciTalepClient() {
                 <p className="text-2xl font-bold text-amber-600">
                   {talep.benimTeklif.fiyat} TL
                 </p>
-                {talep.benimTeklif.ilkFiyat != null &&
-                  talep.benimTeklif.ilkFiyat !== talep.benimTeklif.fiyat && (
-                    <p className="text-xs text-red-600 mt-1">
-                      İlk fiyat: {talep.benimTeklif.ilkFiyat} TL
-                    </p>
-                  )}
                 <p className="text-sm text-slate-600 mt-1">
                   Tahmini ~{talep.benimTeklif.tahminiSureDk} dk
                 </p>
@@ -322,37 +273,9 @@ export default function CekiciTalepClient() {
                     Toplam {talep.teklifSayisi} aktif teklif
                   </p>
                 )}
-                {!fiyatGuncelle ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setYeniFiyat(String(talep.benimTeklif!.fiyat));
-                      setFiyatGuncelle(true);
-                    }}
-                    className="text-xs text-amber-800 underline mt-3"
-                  >
-                    Fiyatı güncelle (müşteri seçemez)
-                  </button>
-                ) : (
-                  <div className="mt-3 space-y-2 border-t border-amber-200 pt-3">
-                    <Field
-                      label="Yeni fiyat (TL)"
-                      type="number"
-                      value={yeniFiyat}
-                      onChange={(e) => setYeniFiyat(e.target.value)}
-                    />
-                    <Btn onClick={fiyatGuncelleGonder} disabled={islem} className="!py-2 text-sm">
-                      Fiyatı kaydet
-                    </Btn>
-                    <button
-                      type="button"
-                      onClick={() => setFiyatGuncelle(false)}
-                      className="text-xs text-slate-500 w-full text-center"
-                    >
-                      İptal
-                    </button>
-                  </div>
-                )}
+                <p className="text-xs text-slate-500 mt-3 leading-relaxed">
+                  Teklif fiyatı değiştirilemez.
+                </p>
               </Card>
             </>
           )}

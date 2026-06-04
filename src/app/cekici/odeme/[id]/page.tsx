@@ -6,6 +6,55 @@ import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 
+const ODEME_ADIMLARI = [
+  "Kart doğrulanıyor",
+  "Kart doğrulandı",
+  "Bankayla iletişim kuruluyor",
+  "Kart onaylandı",
+  "Ödeme gerçekleşti",
+  "Kredileriniz hesabınıza yüklendi",
+] as const;
+
+function bekle(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+function OdemeIslemAnimasyon({ aktifAdim }: { aktifAdim: number }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm px-6"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="w-14 h-14 rounded-full border-4 border-amber-200 border-t-amber-500 animate-spin mb-8" />
+      <ul className="w-full max-w-sm space-y-3">
+        {ODEME_ADIMLARI.map((adim, i) => {
+          const tamam = i < aktifAdim;
+          const suAn = i === aktifAdim;
+          return (
+            <li
+              key={adim}
+              className={`flex items-center gap-2 text-sm transition-colors duration-300 ${
+                tamam
+                  ? "text-emerald-700 font-medium"
+                  : suAn
+                    ? "text-amber-700 font-semibold"
+                    : "text-slate-300"
+              }`}
+            >
+              <span className="w-5 text-center shrink-0" aria-hidden>
+                {tamam ? "✓" : suAn ? "●" : "○"}
+              </span>
+              <span>{adim}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export default function OdemePage() {
   const params = useParams();
   const router = useRouter();
@@ -15,6 +64,7 @@ export default function OdemePage() {
   const [tutar, setTutar] = useState(0);
   const [listeFiyati, setListeFiyati] = useState(0);
   const [eposta, setEposta] = useState("");
+  const [telefon, setTelefon] = useState("");
   const [adres, setAdres] = useState("");
   const [tcKimlik, setTcKimlik] = useState("");
   const [kurumsal, setKurumsal] = useState(false);
@@ -27,6 +77,8 @@ export default function OdemePage() {
   const sktYilRef = useRef<HTMLInputElement>(null);
   const cvvRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
+  const [odemeAnimasyon, setOdemeAnimasyon] = useState(false);
+  const [animasyonAdim, setAnimasyonAdim] = useState(0);
   const [error, setError] = useState("");
   const [garantiAktif, setGarantiAktif] = useState(false);
   const [smokeDolduruldu, setSmokeDolduruldu] = useState(false);
@@ -40,6 +92,8 @@ export default function OdemePage() {
         router.push("/cekici/giris");
         return;
       }
+      const meData = await me.json();
+      if (!iptal) setTelefon(meData.telefon ?? "");
 
       const detay = await cekiciFetch(`/api/cekici/odeme/${odemeId}`);
       if (detay.ok && !iptal) {
@@ -47,7 +101,7 @@ export default function OdemePage() {
         setMiktar(d.miktar);
         setTutar(d.tutar);
         setListeFiyati(Number(d.listeFiyati) || d.tutar);
-        setEposta(d.faturaEposta ?? "");
+        setEposta(d.faturaEposta ?? meData.faturaEposta ?? "");
         setAdres(d.faturaAdres ?? "");
         setTcKimlik(d.faturaTcKimlik ?? "");
         setKurumsal(Boolean(d.kurumsal));
@@ -61,8 +115,10 @@ export default function OdemePage() {
           setMiktar(s.miktar);
           setTutar(s.tutar);
           setListeFiyati(Number(s.listeFiyati) || s.tutar);
-          setEposta(s.eposta ?? "");
+          setEposta(s.eposta ?? meData.faturaEposta ?? "");
           setGarantiAktif(Boolean(s.garantiAktif));
+        } else if (!iptal) {
+          setEposta(meData.faturaEposta ?? "");
         }
       }
 
@@ -100,6 +156,14 @@ export default function OdemePage() {
     if (v.length === 2) cvvRef.current?.focus();
   }
 
+  async function odemeAdimlariniOynat(iptalRef: { value: boolean }) {
+    for (let i = 0; i < ODEME_ADIMLARI.length; i++) {
+      if (iptalRef.value) return;
+      setAnimasyonAdim(i);
+      await bekle(1000);
+    }
+  }
+
   async function odemeYap(e: React.FormEvent) {
     e.preventDefault();
     const sonKullanma =
@@ -111,6 +175,13 @@ export default function OdemePage() {
 
     setLoading(true);
     setError("");
+    setOdemeAnimasyon(true);
+    setAnimasyonAdim(0);
+
+    const iptalRef = { value: false };
+
+    const animasyonGorev = odemeAdimlariniOynat(iptalRef);
+
     try {
       const res = await cekiciFetch(`/api/cekici/odeme/${odemeId}/tamamla`, {
         method: "POST",
@@ -130,6 +201,8 @@ export default function OdemePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
+      await animasyonGorev;
+
       sessionStorage.removeItem(`odeme-${odemeId}`);
       sessionStorage.setItem(
         "acil_odeme_basarili",
@@ -138,9 +211,18 @@ export default function OdemePage() {
           toplamKredi: data.toplamKredi,
         })
       );
-      router.replace("/cekici/panel?tab=hesabim&mesaj=kredi-eklendi");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Ödeme başarısız.");
+      const eklenenParam =
+        data.eklenenKredi != null
+          ? `&eklenen=${encodeURIComponent(String(data.eklenenKredi))}`
+          : "";
+      router.replace(
+        `/cekici/panel?tab=hesabim&mesaj=kredi-eklendi${eklenenParam}`
+      );
+    } catch (err) {
+      iptalRef.value = true;
+      setOdemeAnimasyon(false);
+      setAnimasyonAdim(0);
+      setError(err instanceof Error ? err.message : "Ödeme başarısız.");
     } finally {
       setLoading(false);
     }
@@ -149,12 +231,16 @@ export default function OdemePage() {
   return (
     <MobileShell
       showBrand={false}
+      backHref={odemeAnimasyon ? undefined : "/cekici/kredi"}
+      backLabel="İptal"
       subtitle={
         garantiAktif
           ? "Güvenli Ödeme — Garanti Sanal POS"
           : "Güvenli Ödeme — Sanal POS (Demo)"
       }
     >
+      {odemeAnimasyon && <OdemeIslemAnimasyon aktifAdim={animasyonAdim} />}
+
       <div className="rounded-t-2xl bg-gradient-to-r from-slate-800 to-slate-700 text-white p-4 mb-6 -mx-4 mt-2">
         <p className="text-xs opacity-80">acilcozumbul.com</p>
         <p className="font-semibold">Banka Sanal POS</p>
@@ -167,7 +253,7 @@ export default function OdemePage() {
         )}
       </div>
 
-      {error && (
+      {error && !odemeAnimasyon && (
         <Card className="border-red-200 bg-red-50 mb-4">
           <p className="text-red-700 text-sm">{error}</p>
         </Card>
@@ -175,32 +261,95 @@ export default function OdemePage() {
 
       <form onSubmit={odemeYap} className="space-y-4">
         <Card>
+          <p className="text-sm font-medium text-slate-800 mb-3">Kart bilgileri</p>
+          <Field
+            label="Kart Numarası"
+            placeholder="4242 4242 4242 4242"
+            value={kartNo}
+            onChange={(e) => setKartNo(e.target.value)}
+            inputMode="numeric"
+            disabled={loading}
+          />
+          <div className="grid grid-cols-3 gap-3">
+            <Field
+              label="Ay"
+              placeholder="12"
+              value={sktAy}
+              onChange={sktAyDegistir}
+              inputMode="numeric"
+              maxLength={2}
+              autoComplete="cc-exp-month"
+              disabled={loading}
+            />
+            <Field
+              ref={sktYilRef}
+              label="Yıl"
+              placeholder="28"
+              value={sktYil}
+              onChange={sktYilDegistir}
+              inputMode="numeric"
+              maxLength={2}
+              autoComplete="cc-exp-year"
+              disabled={loading}
+            />
+            <Field
+              ref={cvvRef}
+              label="CVV"
+              placeholder="123"
+              type="password"
+              maxLength={4}
+              value={cvv}
+              onChange={(e) =>
+                setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))
+              }
+              inputMode="numeric"
+              autoComplete="cc-csc"
+              disabled={loading}
+            />
+          </div>
+        </Card>
+
+        <Card>
           <p className="text-sm font-medium text-slate-800 mb-3">
-            Fatura bilgileri
-          </p>
-          <p className="text-xs text-slate-500 mb-3">
-            E-posta doğrulandı. Adres ve TC isteğe bağlı; kurumsal fatura için
-            şirket bilgilerini girin.
+            İletişim bilgileri
           </p>
           <Field
-            label="Fatura e-postası"
+            label="E-posta"
             type="email"
             value={eposta}
             onChange={() => {}}
             disabled
           />
           <Field
-            label="Adres (isteğe bağlı)"
-            placeholder="Fatura adresi"
-            value={adres}
-            onChange={(e) => setAdres(e.target.value)}
+            label="Telefon"
+            type="tel"
+            value={telefon}
+            onChange={() => {}}
+            disabled
           />
+          <p className="text-xs text-slate-500 mt-2">
+            E-posta ödeme öncesi doğrulandı. Telefon hesabınızdaki kayıtlı numaradır.
+          </p>
+        </Card>
+
+        <Card>
+          <p className="text-sm font-medium text-slate-800 mb-3">
+            Fatura bilgileri
+          </p>
           <Field
             label="TC kimlik no (isteğe bağlı)"
             placeholder="11 hane"
             value={tcKimlik}
             onChange={(e) => setTcKimlik(e.target.value)}
             inputMode="numeric"
+            disabled={loading}
+          />
+          <Field
+            label="Adres (isteğe bağlı)"
+            placeholder="Fatura adresi"
+            value={adres}
+            onChange={(e) => setAdres(e.target.value)}
+            disabled={loading}
           />
 
           <label className="flex items-center gap-2 mt-3 cursor-pointer">
@@ -208,6 +357,7 @@ export default function OdemePage() {
               type="checkbox"
               checked={kurumsal}
               onChange={(e) => setKurumsal(e.target.checked)}
+              disabled={loading}
               className="rounded border-slate-300 text-amber-600"
             />
             <span className="text-sm text-slate-700">Kurumsal fatura istiyorum</span>
@@ -219,6 +369,7 @@ export default function OdemePage() {
                 label="Şirket ünvanı"
                 value={sirketUnvan}
                 onChange={(e) => setSirketUnvan(e.target.value)}
+                disabled={loading}
               />
               <Field
                 label="Vergi no"
@@ -226,55 +377,13 @@ export default function OdemePage() {
                 value={vergiNo}
                 onChange={(e) => setVergiNo(e.target.value)}
                 inputMode="numeric"
+                disabled={loading}
               />
             </div>
           )}
         </Card>
 
-        <Card>
-          <p className="text-sm font-medium text-slate-800 mb-3">Kart bilgileri</p>
-          <Field
-            label="Kart Numarası"
-            placeholder="4242 4242 4242 4242"
-            value={kartNo}
-            onChange={(e) => setKartNo(e.target.value)}
-            inputMode="numeric"
-          />
-          <div className="grid grid-cols-3 gap-3">
-            <Field
-              label="Ay"
-              placeholder="12"
-              value={sktAy}
-              onChange={sktAyDegistir}
-              inputMode="numeric"
-              maxLength={2}
-              autoComplete="cc-exp-month"
-            />
-            <Field
-              ref={sktYilRef}
-              label="Yıl"
-              placeholder="28"
-              value={sktYil}
-              onChange={sktYilDegistir}
-              inputMode="numeric"
-              maxLength={2}
-              autoComplete="cc-exp-year"
-            />
-            <Field
-              ref={cvvRef}
-              label="CVV"
-              placeholder="123"
-              type="password"
-              maxLength={4}
-              value={cvv}
-              onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
-              inputMode="numeric"
-              autoComplete="cc-csc"
-            />
-          </div>
-        </Card>
-
-        {smokeDolduruldu && (
+        {smokeDolduruldu && !odemeAnimasyon && (
           <Card className="bg-blue-50 border-blue-200">
             <p className="text-xs text-blue-800">
               Test kartı .env GARANTI_SMOKE_* alanlarından dolduruldu.
@@ -282,7 +391,7 @@ export default function OdemePage() {
           </Card>
         )}
 
-        {!garantiAktif && (
+        {!garantiAktif && !odemeAnimasyon && (
           <Card className="bg-emerald-50 border-emerald-200">
             <p className="text-xs text-emerald-800">
               Demo ortamı — gerçek ödeme alınmaz.
@@ -290,7 +399,7 @@ export default function OdemePage() {
           </Card>
         )}
 
-        <Btn type="submit" disabled={loading}>
+        <Btn type="submit" disabled={loading || odemeAnimasyon}>
           {loading ? "İşleniyor…" : "Ödeme Yap"}
         </Btn>
       </form>

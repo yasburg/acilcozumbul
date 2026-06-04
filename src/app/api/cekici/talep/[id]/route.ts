@@ -98,25 +98,13 @@ export async function GET(
   }
 
   if (teklifVerdim && benimTeklifim) {
-    const ilkFiyat = benimTeklifim.ilkFiyat ?? benimTeklifim.fiyat;
-    const fiyatDegisti =
-      benimTeklifim.fiyatDegisti === true ||
-      benimTeklifim.fiyat !== ilkFiyat;
     return NextResponse.json({
       id: talep.id,
       durum: talep.durum,
       teklifVerdim: true,
       ihaleAcik: ihaleAcikMi(talep),
       ihaleBitis: talep.ihaleBitis,
-      benimTeklif: {
-        ...benimTeklifim,
-        ilkFiyat,
-        fiyatDegisti,
-      },
-      fiyatDegisti,
-      fiyatDegistiUyari: fiyatDegisti
-        ? `Fiyatı ${ilkFiyat} TL'den ${benimTeklifim.fiyat} TL'ye değiştirdiniz. Müşteri bu teklifle sizi seçemez.`
-        : undefined,
+      benimTeklif: benimTeklifim,
       teklifSayisi: talep.teklifler?.filter((t) => t.durum === "aktif").length ?? 0,
       onizleme: {
         bolge: talepBolge(talep),

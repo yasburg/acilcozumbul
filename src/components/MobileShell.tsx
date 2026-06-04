@@ -8,6 +8,8 @@ interface MobileShellProps {
   subtitleAlign?: "center" | "right";
   showBrand?: boolean;
   backHref?: string;
+  /** Geri okunun yanında görünen metin (ör. İptal) */
+  backLabel?: string;
   footer?: React.ReactNode;
 }
 
@@ -17,6 +19,7 @@ export function MobileShell({
   subtitleAlign = "center",
   showBrand = true,
   backHref,
+  backLabel,
   footer,
 }: MobileShellProps) {
   return (
@@ -40,10 +43,15 @@ export function MobileShell({
             {backHref && (
               <Link
                 href={backHref}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-base text-slate-700"
-                aria-label="Geri"
+                className={`flex shrink-0 items-center gap-1 rounded-full bg-slate-100 text-slate-700 touch-manipulation ${
+                  backLabel
+                    ? "px-3 py-2 text-sm font-medium"
+                    : "h-8 w-8 justify-center text-base"
+                }`}
+                aria-label={backLabel ? `${backLabel}, geri` : "Geri"}
               >
-                ←
+                <span aria-hidden>←</span>
+                {backLabel ? <span>{backLabel}</span> : null}
               </Link>
             )}
             {showBrand && (

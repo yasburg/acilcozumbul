@@ -327,7 +327,7 @@ export default function CekiciPanelTabs() {
       if (!eklenen) eklenen = searchParams.get("eklenen");
       setFlash(
         eklenen
-          ? `${eklenen} kredi hesabınıza eklendi.`
+          ? `Kredi satın alma başarılı. ${eklenen} kredi hesabınıza eklendi.`
           : "Kredi satın alma başarılı."
       );
       setTab("hesabim");

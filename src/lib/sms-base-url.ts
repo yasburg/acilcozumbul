@@ -1,7 +1,23 @@
-const CANONICAL_SITE = "https://acilcozumbul.com";
+/** Uygulama Railway'de www üzerinde; apex (www'süz) Squarespace'e gider ve yol düşer */
+const CANONICAL_SITE = "https://www.acilcozumbul.com";
 
 function normalizeBase(url: string): string {
   return url.replace(/\/$/, "");
+}
+
+/** apex → www (SMS linkleri /cekici/talep/... yolunu kaybetmesin) */
+export function smsHostNormalize(url: string): string {
+  const temiz = normalizeBase(url);
+  try {
+    const u = new URL(temiz);
+    if (u.hostname.toLowerCase() === "acilcozumbul.com") {
+      u.hostname = "www.acilcozumbul.com";
+      return u.origin;
+    }
+    return u.origin;
+  } catch {
+    return temiz;
+  }
 }
 
 /** localhost, LAN IP veya özel ağ — SMS linklerinde kullanılmaz */
@@ -29,7 +45,7 @@ export function smsBaseUrl(fallback?: string): string {
     fallback?.trim();
 
   if (ozel && !yerelVeyaOzelAgUrl(ozel)) {
-    return normalizeBase(ozel);
+    return smsHostNormalize(ozel);
   }
 
   return CANONICAL_SITE;
