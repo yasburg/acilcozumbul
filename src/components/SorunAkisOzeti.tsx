@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { sorunAkisAciklama } from "@/lib/sorun-akis-aciklama";
 import { sorunTipiBul } from "@/lib/sorun-tipleri";
 
@@ -17,10 +17,12 @@ export function SorunAkisOzeti({ sorunTipi, icinde = false }: Props) {
   const aciklama = sorunAkisAciklama(sorunTipi);
   const tip = sorunTipiBul(sorunTipi);
   const [aktifIdx, setAktifIdx] = useState(0);
+  const [animasyonEpoch, setAnimasyonEpoch] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
     setAktifIdx(0);
+    setAnimasyonEpoch((e) => e + 1);
   }, [sorunTipi]);
 
   useEffect(() => {
@@ -37,7 +39,12 @@ export function SorunAkisOzeti({ sorunTipi, icinde = false }: Props) {
       setAktifIdx((i) => (i + 1) % aciklama.adimlar.length);
     }, ADIM_SURE_MS);
     return () => clearInterval(id);
-  }, [aciklama, reducedMotion]);
+  }, [aciklama, reducedMotion, animasyonEpoch]);
+
+  const adimSec = useCallback((idx: number) => {
+    setAktifIdx(idx);
+    setAnimasyonEpoch((e) => e + 1);
+  }, []);
 
   if (!aciklama || !tip) return null;
 
@@ -46,7 +53,7 @@ export function SorunAkisOzeti({ sorunTipi, icinde = false }: Props) {
   const icerik = (
     <>
       <p
-        className={`text-[11px] text-slate-600 leading-relaxed ${icinde ? "mt-3 pt-3 border-t border-amber-200/70" : "mb-2.5"}`}
+        className={`text-[11px] text-slate-600 leading-relaxed ${icinde ? "pt-2 border-t border-amber-200/70" : "mb-2.5"}`}
       >
         <span className="font-semibold text-slate-700">Hizmet: </span>
         {aciklama.hizmet}
@@ -65,19 +72,22 @@ export function SorunAkisOzeti({ sorunTipi, icinde = false }: Props) {
               <div key={adim.kisa} className="flex items-start flex-1 min-w-0">
                 <div className="flex flex-col items-center flex-1 min-w-[2.75rem]">
                   <div className="flex h-10 w-10 items-center justify-center">
-                    <div
+                    <button
+                      type="button"
+                      onClick={() => adimSec(i)}
+                      aria-label={`${adim.kisa}: ${adimAciklamaMetni(sorunTipi, i, adimlar.length)}`}
+                      aria-current={aktif ? "step" : undefined}
                       className={[
-                        "relative flex h-7 w-7 items-center justify-center rounded-full border text-xs transition-all duration-300",
+                        "relative flex h-7 w-7 items-center justify-center rounded-full border text-xs transition-all duration-300 touch-manipulation",
                         aktif
                           ? "border-amber-500 bg-amber-100 animate-nasil-glow"
                           : gecildi
-                            ? "border-amber-300 bg-white/80"
-                            : "border-slate-200 bg-white text-slate-400",
+                            ? "border-amber-300 bg-white/80 hover:border-amber-400"
+                            : "border-slate-200 bg-white text-slate-400 hover:border-amber-300 hover:text-slate-600",
                       ].join(" ")}
-                      aria-hidden
                     >
                       <span className="text-[11px]">{adim.ikon}</span>
-                    </div>
+                    </button>
                   </div>
                   <p
                     className={[
@@ -105,19 +115,13 @@ export function SorunAkisOzeti({ sorunTipi, icinde = false }: Props) {
         </div>
       </div>
 
-      {reducedMotion ? (
-        <p className="text-[10px] text-slate-500 text-center mt-1.5">
-          {adimlar.map((a) => a.kisa).join(" → ")}
-        </p>
-      ) : (
-        <p
-          className="text-[10px] text-slate-500 text-center mt-1.5 min-h-[1.25rem]"
-          aria-live="polite"
-        >
-          {adimlar[aktifIdx].kisa} —{" "}
-          {adimAciklamaMetni(sorunTipi, aktifIdx, adimlar.length)}
-        </p>
-      )}
+      <p
+        className="text-[10px] text-slate-500 text-center mt-1.5 min-h-[1.25rem]"
+        aria-live="polite"
+      >
+        {adimlar[aktifIdx].kisa} —{" "}
+        {adimAciklamaMetni(sorunTipi, aktifIdx, adimlar.length)}
+      </p>
     </>
   );
 

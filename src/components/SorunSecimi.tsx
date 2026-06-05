@@ -40,7 +40,7 @@ export function SorunSecimi({
                 <button
                   type="button"
                   onClick={() => onTipSec(tip.id)}
-                  className="w-full text-left px-4 py-3.5 flex items-center gap-3"
+                  className="w-full text-left px-4 pt-3.5 pb-2 flex items-center gap-3"
                 >
                   <span className="text-xl shrink-0">{tip.icon}</span>
                   <span className="font-medium text-sm flex-1 min-w-0 text-amber-900">
@@ -48,7 +48,7 @@ export function SorunSecimi({
                   </span>
                   <span className="shrink-0 text-amber-600 text-lg">✓</span>
                 </button>
-                <div className="px-4 pb-4">
+                <div className="px-4 pb-3 pt-0">
                   <SorunAkisOzeti sorunTipi={tip.id} icinde />
                   {onDevam && (
                     <Btn type="button" className="w-full mt-3" onClick={onDevam}>

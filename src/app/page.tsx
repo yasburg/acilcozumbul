@@ -96,6 +96,10 @@ export default function HomePage() {
   const [sorunDetayHatasi, setSorunDetayHatasi] = useState(false);
   const [arizaAdresDuzenle, setArizaAdresDuzenle] = useState(false);
   const [yasalOnay, setYasalOnay] = useState(false);
+  const [bilgiAlanMesajlari, setBilgiAlanMesajlari] = useState({
+    yasalOnay: "",
+    telefon: "",
+  });
 
   const [form, setForm] = useState({
     ad: "",
@@ -133,6 +137,9 @@ export default function HomePage() {
     if (step !== "konum") {
       setAdSoyadHatasi(false);
       setArizaAdresDuzenle(false);
+    }
+    if (step !== "bilgi") {
+      setBilgiAlanMesajlari({ yasalOnay: "", telefon: "" });
     }
   }, [step]);
 
@@ -399,19 +406,40 @@ export default function HomePage() {
     }
   }
 
+  function bilgiAdimiAlanlariniDogrula(): boolean {
+    const mesajlar = { yasalOnay: "", telefon: "" };
+    let gecersiz = false;
+
+    if (!yasalOnay) {
+      mesajlar.yasalOnay = "Yasal metinleri onaylamanız zorunludur.";
+      gecersiz = true;
+    }
+    if (!form.telefon.trim()) {
+      mesajlar.telefon = "Telefon numarası zorunludur.";
+      gecersiz = true;
+    } else if (!telefonGecerliMi(form.telefon)) {
+      mesajlar.telefon = telefonDogrulamaHatasi(form.telefon);
+      gecersiz = true;
+    }
+
+    setBilgiAlanMesajlari(mesajlar);
+    if (gecersiz) {
+      setError(
+        mesajlar.yasalOnay && mesajlar.telefon
+          ? "Devam etmek için zorunlu alanları doldurun."
+          : mesajlar.yasalOnay || mesajlar.telefon
+      );
+      return false;
+    }
+
+    setBilgiAlanMesajlari({ yasalOnay: "", telefon: "" });
+    return true;
+  }
+
   async function kodGonder() {
     setError("");
     setBilgiMesaj("");
-    if (!yasalOnay) {
-      setError("SMS göndermek için yasal metinleri onaylayın.");
-      return;
-    }
-    if (!form.telefon.trim()) {
-      setError("Telefon numarası girin (05XX XXX XX XX).");
-      return;
-    }
-    if (!telefonGecerliMi(form.telefon)) {
-      setError(telefonDogrulamaHatasi(form.telefon));
+    if (!bilgiAdimiAlanlariniDogrula()) {
       return;
     }
 
@@ -999,7 +1027,21 @@ export default function HomePage() {
             </Card>
           )}
 
-          <YasalOnayKutusu checked={yasalOnay} onChange={setYasalOnay} />
+          <YasalOnayKutusu
+            checked={yasalOnay}
+            onChange={(checked) => {
+              setYasalOnay(checked);
+              if (checked) {
+                setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
+              }
+            }}
+            invalid={!!bilgiAlanMesajlari.yasalOnay}
+          />
+          {bilgiAlanMesajlari.yasalOnay && (
+            <p className="text-sm text-red-600 -mt-2" role="alert">
+              {bilgiAlanMesajlari.yasalOnay}
+            </p>
+          )}
 
           {telefonDogrulandi ? (
             <>
@@ -1023,11 +1065,15 @@ export default function HomePage() {
               onSubmit={(e) => {
                 e.preventDefault();
                 if (loading) return;
-                if (!yasalOnay) {
-                  setError("Devam etmek için yasal metinleri onaylayın.");
-                  return;
-                }
                 if (kodGirisAcik) {
+                  if (!yasalOnay) {
+                    setBilgiAlanMesajlari((m) => ({
+                      ...m,
+                      yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
+                    }));
+                    setError("Devam etmek için yasal metinleri onaylayın.");
+                    return;
+                  }
                   if (otpKod.length === 6) void kodDogrula();
                   else setError("6 haneli doğrulama kodunu girin.");
                   return;
@@ -1040,14 +1086,24 @@ export default function HomePage() {
                 type="tel"
                 placeholder="05XX XXX XX XX"
                 value={form.telefon}
-                onChange={(e) => update("telefon", e.target.value)}
+                onChange={(e) => {
+                  update("telefon", e.target.value);
+                  setBilgiAlanMesajlari((m) => ({ ...m, telefon: "" }));
+                  setError("");
+                }}
                 autoComplete="tel"
                 inputMode="tel"
                 enterKeyHint="go"
                 name="telefon"
                 required
                 disabled={kodGirisAcik}
+                invalid={!!bilgiAlanMesajlari.telefon}
               />
+              {bilgiAlanMesajlari.telefon && (
+                <p className="text-sm text-red-600 -mt-2" role="alert">
+                  {bilgiAlanMesajlari.telefon}
+                </p>
+              )}
 
               {kodGirisAcik && (
                 <>
@@ -1096,7 +1152,7 @@ export default function HomePage() {
                       ⚠️ {otpHata}
                     </div>
                   )}
-                  <Btn type="submit" disabled={loading || otpKod.length !== 6 || !yasalOnay}>
+                  <Btn type="submit" disabled={loading || otpKod.length !== 6}>
                     {loading ? "Doğrulanıyor…" : "Onayla — Arıza Konumuna Git"}
                   </Btn>
                   <button
@@ -1127,7 +1183,7 @@ export default function HomePage() {
                   <Btn variant="outline" type="button" onClick={() => adimGit("sorun")}>
                     Geri
                   </Btn>
-                  <Btn type="submit" disabled={loading || !yasalOnay}>
+                  <Btn type="submit" disabled={loading}>
                     {loading ? "Kod gönderiliyor…" : "Doğrulama Kodu Gönder"}
                   </Btn>
                   {(otpBekleniyor || yenidenGonderSn > 0) && (

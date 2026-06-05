@@ -52,6 +52,7 @@ type Props = {
 export function NasilCalisirSerit({ aktifFormAdimi = "sorun" }: Props) {
   const [kapali, setKapali] = useState(false);
   const [otomatikIdx, setOtomatikIdx] = useState(0);
+  const [animasyonEpoch, setAnimasyonEpoch] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   const anchor = useMemo(
@@ -81,13 +82,17 @@ export function NasilCalisirSerit({ aktifFormAdimi = "sorun" }: Props) {
       setOtomatikIdx((i) => (i + 1) % NASIL_ADIMLAR.length);
     }, ADIM_SURE_MS);
     return () => clearInterval(id);
-  }, [reducedMotion, kapali]);
+  }, [reducedMotion, kapali, animasyonEpoch]);
 
   useEffect(() => {
     setOtomatikIdx(anchor);
+    setAnimasyonEpoch((e) => e + 1);
   }, [anchor]);
 
-  const aktifIdx = reducedMotion ? anchor : otomatikIdx;
+  const adimSec = useCallback((idx: number) => {
+    setOtomatikIdx(idx);
+    setAnimasyonEpoch((e) => e + 1);
+  }, []);
 
   const toggle = useCallback(() => {
     setKapali((prev) => {
@@ -115,7 +120,7 @@ export function NasilCalisirSerit({ aktifFormAdimi = "sorun" }: Props) {
     );
   }
 
-  const aktifAdim = NASIL_ADIMLAR[aktifIdx];
+  const aktifAdim = NASIL_ADIMLAR[otomatikIdx];
 
   return (
     <Card className="mb-4 !py-3 !px-3 border-amber-100 bg-gradient-to-b from-amber-50/80 to-white overflow-visible">
@@ -135,25 +140,28 @@ export function NasilCalisirSerit({ aktifFormAdimi = "sorun" }: Props) {
       <div className="overflow-x-auto -mx-1 px-1 pt-2 pb-1">
         <div className="flex items-start min-w-[min(100%,280px)] py-1">
           {NASIL_ADIMLAR.map((adim, i) => {
-            const aktif = i === aktifIdx;
-            const gecildi = i < aktifIdx;
+            const aktif = i === otomatikIdx;
+            const gecildi = i < otomatikIdx;
             return (
               <div key={adim.baslik} className="flex items-start flex-1 min-w-0">
                 <div className="flex flex-col items-center flex-1 min-w-[4.5rem]">
                   <div className="flex h-14 w-14 items-center justify-center">
-                    <div
+                    <button
+                      type="button"
+                      onClick={() => adimSec(i)}
+                      aria-label={`${adim.baslik}: ${adim.aciklama}`}
+                      aria-current={aktif ? "step" : undefined}
                       className={[
-                        "relative flex h-10 w-10 items-center justify-center rounded-full border-2 text-lg transition-all duration-300",
+                        "relative flex h-10 w-10 items-center justify-center rounded-full border-2 text-lg transition-all duration-300 touch-manipulation",
                         aktif
                           ? "border-amber-500 bg-amber-100 shadow-sm animate-nasil-adim-aktif animate-nasil-glow"
                           : gecildi
-                            ? "border-amber-300 bg-amber-50"
-                            : "border-slate-200 bg-white text-slate-400",
+                            ? "border-amber-300 bg-amber-50 hover:border-amber-400"
+                            : "border-slate-200 bg-white text-slate-400 hover:border-amber-300 hover:text-slate-600",
                       ].join(" ")}
-                      aria-hidden
                     >
                       <span className="relative">{adim.ikon}</span>
-                    </div>
+                    </button>
                   </div>
                   <p
                     className={[
@@ -172,7 +180,7 @@ export function NasilCalisirSerit({ aktifFormAdimi = "sorun" }: Props) {
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-500 ease-out"
                       style={{
-                        width: aktifIdx > i ? "100%" : "0%",
+                        width: otomatikIdx > i ? "100%" : "0%",
                       }}
                     />
                   </div>
