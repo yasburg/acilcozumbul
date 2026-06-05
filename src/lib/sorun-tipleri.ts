@@ -61,7 +61,7 @@ const SORUN_CAGRI_BUTON: Record<SorunTipiId, string> = {
 };
 
 export function sorunCagriButonEtiketi(sorunTipi?: string): string {
-  const id = talepSorunTipi({ sorunTipi });
+  const id = talepSorunTipi({ sorunTipi: sorunTipi });
   const tip = sorunTipiBul(id);
   const metin = SORUN_CAGRI_BUTON[id];
   return `${tip?.icon ?? "🚛"} ${metin}`;
@@ -87,14 +87,14 @@ export const SORUN_HEDEF_KONUM_ATLANIR: SorunTipiId[] = [
 ];
 
 export function sorunHedefKonumGerekliMi(sorunTipi?: string): boolean {
-  const id = talepSorunTipi({ sorunTipi });
+  const id = talepSorunTipi({ sorunTipi: sorunTipi });
   return !SORUN_HEDEF_KONUM_ATLANIR.includes(id);
 }
 
 /** Konum adımında fotoğraf alanı göster (zorunlu veya isteğe bağlı) */
 export function sorunFotografAlaniGoster(sorunTipi?: string): boolean {
   if (!sorunTipi?.trim()) return false;
-  const id = talepSorunTipi({ sorunTipi });
+  const id = talepSorunTipi({ sorunTipi: sorunTipi });
   return (
     SORUN_FOTOGRAF_TIPLERI.includes(id) ||
     SORUN_ARAC_MODELI_TIPLERI.includes(id)
@@ -102,12 +102,12 @@ export function sorunFotografAlaniGoster(sorunTipi?: string): boolean {
 }
 
 export function sorunFotografGerekliMi(sorunTipi?: string): boolean {
-  const id = talepSorunTipi({ sorunTipi });
+  const id = talepSorunTipi({ sorunTipi: sorunTipi });
   return SORUN_FOTOGRAF_TIPLERI.includes(id);
 }
 
 export function sorunAracModeliGerekliMi(sorunTipi?: string): boolean {
-  const id = talepSorunTipi({ sorunTipi });
+  const id = talepSorunTipi({ sorunTipi: sorunTipi });
   return SORUN_ARAC_MODELI_TIPLERI.includes(id);
 }
 

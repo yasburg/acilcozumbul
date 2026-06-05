@@ -74,7 +74,7 @@ export function sorunAkisAciklama(
   sorunTipi?: string
 ): SorunAkisAciklama | null {
   if (!sorunTipi?.trim()) return null;
-  const id = talepSorunTipi({ sorunTipi });
+  const id = talepSorunTipi({ sorunTipi: sorunTipi });
   return SORUN_AKIS_ACIKLAMA[id] ?? null;
 }
 
