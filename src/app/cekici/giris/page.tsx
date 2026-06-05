@@ -81,7 +81,7 @@ function GirisIcerik() {
   }
 
   return (
-    <MobileShell subtitle="Üye girişi — çekici, lastikçi, anahtarcı">
+    <MobileShell subtitle="Üye girişi">
       {typeof window !== "undefined" &&
         window.location.protocol === "http:" &&
         !window.location.hostname.includes("localhost") && (

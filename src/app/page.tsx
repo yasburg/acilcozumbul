@@ -12,12 +12,14 @@ import {
   sorunCagriButonEtiketi,
   sorunFotografAlaniGoster,
   sorunFotografGerekliMi,
+  sorunHedefKonumGerekliMi,
   sorunMetniOlustur,
   sorunTipiBul,
 } from "@/lib/sorun-tipleri";
 import { KonumIzniYardim } from "@/components/KonumIzniYardim";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
+import { NasilCalisirSerit } from "@/components/NasilCalisirSerit";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import {
   geocodeAdres,
@@ -78,7 +80,6 @@ export default function HomePage() {
   const [gpsGuvenli, setGpsGuvenli] = useState(false);
   const [konumIzni, setKonumIzni] = useState<KonumIzniDurumu>("unknown");
   const [konumIzniBekleniyor, setKonumIzniBekleniyor] = useState(false);
-  const sorunDevamRef = useRef<HTMLDivElement>(null);
   const konumIsimRef = useRef<HTMLDivElement>(null);
   const aracModeliRef = useRef<HTMLDivElement>(null);
   const fotografRef = useRef<HTMLDivElement>(null);
@@ -118,16 +119,6 @@ export default function HomePage() {
     funnelKaydet("form_basla");
   }, []);
 
-  useEffect(() => {
-    if (step !== "sorun" || !form.sorunTipi) return;
-    const t = window.setTimeout(() => {
-      sorunDevamRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-      });
-    }, 150);
-    return () => window.clearTimeout(t);
-  }, [form.sorunTipi, step]);
 
   stepRef.current = step;
   formLatRef.current = form.lat;
@@ -369,9 +360,9 @@ export default function HomePage() {
       }
     }
 
-    if (hedefIdx > sorunIdx && !yasalOnay) {
+    if (hedefIdx > bilgiIdx && !yasalOnay) {
       setError("Devam etmek için yasal metinleri onaylayın.");
-      setStep("sorun");
+      setStep("bilgi");
       return;
     }
 
@@ -806,7 +797,7 @@ export default function HomePage() {
     }
     if (!yasalOnay) {
       setError("Talep göndermek için yasal metinleri onaylayın.");
-      setStep("sorun");
+      setStep("bilgi");
       return;
     }
     if (!telefonDogrulandi) {
@@ -845,13 +836,14 @@ export default function HomePage() {
       setStep("detay");
       return;
     }
-    if (!form.hedefAdres) {
+    if (sorunHedefKonumGerekliMi(form.sorunTipi) && !form.hedefAdres) {
       setError("Aracın çekileceği adres gerekli.");
       setStep("hedef");
       return;
     }
 
     setLoading(true);
+    const hedefGerekli = sorunHedefKonumGerekliMi(form.sorunTipi);
     try {
       const res = await fetch("/api/talep", {
         method: "POST",
@@ -861,11 +853,15 @@ export default function HomePage() {
           soyad: form.soyad,
           telefon: form.telefon,
           konum: { lat: form.lat, lng: form.lng, adres: form.adres },
-          hedefKonum: {
-            lat: form.hedefLat,
-            lng: form.hedefLng,
-            adres: form.hedefAdres,
-          },
+          ...(hedefGerekli
+            ? {
+                hedefKonum: {
+                  lat: form.hedefLat,
+                  lng: form.hedefLng,
+                  adres: form.hedefAdres,
+                },
+              }
+            : {}),
           sorunTipi: form.sorunTipi,
           sorunDetay: form.sorunDetay,
           aracModeli: form.aracModeli.trim() || undefined,
@@ -891,13 +887,11 @@ export default function HomePage() {
     }
   }
 
-  const steps: { key: Step; label: string }[] = [
-    { key: "sorun", label: "1" },
-    { key: "bilgi", label: "2" },
-    { key: "konum", label: "3" },
-    { key: "detay", label: "4" },
-    { key: "hedef", label: "5" },
-  ];
+  const hedefKonumGerekli = sorunHedefKonumGerekliMi(form.sorunTipi);
+
+  const steps: { key: Step; label: string }[] = STEP_SIRA.filter(
+    (s) => s !== "hedef" || hedefKonumGerekli
+  ).map((key, i) => ({ key, label: String(i + 1) }));
 
   const sorunLabel = form.sorunTipi
     ? sorunTipiBul(form.sorunTipi)?.label
@@ -915,6 +909,12 @@ export default function HomePage() {
     !!form.sorunTipi && (arızaKoordinatiVar || !!form.adres.trim());
 
   const googleOneriAktif = googleMapsYapilandirildi();
+
+  useEffect(() => {
+    if (step === "hedef" && !hedefKonumGerekli) {
+      setStep("detay");
+    }
+  }, [step, hedefKonumGerekli]);
 
   useEffect(() => {
     if (step !== "hedef") {
@@ -948,6 +948,8 @@ export default function HomePage() {
         ))}
       </div>
 
+      <NasilCalisirSerit aktifFormAdimi={step} />
+
       {error && (
         <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {error}
@@ -963,39 +965,22 @@ export default function HomePage() {
       {step === "sorun" && (
         <div className="space-y-4 animate-fade-in">
           <h2 className="text-xl font-bold">Sorununuz</h2>
-          <p className="text-slate-500 text-sm">
-            Önce aracınızdaki sorunu seçin; ardından telefon doğrulaması,
-            konum ve sorun detayları istenecek.
-          </p>
+          <p className="text-slate-500 text-sm">Aşağıdan sorununuzu seçin.</p>
           <SorunSecimi
             seciliTip={form.sorunTipi}
             detay={form.sorunDetay}
             onTipSec={(id) => update("sorunTipi", id)}
             onDetayChange={(v) => update("sorunDetay", v)}
             sadeceTipSecimi
+            onDevam={() => {
+              if (!form.sorunTipi) {
+                setError("Lütfen sorununuzu seçin.");
+                return;
+              }
+              setError("");
+              adimGit("bilgi");
+            }}
           />
-          <YasalOnayKutusu checked={yasalOnay} onChange={setYasalOnay} />
-
-          <div ref={sorunDevamRef} className="flex gap-3 pt-2 scroll-mt-4">
-            <Btn
-              className="w-full"
-              onClick={() => {
-                if (!yasalOnay) {
-                  setError("Devam etmek için yasal metinleri onaylayın.");
-                  return;
-                }
-                if (!form.sorunTipi) {
-                  setError("Lütfen sorununuzu seçin.");
-                  return;
-                }
-                setError("");
-                adimGit("bilgi");
-              }}
-              disabled={!form.sorunTipi || !yasalOnay}
-            >
-              Devam Et
-            </Btn>
-          </div>
         </div>
       )}
 
@@ -1014,6 +999,8 @@ export default function HomePage() {
             </Card>
           )}
 
+          <YasalOnayKutusu checked={yasalOnay} onChange={setYasalOnay} />
+
           {telefonDogrulandi ? (
             <>
               <Card className="bg-emerald-50 border-emerald-200">
@@ -1025,7 +1012,7 @@ export default function HomePage() {
                 <Btn variant="outline" type="button" onClick={() => adimGit("sorun")}>
                   Geri
                 </Btn>
-                <Btn type="button" onClick={() => adimGit("konum")}>
+                <Btn type="button" onClick={() => adimGit("konum")} disabled={!yasalOnay}>
                   Arıza Konumuna Git
                 </Btn>
               </div>
@@ -1109,7 +1096,7 @@ export default function HomePage() {
                       ⚠️ {otpHata}
                     </div>
                   )}
-                  <Btn type="submit" disabled={loading || otpKod.length !== 6}>
+                  <Btn type="submit" disabled={loading || otpKod.length !== 6 || !yasalOnay}>
                     {loading ? "Doğrulanıyor…" : "Onayla — Arıza Konumuna Git"}
                   </Btn>
                   <button
@@ -1140,7 +1127,7 @@ export default function HomePage() {
                   <Btn variant="outline" type="button" onClick={() => adimGit("sorun")}>
                     Geri
                   </Btn>
-                  <Btn type="submit" disabled={loading}>
+                  <Btn type="submit" disabled={loading || !yasalOnay}>
                     {loading ? "Kod gönderiliyor…" : "Doğrulama Kodu Gönder"}
                   </Btn>
                   {(otpBekleniyor || yenidenGonderSn > 0) && (
@@ -1167,8 +1154,9 @@ export default function HomePage() {
         <div className="space-y-4 animate-fade-in">
           <h2 className="text-xl font-bold">Sorun Detayı</h2>
           <p className="text-slate-500 text-sm">
-            Aracınız ve arıza hakkında bilgi verin — çekici doğru teklif
-            verebilsin.
+            {hedefKonumGerekli
+              ? "Aracınız ve arıza hakkında bilgi verin — çekici doğru teklif verebilsin."
+              : "Bulunduğunuz yerde hizmet alacaksınız — ek bilgi verin."}
           </p>
 
           {sorunLabel && (
@@ -1266,10 +1254,25 @@ export default function HomePage() {
             </Btn>
             <Btn
               onClick={() => {
-                if (detayAdimiDevam()) adimGit("hedef");
+                if (!detayAdimiDevam()) return;
+                if (hedefKonumGerekli) {
+                  adimGit("hedef");
+                } else {
+                  void cekiciBul();
+                }
               }}
+              disabled={loading}
             >
-              Devam Et
+              {loading ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Spinner className="size-4 border-white/40 border-t-white" />
+                  Gönderiliyor…
+                </span>
+              ) : hedefKonumGerekli ? (
+                "Devam Et"
+              ) : (
+                sorunCagriButonEtiketi(form.sorunTipi)
+              )}
             </Btn>
           </div>
         </div>
@@ -1656,14 +1659,16 @@ export default function HomePage() {
         </div>
       )}
 
-      <p className="text-center text-xs text-slate-500 mt-8">
-        <Link
-          href="/cekici/giris"
-          className="text-amber-600 underline font-medium"
-        >
-          Çekici / lastikçi / anahtarcı girişi
-        </Link>
-      </p>
+      {step === "sorun" && (
+        <p className="text-center text-xs text-slate-500 mt-8">
+          <Link
+            href="/cekici/giris"
+            className="text-amber-600 underline font-medium"
+          >
+            Çekici / lastikçi / anahtarcı girişi
+          </Link>
+        </p>
+      )}
     </MobileShell>
   );
 }

@@ -1,0 +1,200 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { sorunAkisAciklama } from "@/lib/sorun-akis-aciklama";
+import { sorunTipiBul } from "@/lib/sorun-tipleri";
+
+const ADIM_SURE_MS = 2500;
+
+type Props = {
+  sorunTipi: string;
+  /** Seçili sorun kutusunun içinde — dış çerçeve ve başlık yok */
+  icinde?: boolean;
+};
+
+/** Seçilen sorun tipi için küçük hizmet + süreç özeti */
+export function SorunAkisOzeti({ sorunTipi, icinde = false }: Props) {
+  const aciklama = sorunAkisAciklama(sorunTipi);
+  const tip = sorunTipiBul(sorunTipi);
+  const [aktifIdx, setAktifIdx] = useState(0);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    setAktifIdx(0);
+  }, [sorunTipi]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const guncelle = () => setReducedMotion(mq.matches);
+    guncelle();
+    mq.addEventListener("change", guncelle);
+    return () => mq.removeEventListener("change", guncelle);
+  }, []);
+
+  useEffect(() => {
+    if (!aciklama || reducedMotion) return;
+    const id = setInterval(() => {
+      setAktifIdx((i) => (i + 1) % aciklama.adimlar.length);
+    }, ADIM_SURE_MS);
+    return () => clearInterval(id);
+  }, [aciklama, reducedMotion]);
+
+  if (!aciklama || !tip) return null;
+
+  const adimlar = aciklama.adimlar;
+
+  const icerik = (
+    <>
+      <p
+        className={`text-[11px] text-slate-600 leading-relaxed ${icinde ? "mt-3 pt-3 border-t border-amber-200/70" : "mb-2.5"}`}
+      >
+        <span className="font-semibold text-slate-700">Hizmet: </span>
+        {aciklama.hizmet}
+      </p>
+
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5">
+        Süreç
+      </p>
+
+      <div className="overflow-x-auto -mx-0.5 px-0.5 pt-1 pb-0.5">
+        <div className="flex items-start min-w-0">
+          {adimlar.map((adim, i) => {
+            const aktif = i === aktifIdx;
+            const gecildi = i < aktifIdx;
+            return (
+              <div key={adim.kisa} className="flex items-start flex-1 min-w-0">
+                <div className="flex flex-col items-center flex-1 min-w-[2.75rem]">
+                  <div className="flex h-10 w-10 items-center justify-center">
+                    <div
+                      className={[
+                        "relative flex h-7 w-7 items-center justify-center rounded-full border text-xs transition-all duration-300",
+                        aktif
+                          ? "border-amber-500 bg-amber-100 animate-nasil-glow"
+                          : gecildi
+                            ? "border-amber-300 bg-white/80"
+                            : "border-slate-200 bg-white text-slate-400",
+                      ].join(" ")}
+                      aria-hidden
+                    >
+                      <span className="text-[11px]">{adim.ikon}</span>
+                    </div>
+                  </div>
+                  <p
+                    className={[
+                      "mt-0.5 text-[9px] font-medium text-center leading-tight",
+                      aktif ? "text-amber-900 font-semibold" : "text-slate-500",
+                    ].join(" ")}
+                  >
+                    {adim.kisa}
+                  </p>
+                </div>
+                {i < adimlar.length - 1 && (
+                  <div
+                    className="flex-1 h-px mt-[1.125rem] min-w-[0.35rem] mx-px rounded-full bg-slate-200 overflow-hidden"
+                    aria-hidden
+                  >
+                    <div
+                      className="h-full rounded-full bg-amber-400 transition-all duration-500"
+                      style={{ width: aktifIdx > i ? "100%" : "0%" }}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {reducedMotion ? (
+        <p className="text-[10px] text-slate-500 text-center mt-1.5">
+          {adimlar.map((a) => a.kisa).join(" → ")}
+        </p>
+      ) : (
+        <p
+          className="text-[10px] text-slate-500 text-center mt-1.5 min-h-[1.25rem]"
+          aria-live="polite"
+        >
+          {adimlar[aktifIdx].kisa} —{" "}
+          {adimAciklamaMetni(sorunTipi, aktifIdx, adimlar.length)}
+        </p>
+      )}
+    </>
+  );
+
+  if (icinde) {
+    return (
+      <div className="w-full animate-fade-in" role="region" aria-label={`${tip.label} süreci`}>
+        {icerik}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="rounded-xl border border-amber-200/80 bg-amber-50/60 px-3 py-2.5 animate-fade-in"
+      role="region"
+      aria-label={`${tip.label} süreci`}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-base shrink-0" aria-hidden>
+          {tip.icon}
+        </span>
+        <p className="text-xs font-semibold text-amber-900 leading-snug">
+          {tip.label}
+        </p>
+      </div>
+
+      {icerik}
+    </div>
+  );
+}
+
+function adimAciklamaMetni(
+  sorunTipi: string,
+  idx: number,
+  toplam: number
+): string {
+  const hedefVar = toplam >= 5;
+  const genel: Record<number, string> = hedefVar
+    ? {
+        0: "Aracınızın bulunduğu yeri girin",
+        1: "Fotoğraf ve araç bilgisi (gerekirse)",
+        2: "Aracın götürüleceği yeri seçin",
+        3: "Yakındaki hizmet verenler teklif gönderir",
+        4: "En uygun teklifi seçin, en kısa sürede gelsin",
+      }
+    : {
+        0: "Bulunduğunuz konumu paylaşın",
+        1: "Gerekirse ek detay verin",
+        2: "Teklifler gelir, fiyat ve süreyi karşılaştırın",
+        3: "Bir teklif seçin, hizmet yerinize gelsin",
+      };
+
+  if (sorunTipi === "lastik") {
+    if (idx === 2) return "Yakındaki lastikçiler fiyat ve süre teklif eder";
+    if (idx === 3) return "Lastikçi yola çıksın, yerinde tamir veya değişim";
+  }
+  if (sorunTipi === "aku") {
+    if (idx === 2) return "Yol yardım ekipleri teklif gönderir";
+    if (idx === 3) return "Takviye veya akü değişimi yerinde yapılır";
+  }
+  if (sorunTipi === "yakit") {
+    if (idx === 2) return "Yakıt desteği verenler teklif eder";
+    if (idx === 3) return "En az 1 litre yakıt getirilir";
+  }
+  if (sorunTipi === "kilit") {
+    if (idx === 2) return "Anahtarcılar teklif gönderir";
+    if (idx === 3) return "Anahtarcı gelir, kilidi açar";
+  }
+  if (sorunTipi === "ariza" && idx === 2) {
+    return "Tamir servisi veya oto sanayi seçin";
+  }
+  if (sorunTipi === "kaza" && idx === 2) {
+    return "Aracın çekileceği servis veya adresi seçin";
+  }
+  if (sorunTipi === "cekici" && idx === 2) {
+    return "Aracın götürüleceği hedefi belirleyin";
+  }
+
+  return genel[idx] ?? "";
+}

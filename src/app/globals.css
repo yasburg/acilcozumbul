@@ -104,3 +104,40 @@ select {
   animation: konum-ring 0.6s ease-out;
   background: rgb(16 185 129 / 0.25);
 }
+
+@keyframes nasil-adim-aktif {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.animate-nasil-adim-aktif {
+  animation: nasil-adim-aktif 2s ease-in-out infinite;
+}
+
+@keyframes nasil-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(251 191 36 / 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgb(251 191 36 / 0);
+  }
+}
+
+.animate-nasil-glow {
+  animation: nasil-glow 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-nasil-adim-aktif,
+  .animate-nasil-glow {
+    animation: none;
+  }
+}

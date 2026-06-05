@@ -78,6 +78,19 @@ export const SORUN_FOTOGRAF_TIPLERI: SorunTipiId[] = [
 /** Çekici / kurtarma — araç modeli istenen tipler */
 export const SORUN_ARAC_MODELI_TIPLERI: SorunTipiId[] = ["ariza", "kaza", "cekici"];
 
+/** Yerinde müdahale — hedef (çekilecek) adres adımı yok */
+export const SORUN_HEDEF_KONUM_ATLANIR: SorunTipiId[] = [
+  "lastik",
+  "aku",
+  "yakit",
+  "kilit",
+];
+
+export function sorunHedefKonumGerekliMi(sorunTipi?: string): boolean {
+  const id = talepSorunTipi({ sorunTipi });
+  return !SORUN_HEDEF_KONUM_ATLANIR.includes(id);
+}
+
 /** Konum adımında fotoğraf alanı göster (zorunlu veya isteğe bağlı) */
 export function sorunFotografAlaniGoster(sorunTipi?: string): boolean {
   if (!sorunTipi?.trim()) return false;

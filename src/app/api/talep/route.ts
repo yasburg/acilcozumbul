@@ -15,6 +15,7 @@ import { parseIlIlce } from "@/lib/konum-parse";
 import {
   sorunAracModeliGerekliMi,
   sorunFotografGerekliMi,
+  sorunHedefKonumGerekliMi,
   sorunMetniOlustur,
   sorunTipiBul,
 } from "@/lib/sorun-tipleri";
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!hedefKonum?.adres) {
+  if (sorunHedefKonumGerekliMi(tip) && !hedefKonum?.adres) {
     return NextResponse.json(
       { error: "Aracın çekileceği adres gerekli." },
       { status: 400 }
@@ -135,11 +136,15 @@ export async function POST(request: NextRequest) {
     },
     konumIl: konumIl ?? undefined,
     konumIlce: konumIlce ?? undefined,
-    hedefKonum: {
-      lat: hedefKonum.lat ?? 0,
-      lng: hedefKonum.lng ?? 0,
-      adres: hedefKonum.adres.trim(),
-    },
+    ...(sorunHedefKonumGerekliMi(tip) && hedefKonum?.adres
+      ? {
+          hedefKonum: {
+            lat: hedefKonum.lat ?? 0,
+            lng: hedefKonum.lng ?? 0,
+            adres: hedefKonum.adres.trim(),
+          },
+        }
+      : {}),
     sorun: sorunTam,
     sorunTipi: tip,
     sorunDetay: sorunDetay?.trim(),
