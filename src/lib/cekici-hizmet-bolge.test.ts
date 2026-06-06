@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   cekiciHizmetBolgeleri,
+  kayitVarsayilanHizmetBolgeleri,
   menzilKmSinirla,
   normalizeHizmetBolgeleri,
 } from "./cekici-hizmet-bolge";
+import { ilceListesi } from "./il-ilce";
 import { DESTEKLENEN_ILLER } from "./il-ilce";
 
 describe("G — Veri bütünlüğü", () => {
@@ -34,6 +36,12 @@ describe("G — Veri bütünlüğü", () => {
 
   it("G3: 81 il tanımlı", () => {
     expect(DESTEKLENEN_ILLER.length).toBe(81);
+  });
+
+  it("kayitVarsayilanHizmetBolgeleri seçilen ilin tüm ilçelerini seçer", () => {
+    const b = kayitVarsayilanHizmetBolgeleri("Ankara");
+    expect(b.Ankara).toEqual(ilceListesi("Ankara"));
+    expect(kayitVarsayilanHizmetBolgeleri("Sahte İl")).toEqual({});
   });
 
   it("menzilKmSinirla 0–100", () => {

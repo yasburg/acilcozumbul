@@ -10,10 +10,10 @@ import { cekiciFetch } from "@/lib/cekici-fetch";
 import { DESTEKLENEN_ILLER } from "@/lib/il-ilce";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
-import { telefonDogrulamaHatasi, telefonGecerliMi } from "@/lib/telefon";
+import { telefonDogrulamaHatasi, telefonGecerliMi, telefonMaskele } from "@/lib/telefon";
 import { davetKoduNormalize } from "@/lib/davet-kodu";
 
-type KayitAlan = "ad" | "soyad" | "telefon" | "sifre" | "sifreTekrar" | "yasalOnay";
+type KayitAlan = "ad" | "soyad" | "telefon" | "sehir" | "sifre" | "sifreTekrar" | "yasalOnay";
 
 type AlanHatalari = Record<KayitAlan, boolean>;
 
@@ -21,6 +21,7 @@ const BOS_ALAN_HATALARI: AlanHatalari = {
   ad: false,
   soyad: false,
   telefon: false,
+  sehir: false,
   sifre: false,
   sifreTekrar: false,
   yasalOnay: false,
@@ -62,15 +63,17 @@ function KayitIcerik() {
 
   const adRef = useRef<HTMLDivElement>(null);
   const telefonRef = useRef<HTMLDivElement>(null);
+  const sehirRef = useRef<HTMLDivElement>(null);
   const sifreRef = useRef<HTMLDivElement>(null);
   const sifreTekrarRef = useRef<HTMLDivElement>(null);
   const yasalRef = useRef<HTMLDivElement>(null);
+  const otpRef = useRef<HTMLDivElement>(null);
 
   const [form, setForm] = useState({
     ad: "",
     soyad: "",
     telefon: "",
-    sehir: "İstanbul",
+    sehir: "",
     sifre: "",
     sifreTekrar: "",
     davetKodu: davetParam,
@@ -79,6 +82,11 @@ function KayitIcerik() {
   const [davetGecersiz, setDavetGecersiz] = useState(false);
   const [davetKontrol, setDavetKontrol] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [otpAsamasi, setOtpAsamasi] = useState(false);
+  const [otpKod, setOtpKod] = useState("");
+  const [otpBilgi, setOtpBilgi] = useState("");
+  const [gelistirmeKodu, setGelistirmeKodu] = useState<string | null>(null);
+  const [yenidenSn, setYenidenSn] = useState(0);
   const [error, setError] = useState("");
   const [yasalOnay, setYasalOnay] = useState(false);
   const [alanHatalari, setAlanHatalari] =
@@ -104,6 +112,22 @@ function KayitIcerik() {
       });
     });
   }
+
+  useEffect(() => {
+    if (yenidenSn <= 0) return;
+    const t = window.setInterval(() => {
+      setYenidenSn((s) => (s <= 1 ? 0 : s - 1));
+    }, 1000);
+    return () => window.clearInterval(t);
+  }, [yenidenSn]);
+
+  useEffect(() => {
+    setOtpAsamasi(false);
+    setOtpKod("");
+    setOtpBilgi("");
+    setGelistirmeKodu(null);
+    setYenidenSn(0);
+  }, [form.telefon]);
 
   useEffect(() => {
     const kod = davetKoduNormalize(form.davetKodu.trim());
@@ -161,10 +185,12 @@ function KayitIcerik() {
       !sifreKisa &&
       form.sifre !== form.sifreTekrar;
 
+    const sehirBos = !form.sehir.trim();
     const hatalar: AlanHatalari = {
       ad: adBos,
       soyad: soyadBos,
       telefon: telefonBos || telefonGecersiz,
+      sehir: sehirBos,
       sifre: sifreBos || sifreKisa,
       sifreTekrar: sifreTekrarBos || sifreUyumsuz,
       yasalOnay: !yasalOnay,
@@ -177,6 +203,7 @@ function KayitIcerik() {
     if (telefonBos) mesajlar.telefon = "Telefon numarası girin.";
     else if (telefonGecersiz)
       mesajlar.telefon = telefonDogrulamaHatasi(form.telefon);
+    if (sehirBos) mesajlar.sehir = "Şehir seçin.";
     if (sifreBos) mesajlar.sifre = "Şifre girin.";
     else if (sifreKisa)
       mesajlar.sifre = `Şifre en az ${MIN_SIFRE_UZUNLUK} karakter olmalıdır.`;
@@ -214,6 +241,11 @@ function KayitIcerik() {
           : telefonDogrulamaHatasi(form.telefon),
       },
       {
+        alan: "sehir",
+        ref: sehirRef,
+        mesaj: "Şehir seçin.",
+      },
+      {
         alan: "sifre",
         ref: sifreRef,
         mesaj: mesajlar.sifre ?? "Şifre gerekli.",
@@ -243,11 +275,51 @@ function KayitIcerik() {
     return true;
   }
 
-  async function kayitOl(e: React.FormEvent) {
-    e.preventDefault();
+  async function otpGonder() {
     if (!formDogrula()) return;
 
     setLoading(true);
+    setError("");
+    setOtpBilgi("");
+    try {
+      const res = await cekiciFetch("/api/cekici/kayit/otp/gonder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telefon: form.telefon }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Kod gönderilemedi.");
+
+      setGelistirmeKodu(data.gelistirmeKodu ?? null);
+      setYenidenSn(data.yenidenGonderSn ?? 60);
+      setOtpBilgi(data.mesaj ?? "Doğrulama kodu gönderildi.");
+      setOtpAsamasi(true);
+      setOtpKod("");
+      alanaKaydir(otpRef);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Kod gönderilemedi.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function kayitOl(e: React.FormEvent) {
+    e.preventDefault();
+    if (!otpAsamasi) {
+      await otpGonder();
+      return;
+    }
+
+    if (!formDogrula()) return;
+
+    if (otpKod.length !== 6) {
+      setError("6 haneli doğrulama kodunu girin.");
+      alanaKaydir(otpRef);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
     try {
       const res = await cekiciFetch("/api/cekici/kayit", {
         method: "POST",
@@ -257,6 +329,7 @@ function KayitIcerik() {
           telefon: form.telefon,
           sehir: form.sehir,
           sifre: form.sifre,
+          otpKod,
           kayitKodu: form.davetKodu.trim()
             ? davetKoduNormalize(form.davetKodu)
             : undefined,
@@ -289,6 +362,14 @@ function KayitIcerik() {
         <Card className="border-red-200 bg-red-50 mb-4">
           <p className="text-red-700 text-sm" role="alert">
             {error}
+          </p>
+        </Card>
+      )}
+
+      {otpBilgi && (
+        <Card className="border-emerald-200 bg-emerald-50 mb-4">
+          <p className="text-emerald-800 text-sm" role="status">
+            {otpBilgi}
           </p>
         </Card>
       )}
@@ -350,18 +431,29 @@ function KayitIcerik() {
           <AlanHataMetni mesaj={alanMesajlari.telefon} />
         </div>
 
-        <div className="scroll-mt-28">
+        <div ref={sehirRef} className="scroll-mt-28">
           <SelectField
-            label="İl"
+            label="Şehir"
             value={form.sehir}
-            onChange={(e) => setForm((f) => ({ ...f, sehir: e.target.value }))}
+            onChange={(e) => {
+              alanHatasiTemizle("sehir");
+              setForm((f) => ({ ...f, sehir: e.target.value }));
+            }}
+            invalid={alanHatalari.sehir}
+            required
           >
+            <option value="">Şehir seçin</option>
             {DESTEKLENEN_ILLER.map((s) => (
               <option key={s} value={s}>
                 {s}
               </option>
             ))}
           </SelectField>
+          <AlanHataMetni mesaj={alanMesajlari.sehir} />
+          <p className="text-xs text-slate-500 mt-1">
+            Kayıt sonrası Ayarlar&apos;da bu ile ait tüm ilçeler hizmet bölgeniz
+            olarak seçili gelir; dilediğinizde daraltabilirsiniz.
+          </p>
         </div>
 
         <div className="scroll-mt-28">
@@ -456,14 +548,81 @@ function KayitIcerik() {
           <AlanHataMetni mesaj={alanMesajlari.yasalOnay} />
         </div>
 
+        {otpAsamasi && (
+          <div ref={otpRef} className="scroll-mt-28 space-y-3">
+            <Card className="bg-slate-50 border-slate-200">
+              <p className="text-sm text-slate-600 leading-relaxed">
+                {telefonMaskele(form.telefon)} numarasına gönderilen 6 haneli
+                kodu girin. Kodu onayladıktan sonra hesabınız oluşturulur.
+              </p>
+            </Card>
+            {gelistirmeKodu && (
+              <Card className="bg-amber-50 border-amber-200">
+                <p className="text-xs text-amber-800">
+                  Geliştirme kodu:{" "}
+                  <span className="font-mono font-bold text-lg">
+                    {gelistirmeKodu}
+                  </span>
+                </p>
+              </Card>
+            )}
+            <Field
+              label="SMS doğrulama kodu"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="123456"
+              maxLength={6}
+              value={otpKod}
+              onChange={(e) => {
+                setError("");
+                setOtpKod(e.target.value.replace(/\D/g, "").slice(0, 6));
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => void otpGonder()}
+              disabled={loading || yenidenSn > 0}
+              className="w-full text-sm text-amber-600 font-medium disabled:text-slate-400"
+            >
+              {yenidenSn > 0
+                ? `Kodu tekrar gönder (${yenidenSn}s)`
+                : "Kodu tekrar gönder"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOtpAsamasi(false);
+                setOtpKod("");
+                setOtpBilgi("");
+                setError("");
+              }}
+              className="w-full text-sm text-slate-500 underline"
+            >
+              Telefonu değiştir
+            </button>
+          </div>
+        )}
+
         <p className="text-xs text-slate-500">
           Kayıt ücretsizdir. Kredi yükleyerek bölgenizdeki talep SMS bildirimlerini
           alırsınız (1 kredi = 1 bildirim ve panelde talep görünürlüğü). Teklif
           vermek ücretsizdir.
         </p>
 
-        <Btn type="submit" disabled={loading}>
-          {loading ? "Kayıt yapılıyor…" : "Kayıt Ol"}
+        <Btn
+          type="submit"
+          disabled={
+            loading || (otpAsamasi && otpKod.length !== 6)
+          }
+        >
+          {loading
+            ? otpAsamasi
+              ? "Kayıt yapılıyor…"
+              : "Kod gönderiliyor…"
+            : otpAsamasi
+              ? "Kayıt Ol"
+              : "Doğrulama kodu gönder"}
         </Btn>
       </form>
 

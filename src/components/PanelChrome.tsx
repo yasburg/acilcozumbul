@@ -81,6 +81,12 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
                 Çekiciler
               </Link>
               <Link
+                href="/panel/rozetler"
+                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
+              >
+                Rozetler
+              </Link>
+              <Link
                 href="/panel/talepler"
                 className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
               >

@@ -25,12 +25,26 @@ type BelgeDurumResponse = {
   rozetAktif: boolean;
 };
 
+function durumEtiket(d: BelgeDurum): string | null {
+  switch (d) {
+    case "beklemede":
+      return "İnceleniyor";
+    case "onaylandi":
+      return "Belgeler onaylandı";
+    case "reddedildi":
+      return "Reddedildi";
+    default:
+      return null;
+  }
+}
+
 export function OnayliCekiciHesap() {
   const router = useRouter();
   const [durum, setDurum] = useState<BelgeDurumResponse | null>(null);
   const [ruhsat, setRuhsat] = useState<string | null>(null);
   const [cekiciBelge, setCekiciBelge] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
+  const [basvuruAcik, setBasvuruAcik] = useState(false);
   const [gonderiyor, setGonderiyor] = useState(false);
   const [odemeBaslatiyor, setOdemeBaslatiyor] = useState(false);
   const [hata, setHata] = useState("");
@@ -61,6 +75,21 @@ export function OnayliCekiciHesap() {
     return () => clearInterval(timer);
   }, [durum?.belgeDurum, yukle]);
 
+  function basvuruAc() {
+    setHata("");
+    setBilgi("");
+    setRuhsat(null);
+    setCekiciBelge(null);
+    setBasvuruAcik(true);
+  }
+
+  function basvuruKapat() {
+    setBasvuruAcik(false);
+    setHata("");
+    setRuhsat(null);
+    setCekiciBelge(null);
+  }
+
   async function belgeleriGonder() {
     setHata("");
     setBilgi("");
@@ -78,8 +107,7 @@ export function OnayliCekiciHesap() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setBilgi(data.mesaj);
-      setRuhsat(null);
-      setCekiciBelge(null);
+      basvuruKapat();
       await yukle();
     } catch (e) {
       setHata(e instanceof Error ? e.message : "Gönderilemedi.");
@@ -143,61 +171,56 @@ export function OnayliCekiciHesap() {
     );
   }
 
+  const etiket = durumEtiket(durum.belgeDurum);
+  const basvuruYapilabilir =
+    durum.belgeDurum === "yok" || durum.belgeDurum === "reddedildi";
+
   return (
-    <section className="space-y-4">
-      <Card className="border-amber-200 bg-amber-50/60">
-        <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 mb-1">
-          Onaylı çekici ol
-        </p>
-        <h3 className="text-lg font-bold text-slate-900">Belge rozeti</h3>
-        <p className="text-sm text-slate-700 mt-2 leading-relaxed">{USTTE_GORUNUR_NOT}</p>
-      </Card>
-
-      {(hata || bilgi) && (
-        <Card
-          className={
-            hata ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"
-          }
-        >
-          <p className={`text-sm ${hata ? "text-red-700" : "text-emerald-800"}`}>
-            {hata || bilgi}
-          </p>
-        </Card>
-      )}
-
-      {durum.belgeDurum === "beklemede" && (
-        <Card className="border-blue-200 bg-blue-50">
-          <p className="text-sm text-blue-900 font-medium">
-            Belgeleriniz inceleniyor. Admin onayından sonra rozet satın alma
-            adımına geçebilirsiniz.
-          </p>
-        </Card>
-      )}
-
-      {durum.belgeDurum === "reddedildi" && (
-        <Card className="border-red-200 bg-red-50">
-          <p className="text-sm text-red-800 font-medium">Belgeler reddedildi</p>
-          {durum.belgeRedNedeni && (
-            <p className="text-sm text-red-700 mt-1">{durum.belgeRedNedeni}</p>
+    <>
+      <Card className="border-amber-200 bg-amber-50/60 space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+              Onaylı çekici
+            </p>
+            <h3 className="text-lg font-bold text-slate-900 mt-0.5">Belge rozeti</h3>
+          </div>
+          {etiket && (
+            <span
+              className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                durum.belgeDurum === "beklemede"
+                  ? "bg-blue-100 text-blue-800"
+                  : durum.belgeDurum === "onaylandi"
+                    ? "bg-emerald-100 text-emerald-800"
+                    : "bg-red-100 text-red-800"
+              }`}
+            >
+              {etiket}
+            </span>
           )}
-          <p className="text-xs text-red-600 mt-2">Lütfen belgeleri yeniden yükleyin.</p>
-        </Card>
-      )}
+        </div>
 
-      {durum.belgeDurum === "onaylandi" && (
-        <Card className="border-emerald-200 bg-emerald-50">
-          <p className="text-sm text-emerald-900 font-medium mb-2">
-            ✓ Belgeleriniz onaylandı — doğrulanmış rozet satın alabilirsiniz.
+        <p className="text-sm text-slate-700 leading-relaxed">{USTTE_GORUNUR_NOT}</p>
+
+        {durum.belgeDurum === "beklemede" && (
+          <p className="text-sm text-blue-900">
+            Belgeleriniz inceleniyor. Onay sonrası rozet satın alabilirsiniz.
           </p>
-          <p className="text-sm text-slate-700 mb-3">{USTTE_GORUNUR_NOT}</p>
-          <div className="flex items-baseline gap-2 mb-3">
-            <span className="text-lg text-slate-400 line-through">
+        )}
+
+        {durum.belgeDurum === "reddedildi" && durum.belgeRedNedeni && (
+          <p className="text-sm text-red-700">{durum.belgeRedNedeni}</p>
+        )}
+
+        {durum.belgeDurum === "onaylandi" && (
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span className="text-base text-slate-400 line-through">
               {ROZET_LISTE_FIYAT_TL.toLocaleString("tr-TR", {
                 minimumFractionDigits: 2,
               })}{" "}
               TL
             </span>
-            <span className="text-2xl font-bold text-amber-600">
+            <span className="text-xl font-bold text-amber-600">
               {ROZET_INDIRIMLI_FIYAT_TL.toLocaleString("tr-TR", {
                 minimumFractionDigits: 2,
               })}{" "}
@@ -207,40 +230,103 @@ export function OnayliCekiciHesap() {
               %{rozetIndirimYuzde()} indirim
             </span>
           </div>
-          <Btn onClick={() => void rozeteGit()} disabled={odemeBaslatiyor}>
-            {odemeBaslatiyor ? "Yönlendiriliyor…" : "Rozeti satın al"}
-          </Btn>
-          <p className="text-xs text-slate-500 mt-2">
-            Fatura e-postanız kredi ödemesinde doğrulanmış olmalıdır.{" "}
-            <Link href="/cekici/kredi" className="text-amber-700 underline">
-              Kredi / e-posta doğrulama
-            </Link>
-          </p>
-        </Card>
-      )}
+        )}
 
-      {(durum.belgeDurum === "yok" ||
-        durum.belgeDurum === "reddedildi") && (
-        <>
-          <BelgeYuklemeAlani
-            label="Ruhsat"
-            aciklama="Araç ruhsatı — fotoğraf veya PDF"
-            mevcutUrl={durum.belgeRuhsatUrl ?? undefined}
-            onSecildi={setRuhsat}
-            invalid={!!hata && !ruhsat}
-          />
-          <BelgeYuklemeAlani
-            label="Çekici belgesi"
-            aciklama="Çekici / işletme belgesi — fotoğraf veya PDF"
-            mevcutUrl={durum.belgeCekiciUrl ?? undefined}
-            onSecildi={setCekiciBelge}
-            invalid={!!hata && !cekiciBelge}
-          />
-          <Btn onClick={() => void belgeleriGonder()} disabled={gonderiyor}>
-            {gonderiyor ? "Gönderiliyor…" : "Belgeleri incelemeye gönder"}
+        {(hata || bilgi) && !basvuruAcik && (
+          <p
+            className={`text-sm ${hata ? "text-red-700" : "text-emerald-800"}`}
+            role="alert"
+          >
+            {hata || bilgi}
+          </p>
+        )}
+
+        {basvuruYapilabilir && (
+          <Btn
+            type="button"
+            variant="secondary"
+            className="!min-h-[44px] !py-3"
+            onClick={basvuruAc}
+          >
+            {durum.belgeDurum === "reddedildi" ? "Yeniden başvur" : "Başvur"}
           </Btn>
-        </>
+        )}
+
+        {durum.belgeDurum === "onaylandi" && (
+          <>
+            <Btn onClick={() => void rozeteGit()} disabled={odemeBaslatiyor}>
+              {odemeBaslatiyor ? "Yönlendiriliyor…" : "Rozeti satın al"}
+            </Btn>
+            <p className="text-xs text-slate-500">
+              Fatura e-postanız kredi ödemesinde doğrulanmış olmalıdır.{" "}
+              <Link href="/cekici/kredi" className="text-amber-700 underline">
+                Kredi / e-posta doğrulama
+              </Link>
+            </p>
+          </>
+        )}
+      </Card>
+
+      {basvuruAcik && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="onayli-basvuru-baslik"
+        >
+          <Card className="w-full max-w-md shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3
+              id="onayli-basvuru-baslik"
+              className="text-lg font-bold text-slate-900"
+            >
+              Onaylı çekici başvurusu
+            </h3>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Ruhsat ve çekici belgenizi yükleyin. İnceleme sonrası rozet
+              satın alma adımına geçebilirsiniz.
+            </p>
+
+            {hata && (
+              <p className="text-sm text-red-700" role="alert">
+                {hata}
+              </p>
+            )}
+
+            <BelgeYuklemeAlani
+              label="Ruhsat"
+              aciklama="Araç ruhsatı — fotoğraf veya PDF"
+              mevcutUrl={durum.belgeRuhsatUrl ?? undefined}
+              onSecildi={setRuhsat}
+              invalid={!!hata && !ruhsat}
+            />
+            <BelgeYuklemeAlani
+              label="Çekici belgesi"
+              aciklama="Çekici / işletme belgesi — fotoğraf veya PDF"
+              mevcutUrl={durum.belgeCekiciUrl ?? undefined}
+              onSecildi={setCekiciBelge}
+              invalid={!!hata && !cekiciBelge}
+            />
+
+            <div className="flex flex-col-reverse sm:flex-row gap-2 pt-1">
+              <Btn
+                type="button"
+                variant="secondary"
+                onClick={basvuruKapat}
+                disabled={gonderiyor}
+              >
+                Vazgeç
+              </Btn>
+              <Btn
+                type="button"
+                onClick={() => void belgeleriGonder()}
+                disabled={gonderiyor}
+              >
+                {gonderiyor ? "Gönderiliyor…" : "Belgeleri gönder"}
+              </Btn>
+            </div>
+          </Card>
+        </div>
       )}
-    </section>
+    </>
   );
 }

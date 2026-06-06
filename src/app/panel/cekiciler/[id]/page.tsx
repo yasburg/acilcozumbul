@@ -240,7 +240,7 @@ export default function PanelCekiciDetayPage() {
           {oturumYukleniyor ? "Açılıyor…" : "Çekici paneline git"}
         </Btn>
         <Link
-          href="/cekici/ayarlar"
+          href="/cekici/panel?tab=ayarlar"
           className="block text-center text-sm text-amber-600 font-medium py-2"
         >
           Ayarlar sayfası →

@@ -2,6 +2,14 @@ import type { Cekici, HizmetBolgeModu, HizmetBolgeleri } from "./types";
 import { ilGecerliMi, ilceListesi } from "./il-ilce";
 import { mesafeKmHaversine } from "./geo";
 
+/** Kayıt sırasında seçilen il için tüm ilçeleri hizmet bölgesi olarak atar */
+export function kayitVarsayilanHizmetBolgeleri(il: string): HizmetBolgeleri {
+  if (!ilGecerliMi(il)) return {};
+  const ilceler = ilceListesi(il);
+  if (ilceler.length === 0) return {};
+  return { [il]: ilceler };
+}
+
 export function normalizeHizmetBolgeleri(
   raw: HizmetBolgeleri | undefined,
   fallbackIl?: string,

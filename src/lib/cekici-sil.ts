@@ -57,6 +57,8 @@ export async function silCekiciCascade(id: string): Promise<void> {
     .eq("telefon", cekici.telefon);
   if (otpErr) throw otpErr;
 
+  await sb.from("cekici_kayit_otp").delete().eq("telefon", cekici.telefon);
+
   await cekiciBelgeleriniSil(id);
 
   const { error: cekiciErr } = await sb.from("cekiciler").delete().eq("id", id);

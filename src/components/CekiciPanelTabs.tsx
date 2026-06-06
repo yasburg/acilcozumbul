@@ -12,9 +12,10 @@ import { useCekiciKonumSync } from "@/hooks/useCekiciKonumSync";
 import { KonumGuncellemeGostergesi } from "@/components/KonumGuncellemeGostergesi";
 import { DavetKoduAyarlari } from "@/components/cekici/DavetKoduAyarlari";
 import { OnayliCekiciHesap } from "@/components/cekici/OnayliCekiciHesap";
+import { CekiciAyarlarPanel } from "@/components/cekici/CekiciAyarlarPanel";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 
-type Tab = "musteriler" | "hesabim";
+type Tab = "musteriler" | "hesabim" | "ayarlar";
 
 interface Istatistik {
   satinAldiklarim: number;
@@ -190,8 +191,13 @@ function GizliTalepKarti({
 export default function CekiciPanelTabs() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab =
-    searchParams.get("tab") === "hesabim" ? "hesabim" : "musteriler";
+  const tabParam = searchParams.get("tab");
+  const initialTab: Tab =
+    tabParam === "hesabim"
+      ? "hesabim"
+      : tabParam === "ayarlar"
+        ? "ayarlar"
+        : "musteriler";
   const [tab, setTab] = useState<Tab>(initialTab);
   const [cekici, setCekici] = useState<{
     ad: string;
@@ -352,19 +358,35 @@ export default function CekiciPanelTabs() {
     }
   }, [searchParams, router]);
 
+  useEffect(() => {
+    const next: Tab =
+      tabParam === "hesabim"
+        ? "hesabim"
+        : tabParam === "ayarlar"
+          ? "ayarlar"
+          : "musteriler";
+    setTab(next);
+  }, [tabParam]);
+
+  function tabDegistir(next: Tab) {
+    setTab(next);
+    router.replace(`/cekici/panel?tab=${next}`, { scroll: false });
+  }
+
   const tabBar = (
     <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-200 bg-white safe-bottom">
       <div className="flex max-w-lg mx-auto">
         {(
           [
-            { key: "musteriler" as Tab, label: "Müşteriler", icon: "👥" },
-            { key: "hesabim" as Tab, label: "Hesabım", icon: "⚙️" },
+            { key: "musteriler" as Tab, label: "İhaleler", icon: "✅" },
+            { key: "hesabim" as Tab, label: "Hesabım", icon: "👤" },
+            { key: "ayarlar" as Tab, label: "Ayarlar", icon: "⚙️" },
           ] as const
         ).map((t) => (
           <button
             key={t.key}
             type="button"
-            onClick={() => setTab(t.key)}
+            onClick={() => tabDegistir(t.key)}
             className={`flex-1 py-3 text-center text-sm font-medium transition ${
               tab === t.key
                 ? "text-amber-600 border-t-2 border-amber-500 -mt-px"
@@ -431,7 +453,16 @@ export default function CekiciPanelTabs() {
   }
 
   return (
-    <MobileShell subtitle={`Hoş geldin, ${cekici.ad}`} footer={tabBar}>
+    <MobileShell
+      subtitle={
+        tab === "ayarlar"
+          ? "Ayarlar"
+          : tab === "hesabim"
+            ? "Hesabım"
+            : `Hoş geldin, ${cekici.ad}`
+      }
+      footer={tabBar}
+    >
       {konumSync.aktif && (
         <KonumGuncellemeGostergesi
           aktif
@@ -441,7 +472,7 @@ export default function CekiciPanelTabs() {
           onYenile={konumSync.yenile}
         />
       )}
-      {cekici.hizmetModu === "konum" && (
+      {cekici.hizmetModu === "konum" && tab === "musteriler" && (
         <Card className="mb-4 border-blue-200 bg-blue-50">
           <p className="text-sm text-blue-900 leading-relaxed">
             📍 Konum modu aktif — menzil{" "}
@@ -624,9 +655,16 @@ export default function CekiciPanelTabs() {
               <p className="text-xs text-slate-500 uppercase tracking-wide">Krediniz</p>
               {cekici.rozetAktif && <OnayliCekiciRozeti kucuk />}
             </div>
-            <p className="text-4xl font-bold text-amber-600 mt-1">
-              {formatKredi(cekici.kredi)}
-            </p>
+            <div className="flex items-center justify-between gap-3 mt-1">
+              <p className="text-4xl font-bold text-amber-600">
+                {formatKredi(cekici.kredi)}
+              </p>
+              <Link href="/cekici/kredi" className="shrink-0">
+                <Btn className="w-auto min-h-0 py-2.5 px-4 text-sm whitespace-nowrap">
+                  💳 Kredi Satın Al
+                </Btn>
+              </Link>
+            </div>
             <p className="text-sm text-slate-500 mt-2">
               {cekici.ad} · {cekici.sehir}
             </p>
@@ -707,14 +745,6 @@ export default function CekiciPanelTabs() {
               </Link>
             )}
 
-            <Link href="/cekici/ayarlar" className="block">
-              <Btn variant="secondary">📊 Ayarlar & Detaylı İstatistikler</Btn>
-            </Link>
-
-            <Link href="/cekici/kredi" className="block">
-              <Btn>💳 Kredi Satın Al</Btn>
-            </Link>
-
             <Btn
               variant="danger"
               onClick={() => void oturumuKapat()}
@@ -725,6 +755,8 @@ export default function CekiciPanelTabs() {
           </div>
         </div>
       )}
+
+      {tab === "ayarlar" && <CekiciAyarlarPanel />}
     </MobileShell>
   );
 }

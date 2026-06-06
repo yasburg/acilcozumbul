@@ -17,12 +17,17 @@ import {
 import type { Cekici } from "@/lib/types";
 import { tumSorunTipIdleri } from "@/lib/sorun-tipleri";
 import { ilGecerliMi } from "@/lib/il-ilce";
+import { kayitVarsayilanHizmetBolgeleri } from "@/lib/cekici-hizmet-bolge";
+import {
+  cekiciKayitOtpDogrula,
+  cekiciKayitOtpTemizle,
+} from "@/lib/cekici-kayit-otp";
 
 export async function POST(request: NextRequest) {
   await ensureSeedData();
 
   const body = await request.json();
-  const { ad, telefon, sehir, sifre } = body;
+  const { ad, telefon, sehir, sifre, otpKod } = body;
   const kodHam =
     typeof body.kayitKodu === "string"
       ? body.kayitKodu
@@ -65,6 +70,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const otpDogrulama = await cekiciKayitOtpDogrula(tel, String(otpKod ?? ""));
+  if (!otpDogrulama.ok) {
+    return NextResponse.json({ error: otpDogrulama.hata }, { status: 400 });
+  }
+
   const kodNormalized = kodHam?.trim()
     ? kampanyaKoduNormalize(kodHam)
     : undefined;
@@ -76,6 +86,7 @@ export async function POST(request: NextRequest) {
 
   const token = randomUUID();
   const baslangicKredi = kayitBaslangicKredisi(kayitHazir.sonuc);
+  const hizmetBolgeleri = kayitVarsayilanHizmetBolgeleri(sehir);
   const cekici: Cekici = {
     id: randomUUID(),
     ad: ad.trim(),
@@ -84,8 +95,8 @@ export async function POST(request: NextRequest) {
     sifre: sifre.trim(),
     kredi: baslangicKredi,
     sehir,
-    hizmetIlceleri: [],
-    hizmetBolgeleri: {},
+    hizmetIlceleri: hizmetBolgeleri[sehir] ?? [],
+    hizmetBolgeleri,
     hizmetModu: "il_ilce",
     menzilKm: 30,
     hizmetSorunTipleri: tumSorunTipIdleri(),
@@ -98,6 +109,7 @@ export async function POST(request: NextRequest) {
   };
 
   await addCekici(cekici);
+  await cekiciKayitOtpTemizle(tel);
 
   if (kayitHazir.sonuc.uygulandi) {
     try {

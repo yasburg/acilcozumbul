@@ -19,7 +19,7 @@ export function YasalOnayKutusu({
 }: Props) {
   const rolMetin =
     rol === "hizmet-veren"
-      ? "hizmet veren (çekici, lastikçi, anahtarcı) olarak"
+      ? "Hizmet veren (çekici, lastikçi, anahtarcı) olarak"
       : "Müşteri olarak";
 
   return (
