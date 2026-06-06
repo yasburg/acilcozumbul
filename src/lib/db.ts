@@ -11,6 +11,7 @@ import {
   type TalepRow,
 } from "./supabase/mappers";
 import type { BelgeDurum, Cekici, SmsKaydi, Talep } from "./types";
+import { davetKoduNormalize } from "./davet-kodu";
 
 export async function getCekiciler(): Promise<Cekici[]> {
   const { data, error } = await getSupabaseAdmin()
@@ -75,6 +76,57 @@ export async function getCekiciByDogrulanmisFaturaEposta(
   return data ? cekiciFromRow(data as CekiciRow) : undefined;
 }
 
+export async function getCekiciByDavetKodu(
+  kod: string
+): Promise<Cekici | undefined> {
+  const normalized = davetKoduNormalize(kod);
+  const sb = getSupabaseAdmin();
+
+  const { data, error } = await sb
+    .from("cekiciler")
+    .select("*")
+    .eq("davet_kodu", normalized)
+    .maybeSingle();
+  if (error) throw error;
+  if (data) return cekiciFromRow(data as CekiciRow);
+
+  const { data: ilikeData, error: ilikeErr } = await sb
+    .from("cekiciler")
+    .select("*")
+    .ilike("davet_kodu", normalized)
+    .maybeSingle();
+  if (ilikeErr) throw ilikeErr;
+  return ilikeData ? cekiciFromRow(ilikeData as CekiciRow) : undefined;
+}
+
+export async function setCekiciDavetKodu(
+  id: string,
+  davetKodu: string
+): Promise<void> {
+  const { error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .update({ davet_kodu: davetKodu })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function kaydetDavetKullanim(kayit: {
+  davetKodu: string;
+  davetEdenId: string;
+  yeniCekiciId: string;
+  davetliKredi: number;
+  davetEdenKredi: number;
+}): Promise<void> {
+  const { error } = await getSupabaseAdmin().from("davet_kullanimlari").insert({
+    davet_kodu: kayit.davetKodu,
+    davet_eden_id: kayit.davetEdenId,
+    yeni_cekici_id: kayit.yeniCekiciId,
+    davetli_kredi: kayit.davetliKredi,
+    davet_eden_kredi: kayit.davetEdenKredi,
+  });
+  if (error) throw error;
+}
+
 export async function addCekici(cekici: Cekici): Promise<void> {
   const { error } = await getSupabaseAdmin()
     .from("cekiciler")
@@ -110,10 +162,13 @@ export async function updateCekiciBelgeDurum(
   return (data.belge_durum as BelgeDurum) ?? patch.belgeDurum;
 }
 
-export async function saveCekiciler(cekiciler: Cekici[]): Promise<void> {
+export async function saveCekiciler(
+  cekiciler: Cekici[],
+  opts?: { migrationsOnly?: boolean }
+): Promise<void> {
   const { error } = await getSupabaseAdmin()
     .from("cekiciler")
-    .upsert(cekiciler.map(cekiciToRow), { onConflict: "id" });
+    .upsert(cekiciler.map((c) => cekiciToRow(c, opts)), { onConflict: "id" });
   if (error) throw error;
 }
 

@@ -104,6 +104,18 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
               >
                 Puanlar
               </Link>
+              <Link
+                href="/panel/davetler"
+                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
+              >
+                Davet
+              </Link>
+              <Link
+                href="/panel/kampanyalar"
+                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
+              >
+                Kampanya
+              </Link>
             </div>
           </div>
           <div className="p-4 lg:p-0">{children}</div>

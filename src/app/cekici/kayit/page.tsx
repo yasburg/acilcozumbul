@@ -1,23 +1,25 @@
 "use client";
 
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
-import { Btn, Field, SifreAlani, Card } from "@/components/ui";
+import { Btn, Field, SelectField, SifreAlani, Card } from "@/components/ui";
 import { KayitKontenjanBilgi } from "@/components/KayitKontenjanBilgi";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { DESTEKLENEN_ILLER } from "@/lib/il-ilce";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import { telefonDogrulamaHatasi, telefonGecerliMi } from "@/lib/telefon";
+import { davetKoduNormalize } from "@/lib/davet-kodu";
 
-type KayitAlan = "ad" | "telefon" | "sifre" | "sifreTekrar" | "yasalOnay";
+type KayitAlan = "ad" | "soyad" | "telefon" | "sifre" | "sifreTekrar" | "yasalOnay";
 
 type AlanHatalari = Record<KayitAlan, boolean>;
 
 const BOS_ALAN_HATALARI: AlanHatalari = {
   ad: false,
+  soyad: false,
   telefon: false,
   sifre: false,
   sifreTekrar: false,
@@ -52,6 +54,11 @@ function KayitIcerik() {
     process.env.NODE_ENV === "development" && onizlemeRaw
       ? Number.parseInt(onizlemeRaw, 10)
       : undefined;
+  const davetParam =
+    searchParams.get("kampanya")?.trim() ||
+    searchParams.get("davet")?.trim() ||
+    searchParams.get("kod")?.trim() ||
+    "";
 
   const adRef = useRef<HTMLDivElement>(null);
   const telefonRef = useRef<HTMLDivElement>(null);
@@ -61,11 +68,16 @@ function KayitIcerik() {
 
   const [form, setForm] = useState({
     ad: "",
+    soyad: "",
     telefon: "",
     sehir: "İstanbul",
     sifre: "",
     sifreTekrar: "",
+    davetKodu: davetParam,
   });
+  const [davetMesaj, setDavetMesaj] = useState("");
+  const [davetGecersiz, setDavetGecersiz] = useState(false);
+  const [davetKontrol, setDavetKontrol] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [yasalOnay, setYasalOnay] = useState(false);
@@ -93,8 +105,50 @@ function KayitIcerik() {
     });
   }
 
+  useEffect(() => {
+    const kod = davetKoduNormalize(form.davetKodu.trim());
+    if (!kod) {
+      setDavetMesaj("");
+      setDavetGecersiz(false);
+      setDavetKontrol(false);
+      return;
+    }
+
+    let iptal = false;
+    setDavetKontrol(true);
+    setDavetGecersiz(false);
+
+    const t = window.setTimeout(() => {
+      void fetch(`/api/cekici/kayit-kodu/dogrula?kod=${encodeURIComponent(kod)}`)
+        .then(async (res) => {
+          if (iptal) return;
+          const d = await res.json();
+          setDavetKontrol(false);
+          if (!res.ok) {
+            setDavetGecersiz(true);
+            setDavetMesaj(d.hata ?? "Geçersiz kod.");
+            return;
+          }
+          setDavetGecersiz(false);
+          setDavetMesaj(d.mesaj ?? `Kayıt olunca ${d.bonus ?? 0} kredi hediye.`);
+        })
+        .catch(() => {
+          if (iptal) return;
+          setDavetKontrol(false);
+          setDavetGecersiz(false);
+          setDavetMesaj("");
+        });
+    }, 400);
+
+    return () => {
+      iptal = true;
+      window.clearTimeout(t);
+    };
+  }, [form.davetKodu]);
+
   function formDogrula(): boolean {
     const adBos = !form.ad.trim();
+    const soyadBos = !form.soyad.trim();
     const telefonBos = !form.telefon.trim();
     const telefonGecersiz = !telefonBos && !telefonGecerliMi(form.telefon);
     const sifreKisa =
@@ -109,6 +163,7 @@ function KayitIcerik() {
 
     const hatalar: AlanHatalari = {
       ad: adBos,
+      soyad: soyadBos,
       telefon: telefonBos || telefonGecersiz,
       sifre: sifreBos || sifreKisa,
       sifreTekrar: sifreTekrarBos || sifreUyumsuz,
@@ -117,7 +172,8 @@ function KayitIcerik() {
     setAlanHatalari(hatalar);
 
     const mesajlar: Partial<Record<KayitAlan, string>> = {};
-    if (adBos) mesajlar.ad = "Ad soyad girin.";
+    if (adBos) mesajlar.ad = "Ad girin.";
+    if (soyadBos) mesajlar.soyad = "Soyad girin.";
     if (telefonBos) mesajlar.telefon = "Telefon numarası girin.";
     else if (telefonGecersiz)
       mesajlar.telefon = telefonDogrulamaHatasi(form.telefon);
@@ -132,12 +188,24 @@ function KayitIcerik() {
     if (!yasalOnay) mesajlar.yasalOnay = "Yasal metinleri onaylayın.";
     setAlanMesajlari(mesajlar);
 
+    if (form.davetKodu.trim()) {
+      if (davetKontrol) {
+        setError("Davet kodu kontrol ediliyor, lütfen bekleyin.");
+        return false;
+      }
+      if (davetGecersiz) {
+        setError(davetMesaj || "Geçersiz davet kodu.");
+        return false;
+      }
+    }
+
     const kontroller: {
       alan: KayitAlan;
       ref: React.RefObject<HTMLDivElement | null>;
       mesaj: string;
     }[] = [
-      { alan: "ad", ref: adRef, mesaj: "Ad soyad girin." },
+      { alan: "ad", ref: adRef, mesaj: "Ad girin." },
+      { alan: "soyad", ref: adRef, mesaj: "Soyad girin." },
       {
         alan: "telefon",
         ref: telefonRef,
@@ -185,10 +253,13 @@ function KayitIcerik() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ad: form.ad,
+          ad: `${form.ad.trim()} ${form.soyad.trim()}`.trim(),
           telefon: form.telefon,
           sehir: form.sehir,
           sifre: form.sifre,
+          kayitKodu: form.davetKodu.trim()
+            ? davetKoduNormalize(form.davetKodu)
+            : undefined,
         }),
       });
       const data = await res.json();
@@ -223,19 +294,44 @@ function KayitIcerik() {
       )}
 
       <form onSubmit={kayitOl} className="space-y-4" noValidate>
-        <div ref={adRef} className="scroll-mt-28">
-          <Field
-            label="Ad Soyad"
-            placeholder="Ahmet Yılmaz"
-            value={form.ad}
-            onChange={(e) => {
-              alanHatasiTemizle("ad");
-              setForm((f) => ({ ...f, ad: e.target.value }));
-            }}
-            invalid={alanHatalari.ad}
-            required
-          />
-          <AlanHataMetni mesaj={alanMesajlari.ad} />
+        <div ref={adRef} className="scroll-mt-28 space-y-2">
+          <div className="grid grid-cols-2 gap-3">
+            <Field
+              label="Ad"
+              placeholder="Ahmet"
+              value={form.ad}
+              onChange={(e) => {
+                alanHatasiTemizle("ad");
+                setForm((f) => ({ ...f, ad: e.target.value }));
+              }}
+              autoComplete="given-name"
+              name="ad"
+              invalid={alanHatalari.ad}
+              required
+            />
+            <Field
+              label="Soyad"
+              placeholder="Yılmaz"
+              value={form.soyad}
+              onChange={(e) => {
+                alanHatasiTemizle("soyad");
+                setForm((f) => ({ ...f, soyad: e.target.value }));
+              }}
+              autoComplete="family-name"
+              name="soyad"
+              invalid={alanHatalari.soyad}
+              required
+            />
+          </div>
+          {(alanHatalari.ad || alanHatalari.soyad) && (
+            <AlanHataMetni
+              mesaj={
+                alanMesajlari.ad ??
+                alanMesajlari.soyad ??
+                "Ad ve soyad girin."
+              }
+            />
+          )}
         </div>
 
         <div ref={telefonRef} className="scroll-mt-28">
@@ -254,20 +350,60 @@ function KayitIcerik() {
           <AlanHataMetni mesaj={alanMesajlari.telefon} />
         </div>
 
-        <label className="block space-y-1.5 scroll-mt-28">
-          <span className="text-sm font-medium text-slate-700">İl</span>
-          <select
+        <div className="scroll-mt-28">
+          <SelectField
+            label="İl"
             value={form.sehir}
             onChange={(e) => setForm((f) => ({ ...f, sehir: e.target.value }))}
-            className="w-full rounded-xl bg-white border border-slate-200 px-4 py-3.5 text-slate-900"
           >
             {DESTEKLENEN_ILLER.map((s) => (
               <option key={s} value={s}>
                 {s}
               </option>
             ))}
-          </select>
-        </label>
+          </SelectField>
+        </div>
+
+        <div className="scroll-mt-28">
+          <Field
+            label="Davet / kampanya kodu (isteğe bağlı)"
+            placeholder="ör. TIKTOK100 veya arkadaşınızın kodu"
+            value={form.davetKodu}
+            onChange={(e) => {
+              setDavetMesaj("");
+              setDavetGecersiz(false);
+              setDavetKontrol(false);
+              setForm((f) => ({
+                ...f,
+                davetKodu: davetKoduNormalize(e.target.value),
+              }));
+            }}
+            invalid={davetGecersiz}
+            maxLength={20}
+          />
+          {form.davetKodu.trim() ? (
+            <p
+              className={`text-sm mt-1.5 ${
+                davetGecersiz
+                  ? "text-red-600"
+                  : davetKontrol
+                    ? "text-slate-500"
+                    : "text-emerald-700"
+              }`}
+              role="status"
+            >
+              {davetMesaj ||
+                (davetGecersiz
+                  ? "Geçersiz davet kodu."
+                  : "Kod kontrol ediliyor…")}
+            </p>
+          ) : (
+            <p className="text-xs text-slate-500 mt-1">
+              Davet kodu (20 kredi) veya kampanya kodu (reklam / sosyal medya)
+              girebilirsiniz.
+            </p>
+          )}
+        </div>
 
         <div ref={sifreRef} className="scroll-mt-28">
           <SifreAlani

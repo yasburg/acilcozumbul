@@ -86,6 +86,10 @@ export interface Cekici {
   musaitlikBitis?: string;
   /** 1=Pzt … 7=Paz; boş = her gün */
   musaitlikGunler?: number[];
+  /** Paylaşılabilir davet / kupon kodu */
+  davetKodu?: string;
+  /** Kayıtta kullanılan davet kodunun sahibi */
+  davetEdenId?: string;
 }
 
 export type OdemeFatura = {

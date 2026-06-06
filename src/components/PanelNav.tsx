@@ -10,6 +10,8 @@ const LINKS: { href: string; label: string; exact?: boolean }[] = [
   { href: "/panel/sms", label: "SMS" },
   { href: "/panel/kredi-odemeler", label: "Kredi ödemeleri" },
   { href: "/panel/degerlendirmeler", label: "Değerlendirmeler" },
+  { href: "/panel/davetler", label: "Davet kodları" },
+  { href: "/panel/kampanyalar", label: "Kampanyalar" },
 ];
 
 export function PanelNav({ onCikis }: { onCikis?: () => void }) {

@@ -45,6 +45,8 @@ export type CekiciRow = {
   musaitlik_baslangic?: string | null;
   musaitlik_bitis?: string | null;
   musaitlik_gunler?: number[] | null;
+  davet_kodu?: string | null;
+  davet_eden_id?: string | null;
 };
 
 export type TalepRow = {
@@ -114,16 +116,21 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     musaitlikBaslangic: r.musaitlik_baslangic ?? undefined,
     musaitlikBitis: r.musaitlik_bitis ?? undefined,
     musaitlikGunler: r.musaitlik_gunler ?? undefined,
+    davetKodu: r.davet_kodu ?? undefined,
+    davetEdenId: r.davet_eden_id ?? undefined,
   };
 }
 
-export function cekiciToRow(c: Cekici): CekiciRow {
+export function cekiciToRow(
+  c: Cekici,
+  opts?: { migrationsOnly?: boolean }
+): CekiciRow {
   const bolgeler = normalizeHizmetBolgeleri(
     c.hizmetBolgeleri,
     c.sehir,
     c.hizmetIlceleri
   );
-  return {
+  const row: CekiciRow = {
     id: c.id,
     ad: c.ad,
     telefon: c.telefon,
@@ -155,6 +162,11 @@ export function cekiciToRow(c: Cekici): CekiciRow {
     musaitlik_bitis: c.musaitlikBitis ?? null,
     musaitlik_gunler: c.musaitlikGunler ?? null,
   };
+  if (!opts?.migrationsOnly) {
+    row.davet_kodu = c.davetKodu ?? null;
+    row.davet_eden_id = c.davetEdenId ?? null;
+  }
+  return row;
 }
 
 export function talepFromRow(r: TalepRow): Talep {

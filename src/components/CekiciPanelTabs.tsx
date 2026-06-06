@@ -10,6 +10,7 @@ import type { ListeDurumu } from "@/lib/types";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { useCekiciKonumSync } from "@/hooks/useCekiciKonumSync";
 import { KonumGuncellemeGostergesi } from "@/components/KonumGuncellemeGostergesi";
+import { DavetKoduAyarlari } from "@/components/cekici/DavetKoduAyarlari";
 import { OnayliCekiciHesap } from "@/components/cekici/OnayliCekiciHesap";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 
@@ -616,6 +617,8 @@ export default function CekiciPanelTabs() {
 
       {tab === "hesabim" && (
         <div className="space-y-4 animate-fade-in">
+          <DavetKoduAyarlari />
+
           <Card>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs text-slate-500 uppercase tracking-wide">Krediniz</p>

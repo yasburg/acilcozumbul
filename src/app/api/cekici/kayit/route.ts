@@ -4,6 +4,12 @@ import { addCekici, getCekiciByTelefon } from "@/lib/db";
 import { CEKICI_COOKIE } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
 import {
+  kayitBaslangicKredisi,
+  kayitKoduBonusTamamla,
+  kayitKoduHazirla,
+} from "@/lib/kayit-kodu";
+import { kampanyaKoduNormalize } from "@/lib/kampanya-kodu";
+import {
   telefonDogrulamaHatasi,
   telefonGecerliMi,
   telefonNormalize,
@@ -15,7 +21,14 @@ import { ilGecerliMi } from "@/lib/il-ilce";
 export async function POST(request: NextRequest) {
   await ensureSeedData();
 
-  const { ad, telefon, sehir, sifre } = await request.json();
+  const body = await request.json();
+  const { ad, telefon, sehir, sifre } = body;
+  const kodHam =
+    typeof body.kayitKodu === "string"
+      ? body.kayitKodu
+      : typeof body.davetKodu === "string"
+        ? body.davetKodu
+        : undefined;
 
   if (!ad?.trim() || !telefon?.trim() || !sehir?.trim() || !sifre?.trim()) {
     return NextResponse.json(
@@ -52,14 +65,24 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const kodNormalized = kodHam?.trim()
+    ? kampanyaKoduNormalize(kodHam)
+    : undefined;
+
+  const kayitHazir = await kayitKoduHazirla(kodNormalized, tel);
+  if (!kayitHazir.ok) {
+    return NextResponse.json({ error: kayitHazir.hata }, { status: 400 });
+  }
+
   const token = randomUUID();
+  const baslangicKredi = kayitBaslangicKredisi(kayitHazir.sonuc);
   const cekici: Cekici = {
     id: randomUUID(),
     ad: ad.trim(),
     telefon: tel,
     token,
     sifre: sifre.trim(),
-    kredi: 0,
+    kredi: baslangicKredi,
     sehir,
     hizmetIlceleri: [],
     hizmetBolgeleri: {},
@@ -68,14 +91,35 @@ export async function POST(request: NextRequest) {
     hizmetSorunTipleri: tumSorunTipIdleri(),
     aktif: true,
     kayitTarihi: new Date().toISOString(),
+    davetEdenId:
+      kayitHazir.sonuc.uygulandi && kayitHazir.sonuc.tip === "davet"
+        ? kayitHazir.sonuc.davet.davetEden.id
+        : undefined,
   };
 
   await addCekici(cekici);
 
+  if (kayitHazir.sonuc.uygulandi) {
+    try {
+      await kayitKoduBonusTamamla(cekici.id, kayitHazir.sonuc);
+    } catch (e) {
+      console.error("[kayit] kod bonusu tamamlanamadı:", e);
+    }
+  }
+
+  const mesaj = kayitHazir.sonuc.uygulandi
+    ? `Kayıt başarılı. ${baslangicKredi} hediye kredi hesabınıza tanımlandı!`
+    : "Kayıt başarılı. Hoş geldiniz!";
+
   const response = NextResponse.json({
     id: cekici.id,
     ad: cekici.ad,
-    mesaj: "Kayıt başarılı. Hoş geldiniz!",
+    mesaj,
+    kodUygulandi: kayitHazir.sonuc.uygulandi,
+    kodTipi: kayitHazir.sonuc.uygulandi ? kayitHazir.sonuc.tip : undefined,
+    davetUygulandi:
+      kayitHazir.sonuc.uygulandi && kayitHazir.sonuc.tip === "davet",
+    hediyeKredi: baslangicKredi,
   });
 
   response.cookies.set(CEKICI_COOKIE, token, {

@@ -110,7 +110,7 @@ export async function ensureSeedData(): Promise<void> {
 
   if (guncellendi) {
     try {
-      await saveCekiciler(migrated);
+      await saveCekiciler(migrated, { migrationsOnly: true });
     } catch (e) {
       console.warn("[ensureSeedData] çekici güncelleme atlandı:", e);
     }
