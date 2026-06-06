@@ -21,6 +21,8 @@ export default function PanelCekiciDetayPage() {
   const [redNedeni, setRedNedeni] = useState("");
   const [mesaj, setMesaj] = useState("");
   const [hata, setHata] = useState("");
+  const [silOnayAcik, setSilOnayAcik] = useState(false);
+  const [siliyor, setSiliyor] = useState(false);
 
   useEffect(() => {
     fetch(`/api/panel/cekiciler/${id}`)
@@ -92,6 +94,30 @@ export default function PanelCekiciDetayPage() {
       alert("Oturum açılamadı.");
     } finally {
       setOturumYukleniyor(false);
+    }
+  }
+
+  async function cekiciSil() {
+    setSiliyor(true);
+    setHata("");
+    try {
+      const res = await fetch(`/api/panel/cekiciler/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string" ? data.error : "Silinemedi."
+        );
+      }
+      router.push("/panel/cekiciler");
+      router.refresh();
+    } catch (e) {
+      setSilOnayAcik(false);
+      setHata(e instanceof Error ? e.message : "Silinemedi.");
+    } finally {
+      setSiliyor(false);
     }
   }
 
@@ -220,6 +246,52 @@ export default function PanelCekiciDetayPage() {
           Ayarlar sayfası →
         </Link>
       </div>
+
+      <Card className="border-red-200 bg-red-50/50 space-y-3">
+        <p className="text-sm font-semibold text-red-800">Tehlikeli bölge</p>
+        <p className="text-sm text-red-700 leading-relaxed">
+          Bu işlem geri alınamaz. Hizmet veren hesabı, ödeme geçmişi, davet
+          kayıtları, SMS logları ve yüklenen belgeler silinir.
+        </p>
+        <Btn variant="danger" onClick={() => setSilOnayAcik(true)}>
+          Hizmet vereni sil
+        </Btn>
+      </Card>
+
+      {silOnayAcik && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sil-onay-baslik"
+        >
+          <Card className="w-full max-w-md shadow-xl space-y-4">
+            <h3 id="sil-onay-baslik" className="text-lg font-bold text-slate-900">
+              Emin misiniz?
+            </h3>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              <strong>{cekici.ad}</strong> ({cekici.telefon}) kalıcı olarak
+              silinecek. Ödeme, davet ve SMS kayıtları da kaldırılır.
+            </p>
+            <div className="flex flex-col-reverse sm:flex-row gap-2">
+              <Btn
+                variant="secondary"
+                onClick={() => setSilOnayAcik(false)}
+                disabled={siliyor}
+              >
+                Vazgeç
+              </Btn>
+              <Btn
+                variant="danger"
+                onClick={() => void cekiciSil()}
+                disabled={siliyor}
+              >
+                {siliyor ? "Siliniyor…" : "Evet, sil"}
+              </Btn>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
