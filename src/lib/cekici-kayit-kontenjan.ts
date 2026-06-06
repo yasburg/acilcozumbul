@@ -1,6 +1,9 @@
 /** Erken faz gösterim limiti (pazarlama; kayıt bu sayıda kapanmaz) */
 export const ERKEN_KAYIT_LIMIT = 100;
 
+/** Ekranda gösterilen kayıt sayısı bu değerin altına inmez */
+export const GOSTERILEN_KAYIT_TABAN = 67;
+
 /** Ekranda gösterilen kayıt sayısı bu değeri geçmez (97+ aciliyet mesajı) */
 export const GOSTERILEN_KAYIT_TAVAN = 97;
 
@@ -19,7 +22,10 @@ export type KayitKontenjanDurum = {
 
 export function kayitKontenjanHesapla(gercekKayitSayisi: number): KayitKontenjanDurum {
   const gercekKayit = Math.max(0, Math.floor(gercekKayitSayisi));
-  const gosterilenKayit = Math.min(gercekKayit, GOSTERILEN_KAYIT_TAVAN);
+  const gosterilenKayit = Math.min(
+    Math.max(gercekKayit, GOSTERILEN_KAYIT_TABAN),
+    GOSTERILEN_KAYIT_TAVAN
+  );
   const sonKontenjanModu = gercekKayit >= GOSTERILEN_KAYIT_TAVAN;
   const gosterilenKalan = sonKontenjanModu
     ? ERKEN_KAYIT_LIMIT - GOSTERILEN_KAYIT_TAVAN

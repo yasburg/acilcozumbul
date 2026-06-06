@@ -1,15 +1,30 @@
 import { describe, expect, it } from "vitest";
 import {
   ERKEN_KAYIT_LIMIT,
+  GOSTERILEN_KAYIT_TABAN,
   GOSTERILEN_KAYIT_TAVAN,
   kayitKontenjanHesapla,
 } from "./cekici-kayit-kontenjan";
 
 describe("kayitKontenjanHesapla", () => {
-  it("50 kayıtta gösterilen 50", () => {
-    const d = kayitKontenjanHesapla(50);
-    expect(d.gosterilenKayit).toBe(50);
-    expect(d.gosterilenKalan).toBe(50);
+  it("gerçek kayıt 67'nin altındaysa gösterilen en az 67", () => {
+    const d = kayitKontenjanHesapla(10);
+    expect(d.gosterilenKayit).toBe(67);
+    expect(d.gosterilenKalan).toBe(33);
+    expect(d.sonKontenjanModu).toBe(false);
+  });
+
+  it("67 kayıtta gösterilen 67", () => {
+    const d = kayitKontenjanHesapla(67);
+    expect(d.gosterilenKayit).toBe(67);
+    expect(d.gosterilenKalan).toBe(33);
+    expect(d.sonKontenjanModu).toBe(false);
+  });
+
+  it("68–96 arası gerçek sayı gösterilir", () => {
+    const d = kayitKontenjanHesapla(75);
+    expect(d.gosterilenKayit).toBe(75);
+    expect(d.gosterilenKalan).toBe(25);
     expect(d.sonKontenjanModu).toBe(false);
   });
 
@@ -35,6 +50,7 @@ describe("kayitKontenjanHesapla", () => {
 
   it("limit sabitleri", () => {
     expect(ERKEN_KAYIT_LIMIT).toBe(100);
+    expect(GOSTERILEN_KAYIT_TABAN).toBe(67);
     expect(GOSTERILEN_KAYIT_TAVAN).toBe(97);
   });
 });
