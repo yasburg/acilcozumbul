@@ -6,6 +6,7 @@ import { cekiciFetch } from "@/lib/cekici-fetch";
 import { konumAlEsnek, konumGuvenliMi } from "@/lib/konum-client";
 import { latLngStr, type LatLng } from "@/lib/koordinat";
 import { istemciYerelMi } from "@/lib/yerel-ortam";
+import { haritaSecenekleri } from "@/lib/harita-yonlendirme";
 
 interface RotaSureleri {
   sizeMusteriDk: number;
@@ -22,27 +23,8 @@ interface CekiciRotaPanelProps {
   /** Tahmini süre alanını otomatik doldur */
   onToplamSure?: (dk: number) => void;
   compact?: boolean;
-  /** İhale kazanıldıktan sonra — «Haritada rotayı göster» */
+  /** İhale kazanıldıktan sonra — «Haritada rotayı göster» + harici harita */
   haritaButonu?: boolean;
-  /** «Google Maps uygulamasında aç» (sadece kazanan ekranı) */
-  disHaritaLink?: boolean;
-}
-
-function googleMapsDirUrl(
-  cekici: LatLng,
-  musteri: LatLng,
-  hedef?: LatLng | null
-): string {
-  const params = new URLSearchParams({
-    api: "1",
-    origin: latLngStr(cekici),
-    destination: latLngStr(hedef ?? musteri),
-    travelmode: "driving",
-  });
-  if (hedef) {
-    params.set("waypoints", latLngStr(musteri));
-  }
-  return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
 function embedDirectionsUrl(
@@ -70,7 +52,6 @@ export function CekiciRotaPanel({
   onToplamSure,
   compact = false,
   haritaButonu = false,
-  disHaritaLink = false,
 }: CekiciRotaPanelProps) {
   const [cekiciKonum, setCekiciKonum] = useState<LatLng | null>(null);
   const [konumHata, setKonumHata] = useState("");
@@ -79,6 +60,7 @@ export function CekiciRotaPanel({
   const [sureHata, setSureHata] = useState("");
   const [sureler, setSureler] = useState<RotaSureleri | null>(null);
   const [haritaAcik, setHaritaAcik] = useState(false);
+  const [disHaritaSecim, setDisHaritaSecim] = useState(false);
   const onToplamSureRef = useRef(onToplamSure);
   onToplamSureRef.current = onToplamSure;
   const musteriRef = useRef(musteriKonum);
@@ -170,9 +152,10 @@ export function CekiciRotaPanel({
       ? embedDirectionsUrl(cekiciKonum, musteriKonum, hedefKonum, embedKey)
       : null;
 
-  const disHaritaUrl = cekiciKonum
-    ? googleMapsDirUrl(cekiciKonum, musteriKonum, hedefKonum)
-    : null;
+  const disHaritaSecenekleri = haritaSecenekleri(musteriKonum, {
+    cekici: cekiciKonum,
+    hedef: hedefKonum,
+  });
 
   const ozetMetin = sureler
     ? sureler.hedefVar && sureler.musteriHedefDk != null
@@ -235,21 +218,35 @@ export function CekiciRotaPanel({
 
         <div className="flex flex-col gap-2 mt-3">
           {haritaButonu && (
-            <button
-              type="button"
-              onClick={() => setHaritaAcik(true)}
-              disabled={!cekiciKonum}
-              className="w-full rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 text-left transition hover:border-blue-300 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="text-sm font-semibold text-blue-900 block">
-                🗺️ Haritada rotayı göster
-              </span>
-              <span className="text-xs text-blue-700 mt-0.5 block">
-                {cekiciKonum
-                  ? "Siz · müşteri · hedef (Google Maps)"
-                  : "Önce konum izni gerekli"}
-              </span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setHaritaAcik(true)}
+                disabled={!cekiciKonum}
+                className="w-full rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 text-left transition hover:border-blue-300 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="text-sm font-semibold text-blue-900 block">
+                  🗺️ Haritada rotayı göster
+                </span>
+                <span className="text-xs text-blue-700 mt-0.5 block">
+                  {cekiciKonum
+                    ? "Siz · müşteri · hedef (Google Maps)"
+                    : "Önce konum izni gerekli"}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDisHaritaSecim(true)}
+                className="w-full rounded-xl border-2 border-emerald-200 bg-emerald-50 px-4 py-3 text-left transition hover:border-emerald-300 active:scale-[0.99]"
+              >
+                <span className="text-sm font-semibold text-emerald-900 block">
+                  📍 Rotayı haritada aç
+                </span>
+                <span className="text-xs text-emerald-700 mt-0.5 block">
+                  Google Maps veya Apple Maps
+                </span>
+              </button>
+            </>
           )}
 
           {!cekiciKonum && (
@@ -280,19 +277,56 @@ export function CekiciRotaPanel({
                     : "Süreyi hesapla"}
             </Btn>
           )}
-
-          {disHaritaLink && disHaritaUrl && (
-            <a
-              href={disHaritaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-center text-xs text-blue-600 underline"
-            >
-              Google Maps uygulamasında aç
-            </a>
-          )}
         </div>
       </Card>
+
+      {haritaButonu && disHaritaSecim && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4 safe-bottom"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Harita uygulaması seçin"
+          onClick={() => setDisHaritaSecim(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b border-slate-100">
+              <p className="font-semibold text-slate-900">Rotayı haritada aç</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Navigasyon uygulamanızı seçin
+              </p>
+            </div>
+            <div className="p-2 flex flex-col gap-1">
+              {disHaritaSecenekleri.map((sec) => (
+                <a
+                  key={sec.id}
+                  href={sec.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setDisHaritaSecim(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition"
+                >
+                  <span className="text-xl" aria-hidden>
+                    {sec.id === "apple" ? "🍎" : "🗺️"}
+                  </span>
+                  {sec.label}
+                </a>
+              ))}
+            </div>
+            <div className="p-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDisHaritaSecim(false)}
+                className="w-full rounded-xl py-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              >
+                İptal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {haritaButonu && haritaAcik && cekiciKonum && (
         <div
@@ -336,9 +370,13 @@ export function CekiciRotaPanel({
                     <code className="text-xs">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>{" "}
                     tanımlayın (Maps Embed API).
                   </p>
-                  {disHaritaUrl && (
-                    <a href={disHaritaUrl} target="_blank" rel="noopener noreferrer">
-                      <Btn>Google Maps’te aç</Btn>
+                  {disHaritaSecenekleri[0] && (
+                    <a
+                      href={disHaritaSecenekleri[0].url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Btn>{disHaritaSecenekleri[0].label}</Btn>
                     </a>
                   )}
                 </div>
