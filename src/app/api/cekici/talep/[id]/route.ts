@@ -14,6 +14,8 @@ import {
 import { koordinatGecerli } from "@/lib/koordinat";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Talep } from "@/lib/types";
+import { demoTalepGetir, isDemoTalepId } from "@/lib/demo-oturum";
+import { demoCekiciTalepGetJson } from "@/lib/demo-responses";
 
 /** Süre hesabı için koordinat (tam adres gönderilmez) */
 function rotaKoordinatlari(talep: Talep) {
@@ -29,7 +31,7 @@ function rotaKoordinatlari(talep: Talep) {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensureSeedData();
@@ -39,6 +41,24 @@ export async function GET(
   }
 
   const { id } = await params;
+
+  if (isDemoTalepId(id)) {
+    const demoCtx = await demoTalepGetir(id, request, cekici.id);
+    if (!demoCtx) {
+      return NextResponse.json(
+        {
+          error:
+            "Demo oturumu bulunamadı veya bu talep artık geçerli değil. Panelden demo yeniden başlatın.",
+          demoHatasi: true,
+        },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(
+      demoCekiciTalepGetJson(demoCtx.talep, cekici)
+    );
+  }
+
   const talep = await getTalepById(id);
 
   if (!talep) {

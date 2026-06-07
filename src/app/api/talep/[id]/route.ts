@@ -8,13 +8,41 @@ import {
   memnuniyetSmsGonderGerekirse,
 } from "@/lib/memnuniyet";
 import { smsBaseUrl } from "@/lib/sms-base-url";
+import { demoTalepGetir, isDemoTalepId } from "@/lib/demo-oturum";
+import { demoMusteriTalepDurumJson } from "@/lib/demo-responses";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensureSeedData();
   const { id } = await params;
+
+  if (isDemoTalepId(id)) {
+    const demoCtx = await demoTalepGetir(id, request);
+    if (!demoCtx) {
+      return NextResponse.json(
+        { error: "Demo oturumu bulunamadı.", demoHatasi: true },
+        { status: 404 }
+      );
+    }
+    let cekiciAd: string | undefined;
+    if (demoCtx.talep.kazananCekiciId) {
+      const kazanan = demoCtx.talep.teklifler?.find(
+        (t) => t.cekiciId === demoCtx.talep.kazananCekiciId
+      );
+      if (kazanan) {
+        cekiciAd = kazanan.cekiciAd.split(" ")[0];
+      } else {
+        const cekici = await getCekiciById(demoCtx.talep.kazananCekiciId);
+        cekiciAd = cekici?.ad;
+      }
+    }
+    return NextResponse.json(
+      demoMusteriTalepDurumJson(demoCtx.talep, cekiciAd)
+    );
+  }
+
   const talep = await getTalepById(id);
 
   if (!talep) {
@@ -44,7 +72,7 @@ export async function GET(
 
   if (memnuniyet.formAcik) {
     const baseUrl = smsBaseUrl(
-      `${_request.nextUrl.protocol}//${_request.nextUrl.host}`
+      `${request.nextUrl.protocol}//${request.nextUrl.host}`
     );
     await memnuniyetSmsGonderGerekirse(talep, baseUrl).catch(() => {});
   }

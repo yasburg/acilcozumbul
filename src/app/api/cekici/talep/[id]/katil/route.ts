@@ -11,10 +11,12 @@ import {
 import { smsBaseUrl } from "@/lib/sms-base-url";
 import { cekiciTalepSmsMetni } from "@/lib/sms";
 import { sendSms } from "@/lib/sms-provider";
+import { demoTalepGetir, demoKatil, isDemoTalepId } from "@/lib/demo-oturum";
+import { demoKatilMesaji } from "@/lib/demo-responses";
 
 /** 1 kredi ile ihaleye katıl (panelde gizli talebi aç) */
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensureSeedData();
@@ -24,6 +26,23 @@ export async function POST(
   }
 
   const { id } = await params;
+
+  if (isDemoTalepId(id)) {
+    const demoCtx = await demoTalepGetir(id, request, cekici.id);
+    if (!demoCtx) {
+      return NextResponse.json(
+        { error: "Demo oturumu bulunamadı.", demoHatasi: true },
+        { status: 404 }
+      );
+    }
+    const talep = demoCtx.talep;
+    if (cekiciTalebeBildirildiMi(talep, cekici.id)) {
+      return NextResponse.json({ success: true, zatenAcik: true, demoModu: true });
+    }
+    await demoKatil(demoCtx.oturum, id, cekici.id);
+    return NextResponse.json(demoKatilMesaji(cekici));
+  }
+
   const talep = await getTalepById(id);
   if (!talep) {
     return NextResponse.json({ error: "Talep bulunamadı." }, { status: 404 });

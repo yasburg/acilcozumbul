@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
 import { getTalepler } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
@@ -16,6 +16,7 @@ import {
   talepSorunOzet,
 } from "@/lib/talep-utils";
 import type { Cekici, ListeDurumu, Talep, TalepOzet } from "@/lib/types";
+import { demoOturumCekiciIcin, demoPanelVerisi } from "@/lib/demo-oturum";
 
 function listeDurumuBelirle(talep: Talep, cekici: Cekici): ListeDurumu {
   const cekiciId = cekici.id;
@@ -65,7 +66,7 @@ function toOzet(talep: Talep, cekici: Cekici): TalepOzet {
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   await ensureSeedData();
   const cekici = await getCurrentCekici();
   if (!cekici) {
@@ -99,6 +100,28 @@ export async function GET() {
     (a, b) =>
       new Date(b.olusturulma).getTime() - new Date(a.olusturulma).getTime()
   );
+
+  const demoOturum = await demoOturumCekiciIcin(cekici.id, request);
+  if (demoOturum) {
+    const demo = demoPanelVerisi(demoOturum, cekici);
+    return NextResponse.json({
+      bekleyen: [...demo.bekleyen, ...bekleyen],
+      bekleyenGizli: [...demo.bekleyenGizli, ...bekleyenGizli],
+      teklifVerdigim: [...demo.teklifVerdigim, ...teklifVerdigim],
+      kazandiklarim: [...demo.kazandiklarim, ...kazandiklarim],
+      kaybettiklerim: [...demo.kaybettiklerim, ...kaybettiklerim],
+      tercihEdilmedi: [...demo.tercihEdilmedi, ...tercihEdilmedi],
+      bugunTumu: [...demo.bugunTumu, ...bugunTumu].sort(
+        (a, b) =>
+          new Date(b.olusturulma).getTime() - new Date(a.olusturulma).getTime()
+      ),
+      kredi: cekici.kredi,
+      krediYok: !cekiciYeterliBildirimKredisi(cekici.kredi),
+      satinAlinanlar: [...demo.kazandiklarim, ...kazandiklarim],
+      baskasiAldi: [...demo.kaybettiklerim, ...kaybettiklerim],
+      demoModu: true,
+    });
+  }
 
   return NextResponse.json({
     bekleyen,

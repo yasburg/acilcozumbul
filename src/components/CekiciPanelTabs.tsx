@@ -14,6 +14,7 @@ import { DavetKoduAyarlari } from "@/components/cekici/DavetKoduAyarlari";
 import { OnayliCekiciHesap } from "@/components/cekici/OnayliCekiciHesap";
 import { CekiciAyarlarPanel } from "@/components/cekici/CekiciAyarlarPanel";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
+import { DemoHeaderBadge } from "@/components/DemoHeaderBadge";
 
 type Tab = "musteriler" | "hesabim" | "ayarlar";
 
@@ -56,6 +57,7 @@ interface PanelData {
   bugunTumu: TalepOzet[];
   kredi?: number;
   krediYok?: boolean;
+  demoModu?: boolean;
   satinAlinanlar?: TalepOzet[];
   baskasiAldi?: TalepOzet[];
 }
@@ -146,14 +148,16 @@ function GizliTalepKarti({
   talep,
   kredi,
   yukleniyor,
+  demoModu,
   onKatil,
 }: {
   talep: TalepOzet;
   kredi: number;
   yukleniyor: boolean;
+  demoModu?: boolean;
   onKatil: (talepId: string) => void;
 }) {
-  const katilabilir = kredi >= 1;
+  const katilabilir = demoModu || kredi >= 1;
 
   return (
     <button
@@ -219,6 +223,7 @@ export default function CekiciPanelTabs() {
   const [panelNext, setPanelNext] = useState("/panel");
   const [cikisYukleniyor, setCikisYukleniyor] = useState(false);
   const [katilYukleniyor, setKatilYukleniyor] = useState<string | null>(null);
+  const [demoAktif, setDemoAktif] = useState(false);
 
   const oturumuKapat = useCallback(async () => {
     setCikisYukleniyor(true);
@@ -240,7 +245,7 @@ export default function CekiciPanelTabs() {
   const ihaleyeKatil = useCallback(
     async (talepId: string) => {
       const mevcutKredi = data?.kredi ?? cekici?.kredi ?? 0;
-      if (mevcutKredi < 1) {
+      if (!data?.demoModu && mevcutKredi < 1) {
         router.push("/cekici/kredi");
         return;
       }
@@ -275,11 +280,12 @@ export default function CekiciPanelTabs() {
     const nextParam = searchParams.get("next");
     if (nextParam?.startsWith("/panel")) setPanelNext(nextParam);
 
-    const [meRes, talepRes, statRes, panelRes] = await Promise.all([
+    const [meRes, talepRes, statRes, panelRes, demoRes] = await Promise.all([
       cekiciFetch("/api/cekici/me"),
       cekiciFetch("/api/cekici/talepler"),
       cekiciFetch("/api/cekici/istatistik"),
       fetch("/api/panel/oturum", { credentials: "include" }),
+      cekiciFetch("/api/cekici/demo-durum"),
     ]);
 
     let yetkili = false;
@@ -303,6 +309,12 @@ export default function CekiciPanelTabs() {
     setCekici(await meRes.json());
     if (talepRes.ok) setData(await talepRes.json());
     if (statRes.ok) setIstatistik(await statRes.json());
+    if (demoRes.ok) {
+      const d = await demoRes.json();
+      setDemoAktif(!!d.aktif);
+    } else {
+      setDemoAktif(false);
+    }
     setLoading(false);
   }, [router, searchParams]);
 
@@ -461,6 +473,7 @@ export default function CekiciPanelTabs() {
             ? "Hesabım"
             : `Hoş geldin, ${cekici.ad}`
       }
+      headerBadge={demoAktif ? <DemoHeaderBadge /> : undefined}
       footer={tabBar}
     >
       {konumSync.aktif && (
@@ -535,6 +548,7 @@ export default function CekiciPanelTabs() {
                     talep={t}
                     kredi={data.kredi ?? cekici.kredi}
                     yukleniyor={katilYukleniyor === t.id}
+                    demoModu={data.demoModu}
                     onKatil={ihaleyeKatil}
                   />
                 ))}

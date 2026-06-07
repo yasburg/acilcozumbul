@@ -4,13 +4,27 @@ import { teklifleriSirala } from "@/lib/teklif-siralama";
 import { cekiciPuanOzeti, teklifFiyatDegistiMi } from "@/lib/cekici-puan";
 import { ensureSeedData } from "@/lib/seed";
 import { aktifTeklifler, ihaleAcikMi } from "@/lib/ihale";
+import { demoTalepGetir, isDemoTalepId } from "@/lib/demo-oturum";
+import { demoMusteriTekliflerJson } from "@/lib/demo-responses";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensureSeedData();
   const { id } = await params;
+
+  if (isDemoTalepId(id)) {
+    const demoCtx = await demoTalepGetir(id, request);
+    if (!demoCtx) {
+      return NextResponse.json(
+        { error: "Demo oturumu bulunamadı.", demoHatasi: true },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(demoMusteriTekliflerJson(demoCtx.talep));
+  }
+
   const talep = await getTalepById(id);
 
   if (!talep) {

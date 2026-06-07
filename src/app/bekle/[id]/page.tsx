@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
+import { DemoHeaderBadge } from "@/components/DemoHeaderBadge";
 import { Btn, Card } from "@/components/ui";
 import { MemnuniyetFormu } from "@/components/MemnuniyetFormu";
 import { PuanGostergesi } from "@/components/PuanGostergesi";
@@ -42,6 +43,8 @@ interface TeklifOzet {
   onayliCekici?: boolean;
 }
 
+const demoHeaderBadge = <DemoHeaderBadge />;
+
 interface MemnuniyetState {
   degerlendirildi: boolean;
   formAcik: boolean;
@@ -79,6 +82,7 @@ export default function BeklePage() {
   } | null>(null);
   const oncekiTeklifSayisi = useRef(0);
   const anlasildiRef = useRef(false);
+  const demoTalep = id.startsWith("demo-");
 
   useEffect(() => {
     try {
@@ -257,7 +261,7 @@ export default function BeklePage() {
     const degerlendirildi = anlasildi && memnuniyet?.degerlendirildi;
 
     return (
-      <MobileShell>
+      <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
         <div className="space-y-6 py-4">
           <div className="text-center">
             <div className="text-5xl mb-4">{anlasildi ? "✅" : "🚛"}</div>
@@ -356,7 +360,7 @@ export default function BeklePage() {
 
   if (durum === "teklif_sec") {
     return (
-      <MobileShell>
+      <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
         <div className="space-y-4 py-2">
           <div className="text-center mb-2">
             <h2 className="text-xl font-bold text-slate-900">Gelen Teklifler</h2>
@@ -461,7 +465,7 @@ export default function BeklePage() {
   }
 
   return (
-    <MobileShell>
+    <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
       <div className="flex flex-col items-center justify-center min-h-[65dvh] text-center px-4">
         {durum === "yeniden_araniyor" && (
           <Card className="w-full mb-6 bg-amber-50 border-amber-200">

@@ -117,6 +117,12 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
                 Davet
               </Link>
               <Link
+                href="/panel/demo"
+                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
+              >
+                Demo
+              </Link>
+              <Link
                 href="/panel/kampanyalar"
                 className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
               >

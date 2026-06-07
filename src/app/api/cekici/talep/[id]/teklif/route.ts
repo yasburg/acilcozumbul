@@ -16,6 +16,8 @@ import { notifyMusteri } from "@/lib/sms";
 import { smsBaseUrl } from "@/lib/sms-base-url";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Teklif } from "@/lib/types";
+import { demoTalepGetir, demoTeklifEkle, isDemoTalepId } from "@/lib/demo-oturum";
+import { demoTeklifMesaji } from "@/lib/demo-responses";
 
 export async function POST(
   request: NextRequest,
@@ -38,6 +40,46 @@ export async function POST(
       { error: "Geçerli bir fiyat girin (min. 100 TL)." },
       { status: 400 }
     );
+  }
+
+  const demoCtx = isDemoTalepId(id)
+    ? await demoTalepGetir(id, request, cekici.id)
+    : null;
+  if (isDemoTalepId(id)) {
+    if (!demoCtx) {
+      return NextResponse.json(
+        { error: "Demo oturumu bulunamadı.", demoHatasi: true },
+        { status: 404 }
+      );
+    }
+    const talep = demoCtx.talep;
+    if (cekiciHaricMi(talep, cekici.id)) {
+      return NextResponse.json(
+        { error: "Müşteri sizi tercih etmedi.", tercihEdilmedi: true },
+        { status: 403 }
+      );
+    }
+    if (talep.kazananCekiciId === cekici.id) {
+      return NextResponse.json({ kazandim: true, talepId: talep.id, demoModu: true });
+    }
+    try {
+      const { oturum: yeniOturum, teklif } = await demoTeklifEkle(
+        demoCtx.oturum,
+        id,
+        cekici,
+        { fiyat, tahminiSureDk, mesaj }
+      );
+      const guncelTalep =
+        yeniOturum.durum.talepler.find((t) => t.id === id) ?? talep;
+      return NextResponse.json(
+        demoTeklifMesaji(cekici, guncelTalep, teklif.id)
+      );
+    } catch (e) {
+      return NextResponse.json(
+        { error: e instanceof Error ? e.message : "Teklif verilemedi." },
+        { status: 409 }
+      );
+    }
   }
 
   let talep = await getTalepById(id);

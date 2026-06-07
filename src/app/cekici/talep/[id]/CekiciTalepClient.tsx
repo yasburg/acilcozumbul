@@ -9,6 +9,7 @@ import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card, Field } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
+import { DemoHeaderBadge } from "@/components/DemoHeaderBadge";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 
 interface TalepDurum {
@@ -62,6 +63,7 @@ export default function CekiciTalepClient() {
   const [islem, setIslem] = useState(false);
   const [error, setError] = useState("");
   const [teklifGonderildi, setTeklifGonderildi] = useState(false);
+  const [demoAktif, setDemoAktif] = useState(false);
 
   const [fiyat, setFiyat] = useState("");
   const [sure, setSure] = useState("30");
@@ -83,9 +85,10 @@ export default function CekiciTalepClient() {
         }
       }
 
-      const [meRes, talepRes] = await Promise.all([
+      const [meRes, talepRes, demoRes] = await Promise.all([
         cekiciFetch("/api/cekici/me"),
         cekiciFetch(`/api/cekici/talep/${id}`),
+        cekiciFetch("/api/cekici/demo-durum"),
       ]);
 
       if (!meRes.ok) {
@@ -105,6 +108,12 @@ export default function CekiciTalepClient() {
       }
 
       setTalep(await talepRes.json());
+      if (demoRes.ok) {
+        const d = await demoRes.json();
+        setDemoAktif(!!d.aktif);
+      } else {
+        setDemoAktif(false);
+      }
     } catch {
       setError("Bağlantı hatası.");
     } finally {
@@ -196,6 +205,7 @@ export default function CekiciTalepClient() {
       showBrand={false}
       backHref="/cekici/panel"
       subtitle={cekici ? `Hoş geldin, ${cekici.ad}` : "Çekici Paneli"}
+      headerBadge={demoAktif ? <DemoHeaderBadge /> : undefined}
     >
       {loading && (
         <p className="text-center text-slate-500 py-12">Yükleniyor…</p>

@@ -10,6 +10,8 @@ interface MobileShellProps {
   backHref?: string;
   /** Geri okunun yanında görünen metin (ör. İptal) */
   backLabel?: string;
+  /** Header ortasında, subtitle üstünde (ör. demo ikonu) */
+  headerBadge?: React.ReactNode;
   footer?: React.ReactNode;
 }
 
@@ -20,6 +22,7 @@ export function MobileShell({
   showBrand = true,
   backHref,
   backLabel,
+  headerBadge,
   footer,
 }: MobileShellProps) {
   return (
@@ -62,14 +65,25 @@ export function MobileShell({
             )}
           </div>
           {subtitle && (
-            <p
+            <div
               className={[
-                "text-[14.3px] leading-snug font-medium text-slate-600 line-clamp-3",
-                subtitleAlign === "right"
-                  ? "max-w-[46%] shrink-0 text-right"
-                  : "pointer-events-none absolute inset-x-0 px-28 text-center",
+                "pointer-events-none absolute inset-x-0 flex flex-col items-center justify-center gap-0.5 px-28",
+                subtitleAlign === "right" ? "hidden" : "",
               ].join(" ")}
             >
+              {headerBadge}
+              <p className="text-[14.3px] leading-snug font-medium text-slate-600 line-clamp-3 text-center">
+                {subtitle}
+              </p>
+            </div>
+          )}
+          {!subtitle && headerBadge && subtitleAlign === "center" && (
+            <div className="pointer-events-none absolute inset-x-0 flex justify-center px-28">
+              {headerBadge}
+            </div>
+          )}
+          {subtitle && subtitleAlign === "right" && (
+            <p className="max-w-[46%] shrink-0 text-right text-[14.3px] leading-snug font-medium text-slate-600 line-clamp-3">
               {subtitle}
             </p>
           )}
