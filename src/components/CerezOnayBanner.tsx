@@ -7,6 +7,7 @@ import {
   cerezBannerKapat,
   cerezOnayKaydet,
 } from "@/lib/cerez-onay";
+import { posthogCerezSenkronize } from "@/lib/posthog-client";
 
 export function CerezOnayBanner() {
   const [goster, setGoster] = useState(false);
@@ -49,6 +50,7 @@ export function CerezOnayBanner() {
             type="button"
             onClick={() => {
               cerezOnayKaydet("tumu");
+              posthogCerezSenkronize();
               setGoster(false);
             }}
             className="flex-1 min-h-[44px] rounded-xl bg-amber-500 text-white text-sm font-semibold px-4 py-2.5 hover:bg-amber-600 touch-manipulation"
@@ -59,6 +61,7 @@ export function CerezOnayBanner() {
             type="button"
             onClick={() => {
               cerezOnayKaydet("zorunlu");
+              posthogCerezSenkronize();
               setGoster(false);
             }}
             className="flex-1 min-h-[44px] rounded-xl border border-slate-300 bg-white text-slate-800 text-sm font-medium px-4 py-2.5 hover:bg-slate-50 touch-manipulation"

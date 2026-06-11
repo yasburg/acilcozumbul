@@ -41,18 +41,24 @@ import {
 import { googleMapsYapilandirildi } from "@/lib/google-maps";
 import type { KonumOneri } from "@/lib/hedef-oneri-data";
 import type { HedefOneriKaynak } from "@/lib/konum-oneri";
+import { posthogOlayYakala } from "@/lib/posthog-client";
 
 type Step = "bilgi" | "konum" | "sorun" | "detay" | "hedef";
 
 const STEP_SIRA: Step[] = ["sorun", "bilgi", "konum", "detay", "hedef"];
 const OTP_BEKLEYEN_KEY = "acilcozum_otp_bekleyen";
 
-function funnelKaydet(olay: string, telefon?: string) {
+function funnelKaydet(
+  olay: string,
+  telefon?: string,
+  posthogProps?: Record<string, unknown>
+) {
   void fetch("/api/musteri/funnel", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ olay, telefon }),
   });
+  posthogOlayYakala(olay, posthogProps);
 }
 
 export default function HomePage() {
@@ -501,6 +507,10 @@ export default function HomePage() {
             : undefined,
       });
 
+      if (data.smsGonderildi || data.gelistirmeKodu) {
+        posthogOlayYakala("otp_gonder");
+      }
+
       if (!data.smsGonderildi && !data.gelistirmeKodu) {
         setError(
           [data.mesaj, data.smsHatasi].filter(Boolean).join(" ") ||
@@ -557,6 +567,7 @@ export default function HomePage() {
       setGelistirmeKodu(null);
       setBilgiMesaj("");
       setOtpKod("");
+      posthogOlayYakala("otp_dogrulandi");
       try {
         sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
       } catch {
@@ -899,6 +910,10 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Bir hata oluştu.");
+      posthogOlayYakala("talep_olustur", {
+        sorun_tipi: form.sorunTipi,
+        bildirilen_sayisi: data.bildirilenSayisi ?? 0,
+      });
       try {
         sessionStorage.setItem(
           `acil_bekle_${data.id}`,

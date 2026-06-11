@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { CerezOnayBanner } from "@/components/CerezOnayBanner";
+import { PostHogProvider } from "@/components/PostHogProvider";
 import "./globals.css";
 
 const geist = Geist({
@@ -39,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="tr" className={`${geist.variable} h-full`}>
       <body className="min-h-dvh font-sans antialiased">
-        {children}
+        <PostHogProvider>{children}</PostHogProvider>
         <CerezOnayBanner />
       </body>
     </html>
