@@ -1,30 +1,53 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { HizmetVerenSayimOzet } from "@/lib/hizmet-veren-sayim";
 
-const YENILE_MS = 45_000;
+const CACHE_KEY = "acil_hizmet_veren_sayim";
+
+function cacheOku(): HizmetVerenSayimOzet | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as HizmetVerenSayimOzet;
+  } catch {
+    return null;
+  }
+}
 
 export function useHizmetVerenSayim() {
-  const [ozet, setOzet] = useState<HizmetVerenSayimOzet | null>(null);
-  const [yukleniyor, setYukleniyor] = useState(true);
-
-  const yukle = useCallback(async () => {
-    try {
-      const res = await fetch("/api/hizmet-veren/sayim");
-      if (res.ok) setOzet(await res.json());
-    } catch {
-      /* sessiz */
-    } finally {
-      setYukleniyor(false);
-    }
-  }, []);
+  const [ozet, setOzet] = useState<HizmetVerenSayimOzet | null>(() => cacheOku());
+  const [yukleniyor, setYukleniyor] = useState(() => cacheOku() == null);
 
   useEffect(() => {
-    void yukle();
-    const t = setInterval(() => void yukle(), YENILE_MS);
-    return () => clearInterval(t);
-  }, [yukle]);
+    const cached = cacheOku();
+    if (cached) {
+      setOzet(cached);
+      setYukleniyor(false);
+      return;
+    }
 
-  return { ozet, yukleniyor, yenile: yukle };
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/hizmet-veren/sayim");
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as HizmetVerenSayimOzet;
+        if (cancelled) return;
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        setOzet(data);
+      } catch {
+        /* sessiz */
+      } finally {
+        if (!cancelled) setYukleniyor(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { ozet, yukleniyor };
 }
