@@ -6,6 +6,7 @@
     "dev": "next dev",
     "dev:lan": "next dev --hostname 0.0.0.0",
     "dev:lan:https": "next dev --hostname 0.0.0.0 --experimental-https",
+    "dev:5000:https": "next dev --port 5000 --hostname 127.0.0.1 --experimental-https",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

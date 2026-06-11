@@ -20,6 +20,8 @@ import { KonumIzniYardim } from "@/components/KonumIzniYardim";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import { NasilCalisirSerit } from "@/components/NasilCalisirSerit";
+import { HizmetVerenSayimGostergesi } from "@/components/HizmetVerenSayimGostergesi";
+import { useHizmetVerenSayim } from "@/hooks/useHizmetVerenSayim";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import {
   geocodeAdres,
@@ -63,6 +65,8 @@ function funnelKaydet(
 
 export default function HomePage() {
   const router = useRouter();
+  const { ozet: hizmetVerenSayim, yukleniyor: hizmetVerenYukleniyor } =
+    useHizmetVerenSayim();
   const [step, setStep] = useState<Step>("sorun");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -976,6 +980,14 @@ export default function HomePage() {
       subtitleAlign="right"
       footer={<YasalSiteFooter />}
     >
+
+      <div className="mb-4">
+        <HizmetVerenSayimGostergesi
+          sorunTipi={form.sorunTipi || null}
+          ozet={hizmetVerenSayim}
+          yukleniyor={hizmetVerenYukleniyor}
+        />
+      </div>
 
       <div className="flex gap-1.5 mb-6">
         {steps.map((s) => (

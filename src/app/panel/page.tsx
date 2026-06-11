@@ -5,7 +5,9 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui";
 import { PanelGirisForm } from "@/components/panel/PanelGirisForm";
+import { HizmetVerenSayimPanel } from "@/components/panel/HizmetVerenSayimPanel";
 import { supabaseYapilandirmaHataMesaji } from "@/lib/supabase/env";
+import type { HizmetVerenSayimOzet } from "@/lib/hizmet-veren-sayim";
 
 interface Ozet {
   cekiciSayisi: number;
@@ -29,6 +31,7 @@ interface Ozet {
     basarisiz: number;
     toplam: number;
   };
+  hizmetVerenler?: HizmetVerenSayimOzet;
 }
 
 function hataMesajiFromParam(hata: string | null): string {
@@ -219,6 +222,10 @@ function PanelIcerik() {
           </Link>
         ))}
       </div>
+
+      {ozet.hizmetVerenler && (
+        <HizmetVerenSayimPanel ozet={ozet.hizmetVerenler} />
+      )}
 
       <Card>
         <h3 className="font-semibold text-slate-800 mb-3">Hızlı erişim</h3>
