@@ -71,3 +71,10 @@ export function telefonMaskele(tel: string): string {
   if (n.length < 10) return tel;
   return `${n.slice(0, 4)} *** ** ${n.slice(-2)}`;
 }
+
+/** Netgsm WhatsApp OTP: E.164 (+905xxxxxxxxx) */
+export function telefonE164(tel: string): string | null {
+  const n = telefonNormalize(tel);
+  if (!/^05[0-9]{9}$/.test(n)) return null;
+  return `+90${n.slice(1)}`;
+}

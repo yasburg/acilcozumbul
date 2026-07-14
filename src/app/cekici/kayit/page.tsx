@@ -576,7 +576,7 @@ function KayitIcerik() {
               </Card>
             )}
             <Field
-              label="SMS doğrulama kodu"
+              label="WhatsApp doğrulama kodu"
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"

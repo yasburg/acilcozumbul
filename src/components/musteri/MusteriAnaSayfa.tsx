@@ -487,7 +487,7 @@ export default function MusteriAnaSayfa() {
         setOtpKod("");
         setTelefonDogrulandi(false);
         kodGirisGoster({
-          mesaj: data.mesaj ?? "SMS'teki kodu girin.",
+          mesaj: data.mesaj ?? "WhatsApp’taki kodu girin.",
           gelistirmeKodu: data.gelistirmeKodu ?? null,
           yenidenGonderSn: data.yenidenGonderSn ?? 60,
         });
@@ -508,7 +508,7 @@ export default function MusteriAnaSayfa() {
         mesaj: data.smsGonderildi
           ? (data.mesaj ?? "Kod gönderildi. Aşağıya girin.")
           : data.gelistirmeKodu
-            ? (data.mesaj ?? "SMS gelmediyse geliştirme kodunu girin.")
+            ? (data.mesaj ?? "Kod gelmediyse geliştirme kodunu girin.")
             : undefined,
       });
 
@@ -519,7 +519,7 @@ export default function MusteriAnaSayfa() {
       if (!data.smsGonderildi && !data.gelistirmeKodu) {
         setError(
           [data.mesaj, data.smsHatasi].filter(Boolean).join(" ") ||
-            "SMS gönderilemedi."
+            "Doğrulama kodu gönderilemedi."
         );
       }
     } catch (e) {
@@ -560,7 +560,7 @@ export default function MusteriAnaSayfa() {
       if (!res.ok) {
         const msg =
           data.error ??
-          "Doğrulama kodu hatalı. SMS’teki 6 haneli kodu kontrol edin.";
+          "Doğrulama kodu hatalı. WhatsApp’taki 6 haneli kodu kontrol edin.";
         setOtpHata(msg);
         setError(msg);
         return;
@@ -1050,7 +1050,7 @@ export default function MusteriAnaSayfa() {
           <p className="text-slate-500 text-sm">
             {telefonDogrulandi
               ? "Telefonunuz doğrulandı. Arıza konumuna geçebilirsiniz."
-              : "SMS kodu ile telefonunuzu doğrulayın. Konum ve araç bilgileri sonraki adımlarda."}
+              : "WhatsApp kodu ile telefonunuzu doğrulayın. Konum ve araç bilgileri sonraki adımlarda."}
           </p>
           {sorunLabel && (
             <Card className="bg-slate-50 border-slate-200">
@@ -1224,11 +1224,11 @@ export default function MusteriAnaSayfa() {
                       variant="outline"
                       onClick={() =>
                         kodGirisGoster({
-                          mesaj: "SMS ile gelen 6 haneli kodu girin.",
+                          mesaj: "WhatsApp ile gelen 6 haneli kodu girin.",
                         })
                       }
                     >
-                      SMS Kodunu Gir
+                      WhatsApp Kodunu Gir
                     </Btn>
                   )}
                 </>

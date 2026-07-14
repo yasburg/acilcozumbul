@@ -4,7 +4,13 @@ import { funnelOlayKaydet } from "@/lib/funnel";
 import { guvenlikOlayiKaydet, otpFraudKontrol } from "@/lib/talep-fraud";
 import { ipHash, istekIp } from "@/lib/request-ip";
 import { telefonNormalize } from "@/lib/telefon";
-import { sendSms } from "@/lib/sms-provider";
+import {
+  otpBasariMesaji,
+  otpBekleyenMesaji,
+  otpGelmediMesaji,
+  otpHataMesaji,
+  sendOtp,
+} from "@/lib/otp-gonder";
 import { telefonMaskele } from "@/lib/telefon";
 
 export async function POST(request: NextRequest) {
@@ -24,7 +30,7 @@ export async function POST(request: NextRequest) {
       const bekleyen = await bekleyenOtpBilgisi(telefon ?? "");
       return NextResponse.json({
         kodBekliyor: true,
-        mesaj: "Kod zaten gönderildi. SMS'teki 6 haneli kodu girin.",
+        mesaj: otpBekleyenMesaji(),
         yenidenGonderSn: sonuc.yenidenGonderSn,
         gelistirmeKodu: bekleyen.gelistirmeKodu,
         telefon: bekleyen.telefon ?? telefonNormalize(telefon ?? ""),
@@ -47,29 +53,38 @@ export async function POST(request: NextRequest) {
   });
 
   const smsMesaj = `acilcozumbul.com doğrulama kodunuz: ${sonuc.kod}. 5 dakika geçerlidir.`;
-  const sms = await sendSms(sonuc.telefon, smsMesaj, {
+  const otp = await sendOtp(sonuc.telefon, sonuc.kod, {
     aliciTipi: "musteri",
     talepId: "otp",
+    smsMesaj,
   });
 
   const body: Record<string, unknown> = {
     yenidenGonderSn: sonuc.yenidenGonderSn,
-    smsGonderildi: sms.basarili,
+    smsGonderildi: otp.basarili,
+    otpKanal: otp.kanal,
     telefon: sonuc.telefon,
   };
 
-  if (sms.basarili) {
-    body.mesaj = `${telefonMaskele(sonuc.telefon)} numarasına doğrulama kodu gönderildi.`;
-  } else if (sonuc.gelistirmeKodu) {
-    body.gelistirmeKodu = sonuc.gelistirmeKodu;
-    body.smsGonderildi = false;
-    body.mesaj =
-      "SMS şu an gitmedi (test ortamı). Ekrandaki geliştirme kodunu girin.";
-  } else {
-    body.mesaj =
-      "Kod oluşturuldu ancak SMS gönderilemedi. Bir dakika sonra «Kodu tekrar gönder» deneyin.";
-    body.smsHatasi = sms.hata ?? "SMS servisi yanıt vermedi";
+  if (otp.basarili) {
+    body.mesaj = otpBasariMesaji(telefonMaskele(sonuc.telefon), otp.kanal);
+    return NextResponse.json(body);
   }
 
-  return NextResponse.json(body);
+  if (sonuc.gelistirmeKodu) {
+    body.gelistirmeKodu = sonuc.gelistirmeKodu;
+    body.smsGonderildi = false;
+    body.mesaj = otpGelmediMesaji(otp.kanal);
+    return NextResponse.json(body);
+  }
+
+  return NextResponse.json(
+    {
+      error: otpHataMesaji(),
+      smsGonderildi: false,
+      otpKanal: otp.kanal,
+      smsHatasi: otp.hata ?? "OTP servisi yanıt vermedi",
+    },
+    { status: 503 }
+  );
 }
