@@ -45,6 +45,7 @@ export type CekiciRow = {
   musaitlik_baslangic?: string | null;
   musaitlik_bitis?: string | null;
   musaitlik_gunler?: number[] | null;
+  premium_sms_aktif?: boolean | null;
   davet_kodu?: string | null;
   davet_eden_id?: string | null;
 };
@@ -116,6 +117,7 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     musaitlikBaslangic: r.musaitlik_baslangic ?? undefined,
     musaitlikBitis: r.musaitlik_bitis ?? undefined,
     musaitlikGunler: r.musaitlik_gunler ?? undefined,
+    premiumSmsAktif: Boolean(r.premium_sms_aktif),
     davetKodu: r.davet_kodu ?? undefined,
     davetEdenId: r.davet_eden_id ?? undefined,
   };
@@ -161,6 +163,7 @@ export function cekiciToRow(
     musaitlik_baslangic: c.musaitlikBaslangic ?? null,
     musaitlik_bitis: c.musaitlikBitis ?? null,
     musaitlik_gunler: c.musaitlikGunler ?? null,
+    premium_sms_aktif: c.premiumSmsAktif ?? false,
   };
   if (!opts?.migrationsOnly) {
     row.davet_kodu = c.davetKodu ?? null;

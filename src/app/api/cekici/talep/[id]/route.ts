@@ -3,13 +3,13 @@ import { getCurrentCekici } from "@/lib/auth";
 import { getTalepById } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import {
+  cekiciBildirimKrediTutari,
   cekiciHaricMi,
   cekiciTalebeBildirildiMi,
   cekiciTeklifVerdiMi,
   cekiciTeklifVerebilirMi,
   cekiciYeterliBildirimKredisi,
   ihaleAcikMi,
-  SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
 import { koordinatGecerli } from "@/lib/koordinat";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
@@ -148,14 +148,14 @@ export async function GET(
   }
 
   if (!cekiciTalebeBildirildiMi(talep, cekici.id)) {
+    const tutar = cekiciBildirimKrediTutari(cekici);
     return NextResponse.json({
       id: talep.id,
       erisimYok: true,
       kredi: cekici.kredi,
-      mesaj:
-        !cekiciYeterliBildirimKredisi(cekici.kredi)
-          ? "Krediniz yok. Yeni talep SMS'i ve panel listesi için kredi yükleyin (1 kredi = 1 bildirim)."
-          : "Bu talep size SMS ile bildirilmedi. Müşteriler sekmesinden 1 kredi ile katılabilirsiniz.",
+      mesaj: !cekiciYeterliBildirimKredisi(cekici.kredi, tutar)
+        ? `Krediniz yetersiz. Bildirim için en az ${tutar} kredi gerekir.`
+        : `Bu talep henüz size açılmadı. Müşteriler sekmesinden ${tutar} kredi ile katılabilirsiniz.`,
     });
   }
 

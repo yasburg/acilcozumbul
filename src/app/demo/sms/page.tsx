@@ -14,6 +14,7 @@ interface SmsKaydi {
   aliciTipi?: "cekici" | "musteri";
   saglayici?: string;
   gonderildi?: boolean;
+  kaynak?: "prod" | "video-demo";
 }
 
 export default function DemoSmsPage() {
@@ -30,6 +31,7 @@ export default function DemoSmsPage() {
     kod?: string;
   } | null>(null);
   const [baslikYukleniyor, setBaslikYukleniyor] = useState(false);
+  const videoDemoVar = log.some((s) => s.kaynak === "video-demo");
 
   useEffect(() => {
     Promise.all([
@@ -77,6 +79,21 @@ export default function DemoSmsPage() {
               NETGSM_MSGHEADER
             </p>
           )}
+        </Card>
+      )}
+
+      {videoDemoVar && (
+        <Card className="mb-4 border-amber-200 bg-amber-50">
+          <p className="text-sm font-semibold text-amber-900">
+            🎬 Video demo SMS’leri üstte
+          </p>
+          <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+            Aktif demo oturumundaki simüle SMS’ler listeleniyor (telefona
+            gitmez). Prod logları altında kalır. Yönetim:{" "}
+            <Link href="/panel/demo" className="underline font-medium">
+              /panel/demo
+            </Link>
+          </p>
         </Card>
       )}
 
@@ -157,6 +174,11 @@ export default function DemoSmsPage() {
               <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
                 {s.saglayici ?? "demo"}
               </span>
+              {s.kaynak === "video-demo" && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                  Video demo
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-500 mb-1">{s.cekiciTelefon}</p>
             <p className="text-sm text-slate-600 mb-3 leading-relaxed">{s.mesaj}</p>

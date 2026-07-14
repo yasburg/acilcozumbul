@@ -1,5 +1,8 @@
 import { addSmsKaydi, getCekiciById, updateCekici } from "./db";
-import { cekiciYeterliBildirimKredisi, SMS_BILDIRIM_KREDI } from "./ihale";
+import {
+  cekiciYeterliBildirimKredisi,
+  PANEL_BILDIRIM_KREDI,
+} from "./ihale";
 import { randomUUID } from "crypto";
 
 export type SmsAliciTipi = "cekici" | "musteri";
@@ -144,10 +147,16 @@ export async function sendSms(
     link?: string;
     /** false ise kredi düşülmez (manuel katılım sonrası SMS) */
     krediDus?: boolean;
+    /** Düşülecek kredi (varsayılan panel = 1; premium SMS = 2) */
+    krediMiktar?: number;
   }
 ): Promise<SmsGonderimSonuc> {
   const krediDus =
     meta.aliciTipi === "cekici" && meta.krediDus !== false;
+  const krediMiktar = Math.max(
+    1,
+    Math.floor(meta.krediMiktar ?? PANEL_BILDIRIM_KREDI)
+  );
   let cekiciIdForKredi: string | undefined;
 
   if (meta.aliciTipi === "cekici" && meta.cekiciId) {
@@ -161,11 +170,11 @@ export async function sendSms(
       await logSmsKaydi(telefon, mesaj, meta, sonuc);
       return sonuc;
     }
-    if (krediDus && !cekiciYeterliBildirimKredisi(cekici.kredi)) {
+    if (krediDus && !cekiciYeterliBildirimKredisi(cekici.kredi, krediMiktar)) {
       const sonuc: SmsGonderimSonuc = {
         basarili: false,
         saglayici: "demo",
-        hata: "Yetersiz kredi (SMS bildirimi için 1 kredi gerekir)",
+        hata: `Yetersiz kredi (SMS bildirimi için ${krediMiktar} kredi gerekir)`,
       };
       await logSmsKaydi(telefon, mesaj, meta, sonuc);
       return sonuc;
@@ -188,7 +197,7 @@ export async function sendSms(
   if (sonuc.basarili && krediDus && cekiciIdForKredi) {
     const cekici = await getCekiciById(cekiciIdForKredi);
     if (cekici) {
-      cekici.kredi -= SMS_BILDIRIM_KREDI;
+      cekici.kredi -= krediMiktar;
       await updateCekici(cekici);
     }
   }

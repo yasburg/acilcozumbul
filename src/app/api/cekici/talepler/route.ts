@@ -7,8 +7,8 @@ import {
   cekiciHaricMi,
   cekiciTalebeBildirildiMi,
   cekiciTeklifVerdiMi,
+  cekiciBildirimKrediTutari,
   cekiciYeterliBildirimKredisi,
-  SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
 import {
   isBugun,
@@ -116,7 +116,12 @@ export async function GET(request: NextRequest) {
           new Date(b.olusturulma).getTime() - new Date(a.olusturulma).getTime()
       ),
       kredi: cekici.kredi,
-      krediYok: !cekiciYeterliBildirimKredisi(cekici.kredi),
+      krediYok: !cekiciYeterliBildirimKredisi(
+        cekici.kredi,
+        cekiciBildirimKrediTutari(cekici)
+      ),
+      bildirimKredi: cekiciBildirimKrediTutari(cekici),
+      premiumSmsAktif: Boolean(cekici.premiumSmsAktif),
       satinAlinanlar: [...demo.kazandiklarim, ...kazandiklarim],
       baskasiAldi: [...demo.kaybettiklerim, ...kaybettiklerim],
       demoModu: true,
@@ -132,7 +137,12 @@ export async function GET(request: NextRequest) {
     tercihEdilmedi,
     bugunTumu,
     kredi: cekici.kredi,
-    krediYok: !cekiciYeterliBildirimKredisi(cekici.kredi),
+    krediYok: !cekiciYeterliBildirimKredisi(
+      cekici.kredi,
+      cekiciBildirimKrediTutari(cekici)
+    ),
+    bildirimKredi: cekiciBildirimKrediTutari(cekici),
+    premiumSmsAktif: Boolean(cekici.premiumSmsAktif),
     // Geriye uyumluluk
     satinAlinanlar: kazandiklarim,
     baskasiAldi: kaybettiklerim,

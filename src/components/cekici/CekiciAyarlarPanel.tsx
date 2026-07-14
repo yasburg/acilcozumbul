@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BolgeAyarlari } from "@/components/BolgeAyarlari";
 import { MusaitlikAyarlari } from "@/components/cekici/MusaitlikAyarlari";
+import { PremiumSmsAyarlari } from "@/components/cekici/PremiumSmsAyarlari";
 import { SorunTipiSecimi } from "@/components/SorunTipiSecimi";
 import { Btn, Card } from "@/components/ui";
 import type { SorunTipi } from "@/lib/sorun-tipleri";
@@ -154,7 +155,8 @@ export function CekiciAyarlarPanel() {
         </h2>
         <Card className="mb-3">
           <p className="text-sm text-slate-600 leading-relaxed">
-            Yalnızca işaretlediğiniz sorun tipleri için talep SMS&apos;i alırsınız.
+            Yalnızca işaretlediğiniz sorun tipleri için talep bildirimi
+            alırsınız (panel veya Premium SMS).
           </p>
         </Card>
 
@@ -189,6 +191,8 @@ export function CekiciAyarlarPanel() {
       </section>
 
       <MusaitlikAyarlari />
+
+      <PremiumSmsAyarlari />
     </div>
   );
 }

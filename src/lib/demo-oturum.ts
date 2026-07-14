@@ -20,6 +20,7 @@ import {
   cekiciTeklifVerebilirMi,
   ihaleAcikMi,
 } from "./ihale";
+import { teklifFiyatDegistiMi } from "./cekici-puan";
 import { talepBolge, talepSorunOzet } from "./talep-utils";
 import type { ListeDurumu, TalepOzet } from "./types";
 
@@ -522,6 +523,61 @@ export async function demoTeklifEkle(
   );
 
   return { oturum: yeni, teklif };
+}
+
+/** Müşteri bekle ekranından teklif seçimi (DB yazmaz) */
+export function demoTeklifSecDurumu(talep: Talep, teklifId: string): Talep {
+  if (talep.kazananCekiciId) {
+    throw new Error("Zaten bir çekici seçildi.");
+  }
+  const teklif = talep.teklifler?.find(
+    (t) => t.id === teklifId && t.durum === "aktif"
+  );
+  if (!teklif) {
+    throw new Error("Geçersiz teklif.");
+  }
+  if (teklifFiyatDegistiMi(teklif)) {
+    throw new Error("Bu çekici teklif fiyatını değiştirdi.");
+  }
+
+  return {
+    ...talep,
+    durum: "kazanan_belli",
+    kazananCekiciId: teklif.cekiciId,
+    kazananTeklifId: teklif.id,
+    anlasmaDurumu: "bekliyor",
+    teklifler: (talep.teklifler ?? []).map((te) => {
+      if (te.id === teklif.id) return { ...te, durum: "kazandi" as const };
+      if (te.durum === "aktif") return { ...te, durum: "kaybetti" as const };
+      return te;
+    }),
+  };
+}
+
+export async function demoTeklifSec(
+  oturum: AktifDemoOturum,
+  talepId: string,
+  teklifId: string
+): Promise<{ talep: Talep; kazananTeklif: Teklif }> {
+  const talep = demoTalepBul(oturum, talepId);
+  if (!talep) throw new Error("Talep bulunamadı.");
+
+  let guncel: Talep;
+  try {
+    guncel = demoTeklifSecDurumu(talep, teklifId);
+  } catch (e) {
+    throw e instanceof Error ? e : new Error("Teklif seçilemedi.");
+  }
+
+  const yeni = await oturumGuncelle(oturum, (d) =>
+    talepGuncelle(d, talepId, () => guncel)
+  );
+  const sonuc = demoTalepBul(yeni, talepId);
+  if (!sonuc) throw new Error("Talep bulunamadı.");
+  const kazananTeklif = sonuc.teklifler?.find((t) => t.id === teklifId);
+  if (!kazananTeklif) throw new Error("Geçersiz teklif.");
+
+  return { talep: sonuc, kazananTeklif };
 }
 
 function demoListeDurumuBelirle(talep: Talep, cekici: Cekici): ListeDurumu {

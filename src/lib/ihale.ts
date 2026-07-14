@@ -4,14 +4,27 @@ import { cekiciMusaitMi } from "./cekici-musaitlik";
 import { cekiciTalepSorununaUygunMu } from "./cekici-sorun";
 import type { Cekici, Talep, Teklif } from "./types";
 
-/** Çekiciye talep bildirimi SMS'i başına düşen kredi (panelde görünürlük de buna bağlı) */
-export const SMS_BILDIRIM_KREDI = 1;
+/** Panel bildirimi (SMS yok) başına kredi */
+export const PANEL_BILDIRIM_KREDI = 1;
+/** Premium anlık SMS bildirimi başına kredi */
+export const PREMIUM_SMS_BILDIRIM_KREDI = 2;
+/** Geriye uyum — panel bildirimi ile aynı */
+export const SMS_BILDIRIM_KREDI = PANEL_BILDIRIM_KREDI;
 
-export function cekiciYeterliBildirimKredisi(kredi: number): boolean {
-  return Number(kredi) >= SMS_BILDIRIM_KREDI - 1e-9;
+export function cekiciBildirimKrediTutari(cekici: Pick<Cekici, "premiumSmsAktif">): number {
+  return cekici.premiumSmsAktif
+    ? PREMIUM_SMS_BILDIRIM_KREDI
+    : PANEL_BILDIRIM_KREDI;
 }
 
-/** SMS gönderildi ve 1 kredi düşüldüyse true */
+export function cekiciYeterliBildirimKredisi(
+  kredi: number,
+  tutar: number = PANEL_BILDIRIM_KREDI
+): boolean {
+  return Number(kredi) >= tutar - 1e-9;
+}
+
+/** Talebe bildirildi (panel açıldı / SMS gitti) */
 export function cekiciTalebeBildirildiMi(talep: Talep, cekiciId: string): boolean {
   return (talep.bildirilenCekiciIds ?? []).includes(cekiciId);
 }
@@ -31,12 +44,15 @@ export function cekiciAcikTalepUygunMu(
   );
 }
 
-/** Otomatik SMS gönderilecek çekici (kredi + uygunluk) */
+/** Otomatik talep bildirimi adayı (kredi + uygunluk) */
 export function cekiciTalepSmsAdayiMi(talep: Talep, cekici: Cekici): boolean {
   return (
     cekici.aktif &&
     cekiciAcikTalepUygunMu(talep, cekici) &&
-    cekiciYeterliBildirimKredisi(cekici.kredi)
+    cekiciYeterliBildirimKredisi(
+      cekici.kredi,
+      cekiciBildirimKrediTutari(cekici)
+    )
   );
 }
 export const IHALE_SURE_DK = 60;

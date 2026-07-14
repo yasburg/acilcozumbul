@@ -5,6 +5,11 @@ import { teklifFiyatDegistiMi } from "@/lib/cekici-puan";
 import { kaybedenTeklifleriIsaretle } from "@/lib/ihale";
 import { notifyMusteri } from "@/lib/sms";
 import { smsBaseUrl } from "@/lib/sms-base-url";
+import {
+  demoTalepGetir,
+  demoTeklifSec,
+  isDemoTalepId,
+} from "@/lib/demo-oturum";
 
 export async function POST(
   request: NextRequest,
@@ -12,10 +17,57 @@ export async function POST(
 ) {
   await ensureSeedData();
   const { id } = await params;
-  const { teklifId } = await request.json();
+  const body = await request.json().catch(() => ({}));
+  const teklifId =
+    typeof body.teklifId === "string" ? body.teklifId.trim() : "";
 
   if (!teklifId) {
     return NextResponse.json({ error: "Teklif seçin." }, { status: 400 });
+  }
+
+  if (isDemoTalepId(id)) {
+    const demoCtx = await demoTalepGetir(id, request);
+    if (!demoCtx) {
+      return NextResponse.json(
+        { error: "Demo oturumu bulunamadı.", demoHatasi: true },
+        { status: 404 }
+      );
+    }
+
+    try {
+      const { kazananTeklif } = await demoTeklifSec(
+        demoCtx.oturum,
+        id,
+        teklifId
+      );
+      return NextResponse.json({
+        cekiciAd: kazananTeklif.cekiciAd,
+        fiyat: kazananTeklif.fiyat,
+        mesaj: "Çekici seçildi. Kısa süre içinde sizi arayacak.",
+        demoModu: true,
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Teklif seçilemedi.";
+      if (msg.includes("Zaten")) {
+        return NextResponse.json({ error: msg }, { status: 409 });
+      }
+      if (msg.includes("fiyatını değiştirdi")) {
+        const talep = demoCtx.talep;
+        const teklif = talep.teklifler?.find((t) => t.id === teklifId);
+        const ilk = teklif?.ilkFiyat ?? teklif?.fiyat;
+        return NextResponse.json(
+          {
+            error: `Bu çekici teklif fiyatını değiştirdi (${ilk} TL → ${teklif?.fiyat} TL). Güvenlik nedeniyle bu teklifle seçim yapılamaz.`,
+            fiyatDegisti: true,
+            ilkFiyat: ilk,
+            guncelFiyat: teklif?.fiyat,
+            demoModu: true,
+          },
+          { status: 403 }
+        );
+      }
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
   }
 
   const talep = await getTalepById(id);

@@ -80,12 +80,17 @@ export interface Cekici {
   belgeGonderim?: string;
   rozetAktif?: boolean;
   rozetOdemeTarihi?: string;
-  /** true ise yalnızca belirtilen saat/günlerde SMS alır */
+  /** true ise yalnızca belirtilen saat/günlerde bildirim alır */
   musaitlikAktif?: boolean;
   musaitlikBaslangic?: string;
   musaitlikBitis?: string;
   /** 1=Pzt … 7=Paz; boş = her gün */
   musaitlikGunler?: number[];
+  /**
+   * true: talep gelince anlık SMS (2 kredi).
+   * false: yalnızca panelde görünür (1 kredi, SMS yok).
+   */
+  premiumSmsAktif?: boolean;
   /** Paylaşılabilir davet / kupon kodu */
   davetKodu?: string;
   /** Kayıtta kullanılan davet kodunun sahibi */

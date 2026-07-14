@@ -1,10 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { cekiciTalebeBildirildiMi, SMS_BILDIRIM_KREDI } from "./ihale";
+import {
+  cekiciBildirimKrediTutari,
+  cekiciTalebeBildirildiMi,
+  PANEL_BILDIRIM_KREDI,
+  PREMIUM_SMS_BILDIRIM_KREDI,
+  SMS_BILDIRIM_KREDI,
+} from "./ihale";
 import { talepFixture } from "@/test/fixtures";
 
 describe("ihale kredi sabitleri", () => {
-  it("SMS bildirimi 1 kredi", () => {
+  it("panel 1, premium SMS 2 kredi", () => {
+    expect(PANEL_BILDIRIM_KREDI).toBe(1);
     expect(SMS_BILDIRIM_KREDI).toBe(1);
+    expect(PREMIUM_SMS_BILDIRIM_KREDI).toBe(2);
+    expect(cekiciBildirimKrediTutari({})).toBe(1);
+    expect(cekiciBildirimKrediTutari({ premiumSmsAktif: true })).toBe(2);
   });
 
   it("bildirilen çekici talebi görebilir", () => {

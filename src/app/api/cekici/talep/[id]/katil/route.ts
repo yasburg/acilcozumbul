@@ -4,9 +4,9 @@ import { getTalepById, updateCekici, updateTalep } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import {
   cekiciAcikTalepUygunMu,
+  cekiciBildirimKrediTutari,
   cekiciTalebeBildirildiMi,
   cekiciYeterliBildirimKredisi,
-  SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
 import { smsBaseUrl } from "@/lib/sms-base-url";
 import { cekiciTalepSmsMetni } from "@/lib/sms";
@@ -14,7 +14,7 @@ import { sendSms } from "@/lib/sms-provider";
 import { demoTalepGetir, demoKatil, isDemoTalepId } from "@/lib/demo-oturum";
 import { demoKatilMesaji } from "@/lib/demo-responses";
 
-/** 1 kredi ile ihaleye katıl (panelde gizli talebi aç) */
+/** Kredi ile ihaleye katıl (gizli talebi aç; premium ise SMS de gider) */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -26,6 +26,7 @@ export async function POST(
   }
 
   const { id } = await params;
+  const tutar = cekiciBildirimKrediTutari(cekici);
 
   if (isDemoTalepId(id)) {
     const demoCtx = await demoTalepGetir(id, request, cekici.id);
@@ -59,18 +60,19 @@ export async function POST(
     return NextResponse.json({ success: true, zatenAcik: true });
   }
 
-  if (!cekiciYeterliBildirimKredisi(cekici.kredi)) {
+  if (!cekiciYeterliBildirimKredisi(cekici.kredi, tutar)) {
     return NextResponse.json(
       {
-        error: "İhaleye katılmak için en az 1 kredi gerekir.",
+        error: `İhaleye katılmak için en az ${tutar} kredi gerekir.`,
         yetersizKredi: true,
         mevcutKredi: cekici.kredi,
+        gerekenKredi: tutar,
       },
       { status: 402 }
     );
   }
 
-  cekici.kredi -= SMS_BILDIRIM_KREDI;
+  cekici.kredi -= tutar;
   await updateCekici(cekici);
 
   talep.bildirilenCekiciIds = [
@@ -78,22 +80,27 @@ export async function POST(
   ];
   await updateTalep(talep);
 
-  const baseUrl = smsBaseUrl(
-    process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.acilcozumbul.com"
-  );
-  const { mesaj, link } = cekiciTalepSmsMetni(talep, cekici, baseUrl);
-  await sendSms(cekici.telefon, mesaj, {
-    aliciTipi: "cekici",
-    cekiciId: cekici.id,
-    talepId: talep.id,
-    link,
-    krediDus: false,
-  });
+  if (cekici.premiumSmsAktif) {
+    const baseUrl = smsBaseUrl(
+      process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.acilcozumbul.com"
+    );
+    const { mesaj, link } = cekiciTalepSmsMetni(talep, cekici, baseUrl);
+    await sendSms(cekici.telefon, mesaj, {
+      aliciTipi: "cekici",
+      cekiciId: cekici.id,
+      talepId: talep.id,
+      link,
+      krediDus: false,
+    });
+  }
 
   return NextResponse.json({
     success: true,
     kredi: cekici.kredi,
-    harcananKredi: SMS_BILDIRIM_KREDI,
-    mesaj: "İhaleye katıldınız. Teklif verebilirsiniz.",
+    harcananKredi: tutar,
+    premiumSms: Boolean(cekici.premiumSmsAktif),
+    mesaj: cekici.premiumSmsAktif
+      ? "İhaleye katıldınız. Anlık SMS de gönderildi."
+      : "İhaleye katıldınız. Teklif verebilirsiniz.",
   });
 }

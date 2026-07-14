@@ -1,5 +1,9 @@
-import { getCekiciler } from "./db";
-import { cekiciTalepSmsAdayiMi } from "./ihale";
+import { getCekiciById, getCekiciler, updateCekici } from "./db";
+import {
+  cekiciBildirimKrediTutari,
+  cekiciTalepSmsAdayiMi,
+  cekiciYeterliBildirimKredisi,
+} from "./ihale";
 import { sendSms, smsInfraHatasiMi } from "./sms-provider";
 import type { Cekici, Talep } from "./types";
 
@@ -20,6 +24,11 @@ export function cekiciTalepSmsMetni(
   return { mesaj, link };
 }
 
+/**
+ * Uygun çekicilere talep bildirimi.
+ * - premiumSmsAktif: anlık SMS + 2 kredi
+ * - değilse: yalnızca panel açılışı + 1 kredi (SMS yok)
+ */
 export async function notifyCekiciler(
   talep: Talep,
   baseUrl: string,
@@ -38,18 +47,37 @@ export async function notifyCekiciler(
 
   await Promise.all(
     adaylar.map(async (cekici: Cekici) => {
-      const { mesaj, link } = cekiciTalepSmsMetni(talep, cekici, baseUrl, yeniden);
+      const tutar = cekiciBildirimKrediTutari(cekici);
 
-      const sonuc = await sendSms(cekici.telefon, mesaj, {
-        aliciTipi: "cekici",
-        cekiciId: cekici.id,
-        talepId: talep.id,
-        link,
-      });
+      if (cekici.premiumSmsAktif) {
+        const { mesaj, link } = cekiciTalepSmsMetni(
+          talep,
+          cekici,
+          baseUrl,
+          yeniden
+        );
+        const sonuc = await sendSms(cekici.telefon, mesaj, {
+          aliciTipi: "cekici",
+          cekiciId: cekici.id,
+          talepId: talep.id,
+          link,
+          krediMiktar: tutar,
+        });
 
-      if (sonuc.basarili || smsInfraHatasiMi(sonuc)) {
-        bildirilenIds.push(cekici.id);
+        if (sonuc.basarili || smsInfraHatasiMi(sonuc)) {
+          bildirilenIds.push(cekici.id);
+        }
+        return;
       }
+
+      // Standart: panel bildirimi, SMS yok
+      const guncel = await getCekiciById(cekici.id);
+      if (!guncel || !cekiciYeterliBildirimKredisi(guncel.kredi, tutar)) {
+        return;
+      }
+      guncel.kredi -= tutar;
+      await updateCekici(guncel);
+      bildirilenIds.push(cekici.id);
     })
   );
 
@@ -98,7 +126,7 @@ export async function notifyMusteriMemnuniyet(
   });
 }
 
-/** İptal / anlaşamama — çekiciye bilgi SMS */
+/** İptal / anlaşamama — çekiciye bilgi SMS (premium değil; kredi düşmez) */
 export async function notifyCekiciIptal(
   cekiciTelefon: string,
   cekiciId: string,
@@ -107,6 +135,6 @@ export async function notifyCekiciIptal(
   await sendSms(
     cekiciTelefon,
     `acilcozumbul.com: ${talep.ad} ${talep.soyad.charAt(0)}. müşteri sizi tercih etmedi. Talep başka çekicilere açıldı.`,
-    { aliciTipi: "cekici", cekiciId, talepId: talep.id }
+    { aliciTipi: "cekici", cekiciId, talepId: talep.id, krediDus: false }
   );
 }
