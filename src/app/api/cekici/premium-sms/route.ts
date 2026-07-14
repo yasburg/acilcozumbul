@@ -110,7 +110,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       premiumSmsAktif: false,
       bildirimKredi: PANEL_BILDIRIM_KREDI,
-      mesaj: "Premium SMS kapatıldı. Talepler panelde 1 kredi ile açılır.",
+      mesaj: "Premium SMS kapatıldı. Talepler toplu SMS ile 1 kredi.",
     });
   }
 
@@ -135,6 +135,6 @@ export async function PUT(request: NextRequest) {
     premiumSmsAktif: true,
     bildirimKredi: PREMIUM_SMS_BILDIRIM_KREDI,
     mesaj:
-      "Premium SMS açıldı. Yeni talepler anlık SMS ile gelir (bildirim başına 2 kredi).",
+      "Premium SMS açıldı. Yeni talepler anlık OTP SMS ile gelir (bildirim başına 2 kredi).",
   });
 }

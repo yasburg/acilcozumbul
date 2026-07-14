@@ -460,7 +460,7 @@ export async function demoSimuleOlay(
         smsEkle(d, {
           aliciTipi: "musteri",
           telefon: ana!.telefon,
-          mesaj: "acilcozumbul.com: Yeni teklif geldi — demo",
+          mesaj: "acilcozumbul.com: Tekliflerinizi buradan görebilirsiniz — demo",
           link: `/bekle/${anaId}`,
         })
       );

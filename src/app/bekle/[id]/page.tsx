@@ -81,8 +81,34 @@ export default function BeklePage() {
     adres: string;
   } | null>(null);
   const oncekiTeklifSayisi = useRef(0);
+  const ilkTeklifKontrol = useRef(true);
   const anlasildiRef = useRef(false);
   const demoTalep = id.startsWith("demo-");
+  const [teklifBanner, setTeklifBanner] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!teklifBanner) return;
+    const t = setTimeout(() => setTeklifBanner(null), 8000);
+    return () => clearTimeout(t);
+  }, [teklifBanner]);
+
+  function gelenTeklifBanner() {
+    if (!teklifBanner) return null;
+    return (
+      <div
+        role="status"
+        className="sticky top-0 z-20 -mx-1 mb-3 rounded-xl bg-amber-500 px-3 py-2.5 text-center text-sm font-semibold text-white shadow-sm"
+      >
+        <button
+          type="button"
+          className="w-full"
+          onClick={() => setTeklifBanner(null)}
+        >
+          {teklifBanner}
+        </button>
+      </div>
+    );
+  }
 
   useEffect(() => {
     try {
@@ -135,6 +161,8 @@ export default function BeklePage() {
           setTeklifler([]);
           setAnimasyonBitti(false);
           oncekiTeklifSayisi.current = 0;
+          ilkTeklifKontrol.current = true;
+          setTeklifBanner(null);
           const teklifRes = await fetch(`/api/talep/${id}/teklifler`);
           if (teklifRes.ok) {
             const teklifData = await teklifRes.json();
@@ -164,12 +192,23 @@ export default function BeklePage() {
         if (teklifRes.ok) {
           const teklifData = await teklifRes.json();
           const yeniSayi = teklifData.teklifler?.length ?? 0;
-          if (yeniSayi > oncekiTeklifSayisi.current && yeniSayi > 0) {
+          if (
+            !ilkTeklifKontrol.current &&
+            yeniSayi > oncekiTeklifSayisi.current &&
+            yeniSayi > 0
+          ) {
+            const artis = yeniSayi - oncekiTeklifSayisi.current;
             const son = teklifData.teklifler[teklifData.teklifler.length - 1];
             if (son) {
               musteriYeniTeklifBildir(son.fiyat, son.cekiciAd);
             }
+            setTeklifBanner(
+              artis === 1 && yeniSayi === 1
+                ? "Gelen teklifler — aşağıdan inceleyebilirsiniz."
+                : `Yeni teklif geldi (${yeniSayi} teklif).`
+            );
           }
+          ilkTeklifKontrol.current = false;
           oncekiTeklifSayisi.current = yeniSayi;
           setTeklifler(teklifData.teklifler ?? []);
           setIhaleBitis(teklifData.ihaleBitis ?? null);
@@ -362,6 +401,7 @@ export default function BeklePage() {
     return (
       <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
         <div className="space-y-4 py-2">
+          {gelenTeklifBanner()}
           <div className="text-center mb-2">
             <h2 className="text-xl font-bold text-slate-900">Gelen Teklifler</h2>
             <p className="text-slate-500 text-sm mt-1">
@@ -467,6 +507,7 @@ export default function BeklePage() {
   return (
     <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
       <div className="flex flex-col items-center justify-center min-h-[65dvh] text-center px-4">
+        {gelenTeklifBanner()}
         {durum === "yeniden_araniyor" && (
           <Card className="w-full mb-6 bg-amber-50 border-amber-200">
             <p className="text-sm text-amber-900">

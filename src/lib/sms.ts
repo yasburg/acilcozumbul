@@ -1,15 +1,15 @@
-import { getCekiciById, getCekiciler, updateCekici } from "./db";
+import { getCekiciler } from "./db";
 import {
   cekiciBildirimKrediTutari,
   cekiciTalepSmsAdayiMi,
-  cekiciYeterliBildirimKredisi,
 } from "./ihale";
-import { sendSms, smsInfraHatasiMi } from "./sms-provider";
+import { sendSms, smsInfraHatasiMi, type SmsKanal } from "./sms-provider";
 import type { Cekici, Talep } from "./types";
 
 /**
- * Premium talep OTP SMS metni.
- * Netgsm OTP max 155 karakter — tam adres yok; ihale linki her zaman sonda tam kalır.
+ * Çekici talep SMS metni.
+ * OTP (premium) max 155 — kısa konum; link sonda korunur.
+ * Toplu (standart) aynı metni kullanır (Türkçe karakter ASCII'ye çevrilmez XML'de).
  */
 export function cekiciTalepSmsMetni(
   talep: Talep,
@@ -18,7 +18,6 @@ export function cekiciTalepSmsMetni(
   yenidenArama = false
 ): { mesaj: string; link: string } {
   const link = `${baseUrl.replace(/\/$/, "")}/cekici/talep/${talep.id}?t=${cekici.token}`;
-  // Sadece ilçe (veya il) — tam adres OTP 155 limitinde linki keserdi
   const yer = talep.konumIlce || talep.konumIl || "";
   const yerParca = yer ? ` [${yer}]` : "";
   const kim = `${talep.ad} ${talep.soyad.charAt(0)}.`;
@@ -30,8 +29,8 @@ export function cekiciTalepSmsMetni(
 
 /**
  * Uygun çekicilere talep bildirimi.
- * - premiumSmsAktif: anlık SMS + 2 kredi
- * - değilse: yalnızca panel açılışı + 1 kredi (SMS yok)
+ * - premiumSmsAktif: OTP SMS + 2 kredi
+ * - değilse: toplu (XML) SMS + 1 kredi
  */
 export async function notifyCekiciler(
   talep: Talep,
@@ -52,86 +51,98 @@ export async function notifyCekiciler(
   await Promise.all(
     adaylar.map(async (cekici: Cekici) => {
       const tutar = cekiciBildirimKrediTutari(cekici);
+      const kanal: SmsKanal = cekici.premiumSmsAktif ? "otp" : "xml";
+      const { mesaj, link } = cekiciTalepSmsMetni(
+        talep,
+        cekici,
+        baseUrl,
+        yeniden
+      );
+      const sonuc = await sendSms(cekici.telefon, mesaj, {
+        aliciTipi: "cekici",
+        cekiciId: cekici.id,
+        talepId: talep.id,
+        link,
+        krediMiktar: tutar,
+        kanal,
+      });
 
-      if (cekici.premiumSmsAktif) {
-        const { mesaj, link } = cekiciTalepSmsMetni(
-          talep,
-          cekici,
-          baseUrl,
-          yeniden
-        );
-        const sonuc = await sendSms(cekici.telefon, mesaj, {
-          aliciTipi: "cekici",
-          cekiciId: cekici.id,
-          talepId: talep.id,
-          link,
-          krediMiktar: tutar,
-          kanal: "otp",
-        });
-
-        if (sonuc.basarili || smsInfraHatasiMi(sonuc)) {
-          bildirilenIds.push(cekici.id);
-        }
-        return;
+      if (sonuc.basarili || smsInfraHatasiMi(sonuc)) {
+        bildirilenIds.push(cekici.id);
       }
-
-      // Standart: panel bildirimi, SMS yok
-      const guncel = await getCekiciById(cekici.id);
-      if (!guncel || !cekiciYeterliBildirimKredisi(guncel.kredi, tutar)) {
-        return;
-      }
-      guncel.kredi -= tutar;
-      await updateCekici(guncel);
-      bildirilenIds.push(cekici.id);
     })
   );
 
   return bildirilenIds;
 }
 
+export type MusteriSmsTipi =
+  | "talep_alindi"
+  | "cekici_bulundu"
+  | "yeniden_arama"
+  | "anlasildi"
+  | "yeni_teklif";
+
+/** OTP kanalı kullanan müşteri SMS tipleri */
+const MUSTERI_OTP_TIPLERI = new Set<MusteriSmsTipi>([
+  "talep_alindi",
+  "yeniden_arama",
+  "yeni_teklif",
+]);
+
+/** Artık SMS gönderilmeyen tipler (çağrı no-op) */
+const MUSTERI_SMS_IPTAL = new Set<MusteriSmsTipi>([
+  "cekici_bulundu",
+  "anlasildi",
+]);
+
 export async function notifyMusteri(
   talep: Talep,
-  tip:
-    | "talep_alindi"
-    | "cekici_bulundu"
-    | "yeniden_arama"
-    | "anlasildi"
-    | "yeni_teklif",
+  tip: MusteriSmsTipi,
   baseUrl: string,
-  ek?: { fiyat?: number; cekiciAd?: string }
+  _ek?: { fiyat?: number; cekiciAd?: string }
 ): Promise<void> {
-  const bekleLink = `${baseUrl}/bekle/${talep.id}`;
-  const mesajlar: Record<typeof tip, string> = {
-    talep_alindi: `acilcozumbul.com: Talebiniz alındı. Çekiciler teklif verecek. Takip: ${bekleLink}`,
-    cekici_bulundu: `acilcozumbul.com: Çekici seçtiniz! Kısa süre içinde sizi arayacak. Takip: ${bekleLink}`,
-    yeniden_arama: `acilcozumbul.com: Yeni çekici aranıyor. Lütfen bekleyin. Takip: ${bekleLink}`,
-    anlasildi: `acilcozumbul.com: Çekici ile anlaşmanız kaydedildi. İyi yolculuklar!`,
-    yeni_teklif: `acilcozumbul.com: Yeni teklif: ${ek?.fiyat ?? "?"} TL (${ek?.cekiciAd ?? "Çekici"}). Seçmek için: ${bekleLink}`,
+  if (MUSTERI_SMS_IPTAL.has(tip)) return;
+
+  const bekleLink = `${baseUrl.replace(/\/$/, "")}/bekle/${talep.id}`;
+
+  // OTP 155'e sığacak ASCII metinler (link sonda)
+  const mesajlar: Record<
+    Exclude<MusteriSmsTipi, "cekici_bulundu" | "anlasildi">,
+    string
+  > = {
+    talep_alindi: `acilcozumbul.com: Talebiniz alindi. Teklifleri buradan gorebilirsiniz: ${bekleLink}`,
+    yeniden_arama: `acilcozumbul.com: Yeni cekici araniyor. Teklifleri buradan gorebilirsiniz: ${bekleLink}`,
+    yeni_teklif: `acilcozumbul.com: Teklif geldi. Buradan gorebilirsiniz: ${bekleLink}`,
   };
 
-  await sendSms(talep.telefon, mesajlar[tip], {
+  const kanal: SmsKanal = MUSTERI_OTP_TIPLERI.has(tip) ? "otp" : "xml";
+
+  await sendSms(talep.telefon, mesajlar[tip as keyof typeof mesajlar], {
     aliciTipi: "musteri",
     talepId: talep.id,
     link: bekleLink,
+    kanal,
   });
 }
 
-/** Memnuniyet formu açıldığında müşteriye link */
+/** Memnuniyet formu — klasik toplu SMS */
 export async function notifyMusteriMemnuniyet(
   talep: Talep,
   baseUrl: string
 ): Promise<void> {
-  const link = `${baseUrl}/bekle/${talep.id}`;
-  const mesaj = `acilcozumbul.com: Hizmeti değerlendirin (genel memnuniyet, fiyat ve varış süresi). Form: ${link}`;
+  const link = `${baseUrl.replace(/\/$/, "")}/bekle/${talep.id}`;
+  const mesaj = `acilcozumbul.com: Hizmeti degerlendirin. Form: ${link}`;
 
   await sendSms(talep.telefon, mesaj, {
     aliciTipi: "musteri",
     talepId: talep.id,
     link,
+    kanal: "xml",
   });
 }
 
-/** İptal / anlaşamama — çekiciye bilgi SMS (premium değil; kredi düşmez) */
+/** İptal / anlaşamama — çekiciye toplu SMS (kredi düşmez) */
 export async function notifyCekiciIptal(
   cekiciTelefon: string,
   cekiciId: string,
@@ -139,7 +150,13 @@ export async function notifyCekiciIptal(
 ): Promise<void> {
   await sendSms(
     cekiciTelefon,
-    `acilcozumbul.com: ${talep.ad} ${talep.soyad.charAt(0)}. müşteri sizi tercih etmedi. Talep başka çekicilere açıldı.`,
-    { aliciTipi: "cekici", cekiciId, talepId: talep.id, krediDus: false }
+    `acilcozumbul.com: ${talep.ad} ${talep.soyad.charAt(0)}. musteri sizi tercih etmedi. Talep baska cekicilere acildi.`,
+    {
+      aliciTipi: "cekici",
+      cekiciId,
+      talepId: talep.id,
+      krediDus: false,
+      kanal: "xml",
+    }
   );
 }

@@ -14,7 +14,7 @@ import { sendSms } from "@/lib/sms-provider";
 import { demoTalepGetir, demoKatil, isDemoTalepId } from "@/lib/demo-oturum";
 import { demoKatilMesaji } from "@/lib/demo-responses";
 
-/** Kredi ile ihaleye katıl (gizli talebi aç; premium ise SMS de gider) */
+/** Kredi ile ihaleye katıl (gizli talebi aç; SMS: premium OTP / standart toplu) */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -80,20 +80,18 @@ export async function POST(
   ];
   await updateTalep(talep);
 
-  if (cekici.premiumSmsAktif) {
-    const baseUrl = smsBaseUrl(
-      process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.acilcozumbul.com"
-    );
-    const { mesaj, link } = cekiciTalepSmsMetni(talep, cekici, baseUrl);
-    await sendSms(cekici.telefon, mesaj, {
-      aliciTipi: "cekici",
-      cekiciId: cekici.id,
-      talepId: talep.id,
-      link,
-      krediDus: false,
-      kanal: "otp",
-    });
-  }
+  const baseUrl = smsBaseUrl(
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.acilcozumbul.com"
+  );
+  const { mesaj, link } = cekiciTalepSmsMetni(talep, cekici, baseUrl);
+  await sendSms(cekici.telefon, mesaj, {
+    aliciTipi: "cekici",
+    cekiciId: cekici.id,
+    talepId: talep.id,
+    link,
+    krediDus: false,
+    kanal: cekici.premiumSmsAktif ? "otp" : "xml",
+  });
 
   return NextResponse.json({
     success: true,
@@ -101,7 +99,7 @@ export async function POST(
     harcananKredi: tutar,
     premiumSms: Boolean(cekici.premiumSmsAktif),
     mesaj: cekici.premiumSmsAktif
-      ? "İhaleye katıldınız. Anlık SMS de gönderildi."
-      : "İhaleye katıldınız. Teklif verebilirsiniz.",
+      ? "İhaleye katıldınız. Anlık OTP SMS gönderildi."
+      : "İhaleye katıldınız. SMS gönderildi.",
   });
 }

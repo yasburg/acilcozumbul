@@ -170,11 +170,9 @@ export async function POST(
     `${request.nextUrl.protocol}//${request.nextUrl.host}`
   );
   const aktifSayi = aktifTeklifler(talep).length;
-  if (aktifSayi >= 1 && !talep.kazananCekiciId) {
-    await notifyMusteri(talep, "yeni_teklif", baseUrl, {
-      fiyat: teklif.fiyat,
-      cekiciAd: teklif.cekiciAd.split(" ")[0],
-    }).catch(() => {});
+  // İlk teklifte bir kez OTP SMS
+  if (aktifSayi === 1 && !talep.kazananCekiciId) {
+    await notifyMusteri(talep, "yeni_teklif", baseUrl).catch(() => {});
   }
 
   return NextResponse.json({

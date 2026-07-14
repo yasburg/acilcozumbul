@@ -3,8 +3,6 @@ import { getCekiciById, getTalepById, updateTalep } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import { teklifFiyatDegistiMi } from "@/lib/cekici-puan";
 import { kaybedenTeklifleriIsaretle } from "@/lib/ihale";
-import { notifyMusteri } from "@/lib/sms";
-import { smsBaseUrl } from "@/lib/sms-base-url";
 import {
   demoTalepGetir,
   demoTeklifSec,
@@ -106,10 +104,6 @@ export async function POST(
   await kaybedenTeklifleriIsaretle(talep, teklif.id);
 
   const cekici = await getCekiciById(teklif.cekiciId);
-  const baseUrl = smsBaseUrl(
-    `${request.nextUrl.protocol}//${request.nextUrl.host}`
-  );
-  await notifyMusteri(talep, "cekici_bulundu", baseUrl);
 
   return NextResponse.json({
     cekiciAd: cekici?.ad ?? teklif.cekiciAd,

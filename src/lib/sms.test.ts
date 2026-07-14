@@ -44,7 +44,7 @@ describe("D — Çekici bildirim (mock)", () => {
     });
   });
 
-  it("D1: 2 uygun çekici — panel (SMS yok, 1 kredi)", async () => {
+  it("D1: 2 uygun çekici — toplu SMS + 1 kredi", async () => {
     const c1 = cekiciFixture({ id: "c1", telefon: "05321111111" });
     const c2 = cekiciFixture({ id: "c2", telefon: "05322222222" });
     const c3 = cekiciFixture({
@@ -58,8 +58,13 @@ describe("D — Çekici bildirim (mock)", () => {
     const t = talepFixture({ konumIl: "İstanbul", konumIlce: "Kadıköy" });
     const ids = await notifyCekiciler(t, "http://localhost:3000");
     expect(ids.sort()).toEqual(["c1", "c2"]);
-    expect(sendSms).not.toHaveBeenCalled();
-    expect(updateCekici).toHaveBeenCalledTimes(2);
+    expect(sendSms).toHaveBeenCalledTimes(2);
+    const meta = sendSms.mock.calls[0][2] as {
+      krediMiktar?: number;
+      kanal?: string;
+    };
+    expect(meta.krediMiktar).toBe(PANEL_BILDIRIM_KREDI);
+    expect(meta.kanal).toBe("xml");
   });
 
   it("D1b: premium SMS → anlık SMS + 2 kredi meta", async () => {
@@ -125,8 +130,11 @@ describe("D — Çekici bildirim (mock)", () => {
     await notifyCekiciler(t, "http://localhost:3000", ["c1"], {
       yenidenArama: true,
     });
-    expect(updateCekici).toHaveBeenCalledTimes(1);
-    expect(sendSms).not.toHaveBeenCalled();
+    expect(sendSms).toHaveBeenCalledTimes(1);
+    expect(sendSms.mock.calls[0][2]).toMatchObject({
+      cekiciId: "c2",
+      kanal: "xml",
+    });
   });
 
   it("D7: premium yeniden arama mesajı", async () => {
@@ -196,7 +204,7 @@ describe("D — Çekici bildirim (mock)", () => {
     expect(ids).toEqual([]);
   });
 
-  it("D10: çok sayıda uygun çekici — panele bildir", async () => {
+  it("D10: çok sayıda uygun çekici — hepsine toplu SMS", async () => {
     const list: Cekici[] = Array.from({ length: 5 }, (_, i) =>
       cekiciFixture({ id: `c${i}`, telefon: `0532000000${i}` })
     );
@@ -209,11 +217,11 @@ describe("D — Çekici bildirim (mock)", () => {
       "http://localhost:3000"
     );
     expect(ids).toHaveLength(5);
-    expect(sendSms).not.toHaveBeenCalled();
-    expect(updateCekici).toHaveBeenCalledTimes(5);
+    expect(sendSms).toHaveBeenCalledTimes(5);
+    expect(sendSms.mock.calls[0][2]).toMatchObject({ kanal: "xml", krediMiktar: 1 });
   });
 
-  it("D4: kredi tam 1 — panel bildirimi dahil", async () => {
+  it("D4: kredi tam 1 — toplu SMS dahil", async () => {
     const c1 = cekiciFixture({ id: "c1", kredi: 1 });
     getCekiciler.mockResolvedValue([c1]);
     getCekiciById.mockResolvedValue(c1);
@@ -243,25 +251,43 @@ describe("E — Müşteri SMS (mock)", () => {
     sendSms.mockResolvedValue({ basarili: true, saglayici: "mock" });
   });
 
-  it("E1: talep_alindi", async () => {
+  it("E1: talep_alindi OTP + buradan gorebilirsiniz", async () => {
     const t = talepFixture({ id: "t1" });
     await notifyMusteri(t, "talep_alindi", "http://localhost:3000");
-    expect(sendSms.mock.calls[0][1]).toContain("Talebiniz alındı");
-    expect(sendSms.mock.calls[0][1]).toContain("/bekle/t1");
+    const mesaj = sendSms.mock.calls[0][1] as string;
+    const meta = sendSms.mock.calls[0][2] as { kanal?: string };
+    expect(mesaj).toContain("Talebiniz alindi");
+    expect(mesaj).toContain("Teklifleri buradan gorebilirsiniz");
+    expect(mesaj).toContain("/bekle/t1");
+    expect(meta.kanal).toBe("otp");
   });
 
-  it("E2: cekici_bulundu", async () => {
+  it("E2: cekici_bulundu — SMS yok", async () => {
     await notifyMusteri(talepFixture(), "cekici_bulundu", "http://localhost:3000");
-    expect(sendSms.mock.calls[0][1]).toContain("Çekici seçtiniz");
+    expect(sendSms).not.toHaveBeenCalled();
   });
 
-  it("E3: yeniden_arama", async () => {
-    await notifyMusteri(talepFixture(), "yeniden_arama", "http://localhost:3000");
-    expect(sendSms.mock.calls[0][1]).toContain("Yeni çekici aranıyor");
+  it("E3: yeniden_arama OTP", async () => {
+    await notifyMusteri(talepFixture({ id: "t2" }), "yeniden_arama", "http://localhost:3000");
+    const mesaj = sendSms.mock.calls[0][1] as string;
+    const meta = sendSms.mock.calls[0][2] as { kanal?: string };
+    expect(mesaj).toContain("Yeni cekici araniyor");
+    expect(mesaj).toContain("/bekle/t2");
+    expect(meta.kanal).toBe("otp");
   });
 
-  it("E4: anlasildi", async () => {
+  it("E4: anlasildi — SMS yok", async () => {
     await notifyMusteri(talepFixture(), "anlasildi", "http://localhost:3000");
-    expect(sendSms.mock.calls[0][1]).toContain("anlaşmanız kaydedildi");
+    expect(sendSms).not.toHaveBeenCalled();
+  });
+
+  it("E5: yeni_teklif OTP", async () => {
+    await notifyMusteri(talepFixture({ id: "t9" }), "yeni_teklif", "http://localhost:3000");
+    const mesaj = sendSms.mock.calls[0][1] as string;
+    const meta = sendSms.mock.calls[0][2] as { kanal?: string };
+    expect(mesaj).toContain("Teklif geldi");
+    expect(mesaj).toContain("Buradan gorebilirsiniz");
+    expect(mesaj).toContain("/bekle/t9");
+    expect(meta.kanal).toBe("otp");
   });
 });

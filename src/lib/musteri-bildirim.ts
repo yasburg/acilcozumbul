@@ -11,14 +11,13 @@ export async function musteriBildirimIzniIste(): Promise<boolean> {
   return sonuc === "granted";
 }
 
-/** Yeni teklif geldiğinde tarayıcı bildirimi */
+/** Yeni teklif geldiğinde tarayıcı bildirimi (sekme gizliyse) */
 export function musteriYeniTeklifBildir(fiyat: number, cekiciAd: string): void {
   if (typeof window === "undefined" || !("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
-  if (document.visibilityState === "visible") return;
 
   try {
-    new Notification("Yeni teklif geldi!", {
+    new Notification("Gelen teklifler", {
       body: `${cekiciAd}: ${fiyat} TL — acilcozumbul.com`,
       icon: "/favicon.ico",
       tag: "yeni-teklif",

@@ -38,7 +38,6 @@ export async function POST(
     talep.anlasmaDurumu = "anlaşıldı";
     talep.anlasildiAt = new Date().toISOString();
     await updateTalep(talep);
-    await notifyMusteri(talep, "anlasildi", baseUrl);
     return NextResponse.json({ durum: "anlaşıldı", mesaj: "Anlaşma kaydedildi." });
   }
 

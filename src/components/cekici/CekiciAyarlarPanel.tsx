@@ -156,7 +156,7 @@ export function CekiciAyarlarPanel() {
         <Card className="mb-3">
           <p className="text-sm text-slate-600 leading-relaxed">
             Yalnızca işaretlediğiniz sorun tipleri için talep bildirimi
-            alırsınız (panel veya Premium SMS).
+            alırsınız (standart toplu SMS veya Premium OTP SMS).
           </p>
         </Card>
 

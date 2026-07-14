@@ -131,12 +131,12 @@ export function PremiumSmsAyarlari() {
         <p className="text-sm font-semibold text-slate-900 mb-1">
           {durum.premiumSmsAktif
             ? "Premium SMS açık"
-            : "Standart bildirim (panel)"}
+            : "Standart SMS (toplu)"}
         </p>
         <p className="text-xs text-slate-600 leading-relaxed mb-3">
           {durum.premiumSmsAktif
-            ? `Yeni talepler anlık SMS ile gelir. Bildirim başına ${durum.premiumKredi} kredi düşülür.`
-            : `Talepler panelde açılır (${durum.panelKredi} kredi). Anlık SMS için Premium SMS’i telefon doğrulamasıyla açın — bildirim başına ${durum.premiumKredi} kredi.`}
+            ? `Yeni talepler anlık OTP SMS ile gelir. Bildirim başına ${durum.premiumKredi} kredi.`
+            : `Yeni talepler toplu SMS ile gelir (${durum.panelKredi} kredi). Anlık OTP SMS için Premium’i telefon doğrulamasıyla açın (${durum.premiumKredi} kredi).`}
         </p>
 
         {hata && (
