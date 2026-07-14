@@ -17,26 +17,52 @@ export interface SmsGonderimSonuc {
 }
 
 const NETGSM_OTP_URL = "https://api.netgsm.com.tr/sms/rest/v2/otp";
+/** Netgsm OTP SMS: alfanumerik başlık ile max karakter */
+export const OTP_SMS_MAX_LEN = 155;
 
-/** OTP SMS Türkçe karakter kabul etmez — ASCII'ye çevir */
+const TURKCE_ASCII: Record<string, string> = {
+  ç: "c",
+  Ç: "C",
+  ğ: "g",
+  Ğ: "G",
+  ı: "i",
+  İ: "I",
+  ö: "o",
+  Ö: "O",
+  ş: "s",
+  Ş: "S",
+  ü: "u",
+  Ü: "U",
+};
+
+function turkceyiAscii(mesaj: string): string {
+  return mesaj.replace(/[çÇğĞıİöÖşŞüÜ]/g, (c) => TURKCE_ASCII[c] ?? c);
+}
+
+/**
+ * OTP SMS Türkçe karakter kabul etmez.
+ * 155 limiti aşılırsa URL (http/https) kesilmez — önek kısaltılır.
+ */
 export function otpMesajAscii(mesaj: string): string {
-  const map: Record<string, string> = {
-    ç: "c",
-    Ç: "C",
-    ğ: "g",
-    Ğ: "G",
-    ı: "i",
-    İ: "I",
-    ö: "o",
-    Ö: "O",
-    ş: "s",
-    Ş: "S",
-    ü: "u",
-    Ü: "U",
-  };
-  return mesaj
-    .replace(/[çÇğĞıİöÖşŞüÜ]/g, (c) => map[c] ?? c)
-    .slice(0, 155);
+  const ascii = turkceyiAscii(mesaj);
+  if (ascii.length <= OTP_SMS_MAX_LEN) return ascii;
+
+  const urlMatch = ascii.match(/https?:\/\/\S+/);
+  if (urlMatch && urlMatch.index != null) {
+    const url = urlMatch[0];
+    if (url.length >= OTP_SMS_MAX_LEN) {
+      return url.slice(0, OTP_SMS_MAX_LEN);
+    }
+    const budget = OTP_SMS_MAX_LEN - url.length - 1;
+    const onek = ascii
+      .slice(0, urlMatch.index)
+      .trimEnd()
+      .slice(0, Math.max(0, budget))
+      .trimEnd();
+    return onek ? `${onek} ${url}` : url;
+  }
+
+  return ascii.slice(0, OTP_SMS_MAX_LEN);
 }
 
 /** OTP API: 5XXXXXXXXX (başında 0 / 90 yok) */

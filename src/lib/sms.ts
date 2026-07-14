@@ -7,20 +7,24 @@ import {
 import { sendSms, smsInfraHatasiMi } from "./sms-provider";
 import type { Cekici, Talep } from "./types";
 
+/**
+ * Premium talep OTP SMS metni.
+ * Netgsm OTP max 155 karakter — tam adres yok; ihale linki her zaman sonda tam kalır.
+ */
 export function cekiciTalepSmsMetni(
   talep: Talep,
   cekici: Cekici,
   baseUrl: string,
   yenidenArama = false
 ): { mesaj: string; link: string } {
-  const link = `${baseUrl}/cekici/talep/${talep.id}?t=${cekici.token}`;
-  const hedef = talep.hedefKonum?.adres
-    ? ` → ${talep.hedefKonum.adres.split(",").slice(0, 2).join(",")}`
-    : "";
-  const bolge = talep.konumIlce ? ` [${talep.konumIlce}]` : "";
+  const link = `${baseUrl.replace(/\/$/, "")}/cekici/talep/${talep.id}?t=${cekici.token}`;
+  // Sadece ilçe (veya il) — tam adres OTP 155 limitinde linki keserdi
+  const yer = talep.konumIlce || talep.konumIl || "";
+  const yerParca = yer ? ` [${yer}]` : "";
+  const kim = `${talep.ad} ${talep.soyad.charAt(0)}.`;
   const mesaj = yenidenArama
-    ? `${talep.ad} ${talep.soyad.charAt(0)}. müşteri yeni çekici arıyor${bolge} (${talep.konum.adres}${hedef}). Teklif: ${link}`
-    : `${talep.ad} ${talep.soyad.charAt(0)}. yolda kaldı${bolge} (${talep.konum.adres}${hedef}). Teklif ver: ${link}`;
+    ? `${kim} yeni cekici ariyor${yerParca}. Teklif: ${link}`
+    : `${kim} yolda kaldi${yerParca}. Teklif: ${link}`;
   return { mesaj, link };
 }
 

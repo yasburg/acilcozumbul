@@ -140,7 +140,7 @@ describe("D — Çekici bildirim (mock)", () => {
       { yenidenArama: true }
     );
     const mesaj = sendSms.mock.calls[0][1] as string;
-    expect(mesaj).toContain("yeni çekici arıyor");
+    expect(mesaj).toContain("yeni cekici ariyor");
   });
 
   it("D8: premium ilk talep mesajı ve token linki", async () => {
@@ -157,9 +157,11 @@ describe("D — Çekici bildirim (mock)", () => {
     });
     await notifyCekiciler(t, "http://localhost:3000");
     const mesaj = sendSms.mock.calls[0][1] as string;
-    expect(mesaj).toContain("yolda kaldı");
+    expect(mesaj).toContain("yolda kaldi");
+    expect(mesaj).toContain("[Kadıköy]");
     expect(mesaj).toContain("t=abc-token");
     expect(mesaj).toContain("/cekici/talep/t99");
+    expect(mesaj).not.toMatch(/\([^)]{20,}\)/);
   });
 
   it("D9: premium altyapı hatası → panelde açık sayılır", async () => {
