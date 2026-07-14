@@ -1,16 +1,17 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import {
   YasalBolum,
   YasalListe,
   YasalSayfaShell,
 } from "@/components/yasal/YasalSayfaShell";
+import { sayfaMetadata } from "@/lib/seo";
 import { YASAL_SIRKET } from "@/lib/yasal-sirket";
 
-export const metadata: Metadata = {
+export const metadata = sayfaMetadata({
   title: "Mesafeli Hizmet Sözleşmesi",
-  description: `${YASAL_SIRKET.platformAdi} mesafeli hizmet sözleşmesi`,
-};
+  description: `${YASAL_SIRKET.platformAdi} mesafeli hizmet sözleşmesi.`,
+  path: "/mesafeli-hizmet-sozlesmesi",
+});
 
 export default function MesafeliHizmetSozlesmesiPage() {
   return (

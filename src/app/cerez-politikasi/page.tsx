@@ -1,16 +1,17 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import {
   YasalBolum,
   YasalListe,
   YasalSayfaShell,
 } from "@/components/yasal/YasalSayfaShell";
+import { sayfaMetadata } from "@/lib/seo";
 import { YASAL_SIRKET } from "@/lib/yasal-sirket";
 
-export const metadata: Metadata = {
+export const metadata = sayfaMetadata({
   title: "Çerez Politikası",
-  description: `${YASAL_SIRKET.platformAdi} çerez kullanımı`,
-};
+  description: `${YASAL_SIRKET.platformAdi} çerez politikası — zorunlu ve analitik çerezler.`,
+  path: "/cerez-politikasi",
+});
 
 export default function CerezPolitikasiPage() {
   return (

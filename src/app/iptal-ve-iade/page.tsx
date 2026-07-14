@@ -1,16 +1,17 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import {
   YasalBolum,
   YasalListe,
   YasalSayfaShell,
 } from "@/components/yasal/YasalSayfaShell";
+import { sayfaMetadata } from "@/lib/seo";
 import { YASAL_SIRKET } from "@/lib/yasal-sirket";
 
-export const metadata: Metadata = {
+export const metadata = sayfaMetadata({
   title: "İptal ve İade Politikası",
-  description: `${YASAL_SIRKET.platformAdi} iptal ve iade — kredi tabanlı`,
-};
+  description: `${YASAL_SIRKET.platformAdi} iptal ve iade politikası — kredi tabanlı hizmetler.`,
+  path: "/iptal-ve-iade",
+});
 
 export default function IptalVeIadePage() {
   return (

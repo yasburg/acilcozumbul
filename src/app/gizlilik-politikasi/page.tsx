@@ -1,16 +1,17 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import {
   YasalBolum,
   YasalListe,
   YasalSayfaShell,
 } from "@/components/yasal/YasalSayfaShell";
+import { sayfaMetadata } from "@/lib/seo";
 import { YASAL_SIRKET } from "@/lib/yasal-sirket";
 
-export const metadata: Metadata = {
+export const metadata = sayfaMetadata({
   title: "Gizlilik Politikası (KVKK)",
-  description: `${YASAL_SIRKET.platformAdi} kişisel verilerin korunması`,
-};
+  description: `${YASAL_SIRKET.platformAdi} KVKK gizlilik politikası — kişisel verilerin korunması.`,
+  path: "/gizlilik-politikasi",
+});
 
 export default function GizlilikPolitikasiPage() {
   return (

@@ -1,0 +1,47 @@
+# Acil Çözüm Bul
+> Türkiye'de yolda kalan sürücüleri çekici, lastikçi, anahtarcı ve yol yardım hizmet verenleriyle buluşturan platform.
+
+Site: https://www.acilcozumbul.com
+Şirket: YSN LABS Yazılım Hizmetleri ve Bilişim Teknolojileri Sanayi Ticaret Limited Şirketi
+İletişim: destek@acilcozumbul.com
+
+## Ne işe yarar?
+
+Acil Çözüm Bul, acil yol yardım ihtiyacı olan müşterilerin yakındaki onaylı hizmet verenlerden fiyat ve süre teklifi almasını sağlar. Müşteri bir teklifi seçtikten sonra telefon ve konum bilgisi hizmet verenle paylaşılır.
+
+## Ana kullanıcı yolları
+
+- Müşteri talep: https://www.acilcozumbul.com/
+- Hizmet veren kaydı (çekici / lastikçi / anahtarcı): https://www.acilcozumbul.com/cekici/kayit
+- Hizmet veren girişi: https://www.acilcozumbul.com/cekici/giris
+
+## Ücret modeli (özet)
+
+- Müşteri talep oluşturma: ücretsiz
+- Hizmet veren kaydı: ücretsiz
+- Teklif vermek: ücretsiz
+- Hizmet verenler taleplerden SMS/panel bildirimi almak için kredi kullanır
+- Hizmet bedeli müşteri ile hizmet veren arasında anlaştıkları teklif tutarıdır
+
+## Hizmet türleri
+
+çekici, lastik, akü, yakıt, kaza, kilit / anahtarcı, diğer yol yardım
+
+## Güven
+
+- Telefon (SMS) doğrulama
+- Belge inceleme
+- Onaylı çekici rozeti (doğrulanan hesaplar müşteri listesinde öne çıkar)
+- KVKK ve yasal metinler sitede yayınlanır
+
+## Yasal sayfalar
+
+- Kullanım Koşulları: https://www.acilcozumbul.com/kullanim-kosullari
+- Gizlilik Politikası (KVKK): https://www.acilcozumbul.com/gizlilik-politikasi
+- Çerez Politikası: https://www.acilcozumbul.com/cerez-politikasi
+- İptal ve İade: https://www.acilcozumbul.com/iptal-ve-iade
+- Mesafeli Hizmet Sözleşmesi: https://www.acilcozumbul.com/mesafeli-hizmet-sozlesmesi
+
+## Sitemap
+
+https://www.acilcozumbul.com/sitemap.xml

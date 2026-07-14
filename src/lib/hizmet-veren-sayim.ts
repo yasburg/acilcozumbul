@@ -21,6 +21,10 @@ export type HizmetVerenSayimOzet = {
   benzersizCevrimici: number;
 };
 
+/** Müşteri ana sayfasında gösterilen ek offset (gerçek sayı + offset) */
+export const HIZMET_VEREN_MUSTERI_AKTIF_EK = 20;
+export const HIZMET_VEREN_MUSTERI_CEVRIMICI_EK = 10;
+
 /** Müşteriye gösterilen kısa meslek adı */
 const HIZMET_ETIKET: Record<SorunTipiId, string> = {
   ariza: "çekici",
@@ -73,6 +77,23 @@ export function hizmetVerenSayimHesapla(
     })),
     benzersizAktif,
     benzersizCevrimici,
+  };
+}
+
+/** Panel dışı müşteri ekranları için gösterim sayıları */
+export function hizmetVerenSayimMusteriGoster(
+  ozet: HizmetVerenSayimOzet
+): HizmetVerenSayimOzet {
+  return {
+    ...ozet,
+    benzersizAktif: ozet.benzersizAktif + HIZMET_VEREN_MUSTERI_AKTIF_EK,
+    benzersizCevrimici:
+      ozet.benzersizCevrimici + HIZMET_VEREN_MUSTERI_CEVRIMICI_EK,
+    satirlar: ozet.satirlar.map((s) => ({
+      ...s,
+      aktif: s.aktif + HIZMET_VEREN_MUSTERI_AKTIF_EK,
+      cevrimici: s.cevrimici + HIZMET_VEREN_MUSTERI_CEVRIMICI_EK,
+    })),
   };
 }
 

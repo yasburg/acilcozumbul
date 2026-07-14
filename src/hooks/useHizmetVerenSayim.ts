@@ -6,7 +6,6 @@ import type { HizmetVerenSayimOzet } from "@/lib/hizmet-veren-sayim";
 const CACHE_KEY = "acil_hizmet_veren_sayim";
 
 function cacheOku(): HizmetVerenSayimOzet | null {
-  if (typeof window === "undefined") return null;
   try {
     const raw = sessionStorage.getItem(CACHE_KEY);
     if (!raw) return null;
@@ -17,8 +16,8 @@ function cacheOku(): HizmetVerenSayimOzet | null {
 }
 
 export function useHizmetVerenSayim() {
-  const [ozet, setOzet] = useState<HizmetVerenSayimOzet | null>(() => cacheOku());
-  const [yukleniyor, setYukleniyor] = useState(() => cacheOku() == null);
+  const [ozet, setOzet] = useState<HizmetVerenSayimOzet | null>(null);
+  const [yukleniyor, setYukleniyor] = useState(true);
 
   useEffect(() => {
     const cached = cacheOku();

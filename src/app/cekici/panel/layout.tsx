@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
-import { PanelChrome } from "@/components/PanelChrome";
 
 export const metadata: Metadata = {
-  title: "Yönetim Paneli",
+  title: "Hizmet Veren Paneli",
   robots: { index: false, follow: false },
 };
 
-export default function PanelLayout({
+export default function CekiciPanelLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <PanelChrome>{children}</PanelChrome>;
+  return children;
 }

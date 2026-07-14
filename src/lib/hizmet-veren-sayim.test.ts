@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   hizmetVerenKisaMetin,
   hizmetVerenSayimHesapla,
+  hizmetVerenSayimMusteriGoster,
 } from "./hizmet-veren-sayim";
 import { cekiciFixture } from "@/test/fixtures";
 
@@ -51,6 +52,28 @@ describe("hizmetVerenSayimHesapla", () => {
     );
     expect(hizmetVerenKisaMetin("kilit", 0, 0)).toBe(
       "Şu an kayıtlı anahtarcı yok"
+    );
+  });
+
+  it("müşteri gösterimine sabit offset ekler", () => {
+    const simdi = new Date("2026-06-03T14:00:00+03:00");
+    const ozet = hizmetVerenSayimHesapla(
+      [
+        cekiciFixture({
+          id: "c1",
+          aktif: true,
+          hizmetSorunTipleri: ["lastik"],
+          musaitlikAktif: false,
+        }),
+      ],
+      simdi
+    );
+    const goster = hizmetVerenSayimMusteriGoster(ozet);
+
+    expect(goster.benzersizAktif).toBe(ozet.benzersizAktif + 20);
+    expect(goster.benzersizCevrimici).toBe(ozet.benzersizCevrimici + 10);
+    expect(goster.satirlar.find((s) => s.sorunTipi === "lastik")!.aktif).toBe(
+      21
     );
   });
 });

@@ -1,16 +1,17 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import {
   YasalBolum,
   YasalListe,
   YasalSayfaShell,
 } from "@/components/yasal/YasalSayfaShell";
+import { sayfaMetadata } from "@/lib/seo";
 import { YASAL_SIRKET } from "@/lib/yasal-sirket";
 
-export const metadata: Metadata = {
+export const metadata = sayfaMetadata({
   title: "Kullanım Koşulları",
-  description: `${YASAL_SIRKET.platformAdi} kullanım koşulları`,
-};
+  description: `${YASAL_SIRKET.platformAdi} kullanım koşulları — çekici ve yol yardım platformu kuralları.`,
+  path: "/kullanim-kosullari",
+});
 
 export default function KullanimKosullariPage() {
   return (

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, SelectField, SifreAlani, Card } from "@/components/ui";
 import { KayitKontenjanBilgi } from "@/components/KayitKontenjanBilgi";
+import { CekiciKayitLanding } from "@/components/cekici/CekiciKayitLanding";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { DESTEKLENEN_ILLER } from "@/lib/il-ilce";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
@@ -68,6 +69,7 @@ function KayitIcerik() {
   const sifreTekrarRef = useRef<HTMLDivElement>(null);
   const yasalRef = useRef<HTMLDivElement>(null);
   const otpRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const [form, setForm] = useState({
     ad: "",
@@ -105,7 +107,7 @@ function KayitIcerik() {
     });
   }
 
-  function alanaKaydir(ref: React.RefObject<HTMLDivElement | null>) {
+  function alanaKaydir(ref: React.RefObject<HTMLElement | null>) {
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
         scrollBelowStickyHeader(ref.current);
@@ -275,6 +277,10 @@ function KayitIcerik() {
     return true;
   }
 
+  function kaydaKaydir() {
+    alanaKaydir(formRef);
+  }
+
   async function otpGonder() {
     if (!formDogrula()) return;
 
@@ -348,10 +354,12 @@ function KayitIcerik() {
 
   return (
     <MobileShell
-      subtitle="Hizmet veren kaydı — acilcozumbul.com"
+      subtitle="Çekici ve yol yardım — ücretsiz kayıt"
       backHref="/cekici/giris"
       footer={<YasalSiteFooter />}
     >
+      <CekiciKayitLanding onKayitBasla={kaydaKaydir} />
+
       <KayitKontenjanBilgi
         onizlemeGercekKayit={
           Number.isFinite(onizlemeGercekKayit) ? onizlemeGercekKayit : undefined
@@ -374,7 +382,8 @@ function KayitIcerik() {
         </Card>
       )}
 
-      <form onSubmit={kayitOl} className="space-y-4" noValidate>
+      <form ref={formRef} onSubmit={kayitOl} className="space-y-4" noValidate>
+        <h2 className="text-base font-semibold text-slate-900">Kayıt formu</h2>
         <div ref={adRef} className="scroll-mt-28 space-y-2">
           <div className="grid grid-cols-2 gap-3">
             <Field
@@ -605,9 +614,8 @@ function KayitIcerik() {
         )}
 
         <p className="text-xs text-slate-500">
-          Kayıt ücretsizdir. Kredi yükleyerek bölgenizdeki talep SMS bildirimlerini
-          alırsınız (1 kredi = 1 bildirim ve panelde talep görünürlüğü). Teklif
-          vermek ücretsizdir.
+          Bildirim almak için kredi yüklemeniz gerekir (1 kredi = 1 talep
+          bildirimi). Teklif vermek her zaman ücretsizdir.
         </p>
 
         <Btn
@@ -622,7 +630,7 @@ function KayitIcerik() {
               : "Kod gönderiliyor…"
             : otpAsamasi
               ? "Kayıt Ol"
-              : "Doğrulama kodu gönder"}
+              : "Ücretsiz çekici kaydı oluştur"}
         </Btn>
       </form>
 
@@ -640,7 +648,7 @@ export default function CekiciKayitPage() {
   return (
     <Suspense
       fallback={
-        <MobileShell subtitle="Hizmet veren kaydı" backHref="/cekici/giris">
+        <MobileShell subtitle="Çekici kaydı" backHref="/cekici/giris">
           <p className="text-center text-slate-500 py-12">Yükleniyor…</p>
         </MobileShell>
       }
