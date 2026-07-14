@@ -102,7 +102,7 @@ export default function SifremiUnuttumPage() {
       {adim === "telefon" && (
         <div className="space-y-4">
           <p className="text-sm text-slate-600 leading-relaxed">
-            Kayıtlı telefon numaranıza WhatsApp ile doğrulama kodu gönderilir. Kodu
+            Kayıtlı telefon numaranıza SMS ile doğrulama kodu gönderilir. Kodu
             girdikten sonra yeni şifrenizi belirleyin.
           </p>
           <Field

@@ -74,8 +74,12 @@ describe("D — Çekici bildirim (mock)", () => {
     const ids = await notifyCekiciler(t, "http://localhost:3000");
     expect(ids).toEqual(["c1"]);
     expect(sendSms).toHaveBeenCalledTimes(1);
-    const meta = sendSms.mock.calls[0][2] as { krediMiktar?: number };
+    const meta = sendSms.mock.calls[0][2] as {
+      krediMiktar?: number;
+      kanal?: string;
+    };
     expect(meta.krediMiktar).toBe(PREMIUM_SMS_BILDIRIM_KREDI);
+    expect(meta.kanal).toBe("otp");
   });
 
   it("D2: aktif false → bildirim yok", async () => {

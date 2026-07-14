@@ -91,6 +91,7 @@ export async function POST(
       talepId: talep.id,
       link,
       krediDus: false,
+      kanal: "otp",
     });
   }
 

@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const smsMesaj = `acilcozumbul.com: Premium SMS aktivasyon kodunuz: ${sonuc.kod}. 5 dakika geçerlidir.`;
+  const smsMesaj = `acilcozumbul.com: Premium SMS aktivasyon kodunuz: ${sonuc.kod}. 5 dakika gecerlidir.`;
   const otp = await sendOtp(sonuc.telefon, sonuc.kod, {
     aliciTipi: "cekici",
     talepId: "premium-sms-otp",
@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
     yenidenGonderSn: sonuc.yenidenGonderSn,
     gelistirmeKodu: otp.basarili ? undefined : sonuc.gelistirmeKodu,
     mesaj: otp.basarili
-      ? otpBasariMesaji(telefonMaskele(cekici.telefon), otp.kanal)
-      : otpGelmediMesaji(otp.kanal),
+      ? otpBasariMesaji(telefonMaskele(cekici.telefon))
+      : otpGelmediMesaji(),
   });
 }
 

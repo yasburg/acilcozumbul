@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: sonuc.hata }, { status: 400 });
   }
 
-  const smsMesaj = `acilcozumbul.com şifre sıfırlama kodunuz: ${sonuc.kod}. 5 dakika geçerlidir.`;
+  const smsMesaj = `acilcozumbul.com sifre sifirlama kodunuz: ${sonuc.kod}. 5 dakika gecerlidir.`;
   const otp = await sendOtp(sonuc.telefon, sonuc.kod, {
     aliciTipi: "cekici",
     talepId: "sifre-sifirla",
@@ -58,14 +58,14 @@ export async function POST(request: NextRequest) {
   };
 
   if (otp.basarili) {
-    body.mesaj = otpBasariMesaji(telefonMaskele(sonuc.telefon), otp.kanal);
+    body.mesaj = otpBasariMesaji(telefonMaskele(sonuc.telefon));
     return NextResponse.json(body);
   }
 
   if (sonuc.gelistirmeKodu) {
     body.gelistirmeKodu = sonuc.gelistirmeKodu;
     body.smsGonderildi = false;
-    body.mesaj = otpGelmediMesaji(otp.kanal);
+    body.mesaj = otpGelmediMesaji();
     return NextResponse.json(body);
   }
 
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       error: otpHataMesaji(),
       smsGonderildi: false,
       otpKanal: otp.kanal,
-      smsHatasi: otp.hata ?? "OTP servisi yanıt vermedi",
+      smsHatasi: otp.hata ?? "OTP SMS servisi yanıt vermedi",
     },
     { status: 503 }
   );

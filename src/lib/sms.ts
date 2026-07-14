@@ -62,6 +62,7 @@ export async function notifyCekiciler(
           talepId: talep.id,
           link,
           krediMiktar: tutar,
+          kanal: "otp",
         });
 
         if (sonuc.basarili || smsInfraHatasiMi(sonuc)) {

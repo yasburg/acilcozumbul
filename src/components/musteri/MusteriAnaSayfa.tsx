@@ -487,7 +487,7 @@ export default function MusteriAnaSayfa() {
         setOtpKod("");
         setTelefonDogrulandi(false);
         kodGirisGoster({
-          mesaj: data.mesaj ?? "WhatsApp’taki kodu girin.",
+          mesaj: data.mesaj ?? "SMS'teki kodu girin.",
           gelistirmeKodu: data.gelistirmeKodu ?? null,
           yenidenGonderSn: data.yenidenGonderSn ?? 60,
         });
@@ -560,7 +560,7 @@ export default function MusteriAnaSayfa() {
       if (!res.ok) {
         const msg =
           data.error ??
-          "Doğrulama kodu hatalı. WhatsApp’taki 6 haneli kodu kontrol edin.";
+          "Doğrulama kodu hatalı. SMS’teki 6 haneli kodu kontrol edin.";
         setOtpHata(msg);
         setError(msg);
         return;
@@ -1050,7 +1050,7 @@ export default function MusteriAnaSayfa() {
           <p className="text-slate-500 text-sm">
             {telefonDogrulandi
               ? "Telefonunuz doğrulandı. Arıza konumuna geçebilirsiniz."
-              : "WhatsApp kodu ile telefonunuzu doğrulayın. Konum ve araç bilgileri sonraki adımlarda."}
+              : "SMS kodu ile telefonunuzu doğrulayın. Konum ve araç bilgileri sonraki adımlarda."}
           </p>
           {sorunLabel && (
             <Card className="bg-slate-50 border-slate-200">
@@ -1224,11 +1224,11 @@ export default function MusteriAnaSayfa() {
                       variant="outline"
                       onClick={() =>
                         kodGirisGoster({
-                          mesaj: "WhatsApp ile gelen 6 haneli kodu girin.",
+                          mesaj: "SMS ile gelen 6 haneli kodu girin.",
                         })
                       }
                     >
-                      WhatsApp Kodunu Gir
+                      SMS Kodunu Gir
                     </Btn>
                   )}
                 </>

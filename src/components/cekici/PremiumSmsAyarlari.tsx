@@ -175,7 +175,7 @@ export function PremiumSmsAyarlari() {
               </p>
             )}
             <Field
-              label="WhatsApp doğrulama kodu"
+              label="SMS doğrulama kodu"
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"

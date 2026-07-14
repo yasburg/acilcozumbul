@@ -6,12 +6,46 @@ import {
 import { randomUUID } from "crypto";
 
 export type SmsAliciTipi = "cekici" | "musteri";
-export type SmsSaglayici = "netgsm" | "demo";
+export type SmsSaglayici = "netgsm" | "netgsm-otp" | "demo";
+/** xml = klasik SMS; otp = Netgsm OTP SMS paketi (öncelikli teslim) */
+export type SmsKanal = "xml" | "otp";
 
 export interface SmsGonderimSonuc {
   basarili: boolean;
   saglayici: SmsSaglayici;
   hata?: string;
+}
+
+const NETGSM_OTP_URL = "https://api.netgsm.com.tr/sms/rest/v2/otp";
+
+/** OTP SMS Türkçe karakter kabul etmez — ASCII'ye çevir */
+export function otpMesajAscii(mesaj: string): string {
+  const map: Record<string, string> = {
+    ç: "c",
+    Ç: "C",
+    ğ: "g",
+    Ğ: "G",
+    ı: "i",
+    İ: "I",
+    ö: "o",
+    Ö: "O",
+    ş: "s",
+    Ş: "S",
+    ü: "u",
+    Ü: "U",
+  };
+  return mesaj
+    .replace(/[çÇğĞıİöÖşŞüÜ]/g, (c) => map[c] ?? c)
+    .slice(0, 155);
+}
+
+/** OTP API: 5XXXXXXXXX (başında 0 / 90 yok) */
+function telefonOtpFormat(tel: string): string | null {
+  let digits = tel.replace(/\D/g, "");
+  if (digits.startsWith("90") && digits.length === 12) digits = digits.slice(2);
+  if (digits.startsWith("0") && digits.length === 11) digits = digits.slice(1);
+  if (!/^5[0-9]{9}$/.test(digits)) return null;
+  return digits;
 }
 
 /** SMS gitti ama altyapı/demo hatası — panelde talep yine açılsın */
@@ -56,6 +90,97 @@ function netgsmKimlik(): { usercode: string; password: string; msgheader: string
     password: process.env.NETGSM_PASSWORD!,
     msgheader: process.env.NETGSM_MSGHEADER!,
   };
+}
+
+/**
+ * Netgsm OTP SMS — https://api.netgsm.com.tr/sms/rest/v2/otp
+ * Basic Auth; Türkçe karakter yok; numara 5XXXXXXXXX.
+ */
+async function netgsmOtpSmsGonder(
+  telefon: string,
+  mesaj: string
+): Promise<SmsGonderimSonuc> {
+  if (!netgsmYapilandirildi()) {
+    return {
+      basarili: false,
+      saglayici: "demo",
+      hata: "Netgsm yapılandırılmamış (NETGSM_USERCODE, NETGSM_PASSWORD, NETGSM_MSGHEADER)",
+    };
+  }
+
+  const no = telefonOtpFormat(telefon);
+  if (!no) {
+    return {
+      basarili: false,
+      saglayici: "netgsm-otp",
+      hata: `Geçersiz telefon: ${telefon}`,
+    };
+  }
+
+  const { usercode, password, msgheader } = netgsmKimlik();
+  const auth = Buffer.from(`${usercode}:${password}`).toString("base64");
+  const appname = process.env.NETGSM_APPNAME?.trim();
+  const msg = otpMesajAscii(mesaj);
+
+  const body: Record<string, string> = {
+    msgheader,
+    msg,
+    no,
+  };
+  if (appname) body.appname = appname;
+
+  try {
+    const res = await fetch(NETGSM_OTP_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const raw = await res.text();
+    let data: { code?: string; description?: string; jobid?: string };
+    try {
+      data = JSON.parse(raw) as typeof data;
+    } catch {
+      console.error("[Netgsm OTP SMS] JSON değil:", raw);
+      return {
+        basarili: false,
+        saglayici: "netgsm-otp",
+        hata: raw || `HTTP ${res.status}`,
+      };
+    }
+
+    if (data.code === "00") {
+      return { basarili: true, saglayici: "netgsm-otp" };
+    }
+
+    const hataMesajlari: Record<string, string> = {
+      "20": "Mesaj metni veya uzunluk hatası (max 155, Turkce karakter yok)",
+      "30": "Geçersiz kullanıcı adı/şifre veya API erişim izni yok",
+      "40": "Geçersiz gönderici adı (msgheader)",
+      "41": "Geçersiz gönderici adı (msgheader)",
+      "50": "Gönderilen numarayı kontrol edin",
+      "51": "Gönderilen numarayı kontrol edin",
+      "52": "Gönderilen numarayı kontrol edin",
+      "60": "Hesabınızda OTP SMS paketi tanımlı değil",
+      "70": "Hatalı parametre",
+      "100": "Netgsm sistem hatası",
+    };
+    const kod = data.code ?? "?";
+    const aciklama = hataMesajlari[kod] ?? data.description ?? raw;
+    console.error("[Netgsm OTP SMS]", kod, aciklama);
+    return {
+      basarili: false,
+      saglayici: "netgsm-otp",
+      hata: `${kod}: ${aciklama}`,
+    };
+  } catch (err) {
+    const hata = err instanceof Error ? err.message : String(err);
+    console.error("[Netgsm OTP SMS hata]", hata);
+    return { basarili: false, saglayici: "netgsm-otp", hata };
+  }
 }
 
 /**
@@ -149,6 +274,8 @@ export async function sendSms(
     krediDus?: boolean;
     /** Düşülecek kredi (varsayılan panel = 1; premium SMS = 2) */
     krediMiktar?: number;
+    /** varsayılan xml; dogrulama + premium talep → otp */
+    kanal?: SmsKanal;
   }
 ): Promise<SmsGonderimSonuc> {
   const krediDus =
@@ -182,10 +309,14 @@ export async function sendSms(
     cekiciIdForKredi = cekici.id;
   }
 
+  const kanal: SmsKanal = meta.kanal === "otp" ? "otp" : "xml";
   let sonuc: SmsGonderimSonuc;
 
   if (netgsmYapilandirildi()) {
-    sonuc = await netgsmXmlGonder(telefon, mesaj);
+    sonuc =
+      kanal === "otp"
+        ? await netgsmOtpSmsGonder(telefon, mesaj)
+        : await netgsmXmlGonder(telefon, mesaj);
   } else {
     sonuc = {
       basarili: false,
@@ -242,7 +373,7 @@ export function smsDurumu(): {
   saglayici: string;
 } {
   if (netgsmYapilandirildi()) {
-    return { gercekGonderim: true, saglayici: "netgsm-xml" };
+    return { gercekGonderim: true, saglayici: "netgsm (xml + otp)" };
   }
   return { gercekGonderim: false, saglayici: "demo (sadece log)" };
 }
