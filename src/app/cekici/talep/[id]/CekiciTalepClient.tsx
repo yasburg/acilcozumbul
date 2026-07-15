@@ -11,6 +11,12 @@ import { Btn, Card, Field } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { DemoHeaderBadge } from "@/components/DemoHeaderBadge";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
+import { useKisiselVeriGizle } from "@/hooks/useKisiselVeriGizle";
+import {
+  adGoster,
+  soyadGoster,
+  telefonGoster,
+} from "@/lib/kisisel-veri-gizle";
 
 interface TalepDurum {
   id: string;
@@ -68,6 +74,7 @@ export default function CekiciTalepClient() {
   const [fiyat, setFiyat] = useState("");
   const [sure, setSure] = useState("30");
   const [mesaj, setMesaj] = useState("");
+  const { gizli: kisiselGizli } = useKisiselVeriGizle();
 
   const yukle = useCallback(async () => {
     setError("");
@@ -166,9 +173,10 @@ export default function CekiciTalepClient() {
     }
   }
 
-  const telefonHref = talep?.telefon
-    ? `tel:${talep.telefon.replace(/\s/g, "")}`
-    : "#";
+  const telefonHref =
+    !kisiselGizli && talep?.telefon
+      ? `tel:${talep.telefon.replace(/\s/g, "")}`
+      : "#";
 
   const teklifVerebilir =
     talep &&
@@ -204,7 +212,11 @@ export default function CekiciTalepClient() {
     <MobileShell
       showBrand={false}
       backHref="/cekici/panel"
-      subtitle={cekici ? `Hoş geldin, ${cekici.ad}` : "Çekici Paneli"}
+      subtitle={
+        cekici
+          ? `Hoş geldin, ${adGoster(cekici.ad, kisiselGizli)}`
+          : "Çekici Paneli"
+      }
       headerBadge={demoAktif ? <DemoHeaderBadge /> : undefined}
     >
       {loading && (
@@ -398,10 +410,11 @@ export default function CekiciTalepClient() {
                   Kazandınız — Müşteri Bilgileri
                 </p>
                 <p className="text-lg font-bold mb-1 text-slate-900">
-                  {talep.ad} {talep.soyad}
+                  {adGoster(talep.ad, kisiselGizli)}{" "}
+                  {soyadGoster(talep.soyad, kisiselGizli)}
                 </p>
                 <p className="text-amber-600 font-mono text-lg mb-3">
-                  {talep.telefon}
+                  {telefonGoster(talep.telefon, kisiselGizli)}
                 </p>
                 <p className="text-sm text-slate-600 mb-1">
                   📍 Arıza: {talep.konum?.adres}
@@ -446,9 +459,15 @@ export default function CekiciTalepClient() {
                   </p>
                 )}
               </Card>
-              <a href={telefonHref}>
-                <Btn variant="success">📞 Müşteriye Ara</Btn>
-              </a>
+              {kisiselGizli ? (
+                <Btn variant="success" disabled>
+                  📞 Telefon gizli
+                </Btn>
+              ) : (
+                <a href={telefonHref}>
+                  <Btn variant="success">📞 Müşteriye Ara</Btn>
+                </a>
+              )}
               {musteriKoordinat && (
                 <CekiciRotaPanel
                   key={`rota-${id}`}

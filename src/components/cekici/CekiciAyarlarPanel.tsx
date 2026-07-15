@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BolgeAyarlari } from "@/components/BolgeAyarlari";
 import { MusaitlikAyarlari } from "@/components/cekici/MusaitlikAyarlari";
 import { PremiumSmsAyarlari } from "@/components/cekici/PremiumSmsAyarlari";
+import { KisiselVeriGizlemeAyarlari } from "@/components/cekici/KisiselVeriGizlemeAyarlari";
 import { SorunTipiSecimi } from "@/components/SorunTipiSecimi";
 import { Btn, Card } from "@/components/ui";
 import type { SorunTipi } from "@/lib/sorun-tipleri";
@@ -193,6 +194,8 @@ export function CekiciAyarlarPanel() {
       <MusaitlikAyarlari />
 
       <PremiumSmsAyarlari />
+
+      <KisiselVeriGizlemeAyarlari />
     </div>
   );
 }

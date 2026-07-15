@@ -15,6 +15,12 @@ import { OnayliCekiciHesap } from "@/components/cekici/OnayliCekiciHesap";
 import { CekiciAyarlarPanel } from "@/components/cekici/CekiciAyarlarPanel";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 import { DemoHeaderBadge } from "@/components/DemoHeaderBadge";
+import { useKisiselVeriGizle } from "@/hooks/useKisiselVeriGizle";
+import {
+  adGoster,
+  soyadGoster,
+  telefonGoster,
+} from "@/lib/kisisel-veri-gizle";
 
 type Tab = "musteriler" | "hesabim" | "ayarlar";
 
@@ -81,12 +87,17 @@ const BADGE: Record<
 function TalepKarti({
   talep,
   kilitle = false,
+  kisiselGizli = false,
 }: {
   talep: TalepOzet;
   kilitle?: boolean;
+  kisiselGizli?: boolean;
 }) {
   const durum = talep.listeDurumu ?? "acik";
   const badge = BADGE[durum] ?? BADGE.kaybettim;
+  const ad = adGoster(talep.ad, kisiselGizli);
+  const soyad = soyadGoster(talep.soyad, kisiselGizli);
+  const telefon = telefonGoster(talep.telefon, kisiselGizli);
 
   const icerik = (
     <Card
@@ -99,7 +110,10 @@ function TalepKarti({
       <div className="flex justify-between items-start gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-slate-900">
-            {talep.ad} {talep.soyad.charAt(0)}.
+            {ad}{" "}
+            {kisiselGizli
+              ? soyad
+              : `${talep.soyad.charAt(0)}.`}
           </p>
           {!kilitle && (
             <>
@@ -122,7 +136,7 @@ function TalepKarti({
             <p className="text-sm text-slate-500 mt-1">Müşteri sizi tercih etmedi</p>
           )}
           {talep.telefon && durum === "kazandim" && (
-            <p className="text-amber-700 font-mono text-sm mt-2">{talep.telefon}</p>
+            <p className="text-amber-700 font-mono text-sm mt-2">{telefon}</p>
           )}
         </div>
         <span
@@ -195,6 +209,7 @@ function GizliTalepKarti({
 export default function CekiciPanelTabs() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { gizli: kisiselGizli } = useKisiselVeriGizle();
   const tabParam = searchParams.get("tab");
   const initialTab: Tab =
     tabParam === "hesabim"
@@ -471,7 +486,7 @@ export default function CekiciPanelTabs() {
           ? "Ayarlar"
           : tab === "hesabim"
             ? "Hesabım"
-            : `Hoş geldin, ${cekici.ad}`
+            : `Hoş geldin, ${adGoster(cekici.ad, kisiselGizli)}`
       }
       headerBadge={demoAktif ? <DemoHeaderBadge /> : undefined}
       footer={tabBar}
@@ -540,7 +555,11 @@ export default function CekiciPanelTabs() {
             ) : (
               <div className="flex flex-col gap-4">
                 {data.bekleyen.map((t) => (
-                  <TalepKarti key={t.id} talep={t} />
+                  <TalepKarti
+                    key={t.id}
+                    talep={t}
+                    kisiselGizli={kisiselGizli}
+                  />
                 ))}
                 {(data.bekleyenGizli ?? []).map((t) => (
                   <GizliTalepKarti
@@ -569,7 +588,11 @@ export default function CekiciPanelTabs() {
             ) : (
               <div className="space-y-2">
                 {data.teklifVerdigim!.map((t) => (
-                  <TalepKarti key={t.id} talep={t} />
+                  <TalepKarti
+                    key={t.id}
+                    talep={t}
+                    kisiselGizli={kisiselGizli}
+                  />
                 ))}
               </div>
             )}
@@ -588,7 +611,11 @@ export default function CekiciPanelTabs() {
             ) : (
               <div className="space-y-2">
                 {data.kazandiklarim!.map((t) => (
-                  <TalepKarti key={t.id} talep={t} />
+                  <TalepKarti
+                    key={t.id}
+                    talep={t}
+                    kisiselGizli={kisiselGizli}
+                  />
                 ))}
               </div>
             )}
@@ -607,7 +634,12 @@ export default function CekiciPanelTabs() {
             ) : (
               <div className="space-y-2">
                 {data.kaybettiklerim!.map((t) => (
-                  <TalepKarti key={t.id} talep={t} kilitle />
+                  <TalepKarti
+                    key={t.id}
+                    talep={t}
+                    kilitle
+                    kisiselGizli={kisiselGizli}
+                  />
                 ))}
               </div>
             )}
@@ -626,7 +658,12 @@ export default function CekiciPanelTabs() {
             ) : (
               <div className="space-y-2">
                 {data.tercihEdilmedi.map((t) => (
-                  <TalepKarti key={t.id} talep={t} kilitle />
+                  <TalepKarti
+                    key={t.id}
+                    talep={t}
+                    kilitle
+                    kisiselGizli={kisiselGizli}
+                  />
                 ))}
               </div>
             )}
@@ -652,6 +689,7 @@ export default function CekiciPanelTabs() {
                       t.listeDurumu === "kaybettim" ||
                       t.listeDurumu === "tercih_edilmedi"
                     }
+                    kisiselGizli={kisiselGizli}
                   />
                 ))}
               </div>
@@ -680,9 +718,11 @@ export default function CekiciPanelTabs() {
               </Link>
             </div>
             <p className="text-sm text-slate-500 mt-2">
-              {cekici.ad} · {cekici.sehir}
+              {adGoster(cekici.ad, kisiselGizli)} · {cekici.sehir}
             </p>
-            <p className="text-sm text-slate-600">{cekici.telefon}</p>
+            <p className="text-sm text-slate-600">
+              {telefonGoster(cekici.telefon, kisiselGizli)}
+            </p>
           </Card>
 
           <OnayliCekiciHesap />
