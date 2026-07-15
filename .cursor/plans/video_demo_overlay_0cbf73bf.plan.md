@@ -4,19 +4,19 @@ overview: Panelden başlatılan, süre sınırlı (ör. 5 dk) bir demo oturumu; 
 todos:
   - id: migration-demo-oturum
     content: Add 016_demo_oturum.sql and demo-oturum.ts + fixtures
-    status: pending
+    status: completed
   - id: panel-demo-api-ui
     content: Panel /api/panel/demo/* routes and /panel/demo control page with simulate buttons
-    status: pending
+    status: completed
   - id: cekici-api-overlay
     content: Branch cekici talepler/talep/katil/teklif APIs for demo IDs (no DB/kredi writes)
-    status: pending
+    status: completed
   - id: musteri-bekle-overlay
     content: Branch /api/talep/[id] for demo talep; panel link to /bekle/demo-*
-    status: pending
+    status: completed
   - id: ui-banner-tests
     content: Demo banner on cekici panel, unit tests, docs/video-demo.md
-    status: pending
+    status: completed
 isProject: false
 ---
 

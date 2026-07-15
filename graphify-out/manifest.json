@@ -330,8 +330,8 @@
     "semantic_hash": ""
   },
   "src/app/api/panel/demo/durum/route.ts": {
-    "mtime": 1780782504.4424195,
-    "ast_hash": "36451c424cacce5034b0caf4721b88ce",
+    "mtime": 1784111836.4782226,
+    "ast_hash": "7fb7cc3e2956f370c0e214463c863c9b",
     "semantic_hash": ""
   },
   "src/app/api/panel/demo/simule/route.ts": {
@@ -420,8 +420,8 @@
     "semantic_hash": ""
   },
   "src/app/bekle/[id]/page.tsx": {
-    "mtime": 1784067257.5613708,
-    "ast_hash": "3ae0c85b987696ce88c4955653730bad",
+    "mtime": 1784111653.9822733,
+    "ast_hash": "b11dbaf442f0e28e23f088fccc0b0ba0",
     "semantic_hash": ""
   },
   "src/app/cekici/ayarlar/page.tsx": {
@@ -475,8 +475,8 @@
     "semantic_hash": ""
   },
   "src/app/cekici/talep/[id]/CekiciTalepClient.tsx": {
-    "mtime": 1780832801.3218644,
-    "ast_hash": "1b2807a8fc9b6c9e9a8ea8fabbb11c44",
+    "mtime": 1784111642.964484,
+    "ast_hash": "0ebc8a3bfdbf583d89008ddc3ce1d06f",
     "semantic_hash": ""
   },
   "src/app/cekici/talep/[id]/page.tsx": {
@@ -490,8 +490,8 @@
     "semantic_hash": ""
   },
   "src/app/demo/sms/page.tsx": {
-    "mtime": 1784062199.8129642,
-    "ast_hash": "136645a342fabede6add7befec7fa44b",
+    "mtime": 1784111653.9822738,
+    "ast_hash": "64d28daf5565990e509a029939d6145f",
     "semantic_hash": ""
   },
   "src/app/gizlilik-politikasi/page.tsx": {
@@ -625,8 +625,8 @@
     "semantic_hash": ""
   },
   "src/components/CekiciPanelTabs.tsx": {
-    "mtime": 1780832796.1348054,
-    "ast_hash": "d9bcb65a5d1e7bc233f4729fe813d387",
+    "mtime": 1784111833.7193134,
+    "ast_hash": "48d0eb30fee40e09b18571f124e7e00f",
     "semantic_hash": ""
   },
   "src/components/CekiciRotaPanel.tsx": {
@@ -755,8 +755,8 @@
     "semantic_hash": ""
   },
   "src/components/cekici/CekiciAyarlarPanel.tsx": {
-    "mtime": 1784062444.8598917,
-    "ast_hash": "db07cb235039e1887d4c10ba3629b3da",
+    "mtime": 1784109751.575649,
+    "ast_hash": "97d830a4f0a41a42910fa8b0ab87d76a",
     "semantic_hash": ""
   },
   "src/components/cekici/CekiciKayitLanding.tsx": {
@@ -980,18 +980,18 @@
     "semantic_hash": ""
   },
   "src/lib/demo-fixtures.ts": {
-    "mtime": 1780784412.5015852,
-    "ast_hash": "5026c63ffef7a17054167db48a05ad06",
+    "mtime": 1784111841.8945725,
+    "ast_hash": "7d7a63a129448126f69c208f1e3b4ac0",
     "semantic_hash": ""
   },
   "src/lib/demo-oturum.test.ts": {
-    "mtime": 1784062234.4029748,
-    "ast_hash": "00003ccf2e8d35f781b5c5cf46e885fe",
+    "mtime": 1784111875.6965108,
+    "ast_hash": "24ca7d502b300bba8416d866d9cc1c29",
     "semantic_hash": ""
   },
   "src/lib/demo-oturum.ts": {
-    "mtime": 1784067248.2353044,
-    "ast_hash": "7a7e7d75fc5de721d022121f12f3f67c",
+    "mtime": 1784111875.512892,
+    "ast_hash": "4a9945936a00a44b7979c030b61fc77b",
     "semantic_hash": ""
   },
   "src/lib/demo-responses.ts": {
@@ -1500,8 +1500,8 @@
     "semantic_hash": ""
   },
   "docs/video-demo.md": {
-    "mtime": 1784062216.4279375,
-    "ast_hash": "0f17a5073e2bf05b6e011497b3ea4b8c",
+    "mtime": 1784111860.832132,
+    "ast_hash": "56b3443ce661d588ea9be9914817dadc",
     "semantic_hash": ""
   },
   "public/llms.txt": {
@@ -1610,8 +1610,28 @@
     "semantic_hash": ""
   },
   ".cursor/plans/video_demo_overlay_0cbf73bf.plan.md": {
-    "mtime": 1784063098.3866422,
-    "ast_hash": "e6b4c7aa48536a8bd1348caf0067988f",
+    "mtime": 1784111889.848591,
+    "ast_hash": "fd605b6c63e3659cce9a4af212949216",
+    "semantic_hash": ""
+  },
+  "src/components/cekici/KisiselVeriGizlemeAyarlari.tsx": {
+    "mtime": 1784111653.9850025,
+    "ast_hash": "1151f1d627a2d5fa19a2931b18a1b0bb",
+    "semantic_hash": ""
+  },
+  "src/hooks/useKisiselVeriGizle.ts": {
+    "mtime": 1784111549.5920553,
+    "ast_hash": "f48d60a8f4ee7e3e0e5985818e806c12",
+    "semantic_hash": ""
+  },
+  "src/lib/kisisel-veri-gizle.test.ts": {
+    "mtime": 1784111552.8334446,
+    "ast_hash": "bf0dba8b9619e4665e42907ac00dcf59",
+    "semantic_hash": ""
+  },
+  "src/lib/kisisel-veri-gizle.ts": {
+    "mtime": 1784111541.9075963,
+    "ast_hash": "3da8eb32ad49071755485e1f80475853",
     "semantic_hash": ""
   }
 }

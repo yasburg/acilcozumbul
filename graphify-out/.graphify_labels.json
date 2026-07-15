@@ -31,7 +31,7 @@
   "29": "cekici-puan.ts",
   "30": "page.tsx",
   "31": "route.ts",
-  "32": "ArizaFotografAlani.tsx",
+  "32": "sorun-akis-aciklama.ts",
   "33": "migrate-json-to-supabase.mjs",
   "34": "PanelChrome.tsx",
   "35": "page.tsx",
@@ -52,7 +52,10 @@
   "50": "CLAUDE.md",
   "51": "instrumentation-client.ts",
   "52": "route.ts",
-  "53": "talep-fotograf.ts",
-  "54": "ArizaFotografAlani.tsx",
-  "57": "route.ts"
+  "53": "davet-kayit.ts",
+  "54": "route.ts",
+  "55": "davet-panel.ts",
+  "56": "Btn",
+  "57": "route.ts",
+  "58": "NasilCalisirSerit.tsx"
 }
