@@ -16,6 +16,7 @@ import {
   musteriBildirimIzniIste,
   musteriYeniTeklifBildir,
 } from "@/lib/musteri-bildirim";
+import { adSoyadSatirGoster } from "@/lib/kisisel-veri-gizle";
 
 type Durum =
   | "ihale_bekliyor"
@@ -84,6 +85,8 @@ export default function BeklePage() {
   const ilkTeklifKontrol = useRef(true);
   const anlasildiRef = useRef(false);
   const demoTalep = id.startsWith("demo-");
+  const gizlilik = demoTalep ? "yari" : "yok";
+  const cekiciAdGoster = adSoyadSatirGoster(cekiciAd, gizlilik);
   const [teklifBanner, setTeklifBanner] = useState<string | null>(null);
 
   useEffect(() => {
@@ -308,7 +311,7 @@ export default function BeklePage() {
               {anlasildi ? "Anlaşma sağlandı" : "Çekici Seçildi!"}
             </h2>
             <p className="text-slate-600 mt-2 text-sm">
-              <strong>{cekiciAd}</strong>
+              <strong>{cekiciAdGoster}</strong>
               {kazananFiyat != null && (
                 <> · <span className="text-amber-600">{kazananFiyat} TL</span></>
               )}
@@ -358,7 +361,7 @@ export default function BeklePage() {
             <>
               <Card className="bg-emerald-50 border-emerald-200">
                 <p className="text-sm font-medium text-emerald-900">
-                  {cekiciAd} sizi birazdan arayacak.
+                  {cekiciAdGoster} sizi birazdan arayacak.
                 </p>
                 <p className="text-xs text-emerald-800 mt-2 leading-relaxed">
                   Yoldayken çekiciyi yukarıdaki haritadan canlı takip
@@ -386,7 +389,7 @@ export default function BeklePage() {
               {formAcik && (
                 <MemnuniyetFormu
                   talepId={id}
-                  cekiciAd={cekiciAd ?? undefined}
+                  cekiciAd={cekiciAdGoster || undefined}
                   onTamamlandi={() => setMemnuniyetYenile((n) => n + 1)}
                 />
               )}
@@ -453,7 +456,9 @@ export default function BeklePage() {
 
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-semibold text-slate-900">{t.cekiciAd}</p>
+                        <p className="font-semibold text-slate-900">
+                          {adSoyadSatirGoster(t.cekiciAd, gizlilik)}
+                        </p>
                         {t.onayliCekici && <OnayliCekiciRozeti kucuk />}
                       </div>
                       <p className="text-2xl font-bold text-amber-600 mt-1">

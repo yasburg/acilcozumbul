@@ -24,6 +24,14 @@ export function isDemoTalepId(id: string): boolean {
   return id.startsWith(DEMO_TALEP_PREFIX);
 }
 
+export function demoRakipCekiciId(): string {
+  return "demo-rakip-cekici";
+}
+
+export function demoRakipAd(): string {
+  return "Mehmet Demir";
+}
+
 function ilceForCekici(cekici: Cekici): string {
   const bolgeler = cekiciHizmetBolgeleri(cekici);
   const ilceler = bolgeler[cekici.sehir];
@@ -69,7 +77,20 @@ export function demoBaslangicDurumu(cekici: Cekici): DemoOturumDurum {
     olusturulma: simdi,
     ihaleBitis: bitis,
     bildirilenCekiciIds: [cekici.id],
-    teklifler: [],
+    teklifler: [
+      {
+        id: `${DEMO_TALEP_PREFIX}seed-rakip-${anaId.slice(-8)}`,
+        cekiciId: demoRakipCekiciId(),
+        cekiciAd: demoRakipAd(),
+        fiyat: 2600,
+        ilkFiyat: 2600,
+        fiyatDegisti: false,
+        tahminiSureDk: 30,
+        mesaj: "Yarım saatte çıkarım.",
+        tarih: simdi,
+        durum: "aktif",
+      },
+    ],
     haricTutulanCekiciIds: [],
   };
 
@@ -102,12 +123,4 @@ export function demoBaslangicDurumu(cekici: Cekici): DemoOturumDurum {
     sms: [],
     anaTalepId: anaId,
   };
-}
-
-export function demoRakipCekiciId(): string {
-  return "demo-rakip-cekici";
-}
-
-export function demoRakipAd(): string {
-  return "Mehmet Demir";
 }

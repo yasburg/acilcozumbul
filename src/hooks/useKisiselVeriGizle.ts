@@ -1,18 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   KISISEL_VERI_GIZLE_EVENT,
+  gizlilikSeviyesi,
   kisiselVeriGizliMi,
   setKisiselVeriGizli,
+  type GizlilikSeviye,
 } from "@/lib/kisisel-veri-gizle";
 
-export function useKisiselVeriGizle() {
-  const [gizli, setGizli] = useState(false);
+/**
+ * @param demo Demo oturumu aktifse otomatik yarı maske (sosyal medya videosu).
+ * Ayarlardan tam gizleme açıksa o önceliklidir.
+ */
+export function useKisiselVeriGizle(demo = false) {
+  const [tamGizli, setTamGizli] = useState(false);
 
   useEffect(() => {
-    setGizli(kisiselVeriGizliMi());
-    const sync = () => setGizli(kisiselVeriGizliMi());
+    setTamGizli(kisiselVeriGizliMi());
+    const sync = () => setTamGizli(kisiselVeriGizliMi());
     window.addEventListener(KISISEL_VERI_GIZLE_EVENT, sync);
     window.addEventListener("storage", sync);
     return () => {
@@ -23,8 +29,18 @@ export function useKisiselVeriGizle() {
 
   const ayarla = useCallback((sonraki: boolean) => {
     setKisiselVeriGizli(sonraki);
-    setGizli(sonraki);
+    setTamGizli(sonraki);
   }, []);
 
-  return { gizli, ayarla };
+  const seviye: GizlilikSeviye = useMemo(
+    () => gizlilikSeviyesi({ tamGizli, demo }),
+    [tamGizli, demo]
+  );
+
+  return {
+    seviye,
+    /** Ayarlar anahtarının durumu (tam gizleme) */
+    gizli: tamGizli,
+    ayarla,
+  };
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Card } from "@/components/ui";
+import { telefonGoster } from "@/lib/kisisel-veri-gizle";
 
 interface SmsKaydi {
   id: string;
@@ -180,7 +181,9 @@ export default function DemoSmsPage() {
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-500 mb-1">{s.cekiciTelefon}</p>
+            <p className="text-xs text-slate-500 mb-1 font-mono">
+              {telefonGoster(s.cekiciTelefon, "yari")}
+            </p>
             <p className="text-sm text-slate-600 mb-3 leading-relaxed">{s.mesaj}</p>
             {s.link && s.aliciTipi !== "musteri" && (
               <Link

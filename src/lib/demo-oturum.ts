@@ -109,67 +109,30 @@ function oturumGecerliMi(row: DemoOturumRow | null): row is DemoOturumRow {
   return kalanSn(row.bitis) > 0;
 }
 
-function rowToAktif(row: DemoOturumRow): AktifDemoOturum {
-  return {
-    id: row.id,
-    cekiciId: row.cekici_id,
-    bitis: row.bitis,
-    kalanSn: kalanSn(row.bitis),
-    durum: normalizeDurum(row.durum),
-    olusturan: row.olusturan,
-  };
-}
-
-async function getAktifDemoOturumByCekiciId(
-  cekiciId: string
-): Promise<AktifDemoOturum | null> {
-  const { data, error } = await getSupabaseAdmin()
-    .from("demo_oturum")
-    .select("*")
-    .eq("cekici_id", cekiciId)
-    .gt("bitis", new Date().toISOString())
-    .order("olusturulma", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    if (error.message.includes("demo_oturum")) return null;
-    throw error;
-  }
-  if (!data) return null;
-
-  const row = data as DemoOturumRow;
-  return rowToAktif({ ...row, durum: normalizeDurum(row.durum) });
-}
-
-async function getAktifDemoOturumByTalepId(
-  talepId: string
-): Promise<AktifDemoOturum | null> {
-  const { data, error } = await getSupabaseAdmin()
-    .from("demo_oturum")
-    .select("*")
-    .gt("bitis", new Date().toISOString())
-    .order("olusturulma", { ascending: false })
-    .limit(20);
-
-  if (error) {
-    if (error.message.includes("demo_oturum")) return null;
-    throw error;
-  }
-
-  for (const raw of data ?? []) {
-    const row = raw as DemoOturumRow;
-    const durum = normalizeDurum(row.durum);
-    if (durum.talepler.some((t) => t.id === talepId)) {
-      return rowToAktif({ ...row, durum });
-    }
-  }
-  return null;
-}
-
 export async function demoCookieOturumId(): Promise<string | null> {
   const jar = await cookies();
   return jar.get(DEMO_COOKIE)?.value ?? null;
+}
+
+/** Süresi dolmuş satırı / çerezi temizlemek için (Route Handler içinde) */
+export async function demoCookieTemizle(): Promise<void> {
+  try {
+    const jar = await cookies();
+    jar.delete(DEMO_COOKIE);
+  } catch {
+    /* read-only cookie store (ör. bazı RSC bağlamları) */
+  }
+}
+
+async function suresiDolanOturumlariTemizle(): Promise<void> {
+  try {
+    await getSupabaseAdmin()
+      .from("demo_oturum")
+      .delete()
+      .lt("bitis", new Date().toISOString());
+  } catch {
+    /* tablo yoksa yoksay */
+  }
 }
 
 export async function getAktifDemoOturum(
@@ -182,6 +145,7 @@ export async function getAktifDemoOturum(
   const row = await oturumGet(id);
   if (!oturumGecerliMi(row)) {
     if (row) await oturumSil(id);
+    await demoCookieTemizle();
     return null;
   }
 
@@ -202,6 +166,10 @@ export async function getAktifDemoOturumRequest(
   return getAktifDemoOturum(cookieId);
 }
 
+/**
+ * Yalnızca `acil_demo` çerezi olan tarayıcıda ve oturum bu çekiciye aitse
+ * overlay döner (plan: normal kullanıcılar mock görmez).
+ */
 export async function demoOturumCekiciIcin(
   cekiciId: string,
   request?: NextRequest
@@ -212,8 +180,7 @@ export async function demoOturumCekiciIcin(
     ? await getAktifDemoOturumRequest(request)
     : await getAktifDemoOturum();
   if (fromCookie?.cekiciId === cekiciId) return fromCookie;
-
-  return getAktifDemoOturumByCekiciId(cekiciId);
+  return null;
 }
 
 export async function baslatDemoOturum(opts: {
@@ -227,6 +194,8 @@ export async function baslatDemoOturum(opts: {
 
   const cekici = await getCekiciById(opts.cekiciId);
   if (!cekici) throw new Error("Çekici bulunamadı.");
+
+  await suresiDolanOturumlariTemizle();
 
   const sureDk = Math.min(30, Math.max(1, opts.sureDk ?? 5));
   const id = randomUUID();
@@ -274,12 +243,10 @@ export async function demoTalepGetir(
   if (cekiciId) {
     oturum = await demoOturumCekiciIcin(cekiciId, request);
   } else {
+    // Müşteri tarafı: plan gereği aynı tarayıcıdaki acil_demo çerezi şart
     oturum = request
       ? await getAktifDemoOturumRequest(request)
       : await getAktifDemoOturum();
-    if (!oturum || !demoTalepBul(oturum, talepId)) {
-      oturum = await getAktifDemoOturumByTalepId(talepId);
-    }
   }
 
   if (!oturum) return null;
@@ -356,10 +323,19 @@ export async function demoSimuleOlay(
       const yeni = demoBaslangicDurumu(cekici);
       const gizli = yeni.talepler.find((t) => !t.bildirilenCekiciIds.length);
       if (!gizli) throw new Error("Gizli talep oluşturulamadı.");
-      return oturumGuncelle(oturum, (d) => ({
-        ...d,
-        talepler: [gizli, ...d.talepler],
-      }));
+      return oturumGuncelle(oturum, (d) => {
+        let next: DemoOturumDurum = {
+          ...d,
+          talepler: [gizli, ...d.talepler],
+        };
+        next = smsEkle(next, {
+          aliciTipi: "cekici",
+          telefon: cekici.telefon,
+          mesaj: `${gizli.ad} ${gizli.soyad.charAt(0)}. yolda kaldı — gizli demo ihale`,
+          link: `/cekici/talep/${gizli.id}`,
+        });
+        return next;
+      });
     }
     case "ihaleyi_ac": {
       const gizli = oturum.durum.talepler.find(
@@ -440,19 +416,7 @@ export async function demoSimuleOlay(
       const kazanan = benimTeklif ?? ana!.teklifler?.find((t) => t.durum === "aktif");
       if (!kazanan) throw new Error("Seçilecek aktif teklif yok. Önce teklif simüle edin.");
       return oturumGuncelle(oturum, (d) =>
-        talepGuncelle(d, anaId, (t) => ({
-          ...t,
-          durum: "kazanan_belli",
-          kazananCekiciId: kazanan.cekiciId,
-          kazananTeklifId: kazanan.id,
-          teklifler: (t.teklifler ?? []).map((te) =>
-            te.id === kazanan.id
-              ? te
-              : te.durum === "aktif"
-                ? { ...te, durum: "kaybetti" as const }
-                : te
-          ),
-        }))
+        talepGuncelle(d, anaId, (t) => demoTeklifSecDurumu(t, kazanan.id))
       );
     }
     case "musteri_yeni_teklif_sms": {
@@ -628,6 +592,7 @@ function demoToOzet(talep: Talep, cekici: Cekici): TalepOzet {
   };
 }
 
+/** Panel listelerini demo state ile birleştirmek için özet üretir */
 export function demoPanelVerisi(
   oturum: AktifDemoOturum,
   cekici: Cekici
@@ -657,5 +622,8 @@ export function demoPanelVerisi(
     ),
   };
 }
+
+/** Plan adı — `demoPanelVerisi` ile aynı */
+export const mergeCekiciPanelData = demoPanelVerisi;
 
 export { isDemoTalepId };

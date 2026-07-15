@@ -14,6 +14,7 @@ import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 import { useKisiselVeriGizle } from "@/hooks/useKisiselVeriGizle";
 import {
   adGoster,
+  adresGoster,
   soyadGoster,
   telefonGoster,
 } from "@/lib/kisisel-veri-gizle";
@@ -74,7 +75,8 @@ export default function CekiciTalepClient() {
   const [fiyat, setFiyat] = useState("");
   const [sure, setSure] = useState("30");
   const [mesaj, setMesaj] = useState("");
-  const { gizli: kisiselGizli } = useKisiselVeriGizle();
+  const demoTalep = id.startsWith("demo-");
+  const { seviye: gizlilik } = useKisiselVeriGizle(demoAktif || demoTalep);
 
   const yukle = useCallback(async () => {
     setError("");
@@ -174,7 +176,7 @@ export default function CekiciTalepClient() {
   }
 
   const telefonHref =
-    !kisiselGizli && talep?.telefon
+    gizlilik === "yok" && talep?.telefon
       ? `tel:${talep.telefon.replace(/\s/g, "")}`
       : "#";
 
@@ -214,7 +216,7 @@ export default function CekiciTalepClient() {
       backHref="/cekici/panel"
       subtitle={
         cekici
-          ? `Hoş geldin, ${adGoster(cekici.ad, kisiselGizli)}`
+          ? `Hoş geldin, ${adGoster(cekici.ad, gizlilik)}`
           : "Çekici Paneli"
       }
       headerBadge={demoAktif ? <DemoHeaderBadge /> : undefined}
@@ -410,18 +412,18 @@ export default function CekiciTalepClient() {
                   Kazandınız — Müşteri Bilgileri
                 </p>
                 <p className="text-lg font-bold mb-1 text-slate-900">
-                  {adGoster(talep.ad, kisiselGizli)}{" "}
-                  {soyadGoster(talep.soyad, kisiselGizli)}
+                  {adGoster(talep.ad, gizlilik)}{" "}
+                  {soyadGoster(talep.soyad, gizlilik)}
                 </p>
                 <p className="text-amber-600 font-mono text-lg mb-3">
-                  {telefonGoster(talep.telefon, kisiselGizli)}
+                  {telefonGoster(talep.telefon, gizlilik)}
                 </p>
                 <p className="text-sm text-slate-600 mb-1">
-                  📍 Arıza: {talep.konum?.adres}
+                  📍 Arıza: {adresGoster(talep.konum?.adres, gizlilik)}
                 </p>
                 {talep.hedefKonum && (
                   <p className="text-sm text-amber-700 mb-2">
-                    → Hedef: {talep.hedefKonum.adres}
+                    → Hedef: {adresGoster(talep.hedefKonum.adres, gizlilik)}
                   </p>
                 )}
                 <p className="text-sm text-slate-500 border-t border-slate-100 pt-3 mt-3">
@@ -459,9 +461,9 @@ export default function CekiciTalepClient() {
                   </p>
                 )}
               </Card>
-              {kisiselGizli ? (
+              {gizlilik !== "yok" ? (
                 <Btn variant="success" disabled>
-                  📞 Telefon gizli
+                  📞 {gizlilik === "tam" ? "Telefon gizli" : "Telefon maskeli"}
                 </Btn>
               ) : (
                 <a href={telefonHref}>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  DEMO_COOKIE,
   demoCookieOturumId,
   demoModuAcikMi,
   getAktifDemoOturum,
@@ -14,7 +15,17 @@ export async function GET() {
   const id = await demoCookieOturumId();
   const oturum = await getAktifDemoOturum(id);
   if (!oturum) {
-    return NextResponse.json({ aktif: false });
+    const res = NextResponse.json({ aktif: false });
+    if (id) {
+      res.cookies.set(DEMO_COOKIE, "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 0,
+        path: "/",
+      });
+    }
+    return res;
   }
 
   const cekici = await getCekiciById(oturum.cekiciId);
