@@ -64,16 +64,17 @@ export function KayitKontenjanBilgi({ onizlemeGercekKayit }: Props = {}) {
         Erken faz — sınırlı üye kaydı
       </p>
       <p className="text-sm text-slate-700 leading-relaxed mb-3">
-        Erken fazda ilk <strong>{durum.limit} hizmet veren</strong> (çekici,
-        lastikçi, anahtarcı) önceliğini hedefliyoruz. Bu bir bekleme listesi
-        değil; gösterge yoğunluğu yansıtır, kayıt devam eder.
+        Erken fazda panel kullanımı yalnızca <strong>İstanbul</strong>’da açık
+        (kontenjan <strong>{durum.limit} hizmet veren</strong>). Diğer
+        illerden de kayıt olabilirsiniz; şehriniz açılana kadar bekleme
+        listesinde önde tutulursunuz. Gösterge İstanbul doluluğunu yansıtır.
       </p>
 
       <div className="flex justify-between text-sm mb-1.5">
         <span className="text-slate-600">
           <strong className="text-slate-900">{durum.gosterilenKayit}</strong>
           {" / "}
-          {durum.limit} kayıt
+          {durum.limit} İstanbul kontenjanı
         </span>
         <span
           className={
@@ -105,7 +106,7 @@ export function KayitKontenjanBilgi({ onizlemeGercekKayit }: Props = {}) {
 
       {durum.sonKontenjanModu && (
         <p className="text-sm font-semibold text-amber-900 mt-3">
-          Son {durum.gosterilenKalan} kontenjan — hemen kayıt olun!
+          Son {durum.gosterilenKalan} İstanbul kontenjanı — hemen kayıt olun!
         </p>
       )}
     </Card>

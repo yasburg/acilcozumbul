@@ -6,7 +6,7 @@ import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 const AVANTAJLAR = [
   "Kayıt ücretsiz",
   "Teklif vermek ücretsiz",
-  "İl / ilçe bazlı çalış",
+  "İstanbul ilçe bazlı çalış",
 ] as const;
 
 const IS_AKISI = [
@@ -55,12 +55,12 @@ const YORUMLAR = [
   {
     metin: "Kayıt 5 dakika sürdü. İlk ayda lastik işlerim ikiye katlandı, panelden takip etmek çok kolay.",
     ad: "Ali R.",
-    rol: "Lastikçi · Ankara",
+    rol: "Lastikçi · İstanbul",
   },
   {
     metin: "Araç kilit işlerim eskiden sadece tanıdıktan geliyordu. Şimdi bölgeden düzenli talep alıyorum, iş hacmim arttı.",
     ad: "Serkan D.",
-    rol: "Anahtarcı · İzmir",
+    rol: "Anahtarcı · İstanbul",
   },
 ] as const;
 
@@ -73,16 +73,17 @@ export function CekiciKayitLanding({ onKayitBasla }: CekiciKayitLandingProps) {
     <div className="space-y-4 mb-6">
       <section className="rounded-2xl border border-amber-200/80 bg-gradient-to-b from-amber-50 via-white to-white px-4 py-5 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 mb-2">
-          Hizmet verenler için
+          Hizmet verenler için · İstanbul
         </p>
         <h1 className="text-xl font-bold text-slate-900 leading-snug">
-          Çekici, lastikçi veya anahtarcı mısınız? Bölgenizdeki yol yardım
+          Çekici, lastikçi veya anahtarcı mısınız? İstanbul’daki yol yardım
           taleplerine teklif verin.
         </h1>
         <p className="text-sm text-slate-600 mt-3 leading-relaxed">
-          Müşteri talep açar, size SMS + panel bildirimi gelir. Fiyat ve
-          sürenizi yazarsınız. Müşteri sizi seçerse telefon ve konum bilgisi
-          açılır.
+          Erken fazda panel kullanımı İstanbul’da açık. Diğer illerden kayıt
+          olabilirsiniz; şehriniz açılınca sizi önde tutarız. Müşteri talep
+          açar, size SMS + panel bildirimi gelir. Fiyat ve sürenizi yazarsınız;
+          sizi seçerse telefon ve konum açılır.
         </p>
 
         <ul className="mt-4 space-y-2">

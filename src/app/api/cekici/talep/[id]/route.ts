@@ -16,6 +16,10 @@ import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Talep } from "@/lib/types";
 import { demoTalepGetir, isDemoTalepId } from "@/lib/demo-oturum";
 import { demoCekiciTalepGetJson } from "@/lib/demo-responses";
+import {
+  sehirBeklemeMesaji,
+  sehirKullanimAcikMi,
+} from "@/lib/cekici-sehir-acilis";
 
 /** Süre hesabı için koordinat (tam adres gönderilmez) */
 function rotaKoordinatlari(talep: Talep) {
@@ -38,6 +42,16 @@ export async function GET(
   const cekici = await getCurrentCekici();
   if (!cekici) {
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
+  }
+
+  if (!sehirKullanimAcikMi(cekici.sehir)) {
+    return NextResponse.json(
+      {
+        error: sehirBeklemeMesaji(cekici.sehir),
+        sehirBeklemede: true,
+      },
+      { status: 403 }
+    );
   }
 
   const { id } = await params;

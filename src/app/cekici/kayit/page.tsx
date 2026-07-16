@@ -9,6 +9,8 @@ import { KayitKontenjanBilgi } from "@/components/KayitKontenjanBilgi";
 import { CekiciKayitLanding } from "@/components/cekici/CekiciKayitLanding";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { DESTEKLENEN_ILLER } from "@/lib/il-ilce";
+import { ISTANBUL_IL } from "@/lib/istanbul-ilceler";
+import { sehirKullanimAcikMi } from "@/lib/cekici-sehir-acilis";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import { telefonDogrulamaHatasi, telefonGecerliMi, telefonMaskele } from "@/lib/telefon";
@@ -75,7 +77,7 @@ function KayitIcerik() {
     ad: "",
     soyad: "",
     telefon: "",
-    sehir: "",
+    sehir: ISTANBUL_IL,
     sifre: "",
     sifreTekrar: "",
     davetKodu: davetParam,
@@ -358,13 +360,13 @@ function KayitIcerik() {
       backHref="/cekici/giris"
       footer={<YasalSiteFooter />}
     >
-      <CekiciKayitLanding onKayitBasla={kaydaKaydir} />
-
       <KayitKontenjanBilgi
         onizlemeGercekKayit={
           Number.isFinite(onizlemeGercekKayit) ? onizlemeGercekKayit : undefined
         }
       />
+
+      <CekiciKayitLanding onKayitBasla={kaydaKaydir} />
 
       {error && (
         <Card className="border-red-200 bg-red-50 mb-4">
@@ -459,10 +461,22 @@ function KayitIcerik() {
             ))}
           </SelectField>
           <AlanHataMetni mesaj={alanMesajlari.sehir} />
-          <p className="text-xs text-slate-500 mt-1">
-            Kayıt sonrası Ayarlar&apos;da bu ile ait tüm ilçeler hizmet bölgeniz
-            olarak seçili gelir; dilediğinizde daraltabilirsiniz.
-          </p>
+          {form.sehir && !sehirKullanimAcikMi(form.sehir) ? (
+            <Card className="mt-2 border-amber-300 bg-amber-50">
+              <p className="text-sm text-amber-950 leading-relaxed">
+                Şu anda kayıt olabilirsiniz; fakat{" "}
+                <strong>{form.sehir}</strong> kullanıma açılana kadar uygulamayı
+                kullanamazsınız. Sizi bekleme listesinde önde tutacağız.
+              </p>
+            </Card>
+          ) : (
+            <p className="text-xs text-slate-500 mt-1">
+              Erken fazda panel kullanımı yalnızca İstanbul’da açık. Diğer
+              illerden kayıt olabilirsiniz; şehir açılınca öncelikli
+              bilgilendirilirsiniz. Kayıt sonrası Ayarlar&apos;da ilçeleri
+              daraltabilirsiniz.
+            </p>
+          )}
         </div>
 
         <div className="scroll-mt-28">

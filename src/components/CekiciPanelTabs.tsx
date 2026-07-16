@@ -225,6 +225,7 @@ export default function CekiciPanelTabs() {
     hizmetModu?: string;
     menzilKm?: number;
     rozetAktif?: boolean;
+    sehirKullanimAcik?: boolean;
   } | null>(null);
 
   const konumSync = useCekiciKonumSync(cekici?.hizmetModu);
@@ -538,7 +539,20 @@ export default function CekiciPanelTabs() {
         </div>
       )}
 
-      {tab === "musteriler" && data && (
+      {tab === "musteriler" && cekici.sehirKullanimAcik === false && (
+        <Card className="mb-4 border-amber-300 bg-amber-50">
+          <p className="text-sm font-semibold text-amber-950 mb-2">
+            {cekici.sehir} henüz kullanıma açılmadı
+          </p>
+          <p className="text-sm text-amber-900 leading-relaxed">
+            Kaydınız alındı. Şehriniz açılana kadar taleplere teklif veremez ve
+            paneli kullanamazsınız. Sizi bekleme listesinde önde tutacağız;
+            açılışta bilgilendirileceksiniz.
+          </p>
+        </Card>
+      )}
+
+      {tab === "musteriler" && data && cekici.sehirKullanimAcik !== false && (
         <div className="space-y-6 animate-fade-in">
           {data.krediYok && (data.bekleyenGizli?.length ?? 0) > 0 && (
             <Card className="border-amber-200 bg-amber-50">

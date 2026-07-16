@@ -18,6 +18,10 @@ import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Teklif } from "@/lib/types";
 import { demoTalepGetir, demoTeklifEkle, isDemoTalepId } from "@/lib/demo-oturum";
 import { demoTeklifMesaji } from "@/lib/demo-responses";
+import {
+  sehirBeklemeMesaji,
+  sehirKullanimAcikMi,
+} from "@/lib/cekici-sehir-acilis";
 
 export async function POST(
   request: NextRequest,
@@ -27,6 +31,16 @@ export async function POST(
   const cekici = await getCurrentCekici();
   if (!cekici) {
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
+  }
+
+  if (!sehirKullanimAcikMi(cekici.sehir)) {
+    return NextResponse.json(
+      {
+        error: sehirBeklemeMesaji(cekici.sehir),
+        sehirBeklemede: true,
+      },
+      { status: 403 }
+    );
   }
 
   const { id } = await params;

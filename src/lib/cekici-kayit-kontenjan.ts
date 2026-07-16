@@ -1,4 +1,4 @@
-/** Erken faz gösterim limiti (pazarlama; kayıt bu sayıda kapanmaz) */
+/** Erken faz İstanbul kontenjanı (pazarlama; kayıt bu sayıda kapanmaz) */
 export const ERKEN_KAYIT_LIMIT = 100;
 
 /** Ekranda gösterilen kayıt sayısı bu değerin altına inmez */

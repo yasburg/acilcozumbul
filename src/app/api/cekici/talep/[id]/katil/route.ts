@@ -13,6 +13,10 @@ import { cekiciTalepSmsMetni } from "@/lib/sms";
 import { sendSms } from "@/lib/sms-provider";
 import { demoTalepGetir, demoKatil, isDemoTalepId } from "@/lib/demo-oturum";
 import { demoKatilMesaji } from "@/lib/demo-responses";
+import {
+  sehirBeklemeMesaji,
+  sehirKullanimAcikMi,
+} from "@/lib/cekici-sehir-acilis";
 
 /** Kredi ile ihaleye katıl (gizli talebi aç; SMS: premium OTP / standart toplu) */
 export async function POST(
@@ -23,6 +27,16 @@ export async function POST(
   const cekici = await getCurrentCekici();
   if (!cekici) {
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
+  }
+
+  if (!sehirKullanimAcikMi(cekici.sehir)) {
+    return NextResponse.json(
+      {
+        error: sehirBeklemeMesaji(cekici.sehir),
+        sehirBeklemede: true,
+      },
+      { status: 403 }
+    );
   }
 
   const { id } = await params;
