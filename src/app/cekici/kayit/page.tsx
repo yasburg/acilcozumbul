@@ -346,7 +346,10 @@ function KayitIcerik() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       router.refresh();
-      router.push("/cekici/panel?mesaj=kayit-basarili");
+      const sehirQs = form.sehir.trim()
+        ? `?sehir=${encodeURIComponent(form.sehir.trim())}`
+        : "";
+      router.push(`/cekici/kayit/onay${sehirQs}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Kayıt başarısız.");
     } finally {
