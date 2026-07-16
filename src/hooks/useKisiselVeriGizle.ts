@@ -11,7 +11,7 @@ import {
 
 /**
  * @param demo Demo oturumu aktifse otomatik yarı maske (sosyal medya videosu).
- * Ayarlardan tam gizleme açıksa o önceliklidir.
+ * Ayarlar anahtarı yalnızca `hesapSeviye` ile Hesabım’da tam gizler; talepler/panel etkilenmez.
  */
 export function useKisiselVeriGizle(demo = false) {
   const [tamGizli, setTamGizli] = useState(false);
@@ -32,14 +32,22 @@ export function useKisiselVeriGizle(demo = false) {
     setTamGizli(sonraki);
   }, []);
 
+  /** İhaleler, talep detayı vb. — yalnızca demo yarı maske */
   const seviye: GizlilikSeviye = useMemo(
-    () => gizlilikSeviyesi({ tamGizli, demo }),
+    () => gizlilikSeviyesi({ demo }),
+    [demo]
+  );
+
+  /** Hesabım sekmesi — ayarlar açıksa tam gizle */
+  const hesapSeviye: GizlilikSeviye = useMemo(
+    () => gizlilikSeviyesi({ tamGizli, demo, hesapSayfasi: true }),
     [tamGizli, demo]
   );
 
   return {
     seviye,
-    /** Ayarlar anahtarının durumu (tam gizleme) */
+    hesapSeviye,
+    /** Ayarlar anahtarının durumu (yalnızca Hesabım) */
     gizli: tamGizli,
     ayarla,
   };

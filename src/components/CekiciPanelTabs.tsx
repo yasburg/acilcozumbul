@@ -239,7 +239,7 @@ export default function CekiciPanelTabs() {
   const [cikisYukleniyor, setCikisYukleniyor] = useState(false);
   const [katilYukleniyor, setKatilYukleniyor] = useState<string | null>(null);
   const [demoAktif, setDemoAktif] = useState(false);
-  const { seviye: gizlilik } = useKisiselVeriGizle(
+  const { seviye: gizlilik, hesapSeviye } = useKisiselVeriGizle(
     demoAktif || Boolean(data?.demoModu)
   );
 
@@ -746,10 +746,10 @@ export default function CekiciPanelTabs() {
               </Link>
             </div>
             <p className="text-sm text-slate-500 mt-2">
-              {adGoster(cekici.ad, gizlilik)} · {cekici.sehir}
+              {adGoster(cekici.ad, hesapSeviye)} · {cekici.sehir}
             </p>
             <p className="text-sm text-slate-600">
-              {telefonGoster(cekici.telefon, gizlilik)}
+              {telefonGoster(cekici.telefon, hesapSeviye)}
             </p>
           </Card>
 

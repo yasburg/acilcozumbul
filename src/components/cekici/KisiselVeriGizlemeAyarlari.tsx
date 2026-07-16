@@ -23,9 +23,9 @@ export function KisiselVeriGizlemeAyarlari() {
               Kişisel verileri gizle
             </p>
             <p className="text-xs text-slate-600 leading-relaxed mt-1">
-              Açıkken ad, soyad, telefon ve adres tamamen gizlenir. Demo /
-              video modunda yarı maske otomatik uygulanır; bu anahtar daha
-              sert gizleme içindir.
+              Açıkken yalnızca <strong>Hesabım</strong> sekmesindeki ad ve
+              telefon gizlenir. İhaleler ve talep ekranları etkilenmez. Demo /
+              video modunda yarı maske ayrıca uygulanır.
             </p>
           </div>
           <button
@@ -47,7 +47,7 @@ export function KisiselVeriGizlemeAyarlari() {
         </div>
         {gizli && (
           <p className="text-xs font-medium text-violet-800 mt-3" role="status">
-            Gizleme açık — ad, soyad, telefon ve adres maskeleniyor.
+            Gizleme açık — yalnızca Hesabım’daki ad ve telefon maskeleniyor.
           </p>
         )}
       </Card>

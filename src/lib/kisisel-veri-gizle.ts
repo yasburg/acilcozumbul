@@ -26,12 +26,17 @@ export function setKisiselVeriGizli(gizli: boolean): void {
   window.dispatchEvent(new Event(KISISEL_VERI_GIZLE_EVENT));
 }
 
-/** Tam gizleme açığı öncelikli; değilse demo → yarı maske */
+/**
+ * Demo → yarı maske (uygulama geneli).
+ * Ayarlar “tam gizle” yalnızca Hesabım için `hesapSayfasi: true` ile uygulanır.
+ */
 export function gizlilikSeviyesi(opts: {
   tamGizli?: boolean;
   demo?: boolean;
+  /** true ise ayarlar anahtarı (tam) uygulanır — yalnızca Hesabım */
+  hesapSayfasi?: boolean;
 }): GizlilikSeviye {
-  if (opts.tamGizli) return "tam";
+  if (opts.hesapSayfasi && opts.tamGizli) return "tam";
   if (opts.demo) return "yari";
   return "yok";
 }

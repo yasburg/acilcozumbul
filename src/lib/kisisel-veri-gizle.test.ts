@@ -10,8 +10,14 @@ import {
 } from "./kisisel-veri-gizle";
 
 describe("gizlilikSeviyesi", () => {
-  it("tam öncelikli, sonra demo yarı", () => {
-    expect(gizlilikSeviyesi({ tamGizli: true, demo: true })).toBe("tam");
+  it("ayarlar anahtarı yalnızca hesap sayfasında tam gizler", () => {
+    expect(gizlilikSeviyesi({ tamGizli: true, demo: true })).toBe("yari");
+    expect(
+      gizlilikSeviyesi({ tamGizli: true, demo: true, hesapSayfasi: true })
+    ).toBe("tam");
+    expect(
+      gizlilikSeviyesi({ tamGizli: true, demo: false, hesapSayfasi: true })
+    ).toBe("tam");
     expect(gizlilikSeviyesi({ tamGizli: false, demo: true })).toBe("yari");
     expect(gizlilikSeviyesi({})).toBe("yok");
   });
