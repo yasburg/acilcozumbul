@@ -109,8 +109,11 @@ export async function POST(
     if (!sonuc.basarili) {
       return NextResponse.json(
         {
-          error: sonuc.message || "Ödeme banka tarafından reddedildi.",
+          error:
+            sonuc.message ||
+            "Ödeme banka tarafından reddedildi. Lütfen kart bilgilerinizi kontrol edin veya farklı bir kart deneyin.",
           code: sonuc.respCode,
+          bankaMesaji: sonuc.bankaMesaji,
         },
         { status: 400 }
       );

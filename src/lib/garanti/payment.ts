@@ -1,4 +1,5 @@
 import { garantiConfigOku } from "./config";
+import { garantiMusteriHataMesaji } from "./hata-mesaji";
 import { garantiHashHesapla, garantiXmlDeger } from "./hash";
 
 const BASARI_KODLARI = new Set(["00", "000"]);
@@ -18,11 +19,19 @@ export type GarantiOdemeSonuc = {
   basarili: boolean;
   respCode?: string;
   message?: string;
+  /** Bankadan ham ErrorMsg / Message (log için) */
+  bankaMesaji?: string;
   refNo?: string;
 };
 
 function orderIdTemizle(id: string): string {
   return id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 36);
+}
+
+/** Response bloğundan alan oku; yoksa tüm XML */
+function yanitAlan(xml: string, tag: string): string {
+  const blok = xml.match(/<Response>([\s\S]*?)<\/Response>/i)?.[1] ?? xml;
+  return garantiXmlDeger(blok, tag);
 }
 
 function xmlIstekOlustur(
@@ -109,16 +118,26 @@ export async function garantiKrediOdemesiYap(
   }
 
   const text = await response.text();
-  const respCode = garantiXmlDeger(text, "Code");
+  const respCode = yanitAlan(text, "Code") || garantiXmlDeger(text, "Code");
+  const errorMsg = yanitAlan(text, "ErrorMsg");
+  const message = yanitAlan(text, "Message");
+  const sysErrMsg = yanitAlan(text, "SysErrMsg");
   const basarili = BASARI_KODLARI.has(respCode);
+
+  const musteriMesaji = basarili
+    ? message || undefined
+    : garantiMusteriHataMesaji({
+        respCode,
+        errorMsg,
+        message,
+        sysErrMsg,
+      });
 
   return {
     basarili,
     respCode,
-    message:
-      garantiXmlDeger(text, "ErrorMsg") ||
-      garantiXmlDeger(text, "Message") ||
-      undefined,
-    refNo: garantiXmlDeger(text, "RetrefNum") || undefined,
+    message: musteriMesaji,
+    bankaMesaji: errorMsg || message || sysErrMsg || undefined,
+    refNo: yanitAlan(text, "RetrefNum") || undefined,
   };
 }

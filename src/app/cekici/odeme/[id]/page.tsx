@@ -222,7 +222,15 @@ export default function OdemePage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        const err = new Error(
+          typeof data.error === "string" && data.error
+            ? data.error
+            : "Ödeme başarısız."
+        ) as Error & { code?: string };
+        if (typeof data.code === "string") err.code = data.code;
+        throw err;
+      }
 
       await animasyonGorev;
 
@@ -252,12 +260,17 @@ export default function OdemePage() {
       setOdemeAnimasyon(false);
       setAnimasyonAdim(0);
       const hata = err instanceof Error ? err.message : "Ödeme başarısız.";
+      const bankaKodu =
+        err instanceof Error && "code" in err && typeof err.code === "string"
+          ? err.code
+          : undefined;
       posthogOlayYakala("cekici_odeme_tamamla", {
         rol: "cekici",
         odeme_id: odemeId,
         odeme_tipi: odemeTipi,
         odeme_durumu: "basarisiz",
         hata,
+        ...(bankaKodu ? { banka_kodu: bankaKodu } : {}),
       });
       setError(hata);
     } finally {
