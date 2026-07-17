@@ -1,6 +1,7 @@
 import { garantiConfigOku } from "./config";
 import { garantiMusteriHataMesaji } from "./hata-mesaji";
-import { garantiHashHesapla, garantiXmlDeger } from "./hash";
+import { garantiHashHesapla } from "./hash";
+import { garantiYanitAlanlari } from "./yanit";
 
 const BASARI_KODLARI = new Set(["00", "000"]);
 
@@ -26,12 +27,6 @@ export type GarantiOdemeSonuc = {
 
 function orderIdTemizle(id: string): string {
   return id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 36);
-}
-
-/** Response bloğundan alan oku; yoksa tüm XML */
-function yanitAlan(xml: string, tag: string): string {
-  const blok = xml.match(/<Response>([\s\S]*?)<\/Response>/i)?.[1] ?? xml;
-  return garantiXmlDeger(blok, tag);
 }
 
 function xmlIstekOlustur(
@@ -118,29 +113,29 @@ export async function garantiKrediOdemesiYap(
   }
 
   const text = await response.text();
-  const respCode =
-    yanitAlan(text, "Code") ||
-    yanitAlan(text, "ReasonCode") ||
-    garantiXmlDeger(text, "Code");
-  const errorMsg = yanitAlan(text, "ErrorMsg");
-  const message = yanitAlan(text, "Message");
-  const sysErrMsg = yanitAlan(text, "SysErrMsg");
-  const basarili = BASARI_KODLARI.has(respCode);
+  const yanit = garantiYanitAlanlari(text);
+  const basarili = BASARI_KODLARI.has(yanit.respCode);
 
   const musteriMesaji = basarili
-    ? message || undefined
+    ? yanit.message || undefined
     : garantiMusteriHataMesaji({
-        respCode,
-        errorMsg,
-        message,
-        sysErrMsg,
+        respCode: yanit.respCode,
+        errorMsg: yanit.errorMsg,
+        message: yanit.message,
+        sysErrMsg: yanit.sysErrMsg,
+        hostMsg: yanit.hostMsg,
       });
 
   return {
     basarili,
-    respCode,
+    respCode: yanit.respCode,
     message: musteriMesaji,
-    bankaMesaji: errorMsg || message || sysErrMsg || undefined,
-    refNo: yanitAlan(text, "RetrefNum") || undefined,
+    bankaMesaji:
+      yanit.errorMsg ||
+      yanit.hostMsg ||
+      yanit.message ||
+      yanit.sysErrMsg ||
+      undefined,
+    refNo: yanit.refNo || undefined,
   };
 }

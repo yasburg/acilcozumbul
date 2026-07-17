@@ -9,7 +9,9 @@ const GARANTI_HATA_KODLARI: Record<string, string> = {
   "07": "Bu kartla işlem yapılamıyor. Bankanızla iletişime geçin.",
   "12": "Geçersiz işlem. Kart bilgilerini kontrol edip tekrar deneyin.",
   "13": "Ödeme tutarı geçersiz. Sayfayı yenileyip tekrar deneyin.",
-  "14": "Kart numarası hatalı. Numarayı kontrol edip tekrar deneyin.",
+  // 14 sıkça yanlış numara değil; limit/SKT/CVV reddinde de gelebilir
+  "14":
+    "Kart banka tarafından reddedildi. Kullanılabilir limit, son kullanma tarihi ve CVV’yi kontrol edin; gerekirse başka kart deneyin.",
   "15": "Kartınızın bankası bulunamadı. Farklı bir kart deneyin.",
   "16": "Kart bakiyesi veya limiti yetersiz. Yarın tekrar deneyebilir veya başka kart kullanabilirsiniz.",
   "17": "İşlem iptal edildi.",
@@ -40,6 +42,9 @@ const GARANTI_HATA_KODLARI: Record<string, string> = {
   "99": "Ödeme şu an tamamlanamadı. Bir süre sonra tekrar deneyin.",
 };
 
+const YETERSIZ_BAKIYE_MESAJI =
+  "Kart bakiyesi veya kullanılabilir limiti yetersiz. Başka bir kart deneyin.";
+
 const GENEL_MESAJ_ORNEKLERI = [
   "işleminizi gerçekleştiremiyoruz",
   "isleminizi gerceklestiremiyoruz",
@@ -62,6 +67,22 @@ const GENEL_MESAJ_ORNEKLERI = [
   "denied",
 ];
 
+const YETERSIZ_BAKIYE_ORNEKLERI = [
+  "yetersiz",
+  "müsait değil",
+  "musait degil",
+  "hesap müsait",
+  "insufficient",
+  "not sufficient",
+  "not enough",
+  "no credit",
+  "over credit",
+  "limit yetersiz",
+  "limitiniz",
+  "exceeds withdrawal",
+  "exceeds limit",
+];
+
 export function garantiKodNormalize(kod: string | undefined): string {
   const digits = String(kod ?? "").replace(/\D/g, "");
   if (!digits) return "";
@@ -79,6 +100,12 @@ export function garantiMesajGenelMi(mesaj: string | undefined): boolean {
   return false;
 }
 
+export function garantiYetersizBakiyeMetniMi(mesaj: string | undefined): boolean {
+  const m = (mesaj ?? "").trim().toLowerCase();
+  if (!m) return false;
+  return YETERSIZ_BAKIYE_ORNEKLERI.some((p) => m.includes(p));
+}
+
 function mesajTemizle(mesaj: string): string {
   return mesaj
     .replace(/\s+/g, " ")
@@ -89,20 +116,31 @@ function mesajTemizle(mesaj: string): string {
 /**
  * Bankadan gelen kod + mesajlardan müşteriye gösterilecek metni seçer.
  * Bilinen yanıt kodu varsa onu önceler (Message çoğu zaman sadece “Declined”).
+ * Bakiye/limit ifadesi varsa kod 14 olsa bile yetersiz bakiye mesajı verilir.
  */
 export function garantiMusteriHataMesaji(input: {
   respCode?: string;
   errorMsg?: string;
   message?: string;
   sysErrMsg?: string;
+  hostMsg?: string;
 }): string {
+  const adaylar = [
+    input.errorMsg,
+    input.hostMsg,
+    input.sysErrMsg,
+    input.message,
+  ]
+    .map((m) => (m ? mesajTemizle(m) : ""))
+    .filter(Boolean);
+
+  if (adaylar.some((m) => garantiYetersizBakiyeMetniMi(m))) {
+    return YETERSIZ_BAKIYE_MESAJI;
+  }
+
   const kod = garantiKodNormalize(input.respCode);
   const kodMesaji = kod ? GARANTI_HATA_KODLARI[kod] : undefined;
   if (kodMesaji) return kodMesaji;
-
-  const adaylar = [input.errorMsg, input.message, input.sysErrMsg]
-    .map((m) => (m ? mesajTemizle(m) : ""))
-    .filter(Boolean);
 
   const spesifikBank = adaylar.find((m) => !garantiMesajGenelMi(m));
   if (spesifikBank) return spesifikBank;

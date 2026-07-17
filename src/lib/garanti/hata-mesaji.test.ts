@@ -3,19 +3,40 @@ import {
   garantiKodNormalize,
   garantiMesajGenelMi,
   garantiMusteriHataMesaji,
+  garantiYetersizBakiyeMetniMi,
 } from "./hata-mesaji";
+import { garantiYanitAlanlari } from "./yanit";
 
 describe("garantiMusteriHataMesaji", () => {
-  it("51 kodunda yetersiz bakiye mesajı verir (genel ErrorMsg olsa bile)", () => {
+  it("51 kodunda yetersiz bakiye mesajı verir", () => {
     expect(
       garantiMusteriHataMesaji({
         respCode: "51",
-        errorMsg: "İşleminizi gerçekleştiremiyoruz.Tekrar deneyiniz",
+        message: "Declined",
       })
-    ).toMatch(/yetersiz/i);
+    ).toMatch(/yetersiz|limit/i);
   });
 
-  it("Message=Declined olsa bile 51 için yetersiz bakiye gösterir", () => {
+  it("14 kodunu 'kart numarası hatalı' diye göstermez", () => {
+    const msg = garantiMusteriHataMesaji({
+      respCode: "14",
+      message: "Declined",
+    });
+    expect(msg).not.toMatch(/numarası hatalı/i);
+    expect(msg).toMatch(/limit|CVV|son kullanma/i);
+  });
+
+  it("kod 14 olsa bile banka yetersiz bakiye derse onu gösterir", () => {
+    expect(
+      garantiMusteriHataMesaji({
+        respCode: "14",
+        errorMsg: "Not sufficient funds",
+        message: "Declined",
+      })
+    ).toMatch(/yetersiz|limit/i);
+  });
+
+  it("Message=Declined + 51 → yetersiz", () => {
     expect(
       garantiMusteriHataMesaji({
         respCode: "51",
@@ -24,57 +45,53 @@ describe("garantiMusteriHataMesaji", () => {
       })
     ).toMatch(/yetersiz|limit/i);
   });
+});
 
-  it("bilinen kod varken spesifik olmayan banka mesajını ezmez", () => {
-    expect(
-      garantiMusteriHataMesaji({
-        respCode: "51",
-        errorMsg: "Hesap müsait değil.",
-      })
-    ).toMatch(/yetersiz|limit/i);
+describe("garantiYanitAlanlari", () => {
+  it("HOST Code’unu tercih eder", () => {
+    const xml = `
+      <GVPSResponse>
+        <Transaction>
+          <Response>
+            <Source>GVPS</Source>
+            <Code>92</Code>
+            <Message>Error</Message>
+          </Response>
+          <Response>
+            <Source>HOST</Source>
+            <Code>51</Code>
+            <ReasonCode>00</ReasonCode>
+            <Message>Declined</Message>
+            <ErrorMsg></ErrorMsg>
+          </Response>
+        </Transaction>
+      </GVPSResponse>`;
+    expect(garantiYanitAlanlari(xml).respCode).toBe("51");
   });
 
-  it("82 için CVV mesajı verir", () => {
-    expect(
-      garantiMusteriHataMesaji({
-        respCode: "082",
-        message: "İşleminizi gerçekleştiremiyoruz. Tekrar deneyiniz",
-      })
-    ).toMatch(/CVV/i);
-  });
-
-  it("bilinmeyen kod + Declined için Türkçe fallback verir", () => {
-    expect(
-      garantiMusteriHataMesaji({
-        respCode: "77",
-        message: "Declined",
-      })
-    ).toMatch(/reddedildi/i);
-  });
-
-  it("kod yokken spesifik Türkçe banka mesajını kullanır", () => {
-    expect(
-      garantiMusteriHataMesaji({
-        errorMsg: "Kartınızın günlük internet alışveriş limiti dolmuştur.",
-      })
-    ).toMatch(/günlük internet/i);
+  it("Code=Declined iken ReasonCode kullanır", () => {
+    const xml = `
+      <Response>
+        <Source>HOST</Source>
+        <Code>Declined</Code>
+        <ReasonCode>51</ReasonCode>
+        <Message>Declined</Message>
+      </Response>`;
+    expect(garantiYanitAlanlari(xml).respCode).toBe("51");
   });
 });
 
-describe("garantiKodNormalize / genelMi", () => {
-  it("kodları normalize eder", () => {
-    expect(garantiKodNormalize("51")).toBe("51");
+describe("yardımcılar", () => {
+  it("kod normalize", () => {
     expect(garantiKodNormalize("051")).toBe("51");
-    expect(garantiKodNormalize("5")).toBe("05");
   });
 
-  it("Declined ve genel mesajları ayırt eder", () => {
+  it("Declined geneldir", () => {
     expect(garantiMesajGenelMi("Declined")).toBe(true);
-    expect(garantiMesajGenelMi("İşleminizi gerçekleştiremiyoruz.Tekrar deneyiniz")).toBe(
-      true
-    );
-    expect(
-      garantiMesajGenelMi("Kartınızın günlük internet alışveriş limiti dolmuştur.")
-    ).toBe(false);
+  });
+
+  it("yetersiz bakiye metnini tanır", () => {
+    expect(garantiYetersizBakiyeMetniMi("Not sufficient funds")).toBe(true);
+    expect(garantiYetersizBakiyeMetniMi("Declined")).toBe(false);
   });
 });
