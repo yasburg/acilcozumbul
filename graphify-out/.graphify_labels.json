@@ -27,17 +27,13 @@
   "25": "MobileShell.tsx",
   "26": "funnel.ts",
   "27": "page.tsx",
-  "28": "layout.tsx",
   "29": "cekici-puan.ts",
-  "30": "seo.ts",
   "31": "route.ts",
-  "32": "OnayliCekiciHesap.tsx",
   "33": "migrate-json-to-supabase.mjs",
   "34": "PanelChrome.tsx",
   "35": "NasilCalisirSerit.tsx",
   "36": "Supabase veritabanı",
   "37": "Video demo modu",
-  "38": "NasilCalisirSerit.tsx",
   "39": "README.md",
   "40": "route.ts",
   "41": "sitemap.ts",
@@ -58,6 +54,5 @@
   "57": "route.ts",
   "58": "cerez-onay.ts",
   "59": "payment.ts",
-  "60": "route.ts",
-  "62": "page.tsx"
+  "60": "route.ts"
 }
