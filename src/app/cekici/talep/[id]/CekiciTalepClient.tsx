@@ -18,6 +18,7 @@ import {
   soyadGoster,
   telefonGoster,
 } from "@/lib/kisisel-veri-gizle";
+import { posthogOlayYakala } from "@/lib/posthog-client";
 
 interface TalepDurum {
   id: string;
@@ -167,6 +168,13 @@ export default function CekiciTalepClient() {
       }
       if (cekici && data.kredi != null) setCekici({ ...cekici, kredi: data.kredi });
       setTeklifGonderildi(true);
+      posthogOlayYakala("cekici_teklif_ver", {
+        rol: "cekici",
+        talep_id: id,
+        fiyat: fiyatNum,
+        tahmini_sure_dk: Number(sure) || 30,
+        demo: demoTalep || demoAktif,
+      });
       await yukle();
     } catch {
       setError("Teklif gönderilemedi.");

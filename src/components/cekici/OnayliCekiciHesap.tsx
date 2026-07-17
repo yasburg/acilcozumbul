@@ -7,6 +7,7 @@ import { Btn, Card } from "@/components/ui";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 import { BelgeYuklemeAlani } from "@/components/cekici/BelgeYuklemeAlani";
 import { cekiciFetch } from "@/lib/cekici-fetch";
+import { posthogOlayYakala } from "@/lib/posthog-client";
 import {
   ROZET_INDIRIMLI_FIYAT_TL,
   ROZET_LISTE_FIYAT_TL,
@@ -129,6 +130,11 @@ export function OnayliCekiciHesap() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      posthogOlayYakala("cekici_odeme_baslat", {
+        rol: "cekici",
+        odeme_tipi: "rozet",
+        odeme_id: data.odemeId,
+      });
       sessionStorage.setItem(
         `odeme-${data.odemeId}`,
         JSON.stringify({

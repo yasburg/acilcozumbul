@@ -3,16 +3,19 @@
 import { useState } from "react";
 import { Btn, Card, Field } from "@/components/ui";
 import { YildizPuani } from "@/components/YildizPuani";
+import { posthogOlayYakala } from "@/lib/posthog-client";
 
 interface MemnuniyetFormuProps {
   talepId: string;
   cekiciAd?: string;
+  sorunTipi?: string | null;
   onTamamlandi?: () => void;
 }
 
 export function MemnuniyetFormu({
   talepId,
   cekiciAd,
+  sorunTipi,
   onTamamlandi,
 }: MemnuniyetFormuProps) {
   const [puanGenel, setPuanGenel] = useState(0);
@@ -44,6 +47,13 @@ export function MemnuniyetFormu({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setTesekkur(true);
+      posthogOlayYakala("memnuniyet_gonderildi", {
+        talep_id: talepId,
+        ...(sorunTipi ? { sorun_tipi: sorunTipi } : {}),
+        puan_genel: puanGenel,
+        puan_fiyat: puanFiyat,
+        puan_sure: puanSure,
+      });
       onTamamlandi?.();
     } catch (e) {
       setHata(e instanceof Error ? e.message : "Gönderilemedi.");

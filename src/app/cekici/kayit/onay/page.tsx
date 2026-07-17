@@ -6,6 +6,7 @@ import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
 import { sehirKullanimAcikMi } from "@/lib/cekici-sehir-acilis";
 import { gtagOlay } from "@/lib/gtag";
+import { posthogOlayYakala } from "@/lib/posthog-client";
 
 const YONLENDIRME_SN = 5;
 const SIGN_UP_SESSION_KEY = "acil_ga_sign_up";
@@ -26,6 +27,10 @@ function OnayIcerik() {
     }
     gtagOlay("sign_up", {
       method: "cekici_kayit",
+      ...(sehir ? { sehir } : {}),
+    });
+    posthogOlayYakala("cekici_kayit_onay", {
+      rol: "cekici",
       ...(sehir ? { sehir } : {}),
     });
   }, [sehir]);

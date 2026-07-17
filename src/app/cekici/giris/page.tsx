@@ -8,6 +8,7 @@ import { Btn, Field, SifreAlani, Card } from "@/components/ui";
 import { epostaGecerliMi } from "@/lib/eposta";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { TELEFON_ORNEK_GIRISLERI } from "@/lib/telefon";
+import { posthogOlayYakala } from "@/lib/posthog-client";
 
 function epostaGibiMi(deger: string): boolean {
   return deger.includes("@");
@@ -48,6 +49,10 @@ function GirisIcerik() {
     if (!res.ok) {
       throw new Error(typeof d.error === "string" ? d.error : "Giriş başarısız.");
     }
+    posthogOlayYakala("cekici_giris", {
+      rol: "cekici",
+      yontem: epostaIle ? "eposta" : "telefon",
+    });
     router.refresh();
     router.push("/cekici/panel");
   }

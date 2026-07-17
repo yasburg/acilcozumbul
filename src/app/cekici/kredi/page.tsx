@@ -11,6 +11,7 @@ import {
 } from "@/lib/kredi-fiyat";
 import { formatKredi } from "@/lib/talep-utils";
 import { cekiciFetch } from "@/lib/cekici-fetch";
+import { posthogOlayYakala } from "@/lib/posthog-client";
 
 export default function KrediPage() {
   const router = useRouter();
@@ -124,6 +125,11 @@ export default function KrediPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      posthogOlayYakala("cekici_odeme_baslat", {
+        rol: "cekici",
+        paket_tl: seciliPaket,
+        odeme_id: data.odemeId,
+      });
       sessionStorage.setItem(
         `odeme-${data.odemeId}`,
         JSON.stringify({

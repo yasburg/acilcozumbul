@@ -17,6 +17,7 @@ import {
   musteriYeniTeklifBildir,
 } from "@/lib/musteri-bildirim";
 import { adSoyadSatirGoster } from "@/lib/kisisel-veri-gizle";
+import { posthogOlayYakala } from "@/lib/posthog-client";
 
 type Durum =
   | "ihale_bekliyor"
@@ -71,6 +72,7 @@ export default function BeklePage() {
   const [memnuniyetYenile, setMemnuniyetYenile] = useState(0);
   const [operatorSayisi, setOperatorSayisi] = useState(0);
   const [animasyonBitti, setAnimasyonBitti] = useState(false);
+  const [sorunTipi, setSorunTipi] = useState<string | null>(null);
   const [musteriKonum, setMusteriKonum] = useState<{
     lat: number;
     lng: number;
@@ -83,7 +85,16 @@ export default function BeklePage() {
   } | null>(null);
   const oncekiTeklifSayisi = useRef(0);
   const ilkTeklifKontrol = useRef(true);
+  const teklifAlindiKaydedildi = useRef(false);
   const anlasildiRef = useRef(false);
+
+  function musteriFunnelProps(extra?: Record<string, unknown>) {
+    return {
+      talep_id: id,
+      ...(sorunTipi ? { sorun_tipi: sorunTipi } : {}),
+      ...extra,
+    };
+  }
   const demoTalep = id.startsWith("demo-");
   const gizlilik = demoTalep ? "yari" : "yok";
   const cekiciAdGoster = adSoyadSatirGoster(cekiciAd, gizlilik);
@@ -145,6 +156,9 @@ export default function BeklePage() {
         if (data.bildirilenSayisi != null) {
           setOperatorSayisi(data.bildirilenSayisi);
         }
+        if (typeof data.sorunTipi === "string" && data.sorunTipi) {
+          setSorunTipi(data.sorunTipi);
+        }
         if (data.konum) setMusteriKonum(data.konum);
         if (data.hedefKonum) setHedefKonum(data.hedefKonum);
 
@@ -165,6 +179,7 @@ export default function BeklePage() {
           setAnimasyonBitti(false);
           oncekiTeklifSayisi.current = 0;
           ilkTeklifKontrol.current = true;
+          teklifAlindiKaydedildi.current = false;
           setTeklifBanner(null);
           const teklifRes = await fetch(`/api/talep/${id}/teklifler`);
           if (teklifRes.ok) {
@@ -218,6 +233,19 @@ export default function BeklePage() {
           if (yeniSayi > 0) {
             setAnimasyonBitti(true);
             setDurum("teklif_sec");
+            if (!teklifAlindiKaydedildi.current) {
+              teklifAlindiKaydedildi.current = true;
+              posthogOlayYakala(
+                "teklif_alindi",
+                musteriFunnelProps({
+                  teklif_sayisi: yeniSayi,
+                  sorun_tipi:
+                    typeof data.sorunTipi === "string" && data.sorunTipi
+                      ? data.sorunTipi
+                      : sorunTipi || undefined,
+                })
+              );
+            }
           } else {
             setDurum("ihale_bekliyor");
           }
@@ -255,6 +283,13 @@ export default function BeklePage() {
       setKazananFiyat(data.fiyat);
       setDurum("anlasma_bekliyor");
       setMesaj("Çekici seçildi. Kısa süre içinde sizi arayacak.");
+      posthogOlayYakala(
+        "teklif_secildi",
+        musteriFunnelProps({
+          teklif_id: teklifId,
+          fiyat: data.fiyat,
+        })
+      );
     } catch (e) {
       setMesaj(e instanceof Error ? e.message : "Seçim başarısız.");
     } finally {
@@ -278,12 +313,17 @@ export default function BeklePage() {
         anlasildiRef.current = true;
         setDurum("anlasildi");
         setMesaj("");
+        posthogOlayYakala(
+          "anlasma_onaylandi",
+          musteriFunnelProps({ fiyat: kazananFiyat })
+        );
       } else {
         anlasildiRef.current = false;
         setDurum("yeniden_araniyor");
         setCekiciAd(null);
         setTeklifler([]);
         setMesaj("İhale yeniden açıldı. Yeni teklifler bekleniyor.");
+        posthogOlayYakala("anlasma_reddedildi", musteriFunnelProps());
       }
     } catch (e) {
       setMesaj(e instanceof Error ? e.message : "İşlem başarısız.");
@@ -390,6 +430,7 @@ export default function BeklePage() {
                 <MemnuniyetFormu
                   talepId={id}
                   cekiciAd={cekiciAdGoster || undefined}
+                  sorunTipi={sorunTipi}
                   onTamamlandi={() => setMemnuniyetYenile((n) => n + 1)}
                 />
               )}

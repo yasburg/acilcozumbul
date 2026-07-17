@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Asama =
   | "tespit"
@@ -40,6 +40,9 @@ export function IhaleBekleAnimasyon({
 }: IhaleBekleAnimasyonProps) {
   const [gecenMs, setGecenMs] = useState(0);
   const [tamamlandi, setTamamlandi] = useState(false);
+  // Parent her poll’da inline callback verince effect yeniden başlamasın
+  const onTamamlandiRef = useRef(onTamamlandi);
+  onTamamlandiRef.current = onTamamlandi;
 
   useEffect(() => {
     const baslangic = Date.now();
@@ -49,13 +52,13 @@ export function IhaleBekleAnimasyon({
         setGecenMs(TOPLAM_MS);
         setTamamlandi(true);
         clearInterval(id);
-        onTamamlandi?.();
+        onTamamlandiRef.current?.();
       } else {
         setGecenMs(g);
       }
     }, 100);
     return () => clearInterval(id);
-  }, [onTamamlandi]);
+  }, []);
 
   const asamaIdx = Math.min(3, Math.floor(gecenMs / ASAMA_SURE_MS));
   const asamalar: Asama[] = ["tespit", "bulundu", "gonderiliyor", "gonderildi"];

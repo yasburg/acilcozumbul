@@ -15,6 +15,7 @@ import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import { telefonDogrulamaHatasi, telefonGecerliMi, telefonMaskele } from "@/lib/telefon";
 import { davetKoduNormalize } from "@/lib/davet-kodu";
+import { posthogKampanyaKaydet, posthogOlayYakala } from "@/lib/posthog-client";
 
 type KayitAlan = "ad" | "soyad" | "telefon" | "sehir" | "sifre" | "sifreTekrar" | "yasalOnay";
 
@@ -124,6 +125,11 @@ function KayitIcerik() {
     }, 1000);
     return () => window.clearInterval(t);
   }, [yenidenSn]);
+
+  useEffect(() => {
+    posthogKampanyaKaydet();
+    posthogOlayYakala("cekici_kayit_goruldu", { rol: "cekici" });
+  }, []);
 
   useEffect(() => {
     setOtpAsamasi(false);
@@ -304,6 +310,10 @@ function KayitIcerik() {
       setOtpAsamasi(true);
       setOtpKod("");
       alanaKaydir(otpRef);
+      posthogOlayYakala("cekici_otp_gonder", {
+        rol: "cekici",
+        sehir: form.sehir || undefined,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Kod gönderilemedi.");
     } finally {
@@ -345,6 +355,11 @@ function KayitIcerik() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      posthogOlayYakala("cekici_kayit_tamamlandi", {
+        rol: "cekici",
+        sehir: form.sehir || undefined,
+        davet_kodu: Boolean(form.davetKodu.trim()),
+      });
       router.refresh();
       const sehirQs = form.sehir.trim()
         ? `?sehir=${encodeURIComponent(form.sehir.trim())}`

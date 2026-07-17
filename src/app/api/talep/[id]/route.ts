@@ -93,6 +93,7 @@ export async function GET(
     anlasmaDurumu: talep.anlasmaDurumu,
     konum: talep.konum,
     hedefKonum: talep.hedefKonum,
+    sorunTipi: talep.sorunTipi ?? null,
     memnuniyet,
   });
 }

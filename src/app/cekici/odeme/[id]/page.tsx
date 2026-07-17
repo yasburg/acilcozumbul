@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
+import { posthogOlayYakala } from "@/lib/posthog-client";
 
 const KREDI_ODEME_ADIMLARI = [
   "Kart doğrulanıyor",
@@ -223,6 +224,13 @@ export default function OdemePage() {
       if (!res.ok) throw new Error(data.error);
 
       await animasyonGorev;
+
+      posthogOlayYakala("cekici_odeme_tamamla", {
+        rol: "cekici",
+        odeme_id: odemeId,
+        odeme_tipi: data.odemeTipi ?? odemeTipi ?? "kredi",
+        eklenen_kredi: data.eklenenKredi,
+      });
 
       sessionStorage.removeItem(`odeme-${odemeId}`);
 
