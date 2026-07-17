@@ -20,6 +20,16 @@ import {
 } from "@/lib/kisisel-veri-gizle";
 import { posthogOlayYakala } from "@/lib/posthog-client";
 
+function posthogBirKez(anahtar: string): boolean {
+  try {
+    if (localStorage.getItem(anahtar)) return false;
+    localStorage.setItem(anahtar, "1");
+    return true;
+  } catch {
+    return true;
+  }
+}
+
 interface TalepDurum {
   id: string;
   durum: string;
@@ -82,6 +92,7 @@ export default function CekiciTalepClient() {
   const yukle = useCallback(async () => {
     setError("");
     try {
+      const smsLinki = Boolean(token);
       if (token) {
         const authRes = await cekiciFetch("/api/cekici/auth", {
           method: "POST",
@@ -92,6 +103,14 @@ export default function CekiciTalepClient() {
           setError("SMS linki geçersiz veya süresi dolmuş.");
           setLoading(false);
           return;
+        }
+        // SMS linki = giriş adımı (panel şifre girişi olmadan)
+        if (posthogBirKez(`acil_ph_cekici_giris_sms_${id}`)) {
+          posthogOlayYakala("cekici_giris", {
+            rol: "cekici",
+            yontem: "sms_link",
+            talep_id: id,
+          });
         }
       }
 
@@ -117,7 +136,24 @@ export default function CekiciTalepClient() {
         return;
       }
 
-      setTalep(await talepRes.json());
+      const talepData = (await talepRes.json()) as TalepDurum;
+      setTalep(talepData);
+
+      // Panel katıl veya SMS: ihaleye erişim açıldığında tek event
+      const ihalede =
+        !talepData.erisimYok &&
+        (Boolean(talepData.onizleme) ||
+          Boolean(talepData.teklifVerdim) ||
+          Boolean(talepData.kazandim));
+      if (ihalede && posthogBirKez(`acil_ph_cekici_ihaleye_katil_${id}`)) {
+        posthogOlayYakala("cekici_ihaleye_katil", {
+          rol: "cekici",
+          talep_id: id,
+          kaynak: smsLinki ? "sms" : "panel",
+          demo: id.startsWith("demo-"),
+        });
+      }
+
       if (demoRes.ok) {
         const d = await demoRes.json();
         setDemoAktif(!!d.aktif);
@@ -173,6 +209,7 @@ export default function CekiciTalepClient() {
         talep_id: id,
         fiyat: fiyatNum,
         tahmini_sure_dk: Number(sure) || 30,
+        kaynak: token ? "sms" : "panel",
         demo: demoTalep || demoAktif,
       });
       await yukle();

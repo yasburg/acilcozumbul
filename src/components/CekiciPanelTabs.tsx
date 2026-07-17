@@ -322,11 +322,7 @@ export default function CekiciPanelTabs() {
         if (cekici && body.kredi != null) {
           setCekici({ ...cekici, kredi: body.kredi });
         }
-        posthogOlayYakala("cekici_ihaleye_katil", {
-          rol: "cekici",
-          talep_id: talepId,
-          demo: Boolean(data?.demoModu),
-        });
+        // cekici_ihaleye_katil talep sayfasında (SMS + panel) tek yerden yakalanır
         router.push(`/cekici/talep/${talepId}`);
       } catch {
         setFlash("Bağlantı hatası.");
