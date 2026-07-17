@@ -281,6 +281,14 @@ export default function KrediPage() {
           </div>
         </Card>
 
+        {!epostaDogrulandi && (
+          <Card className="border-amber-300 bg-amber-50">
+            <p className="text-sm text-amber-950 leading-relaxed">
+              Ödeme yapmak için e-posta adresinizi doğrulamanız gerekiyor.
+            </p>
+          </Card>
+        )}
+
         <Btn onClick={odemeyeGit} disabled={loading || !epostaDogrulandi}>
           {loading ? "Yönlendiriliyor…" : `💳 ${odenecek} ₺ — Ödemeye Git`}
         </Btn>
