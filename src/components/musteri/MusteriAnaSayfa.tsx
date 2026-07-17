@@ -48,6 +48,10 @@ import {
   posthogKampanyaKaydet,
   posthogOlayYakala,
 } from "@/lib/posthog-client";
+import {
+  musteriProfilKaydet,
+  musteriProfilOku,
+} from "@/lib/musteri-profil";
 
 type Step = "bilgi" | "konum" | "sorun" | "detay" | "hedef";
 
@@ -75,6 +79,19 @@ function funnelKaydet(
 
 function sorunProps(sorunTipi: string): Record<string, unknown> {
   return sorunTipi ? { sorun_tipi: sorunTipi } : {};
+}
+
+/** Kayıtlı ad/soyadı boş alanlara uygular; dolu alanlara dokunmaz */
+function kayitliAdSoyadUygula(
+  telefon: string,
+  mevcut: { ad: string; soyad: string }
+): { telefon: string; ad: string; soyad: string } {
+  const profil = musteriProfilOku(telefon);
+  return {
+    telefon,
+    ad: mevcut.ad.trim() ? mevcut.ad : (profil?.ad ?? mevcut.ad),
+    soyad: mevcut.soyad.trim() ? mevcut.soyad : (profil?.soyad ?? mevcut.soyad),
+  };
 }
 
 export default function MusteriAnaSayfa() {
@@ -238,7 +255,7 @@ export default function MusteriAnaSayfa() {
       .then((d) => {
         if (d.dogrulandi && d.telefon) {
           setTelefonDogrulandi(true);
-          setForm((f) => ({ ...f, telefon: d.telefon }));
+          setForm((f) => ({ ...f, ...kayitliAdSoyadUygula(d.telefon, f) }));
           setOtpBekleniyor(false);
           setKodGirisAcik(false);
           try {
@@ -366,6 +383,11 @@ export default function MusteriAnaSayfa() {
         scrollBelowStickyHeader(hedef);
       });
     });
+  }
+
+  function adSoyadKaydet() {
+    if (!telefonDogrulandi) return;
+    musteriProfilKaydet(form.telefon, form.ad, form.soyad);
   }
 
   function update(field: string, value: string | number) {
@@ -504,6 +526,7 @@ export default function MusteriAnaSayfa() {
         smsHatasi?: string;
         kodBekliyor?: boolean;
         zatenDogrulandi?: boolean;
+        telefon?: string;
       };
       try {
         data = await res.json();
@@ -519,6 +542,13 @@ export default function MusteriAnaSayfa() {
         setKodGirisAcik(false);
         setGelistirmeKodu(null);
         setOtpKod("");
+        setForm((f) => ({
+          ...f,
+          ...kayitliAdSoyadUygula(
+            typeof data.telefon === "string" ? data.telefon : f.telefon,
+            f
+          ),
+        }));
         setBilgiMesaj(
           data.mesaj ?? "Bu numara bugün doğrulanmış. Tekrar SMS gerekmez."
         );
@@ -620,6 +650,13 @@ export default function MusteriAnaSayfa() {
       setGelistirmeKodu(null);
       setBilgiMesaj("");
       setOtpKod("");
+      setForm((f) => ({
+        ...f,
+        ...kayitliAdSoyadUygula(
+          typeof data.telefon === "string" ? data.telefon : f.telefon,
+          f
+        ),
+      }));
       posthogOlayYakala("otp_dogrulandi", sorunProps(form.sorunTipi));
       try {
         sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
@@ -963,6 +1000,7 @@ export default function MusteriAnaSayfa() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Bir hata oluştu.");
+      musteriProfilKaydet(form.telefon, form.ad, form.soyad);
       posthogOlayYakala("talep_olustur", {
         sorun_tipi: form.sorunTipi,
         bildirilen_sayisi: data.bildirilenSayisi ?? 0,
@@ -1433,6 +1471,7 @@ export default function MusteriAnaSayfa() {
                 placeholder="Ahmet"
                 value={form.ad}
                 onChange={(e) => update("ad", e.target.value)}
+                onBlur={adSoyadKaydet}
                 autoComplete="given-name"
                 name="ad"
                 required
@@ -1443,6 +1482,7 @@ export default function MusteriAnaSayfa() {
                 placeholder="Yılmaz"
                 value={form.soyad}
                 onChange={(e) => update("soyad", e.target.value)}
+                onBlur={adSoyadKaydet}
                 autoComplete="family-name"
                 name="soyad"
                 required
@@ -1574,6 +1614,7 @@ export default function MusteriAnaSayfa() {
                     return;
                   }
                   setAdSoyadHatasi(false);
+                  musteriProfilKaydet(form.telefon, form.ad, form.soyad);
                   if (gpsYukleniyor) gpsIptal();
                   const ok = await adresKoordinatDoldur(false);
                   if (ok) adimGit("detay");
