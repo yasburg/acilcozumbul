@@ -15,13 +15,23 @@ describe("garantiMusteriHataMesaji", () => {
     ).toMatch(/yetersiz/i);
   });
 
-  it("spesifik banka mesajını olduğu gibi kullanır", () => {
+  it("Message=Declined olsa bile 51 için yetersiz bakiye gösterir", () => {
+    expect(
+      garantiMusteriHataMesaji({
+        respCode: "51",
+        message: "Declined",
+        errorMsg: "Declined",
+      })
+    ).toMatch(/yetersiz|limit/i);
+  });
+
+  it("bilinen kod varken spesifik olmayan banka mesajını ezmez", () => {
     expect(
       garantiMusteriHataMesaji({
         respCode: "51",
         errorMsg: "Hesap müsait değil.",
       })
-    ).toBe("Hesap müsait değil.");
+    ).toMatch(/yetersiz|limit/i);
   });
 
   it("82 için CVV mesajı verir", () => {
@@ -33,13 +43,21 @@ describe("garantiMusteriHataMesaji", () => {
     ).toMatch(/CVV/i);
   });
 
-  it("bilinmeyen kodda genel fallback kullanır", () => {
+  it("bilinmeyen kod + Declined için Türkçe fallback verir", () => {
     expect(
       garantiMusteriHataMesaji({
         respCode: "77",
-        errorMsg: "İşleminizi gerçekleştiremiyoruz.Tekrar deneyiniz",
+        message: "Declined",
       })
     ).toMatch(/reddedildi/i);
+  });
+
+  it("kod yokken spesifik Türkçe banka mesajını kullanır", () => {
+    expect(
+      garantiMusteriHataMesaji({
+        errorMsg: "Kartınızın günlük internet alışveriş limiti dolmuştur.",
+      })
+    ).toMatch(/günlük internet/i);
   });
 });
 
@@ -50,10 +68,13 @@ describe("garantiKodNormalize / genelMi", () => {
     expect(garantiKodNormalize("5")).toBe("05");
   });
 
-  it("genel mesajları ayırt eder", () => {
+  it("Declined ve genel mesajları ayırt eder", () => {
+    expect(garantiMesajGenelMi("Declined")).toBe(true);
     expect(garantiMesajGenelMi("İşleminizi gerçekleştiremiyoruz.Tekrar deneyiniz")).toBe(
       true
     );
-    expect(garantiMesajGenelMi("Hesap müsait değil.")).toBe(false);
+    expect(
+      garantiMesajGenelMi("Kartınızın günlük internet alışveriş limiti dolmuştur.")
+    ).toBe(false);
   });
 });

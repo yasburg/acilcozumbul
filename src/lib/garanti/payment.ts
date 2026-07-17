@@ -118,7 +118,10 @@ export async function garantiKrediOdemesiYap(
   }
 
   const text = await response.text();
-  const respCode = yanitAlan(text, "Code") || garantiXmlDeger(text, "Code");
+  const respCode =
+    yanitAlan(text, "Code") ||
+    yanitAlan(text, "ReasonCode") ||
+    garantiXmlDeger(text, "Code");
   const errorMsg = yanitAlan(text, "ErrorMsg");
   const message = yanitAlan(text, "Message");
   const sysErrMsg = yanitAlan(text, "SysErrMsg");

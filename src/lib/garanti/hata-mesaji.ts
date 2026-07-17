@@ -49,6 +49,17 @@ const GENEL_MESAJ_ORNEKLERI = [
   "general exception",
   "syserr",
   "errorid",
+  "declined",
+  "decline",
+  "rejected",
+  "failed",
+  "failure",
+  "error",
+  "not approved",
+  "notapproved",
+  "do not honor",
+  "deny",
+  "denied",
 ];
 
 export function garantiKodNormalize(kod: string | undefined): string {
@@ -61,8 +72,11 @@ export function garantiKodNormalize(kod: string | undefined): string {
 export function garantiMesajGenelMi(mesaj: string | undefined): boolean {
   const m = (mesaj ?? "").trim().toLowerCase();
   if (!m) return true;
-  if (m.length < 8) return true;
-  return GENEL_MESAJ_ORNEKLERI.some((p) => m.includes(p));
+  if (m.length < 12) return true;
+  if (GENEL_MESAJ_ORNEKLERI.some((p) => m.includes(p))) return true;
+  // Tek/kısa İngilizce banka kelimeleri (Declined, Error…)
+  if (/^[a-z0-9 .,_'-]+$/i.test(m) && m.split(/\s+/).length <= 3) return true;
+  return false;
 }
 
 function mesajTemizle(mesaj: string): string {
@@ -74,7 +88,7 @@ function mesajTemizle(mesaj: string): string {
 
 /**
  * Bankadan gelen kod + mesajlardan müşteriye gösterilecek metni seçer.
- * Genel “Tekrar deneyiniz” metni yerine mümkünse kod açıklamasını kullanır.
+ * Bilinen yanıt kodu varsa onu önceler (Message çoğu zaman sadece “Declined”).
  */
 export function garantiMusteriHataMesaji(input: {
   respCode?: string;
@@ -82,16 +96,16 @@ export function garantiMusteriHataMesaji(input: {
   message?: string;
   sysErrMsg?: string;
 }): string {
+  const kod = garantiKodNormalize(input.respCode);
+  const kodMesaji = kod ? GARANTI_HATA_KODLARI[kod] : undefined;
+  if (kodMesaji) return kodMesaji;
+
   const adaylar = [input.errorMsg, input.message, input.sysErrMsg]
     .map((m) => (m ? mesajTemizle(m) : ""))
     .filter(Boolean);
 
   const spesifikBank = adaylar.find((m) => !garantiMesajGenelMi(m));
   if (spesifikBank) return spesifikBank;
-
-  const kod = garantiKodNormalize(input.respCode);
-  const kodMesaji = kod ? GARANTI_HATA_KODLARI[kod] : undefined;
-  if (kodMesaji) return kodMesaji;
 
   return "Ödeme banka tarafından reddedildi. Lütfen kart bilgilerinizi kontrol edin veya farklı bir kart deneyin.";
 }
