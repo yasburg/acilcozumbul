@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Geist } from "next/font/google";
 import { CerezOnayBanner } from "@/components/CerezOnayBanner";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
@@ -11,6 +12,10 @@ import {
   SITE_URL,
   sayfaUrl,
 } from "@/lib/seo";
+import {
+  GA_MEASUREMENT_ID,
+  gtagConsentBootstrapInline,
+} from "@/lib/gtag";
 import "./globals.css";
 
 const geist = Geist({
@@ -100,6 +105,15 @@ export default function RootLayout({
   return (
     <html lang="tr" className={`${geist.variable} h-full`}>
       <body className="min-h-dvh font-sans antialiased">
+        {GA_MEASUREMENT_ID ? (
+          <Script
+            id="google-consent-default"
+            strategy="beforeInteractive"
+            dangerouslySetInnerHTML={{
+              __html: gtagConsentBootstrapInline(),
+            }}
+          />
+        ) : null}
         <GoogleAnalytics />
         <PostHogProvider>{children}</PostHogProvider>
         <CerezOnayBanner />

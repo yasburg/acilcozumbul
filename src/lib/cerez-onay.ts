@@ -1,17 +1,18 @@
 export type CerezOnayTercihi = "tumu" | "zorunlu" | null;
 
-const STORAGE_KEY = "acil_cerez_onay";
+/** localStorage anahtarı — gtag early bootstrap ile aynı olmalı */
+export const CEREZ_ONAY_STORAGE_KEY = "acil_cerez_onay";
 const BANNER_KAPALI_KEY = "acil_cerez_banner_kapali";
 
 export function cerezOnayOku(): CerezOnayTercihi {
   if (typeof window === "undefined") return null;
-  const v = localStorage.getItem(STORAGE_KEY);
+  const v = localStorage.getItem(CEREZ_ONAY_STORAGE_KEY);
   if (v === "tumu" || v === "zorunlu") return v;
   return null;
 }
 
 export function cerezOnayKaydet(tercih: "tumu" | "zorunlu"): void {
-  localStorage.setItem(STORAGE_KEY, tercih);
+  localStorage.setItem(CEREZ_ONAY_STORAGE_KEY, tercih);
   sessionStorage.removeItem(BANNER_KAPALI_KEY);
 }
 

@@ -4,7 +4,10 @@ import { useEffect } from "react";
 import Script from "next/script";
 import { GA_MEASUREMENT_ID, gtagCerezSenkronize } from "@/lib/gtag";
 
-/** GA4 gtag — çerez onayı (consent mode) ile senkron */
+/**
+ * gtag.js + config (consent default root layout’ta beforeInteractive).
+ * @see https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced
+ */
 export function GoogleAnalytics() {
   useEffect(() => {
     gtagCerezSenkronize();
@@ -19,18 +22,9 @@ export function GoogleAnalytics() {
         strategy="afterInteractive"
         onLoad={() => gtagCerezSenkronize()}
       />
-      <Script id="google-gtag-init" strategy="afterInteractive">
+      <Script id="google-gtag-config" strategy="afterInteractive">
         {`
-window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
-gtag('consent', 'default', {
-  ad_storage: 'denied',
-  ad_user_data: 'denied',
-  ad_personalization: 'denied',
-  analytics_storage: 'denied',
-  wait_for_update: 500
-});
 gtag('config', '${GA_MEASUREMENT_ID}');
 `}
       </Script>
