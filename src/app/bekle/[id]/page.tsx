@@ -173,20 +173,28 @@ export default function BeklePage() {
 
         if (data.yenidenAranıyor) {
           anlasildiRef.current = false;
-          setDurum("yeniden_araniyor");
           setCekiciAd(null);
+          setTeklifBanner(null);
+          const teklifRes = await fetch(`/api/talep/${id}/teklifler`);
+          if (teklifRes.ok) {
+            const teklifData = await teklifRes.json();
+            const liste = teklifData.teklifler ?? [];
+            setTeklifler(liste);
+            setIhaleBitis(teklifData.ihaleBitis ?? null);
+            if (liste.length > 0) {
+              setAnimasyonBitti(true);
+              setDurum("teklif_sec");
+              oncekiTeklifSayisi.current = liste.length;
+              planla(4000);
+              return;
+            }
+          }
           setTeklifler([]);
           setAnimasyonBitti(false);
           oncekiTeklifSayisi.current = 0;
           ilkTeklifKontrol.current = true;
           teklifAlindiKaydedildi.current = false;
-          setTeklifBanner(null);
-          const teklifRes = await fetch(`/api/talep/${id}/teklifler`);
-          if (teklifRes.ok) {
-            const teklifData = await teklifRes.json();
-            setTeklifler(teklifData.teklifler ?? []);
-            setIhaleBitis(teklifData.ihaleBitis ?? null);
-          }
+          setDurum("yeniden_araniyor");
           planla(4000);
           return;
         }
@@ -319,11 +327,38 @@ export default function BeklePage() {
         );
       } else {
         anlasildiRef.current = false;
-        setDurum("yeniden_araniyor");
         setCekiciAd(null);
-        setTeklifler([]);
-        setMesaj("İhale yeniden açıldı. Yeni teklifler bekleniyor.");
         posthogOlayYakala("anlasma_reddedildi", musteriFunnelProps());
+
+        const teklifRes = await fetch(`/api/talep/${id}/teklifler`);
+        const teklifData = teklifRes.ok ? await teklifRes.json() : null;
+        const kalan =
+          typeof data.kalanTeklifSayisi === "number"
+            ? data.kalanTeklifSayisi
+            : (teklifData?.teklifler?.length ?? 0);
+
+        if (data.tekliflereDon || kalan > 0) {
+          setTeklifler(teklifData?.teklifler ?? []);
+          setIhaleBitis(teklifData?.ihaleBitis ?? null);
+          oncekiTeklifSayisi.current = kalan;
+          setAnimasyonBitti(true);
+          setDurum("teklif_sec");
+          setTeklifBanner(
+            data.mesaj ??
+              "Önceki çekici ile anlaşılamadı. Diğer tekliflerden seçebilirsiniz."
+          );
+          setMesaj("");
+        } else {
+          setTeklifler([]);
+          setAnimasyonBitti(false);
+          oncekiTeklifSayisi.current = 0;
+          ilkTeklifKontrol.current = true;
+          teklifAlindiKaydedildi.current = false;
+          setDurum("yeniden_araniyor");
+          setMesaj(
+            data.mesaj ?? "İhale yeniden açıldı. Yeni teklifler bekleniyor."
+          );
+        }
       }
     } catch (e) {
       setMesaj(e instanceof Error ? e.message : "İşlem başarısız.");

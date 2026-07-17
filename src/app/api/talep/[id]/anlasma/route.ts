@@ -3,7 +3,7 @@ import { getCekiciById, getTalepById, updateTalep } from "@/lib/db";
 import { notifyCekiciIptal, notifyCekiciler, notifyMusteri } from "@/lib/sms";
 import { smsBaseUrl } from "@/lib/sms-base-url";
 import { ensureSeedData } from "@/lib/seed";
-import { IHALE_SURE_DK } from "@/lib/ihale";
+import { anlasamadiSonrasiIhaleyiSurdur } from "@/lib/ihale";
 
 export async function POST(
   request: NextRequest,
@@ -48,31 +48,37 @@ export async function POST(
     await notifyCekiciIptal(cekici.telefon, cekici.id, talep);
   }
 
-  const haric = [...(talep.haricTutulanCekiciIds ?? [])];
-  if (!haric.includes(cekiciId)) haric.push(cekiciId);
-  talep.haricTutulanCekiciIds = haric;
+  const { kalanAktif } = anlasamadiSonrasiIhaleyiSurdur(talep, cekiciId);
+  const haric = talep.haricTutulanCekiciIds ?? [];
 
-  talep.kazananCekiciId = undefined;
-  talep.kazananTeklifId = undefined;
-  talep.teklifler = [];
-  talep.durum = "yeniden_ihalede";
-  talep.anlasmaDurumu = "bekliyor";
-  const simdi = new Date();
-  talep.ihaleBitis = new Date(simdi.getTime() + IHALE_SURE_DK * 60 * 1000).toISOString();
-
-  const yeniBildirimler = await notifyCekiciler(talep, baseUrl, haric, {
-    yenidenArama: true,
-  });
-  talep.bildirilenCekiciIds = [
-    ...new Set([...talep.bildirilenCekiciIds, ...yeniBildirimler]),
-  ];
+  if (kalanAktif === 0) {
+    const yeniBildirimler = await notifyCekiciler(talep, baseUrl, haric, {
+      yenidenArama: true,
+    });
+    talep.bildirilenCekiciIds = [
+      ...new Set([...talep.bildirilenCekiciIds, ...yeniBildirimler]),
+    ];
+    await notifyMusteri(talep, "yeniden_arama", baseUrl);
+  }
 
   await updateTalep(talep);
-  await notifyMusteri(talep, "yeniden_arama", baseUrl);
+
+  if (kalanAktif > 0) {
+    return NextResponse.json({
+      durum: talep.durum,
+      mesaj:
+        "Önceki çekici ile anlaşılamadı. Diğer tekliflerden seçim yapabilirsiniz.",
+      tekliflereDon: true,
+      kalanTeklifSayisi: kalanAktif,
+      yenidenAranıyor: false,
+    });
+  }
 
   return NextResponse.json({
     durum: "yeniden_ihalede",
-    mesaj: "İhale yeniden açıldı. Çekiciler teklif verebilir.",
+    mesaj: "Başka teklif kalmadı. İhale yeniden açıldı.",
+    tekliflereDon: false,
+    kalanTeklifSayisi: 0,
     yenidenAranıyor: true,
   });
 }

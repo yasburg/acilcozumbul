@@ -96,6 +96,56 @@ export function aktifTeklifler(talep: Talep): Teklif[] {
   return (talep.teklifler ?? []).filter((t) => t.durum === "aktif");
 }
 
+/**
+ * Anlaşılamayan kazananı hariç tutar; diğer teklifleri tekrar aktif eder.
+ * Kalan teklif varsa aynı ihaleye devam; yoksa yeniden ihale açılır.
+ */
+export function anlasamadiSonrasiIhaleyiSurdur(
+  talep: Talep,
+  reddedilenCekiciId: string,
+  simdi: Date = new Date()
+): { kalanAktif: number } {
+  const haric = [...(talep.haricTutulanCekiciIds ?? [])];
+  if (!haric.includes(reddedilenCekiciId)) haric.push(reddedilenCekiciId);
+  talep.haricTutulanCekiciIds = haric;
+
+  for (const teklif of talep.teklifler ?? []) {
+    if (
+      teklif.cekiciId === reddedilenCekiciId ||
+      haric.includes(teklif.cekiciId)
+    ) {
+      teklif.durum = "kaybetti";
+      continue;
+    }
+    if (teklif.durum === "kaybetti" || teklif.durum === "kazandi") {
+      teklif.durum = "aktif";
+    }
+  }
+
+  talep.kazananCekiciId = undefined;
+  talep.kazananTeklifId = undefined;
+  talep.anlasmaDurumu = "bekliyor";
+
+  const kalanAktif = aktifTeklifler(talep).length;
+  const bitisGecmis = new Date(talep.ihaleBitis) <= simdi;
+
+  if (kalanAktif > 0) {
+    talep.durum = "ihalede";
+    if (bitisGecmis) {
+      talep.ihaleBitis = new Date(
+        simdi.getTime() + IHALE_SURE_DK * 60 * 1000
+      ).toISOString();
+    }
+  } else {
+    talep.durum = "yeniden_ihalede";
+    talep.ihaleBitis = new Date(
+      simdi.getTime() + IHALE_SURE_DK * 60 * 1000
+    ).toISOString();
+  }
+
+  return { kalanAktif };
+}
+
 export function enDusukTeklif(talep: Talep): Teklif | undefined {
   const aktif = aktifTeklifler(talep);
   if (!aktif.length) return undefined;
