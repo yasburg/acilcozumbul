@@ -10,6 +10,7 @@ import {
 const OTP_SURE_DK = 5;
 const MAX_DENEME = 5;
 const YENIDEN_GONDER_SN = 60;
+const ISTANBUL_TZ = "Europe/Istanbul";
 
 export interface OtpKayit {
   telefon: string;
@@ -18,6 +19,28 @@ export interface OtpKayit {
   sonGonderim: string;
   deneme: number;
   dogrulandi: boolean;
+}
+
+/** YYYY-MM-DD (Europe/Istanbul) */
+export function istanbulGunAnahtari(d: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: ISTANBUL_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
+export function ayniIstanbulGunuMu(iso: string): boolean {
+  return istanbulGunAnahtari(new Date(iso)) === istanbulGunAnahtari();
+}
+
+/** Şu andan İstanbul gün sonuna kalan saniye (çerez maxAge) */
+export function istanbulGunSonunaKalanSn(simdi: Date = new Date()): number {
+  const gun = istanbulGunAnahtari(simdi);
+  const gunBaslangicMs = Date.parse(`${gun}T00:00:00+03:00`);
+  const gunSonuMs = gunBaslangicMs + 24 * 60 * 60 * 1000;
+  return Math.max(60, Math.floor((gunSonuMs - simdi.getTime()) / 1000));
 }
 
 function otpFromRow(r: OtpRow): OtpKayit {
@@ -68,15 +91,25 @@ async function otpSil(telefon: string): Promise<void> {
 }
 
 async function otpEskiKayitlariTemizle(): Promise<void> {
-  const sinir = new Date(
+  const dogrulanmamisSinir = new Date(
     Date.now() - OTP_SURE_DK * 60 * 1000 * 3
   ).toISOString();
-  const { error } = await getSupabaseAdmin()
+  const { error: e1 } = await getSupabaseAdmin()
     .from("telefon_otp")
     .delete()
     .eq("dogrulandi", false)
-    .lt("olusturulma", sinir);
-  if (error) throw error;
+    .lt("olusturulma", dogrulanmamisSinir);
+  if (e1) throw e1;
+
+  const bugunBaslangic = new Date(
+    `${istanbulGunAnahtari()}T00:00:00+03:00`
+  ).toISOString();
+  const { error: e2 } = await getSupabaseAdmin()
+    .from("telefon_otp")
+    .delete()
+    .eq("dogrulandi", true)
+    .lt("olusturulma", bugunBaslangic);
+  if (e2) throw e2;
 }
 
 export function otpSuresiDolduMu(kayit: OtpKayit): boolean {
@@ -122,6 +155,7 @@ export async function otpGonder(
       kod: string;
       yenidenGonderSn: number;
       gelistirmeKodu?: string;
+      zatenDogrulandi?: boolean;
     }
   | { ok: false; hata: string; yenidenGonderSn?: number }
 > {
@@ -132,6 +166,16 @@ export async function otpGonder(
   await otpEskiKayitlariTemizle();
   const telefon = telefonNormalize(telefonHam);
   const mevcut = await otpGet(telefon);
+
+  if (mevcut?.dogrulandi && ayniIstanbulGunuMu(mevcut.olusturulma)) {
+    return {
+      ok: true,
+      telefon,
+      kod: "",
+      yenidenGonderSn: 0,
+      zatenDogrulandi: true,
+    };
+  }
 
   if (mevcut && !mevcut.dogrulandi) {
     const gecenSn = Math.floor(
@@ -217,7 +261,11 @@ export async function otpDogrula(
     };
   }
 
+  const simdi = new Date().toISOString();
   kayit.dogrulandi = true;
+  // olusturulma = doğrulama zamanı (aynı gün kontrolü için)
+  kayit.olusturulma = simdi;
+  kayit.sonGonderim = simdi;
   await otpUpsert(kayit);
   return { ok: true, telefon };
 }
@@ -228,9 +276,10 @@ export async function otpTemizle(telefonHam: string): Promise<void> {
   await otpSil(telefon);
 }
 
+/** Aynı İstanbul takvim günü içinde doğrulanmış mı */
 export async function telefonDogrulandiMi(telefonHam: string): Promise<boolean> {
   const telefon = telefonNormalize(telefonHam);
   const kayit = await otpGet(telefon);
   if (!kayit?.dogrulandi) return false;
-  return Date.now() - new Date(kayit.olusturulma).getTime() < 30 * 60 * 1000;
+  return ayniIstanbulGunuMu(kayit.olusturulma);
 }

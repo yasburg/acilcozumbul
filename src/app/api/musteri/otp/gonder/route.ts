@@ -12,6 +12,7 @@ import {
   sendOtp,
 } from "@/lib/otp-gonder";
 import { telefonMaskele } from "@/lib/telefon";
+import { musteriTelCookieAyarla } from "@/lib/musteri-auth";
 
 export async function POST(request: NextRequest) {
   const { telefon } = await request.json();
@@ -37,6 +38,16 @@ export async function POST(request: NextRequest) {
       });
     }
     return NextResponse.json({ error: sonuc.hata }, { status: 400 });
+  }
+
+  if (sonuc.zatenDogrulandi) {
+    const response = NextResponse.json({
+      zatenDogrulandi: true,
+      telefon: sonuc.telefon,
+      mesaj: "Bu numara bugün doğrulanmış. Tekrar SMS gerekmez.",
+    });
+    musteriTelCookieAyarla(response, sonuc.telefon);
+    return response;
   }
 
   const telNorm = telefonNormalize(sonuc.telefon);

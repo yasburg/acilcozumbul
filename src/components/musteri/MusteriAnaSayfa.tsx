@@ -239,6 +239,13 @@ export default function MusteriAnaSayfa() {
         if (d.dogrulandi && d.telefon) {
           setTelefonDogrulandi(true);
           setForm((f) => ({ ...f, telefon: d.telefon }));
+          setOtpBekleniyor(false);
+          setKodGirisAcik(false);
+          try {
+            sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
+          } catch {
+            /* ignore */
+          }
         } else {
           setTelefonDogrulandi(false);
         }
@@ -248,6 +255,7 @@ export default function MusteriAnaSayfa() {
     try {
       const kayitli = sessionStorage.getItem(OTP_BEKLEYEN_KEY);
       if (kayitli) {
+        // Durum cevabı gelene kadar bekleyen OTP’yi göster; doğrulanmışsa yukarıda temizlenir
         setOtpBekleniyor(true);
         setKodGirisAcik(true);
         setStep("bilgi");
@@ -495,6 +503,7 @@ export default function MusteriAnaSayfa() {
         smsGonderildi?: boolean;
         smsHatasi?: string;
         kodBekliyor?: boolean;
+        zatenDogrulandi?: boolean;
       };
       try {
         data = await res.json();
@@ -502,6 +511,24 @@ export default function MusteriAnaSayfa() {
         throw new Error(
           "Sunucuya ulaşılamadı. Bilgisayarda npm run dev:lan çalışıyor mu?"
         );
+      }
+
+      if (data.zatenDogrulandi) {
+        setTelefonDogrulandi(true);
+        setOtpBekleniyor(false);
+        setKodGirisAcik(false);
+        setGelistirmeKodu(null);
+        setOtpKod("");
+        setBilgiMesaj(
+          data.mesaj ?? "Bu numara bugün doğrulanmış. Tekrar SMS gerekmez."
+        );
+        try {
+          sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
+        } catch {
+          /* ignore */
+        }
+        if (yasalOnay) setStep("konum");
+        return;
       }
 
       if (data.kodBekliyor) {
@@ -1073,7 +1100,7 @@ export default function MusteriAnaSayfa() {
           <h2 className="text-xl font-bold">Telefon Doğrulama</h2>
           <p className="text-slate-500 text-sm">
             {telefonDogrulandi
-              ? "Telefonunuz doğrulandı. Arıza konumuna geçebilirsiniz."
+              ? "Telefonunuz bugün doğrulanmış; tekrar SMS gerekmez. Arıza konumuna geçebilirsiniz."
               : "SMS kodu ile telefonunuzu doğrulayın. Konum ve araç bilgileri sonraki adımlarda."}
           </p>
           {sorunLabel && (
@@ -1103,7 +1130,7 @@ export default function MusteriAnaSayfa() {
             <>
               <Card className="bg-emerald-50 border-emerald-200">
                 <p className="text-sm text-emerald-800">
-                  ✓ {telefonMaskele(form.telefon)} doğrulandı
+                  ✓ {telefonMaskele(form.telefon)} bugün doğrulandı
                 </p>
               </Card>
               <div className="flex gap-3">
