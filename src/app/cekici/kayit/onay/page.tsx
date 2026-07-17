@@ -5,8 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
 import { sehirKullanimAcikMi } from "@/lib/cekici-sehir-acilis";
+import { gtagOlay } from "@/lib/gtag";
 
 const YONLENDIRME_SN = 5;
+const SIGN_UP_SESSION_KEY = "acil_ga_sign_up";
 
 function OnayIcerik() {
   const router = useRouter();
@@ -14,6 +16,19 @@ function OnayIcerik() {
   const sehir = (searchParams.get("sehir") ?? "").trim();
   const kullanimAcik = !sehir || sehirKullanimAcikMi(sehir);
   const [kalanSn, setKalanSn] = useState(YONLENDIRME_SN);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(SIGN_UP_SESSION_KEY) === "1") return;
+      sessionStorage.setItem(SIGN_UP_SESSION_KEY, "1");
+    } catch {
+      /* yine de bir kez dene */
+    }
+    gtagOlay("sign_up", {
+      method: "cekici_kayit",
+      ...(sehir ? { sehir } : {}),
+    });
+  }, [sehir]);
 
   useEffect(() => {
     const tick = window.setInterval(() => {
