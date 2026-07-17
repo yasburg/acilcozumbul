@@ -44,12 +44,21 @@ import {
 import { googleMapsYapilandirildi } from "@/lib/google-maps";
 import type { KonumOneri } from "@/lib/hedef-oneri-data";
 import type { HedefOneriKaynak } from "@/lib/konum-oneri";
-import { posthogOlayYakala } from "@/lib/posthog-client";
+import {
+  posthogKampanyaKaydet,
+  posthogOlayYakala,
+} from "@/lib/posthog-client";
 
 type Step = "bilgi" | "konum" | "sorun" | "detay" | "hedef";
 
 const STEP_SIRA: Step[] = ["sorun", "bilgi", "konum", "detay", "hedef"];
 const OTP_BEKLEYEN_KEY = "acilcozum_otp_bekleyen";
+const ADIM_OLAYLARI: Partial<Record<Step, string>> = {
+  bilgi: "adim_bilgi",
+  konum: "adim_konum",
+  detay: "adim_detay",
+  hedef: "adim_hedef",
+};
 
 function funnelKaydet(
   olay: string,
@@ -62,6 +71,10 @@ function funnelKaydet(
     body: JSON.stringify({ olay, telefon }),
   });
   posthogOlayYakala(olay, posthogProps);
+}
+
+function sorunProps(sorunTipi: string): Record<string, unknown> {
+  return sorunTipi ? { sorun_tipi: sorunTipi } : {};
 }
 
 export default function MusteriAnaSayfa() {
@@ -131,9 +144,17 @@ export default function MusteriAnaSayfa() {
 
   useEffect(() => {
     setGpsGuvenli(konumGuvenliMi());
+    posthogKampanyaKaydet();
     funnelKaydet("form_basla");
   }, []);
 
+  useEffect(() => {
+    const olay = ADIM_OLAYLARI[step];
+    if (!olay) return;
+    posthogOlayYakala(olay, sorunProps(form.sorunTipi));
+    // yalnızca adım değişince; sorunTipi o anki değeri taşır
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   stepRef.current = step;
   formLatRef.current = form.lat;
@@ -513,7 +534,7 @@ export default function MusteriAnaSayfa() {
       });
 
       if (data.smsGonderildi || data.gelistirmeKodu) {
-        posthogOlayYakala("otp_gonder");
+        posthogOlayYakala("otp_gonder", sorunProps(form.sorunTipi));
       }
 
       if (!data.smsGonderildi && !data.gelistirmeKodu) {
@@ -572,7 +593,7 @@ export default function MusteriAnaSayfa() {
       setGelistirmeKodu(null);
       setBilgiMesaj("");
       setOtpKod("");
-      posthogOlayYakala("otp_dogrulandi");
+      posthogOlayYakala("otp_dogrulandi", sorunProps(form.sorunTipi));
       try {
         sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
       } catch {
@@ -1029,7 +1050,10 @@ export default function MusteriAnaSayfa() {
           <SorunSecimi
             seciliTip={form.sorunTipi}
             detay={form.sorunDetay}
-            onTipSec={(id) => update("sorunTipi", id)}
+            onTipSec={(id) => {
+              update("sorunTipi", id);
+              posthogOlayYakala("sorun_secildi", { sorun_tipi: id });
+            }}
             onDetayChange={(v) => update("sorunDetay", v)}
             sadeceTipSecimi
             onDevam={() => {
