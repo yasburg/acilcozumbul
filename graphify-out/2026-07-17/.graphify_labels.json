@@ -51,6 +51,7 @@
   "49": "client.ts",
   "50": "CLAUDE.md",
   "51": "instrumentation-client.ts",
+  "52": "route.ts",
   "53": "davet-kayit.ts",
   "54": "page.tsx",
   "55": "ArizaFotografAlani.tsx",
@@ -59,5 +60,6 @@
   "58": "cerez-onay.ts",
   "59": "payment.ts",
   "60": "route.ts",
+  "61": "HizmetVerenSayimGostergesi.tsx",
   "62": "page.tsx"
 }
