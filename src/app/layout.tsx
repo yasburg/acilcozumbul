@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { CerezOnayBanner } from "@/components/CerezOnayBanner";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import {
   SEO_ACIKLAMA,
@@ -99,6 +100,7 @@ export default function RootLayout({
   return (
     <html lang="tr" className={`${geist.variable} h-full`}>
       <body className="min-h-dvh font-sans antialiased">
+        <GoogleAnalytics />
         <PostHogProvider>{children}</PostHogProvider>
         <CerezOnayBanner />
       </body>
