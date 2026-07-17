@@ -1,5 +1,6 @@
 import { getCekiciById } from "./db";
 import { getSupabaseAdmin } from "./supabase/admin";
+import { cekiciAuthKullaniciSil } from "./cekici-auth";
 
 const BELGE_BUCKET = "cekici-belgeler";
 
@@ -60,6 +61,10 @@ export async function silCekiciCascade(id: string): Promise<void> {
   await sb.from("cekici_kayit_otp").delete().eq("telefon", cekici.telefon);
 
   await cekiciBelgeleriniSil(id);
+
+  if (cekici.authUserId) {
+    await cekiciAuthKullaniciSil(cekici.authUserId);
+  }
 
   const { error: cekiciErr } = await sb.from("cekiciler").delete().eq("id", id);
   if (cekiciErr) throw cekiciErr;

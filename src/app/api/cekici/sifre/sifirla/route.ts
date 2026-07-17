@@ -3,6 +3,10 @@ import {
   cekiciSifreOtpDogrula,
   cekiciSifreOtpTemizle,
 } from "@/lib/cekici-sifre-otp";
+import {
+  cekiciAuthSifreGuncelle,
+  cekiciSifreyiAuthaTasi,
+} from "@/lib/cekici-auth";
 import { getCekiciByTelefon, updateCekici } from "@/lib/db";
 import { telefonGecerliMi, telefonNormalize } from "@/lib/telefon";
 import { ensureSeedData } from "@/lib/seed";
@@ -40,7 +44,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: dogrulama.hata }, { status: 400 });
   }
 
-  await updateCekici({ ...cekici, sifre });
+  try {
+    if (cekici.authUserId) {
+      await cekiciAuthSifreGuncelle(cekici.authUserId, sifre);
+      if (cekici.sifre) {
+        await updateCekici({ ...cekici, sifre: "" });
+      }
+    } else {
+      await cekiciSifreyiAuthaTasi(cekici, sifre);
+    }
+  } catch (e) {
+    const mesaj = e instanceof Error ? e.message : "Şifre güncellenemedi.";
+    return NextResponse.json({ error: mesaj }, { status: 400 });
+  }
+
   await cekiciSifreOtpTemizle(tel);
 
   return NextResponse.json({

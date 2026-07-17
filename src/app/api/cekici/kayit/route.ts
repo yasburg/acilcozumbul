@@ -22,6 +22,10 @@ import {
   cekiciKayitOtpDogrula,
   cekiciKayitOtpTemizle,
 } from "@/lib/cekici-kayit-otp";
+import {
+  cekiciAuthKullaniciOlustur,
+  cekiciAuthKullaniciSil,
+} from "@/lib/cekici-auth";
 
 export async function POST(request: NextRequest) {
   await ensureSeedData();
@@ -87,12 +91,29 @@ export async function POST(request: NextRequest) {
   const token = randomUUID();
   const baslangicKredi = kayitBaslangicKredisi(kayitHazir.sonuc);
   const hizmetBolgeleri = kayitVarsayilanHizmetBolgeleri(sehir);
+  const cekiciId = randomUUID();
+  const sifreTemiz = String(sifre).trim();
+
+  let authUserId: string;
+  try {
+    authUserId = await cekiciAuthKullaniciOlustur({
+      telefon: tel,
+      sifre: sifreTemiz,
+      cekiciId,
+      ad: ad.trim(),
+    });
+  } catch (e) {
+    const mesaj = e instanceof Error ? e.message : "Auth kaydı oluşturulamadı.";
+    return NextResponse.json({ error: mesaj }, { status: 400 });
+  }
+
   const cekici: Cekici = {
-    id: randomUUID(),
+    id: cekiciId,
     ad: ad.trim(),
     telefon: tel,
     token,
-    sifre: sifre.trim(),
+    sifre: "",
+    authUserId,
     kredi: baslangicKredi,
     sehir,
     hizmetIlceleri: hizmetBolgeleri[sehir] ?? [],
@@ -108,7 +129,13 @@ export async function POST(request: NextRequest) {
         : undefined,
   };
 
-  await addCekici(cekici);
+  try {
+    await addCekici(cekici);
+  } catch (e) {
+    // DB kaydı başarısızsa Auth kullanıcısını geri al
+    await cekiciAuthKullaniciSil(authUserId);
+    throw e;
+  }
   await cekiciKayitOtpTemizle(tel);
 
   if (kayitHazir.sonuc.uygulandi) {

@@ -12,7 +12,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "migrate:supabase": "node --env-file=.env scripts/migrate-json-to-supabase.mjs"
+    "migrate:supabase": "node --env-file=.env scripts/migrate-json-to-supabase.mjs",
+    "migrate:cekici-auth": "node --env-file=.env scripts/migrate-cekici-passwords-to-auth.mjs"
   },
   "dependencies": {
     "@netgsm/sms": "^1.1.11",

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
-import { Btn, Card } from "@/components/ui";
+import { Btn, Card, SifreAlani } from "@/components/ui";
 import { formatKredi } from "@/lib/talep-utils";
 import type { ListeDurumu } from "@/lib/types";
 import { cekiciFetch } from "@/lib/cekici-fetch";
@@ -243,6 +243,7 @@ export default function CekiciPanelTabs() {
   const [hesapSilOnayAcik, setHesapSilOnayAcik] = useState(false);
   const [hesapSiliyor, setHesapSiliyor] = useState(false);
   const [hesapSilHata, setHesapSilHata] = useState("");
+  const [hesapSilSifre, setHesapSilSifre] = useState("");
   const { seviye: gizlilik, hesapSeviye } = useKisiselVeriGizle(
     demoAktif || Boolean(data?.demoModu)
   );
@@ -265,10 +266,18 @@ export default function CekiciPanelTabs() {
   }, [router]);
 
   const hesabiSil = useCallback(async () => {
+    if (!hesapSilSifre.trim()) {
+      setHesapSilHata("Hesabı silmek için şifrenizi girin.");
+      return;
+    }
     setHesapSiliyor(true);
     setHesapSilHata("");
     try {
-      const res = await cekiciFetch("/api/cekici/hesap/sil", { method: "POST" });
+      const res = await cekiciFetch("/api/cekici/hesap/sil", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sifre: hesapSilSifre }),
+      });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(
@@ -277,6 +286,7 @@ export default function CekiciPanelTabs() {
       }
       posthogOlayYakala("cekici_hesap_silindi", { rol: "cekici" });
       setHesapSilOnayAcik(false);
+      setHesapSilSifre("");
       router.push("/cekici/giris?mesaj=hesap-silindi");
       router.refresh();
     } catch (e) {
@@ -286,7 +296,7 @@ export default function CekiciPanelTabs() {
     } finally {
       setHesapSiliyor(false);
     }
-  }, [router]);
+  }, [hesapSilSifre, router]);
 
   const ihaleyeKatil = useCallback(
     async (talepId: string) => {
@@ -874,15 +884,11 @@ export default function CekiciPanelTabs() {
                 Bu işlem geri alınamaz. Hesabınız, kredi bakiyeniz, ödeme
                 geçmişiniz ve yüklenen belgeler kalıcı olarak silinir.
               </p>
-              {hesapSilHata && (
-                <p className="text-sm text-red-800" role="alert">
-                  {hesapSilHata}
-                </p>
-              )}
               <Btn
                 variant="danger"
                 onClick={() => {
                   setHesapSilHata("");
+                  setHesapSilSifre("");
                   setHesapSilOnayAcik(true);
                 }}
                 disabled={hesapSiliyor || cikisYukleniyor}
@@ -904,15 +910,35 @@ export default function CekiciPanelTabs() {
                   id="hesap-sil-onay-baslik"
                   className="text-lg font-bold text-slate-900"
                 >
-                  Emin misiniz?
+                  Hesabı silmek için şifre gerekli
                 </h3>
                 <p className="text-sm text-slate-600 leading-relaxed">
-                  Hesabınız kalıcı olarak silinecek. Bu işlem geri alınamaz.
+                  Hesabınız kalıcı olarak silinecek. Onaylamak için şifrenizi
+                  girin.
                 </p>
+                <SifreAlani
+                  label="Şifre"
+                  autoComplete="current-password"
+                  value={hesapSilSifre}
+                  onChange={(e) => {
+                    setHesapSilSifre(e.target.value);
+                    if (hesapSilHata) setHesapSilHata("");
+                  }}
+                  disabled={hesapSiliyor}
+                />
+                {hesapSilHata && (
+                  <p className="text-sm text-red-700" role="alert">
+                    {hesapSilHata}
+                  </p>
+                )}
                 <div className="flex flex-col-reverse sm:flex-row gap-2">
                   <Btn
                     variant="secondary"
-                    onClick={() => setHesapSilOnayAcik(false)}
+                    onClick={() => {
+                      setHesapSilOnayAcik(false);
+                      setHesapSilSifre("");
+                      setHesapSilHata("");
+                    }}
                     disabled={hesapSiliyor}
                   >
                     Vazgeç
@@ -920,7 +946,7 @@ export default function CekiciPanelTabs() {
                   <Btn
                     variant="danger"
                     onClick={() => void hesabiSil()}
-                    disabled={hesapSiliyor}
+                    disabled={hesapSiliyor || !hesapSilSifre.trim()}
                   >
                     {hesapSiliyor ? "Siliniyor…" : "Evet, hesabımı sil"}
                   </Btn>

@@ -75,10 +75,7 @@ export async function ensureSeedData(): Promise<void> {
   let guncellendi = false;
   const migrated = existing.map((c) => {
     let row = c as Cekici;
-    if (!("sifre" in c) || !row.sifre) {
-      guncellendi = true;
-      row = { ...row, sifre: "123456" };
-    }
+    // Artık eksik sifre için plaintext "123456" yazmıyoruz — Auth kullanılır
     if (!row.kayitTarihi) {
       guncellendi = true;
       row = { ...row, kayitTarihi: new Date().toISOString() };

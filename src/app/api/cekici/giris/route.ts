@@ -4,6 +4,7 @@ import {
   getCekiciByTelefon,
 } from "@/lib/db";
 import { CEKICI_COOKIE } from "@/lib/auth";
+import { cekiciGirisSifreKontrol } from "@/lib/cekici-auth";
 import { ensureSeedData } from "@/lib/seed";
 import { epostaGecerliMi, epostaNormalize } from "@/lib/eposta";
 import {
@@ -59,7 +60,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (cekici && cekici.sifre !== sifreDeger) {
+  if (!cekici || !cekici.aktif) {
+    return NextResponse.json({ error: "Geçersiz giriş." }, { status: 401 });
+  }
+
+  const sifreOk = await cekiciGirisSifreKontrol(cekici, sifreDeger);
+  if (!sifreOk) {
     return NextResponse.json(
       {
         error: epostaGiris
@@ -68,10 +74,6 @@ export async function POST(request: NextRequest) {
       },
       { status: 401 }
     );
-  }
-
-  if (!cekici || !cekici.aktif) {
-    return NextResponse.json({ error: "Geçersiz giriş." }, { status: 401 });
   }
 
   const response = NextResponse.json({

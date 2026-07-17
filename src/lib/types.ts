@@ -54,7 +54,13 @@ export interface Cekici {
   ad: string;
   telefon: string;
   token: string;
+  /**
+   * @deprecated Düz metin şifre — yalnızca legacy satırlar.
+   * Yeni kayıtlar Supabase Auth kullanır; alan boş bırakılır.
+   */
   sifre: string;
+  /** Supabase auth.users.id */
+  authUserId?: string;
   kredi: number;
   sehir: string;
   /** @deprecated hizmetBolgeleri kullanın */
