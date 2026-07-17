@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
+import { odemeOnaySessionKey, type OdemeOnayKayit } from "@/lib/odeme-onay";
 import { posthogOlayYakala } from "@/lib/posthog-client";
 
 const KREDI_ODEME_ADIMLARI = [
@@ -225,39 +226,40 @@ export default function OdemePage() {
 
       await animasyonGorev;
 
+      const tip: "kredi" | "rozet" =
+        data.odemeTipi === "rozet" || odemeTipi === "rozet" ? "rozet" : "kredi";
+
       posthogOlayYakala("cekici_odeme_tamamla", {
         rol: "cekici",
         odeme_id: odemeId,
-        odeme_tipi: data.odemeTipi ?? odemeTipi ?? "kredi",
+        odeme_tipi: tip,
+        odeme_durumu: "basarili",
         eklenen_kredi: data.eklenenKredi,
       });
 
       sessionStorage.removeItem(`odeme-${odemeId}`);
 
-      if (data.odemeTipi === "rozet" || odemeTipi === "rozet") {
-        router.replace("/cekici/panel?tab=hesabim&mesaj=rozet-aktif");
-        return;
-      }
-
-      sessionStorage.setItem(
-        "acil_odeme_basarili",
-        JSON.stringify({
-          eklenenKredi: data.eklenenKredi,
-          toplamKredi: data.toplamKredi,
-        })
-      );
-      const eklenenParam =
-        data.eklenenKredi != null
-          ? `&eklenen=${encodeURIComponent(String(data.eklenenKredi))}`
-          : "";
-      router.replace(
-        `/cekici/panel?tab=hesabim&mesaj=kredi-eklendi${eklenenParam}`
-      );
+      const onay: OdemeOnayKayit = {
+        odemeTipi: tip,
+        eklenenKredi: data.eklenenKredi,
+        toplamKredi: data.toplamKredi,
+        tutar: tutar || undefined,
+      };
+      sessionStorage.setItem(odemeOnaySessionKey(odemeId), JSON.stringify(onay));
+      router.replace(`/cekici/odeme/${odemeId}/onay`);
     } catch (err) {
       iptalRef.value = true;
       setOdemeAnimasyon(false);
       setAnimasyonAdim(0);
-      setError(err instanceof Error ? err.message : "Ödeme başarısız.");
+      const hata = err instanceof Error ? err.message : "Ödeme başarısız.";
+      posthogOlayYakala("cekici_odeme_tamamla", {
+        rol: "cekici",
+        odeme_id: odemeId,
+        odeme_tipi: odemeTipi,
+        odeme_durumu: "basarisiz",
+        hata,
+      });
+      setError(hata);
     } finally {
       setLoading(false);
     }

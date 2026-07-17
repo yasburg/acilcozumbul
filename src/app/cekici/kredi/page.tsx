@@ -79,6 +79,10 @@ export default function KrediPage() {
       setOtpBekliyor(true);
       setYenidenSn(data.yenidenGonderSn ?? 60);
       setGelistirmeKodu(data.gelistirmeKodu);
+      posthogOlayYakala("cekici_eposta_otp_gonder", {
+        rol: "cekici",
+        kaynak: "kredi",
+      });
       if (data.demo) {
         setError("Demo: e-posta konsola yazıldı (RESEND_API_KEY yok).");
       }
@@ -103,8 +107,18 @@ export default function KrediPage() {
       setEpostaDogrulandi(true);
       setOtpBekliyor(false);
       setKod("");
+      posthogOlayYakala("cekici_eposta_dogrulandi", {
+        rol: "cekici",
+        kaynak: "kredi",
+      });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Doğrulama başarısız.");
+      const hata = e instanceof Error ? e.message : "Doğrulama başarısız.";
+      posthogOlayYakala("cekici_eposta_dogrulama_basarisiz", {
+        rol: "cekici",
+        kaynak: "kredi",
+        hata,
+      });
+      setError(hata);
     } finally {
       setOtpYukleniyor(false);
     }
@@ -127,6 +141,7 @@ export default function KrediPage() {
       if (!res.ok) throw new Error(data.error);
       posthogOlayYakala("cekici_odeme_baslat", {
         rol: "cekici",
+        odeme_tipi: "kredi",
         paket_tl: seciliPaket,
         odeme_id: data.odemeId,
       });
