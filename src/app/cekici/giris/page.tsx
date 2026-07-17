@@ -34,6 +34,14 @@ function GirisIcerik() {
     router.replace(q ? `/panel?${q}` : "/panel");
   }, [searchParams, router]);
 
+  useEffect(() => {
+    if (searchParams.get("eposta") === "1") return;
+    if (searchParams.get("mesaj") === "hesap-silindi") return;
+    void cekiciFetch("/api/cekici/me").then((res) => {
+      if (res.ok) router.replace("/cekici/panel");
+    });
+  }, [router, searchParams]);
+
   async function uyeGiris(kimlik: string, sifreDeger: string) {
     const epostaIle = epostaGecerliMi(kimlik);
     const res = await cekiciFetch("/api/cekici/giris", {
@@ -87,6 +95,14 @@ function GirisIcerik() {
 
   return (
     <MobileShell subtitle="Üye girişi">
+      {searchParams.get("mesaj") === "hesap-silindi" && (
+        <Card className="border-emerald-200 bg-emerald-50 mb-4">
+          <p className="text-emerald-800 text-sm">
+            Hesabınız silindi. Yeniden kayıt olarak devam edebilirsiniz.
+          </p>
+        </Card>
+      )}
+
       {typeof window !== "undefined" &&
         window.location.protocol === "http:" &&
         !window.location.hostname.includes("localhost") && (

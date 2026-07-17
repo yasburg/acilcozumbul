@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import MusteriAnaSayfa from "@/components/musteri/MusteriAnaSayfa";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { getCurrentCekici } from "@/lib/auth";
 import {
   faqJsonLd,
   organizationJsonLd,
@@ -17,7 +19,12 @@ export const metadata = sayfaMetadata({
   absoluteTitle: true,
 });
 
-export default function HomePage() {
+export default async function HomePage() {
+  const cekici = await getCurrentCekici();
+  if (cekici) {
+    redirect("/cekici/panel");
+  }
+
   return (
     <>
       <JsonLd

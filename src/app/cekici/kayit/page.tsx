@@ -132,6 +132,12 @@ function KayitIcerik() {
   }, []);
 
   useEffect(() => {
+    void cekiciFetch("/api/cekici/me").then((res) => {
+      if (res.ok) router.replace("/cekici/panel");
+    });
+  }, [router]);
+
+  useEffect(() => {
     setOtpAsamasi(false);
     setOtpKod("");
     setOtpBilgi("");

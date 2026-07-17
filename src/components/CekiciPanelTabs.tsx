@@ -240,6 +240,9 @@ export default function CekiciPanelTabs() {
   const [cikisYukleniyor, setCikisYukleniyor] = useState(false);
   const [katilYukleniyor, setKatilYukleniyor] = useState<string | null>(null);
   const [demoAktif, setDemoAktif] = useState(false);
+  const [hesapSilOnayAcik, setHesapSilOnayAcik] = useState(false);
+  const [hesapSiliyor, setHesapSiliyor] = useState(false);
+  const [hesapSilHata, setHesapSilHata] = useState("");
   const { seviye: gizlilik, hesapSeviye } = useKisiselVeriGizle(
     demoAktif || Boolean(data?.demoModu)
   );
@@ -258,6 +261,30 @@ export default function CekiciPanelTabs() {
       setCikisYukleniyor(false);
       router.push("/cekici/giris");
       router.refresh();
+    }
+  }, [router]);
+
+  const hesabiSil = useCallback(async () => {
+    setHesapSiliyor(true);
+    setHesapSilHata("");
+    try {
+      const res = await cekiciFetch("/api/cekici/hesap/sil", { method: "POST" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof body.error === "string" ? body.error : "Hesap silinemedi."
+        );
+      }
+      posthogOlayYakala("cekici_hesap_silindi", { rol: "cekici" });
+      setHesapSilOnayAcik(false);
+      router.push("/cekici/giris?mesaj=hesap-silindi");
+      router.refresh();
+    } catch (e) {
+      setHesapSilHata(
+        e instanceof Error ? e.message : "Hesap silinemedi."
+      );
+    } finally {
+      setHesapSiliyor(false);
     }
   }, [router]);
 
@@ -836,11 +863,71 @@ export default function CekiciPanelTabs() {
             <Btn
               variant="danger"
               onClick={() => void oturumuKapat()}
-              disabled={cikisYukleniyor}
+              disabled={cikisYukleniyor || hesapSiliyor}
             >
               {cikisYukleniyor ? "Çıkış yapılıyor…" : "Çıkış yap"}
             </Btn>
+
+            <Card className="border-red-200 bg-red-50/50 space-y-3">
+              <p className="text-sm font-semibold text-red-800">Hesabı sil</p>
+              <p className="text-sm text-red-700 leading-relaxed">
+                Bu işlem geri alınamaz. Hesabınız, kredi bakiyeniz, ödeme
+                geçmişiniz ve yüklenen belgeler kalıcı olarak silinir.
+              </p>
+              {hesapSilHata && (
+                <p className="text-sm text-red-800" role="alert">
+                  {hesapSilHata}
+                </p>
+              )}
+              <Btn
+                variant="danger"
+                onClick={() => {
+                  setHesapSilHata("");
+                  setHesapSilOnayAcik(true);
+                }}
+                disabled={hesapSiliyor || cikisYukleniyor}
+              >
+                Hesabımı sil
+              </Btn>
+            </Card>
           </div>
+
+          {hesapSilOnayAcik && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="hesap-sil-onay-baslik"
+            >
+              <Card className="w-full max-w-md shadow-xl space-y-4">
+                <h3
+                  id="hesap-sil-onay-baslik"
+                  className="text-lg font-bold text-slate-900"
+                >
+                  Emin misiniz?
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Hesabınız kalıcı olarak silinecek. Bu işlem geri alınamaz.
+                </p>
+                <div className="flex flex-col-reverse sm:flex-row gap-2">
+                  <Btn
+                    variant="secondary"
+                    onClick={() => setHesapSilOnayAcik(false)}
+                    disabled={hesapSiliyor}
+                  >
+                    Vazgeç
+                  </Btn>
+                  <Btn
+                    variant="danger"
+                    onClick={() => void hesabiSil()}
+                    disabled={hesapSiliyor}
+                  >
+                    {hesapSiliyor ? "Siliniyor…" : "Evet, hesabımı sil"}
+                  </Btn>
+                </div>
+              </Card>
+            </div>
+          )}
         </div>
       )}
 
