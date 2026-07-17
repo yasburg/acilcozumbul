@@ -90,3 +90,32 @@ export function posthogOlayYakala(
     ...properties,
   });
 }
+
+/**
+ * Aynı anahtar için bir kez yakala. Analitik kapalıysa localStorage’a yazmaz
+ * (çerez sonra açılınca event kaçmasın).
+ * @returns true ise bu çağrıda capture yapıldı
+ */
+export function posthogOlayBirKez(
+  anahtar: string,
+  olay: string,
+  properties?: Record<string, unknown>
+): boolean {
+  if (typeof window === "undefined") return false;
+  if (!cerezAnalitikAktif() || !posthogYapilandirildi()) return false;
+
+  try {
+    if (localStorage.getItem(anahtar)) return false;
+  } catch {
+    /* storage yoksa yine dene */
+  }
+
+  posthogOlayYakala(olay, properties);
+
+  try {
+    localStorage.setItem(anahtar, "1");
+  } catch {
+    /* ignore */
+  }
+  return true;
+}

@@ -18,17 +18,7 @@ import {
   soyadGoster,
   telefonGoster,
 } from "@/lib/kisisel-veri-gizle";
-import { posthogOlayYakala } from "@/lib/posthog-client";
-
-function posthogBirKez(anahtar: string): boolean {
-  try {
-    if (localStorage.getItem(anahtar)) return false;
-    localStorage.setItem(anahtar, "1");
-    return true;
-  } catch {
-    return true;
-  }
-}
+import { posthogOlayBirKez, posthogOlayYakala } from "@/lib/posthog-client";
 
 interface TalepDurum {
   id: string;
@@ -105,13 +95,11 @@ export default function CekiciTalepClient() {
           return;
         }
         // SMS linki = giriş adımı (panel şifre girişi olmadan)
-        if (posthogBirKez(`acil_ph_cekici_giris_sms_${id}`)) {
-          posthogOlayYakala("cekici_giris", {
-            rol: "cekici",
-            yontem: "sms_link",
-            talep_id: id,
-          });
-        }
+        posthogOlayBirKez(`acil_ph_cekici_giris_sms_${id}`, "cekici_giris", {
+          rol: "cekici",
+          yontem: "sms_link",
+          talep_id: id,
+        });
       }
 
       const [meRes, talepRes, demoRes] = await Promise.all([
@@ -139,19 +127,23 @@ export default function CekiciTalepClient() {
       const talepData = (await talepRes.json()) as TalepDurum;
       setTalep(talepData);
 
-      // Panel katıl veya SMS: ihaleye erişim açıldığında tek event
+      // Panel katıl veya SMS: ihaleye erişim açıldığında
       const ihalede =
         !talepData.erisimYok &&
         (Boolean(talepData.onizleme) ||
           Boolean(talepData.teklifVerdim) ||
           Boolean(talepData.kazandim));
-      if (ihalede && posthogBirKez(`acil_ph_cekici_ihaleye_katil_${id}`)) {
-        posthogOlayYakala("cekici_ihaleye_katil", {
-          rol: "cekici",
-          talep_id: id,
-          kaynak: smsLinki ? "sms" : "panel",
-          demo: id.startsWith("demo-"),
-        });
+      if (ihalede) {
+        posthogOlayBirKez(
+          `acil_ph_cekici_ihaleye_katil_${id}`,
+          "cekici_ihaleye_katil",
+          {
+            rol: "cekici",
+            talep_id: id,
+            kaynak: smsLinki ? "sms" : "panel",
+            demo: id.startsWith("demo-"),
+          }
+        );
       }
 
       if (demoRes.ok) {

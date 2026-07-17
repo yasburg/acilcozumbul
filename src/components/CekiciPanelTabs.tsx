@@ -23,7 +23,7 @@ import {
   telefonGoster,
   type GizlilikSeviye,
 } from "@/lib/kisisel-veri-gizle";
-import { posthogOlayYakala } from "@/lib/posthog-client";
+import { posthogOlayBirKez, posthogOlayYakala } from "@/lib/posthog-client";
 
 type Tab = "musteriler" | "hesabim" | "ayarlar";
 
@@ -322,7 +322,16 @@ export default function CekiciPanelTabs() {
         if (cekici && body.kredi != null) {
           setCekici({ ...cekici, kredi: body.kredi });
         }
-        // cekici_ihaleye_katil talep sayfasında (SMS + panel) tek yerden yakalanır
+        posthogOlayBirKez(
+          `acil_ph_cekici_ihaleye_katil_${talepId}`,
+          "cekici_ihaleye_katil",
+          {
+            rol: "cekici",
+            talep_id: talepId,
+            kaynak: "panel",
+            demo: Boolean(data?.demoModu),
+          }
+        );
         router.push(`/cekici/talep/${talepId}`);
       } catch {
         setFlash("Bağlantı hatası.");
