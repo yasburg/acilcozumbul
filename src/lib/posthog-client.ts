@@ -2,7 +2,10 @@ import posthog from "posthog-js";
 import { cerezAnalitikAktif, cerezOnayOku } from "./cerez-onay";
 
 export function posthogYapilandirildi(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN);
+  return Boolean(
+    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN?.trim() ||
+      "phc_tpA4yHjeJbkPL24VrMUX77teFfUm8W9NgKsqQXFuKMbP"
+  );
 }
 
 /** Çerez tercihine göre PostHog yakalamayı aç/kapat */

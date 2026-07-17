@@ -1,15 +1,20 @@
 import posthog from "posthog-js";
 
-const key = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
-const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
+const key =
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN?.trim() ||
+  "phc_tpA4yHjeJbkPL24VrMUX77teFfUm8W9NgKsqQXFuKMbP";
+const host =
+  process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim() ||
+  "https://eu.i.posthog.com";
 
 if (typeof window !== "undefined" && key && host) {
   posthog.init(key, {
     api_host: "/ingest",
     ui_host: host,
-    defaults: "2026-01-30",
+    defaults: "2026-05-30",
     person_profiles: "identified_only",
     capture_pageview: true,
+    /** Çerez banner’ı “Tümünü kabul et” diyene kadar kapalı */
     opt_out_capturing_by_default: true,
     persistence: "localStorage+cookie",
   });
