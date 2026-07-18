@@ -38,6 +38,8 @@ interface Istatistik {
   hizmetPuani: number | null;
   hizmetDegerlendirmeAdet: number;
   buHaftaHarcanan: number;
+  kazancBuAy: number;
+  kazancToplam: number;
 }
 
 interface TalepOzet {
@@ -808,6 +810,24 @@ export default function CekiciPanelTabs() {
               <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
                 Özet istatistikler
               </h2>
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <Card className="text-center py-3 border-emerald-200 bg-emerald-50/50">
+                  <p className="text-xl font-bold text-emerald-700 tabular-nums">
+                    {(istatistik.kazancBuAy ?? 0).toLocaleString("tr-TR")} TL
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Bu ay (kazanılan / anlaşılan)
+                  </p>
+                </Card>
+                <Card className="text-center py-3 border-emerald-200 bg-emerald-50/50">
+                  <p className="text-xl font-bold text-emerald-800 tabular-nums">
+                    {(istatistik.kazancToplam ?? 0).toLocaleString("tr-TR")} TL
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Toplam (kazanılan / anlaşılan)
+                  </p>
+                </Card>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <Card className="text-center py-3">
                   <p className="text-2xl font-bold text-amber-600">

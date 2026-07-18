@@ -4,18 +4,43 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui";
 import { formatKredi } from "@/lib/talep-utils";
+import {
+  adSoyadSatirGoster,
+  telefonGoster,
+  type GizlilikSeviye,
+} from "@/lib/kisisel-veri-gizle";
 import type { CekiciPanelOzet } from "@/lib/panel";
+
+const PANEL_GIZLE_KEY = "acil_panel_kisisel_veri_gizli";
 
 export default function PanelCekicilerPage() {
   const [liste, setListe] = useState<CekiciPanelOzet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [gizli, setGizli] = useState(false);
 
   useEffect(() => {
+    try {
+      setGizli(window.localStorage.getItem(PANEL_GIZLE_KEY) === "1");
+    } catch {
+      /* ignore */
+    }
     fetch("/api/panel/cekiciler")
       .then((r) => r.json())
       .then(setListe)
       .finally(() => setLoading(false));
   }, []);
+
+  const seviye: GizlilikSeviye = gizli ? "yari" : "yok";
+
+  function gizlemeyiDegistir() {
+    const sonraki = !gizli;
+    setGizli(sonraki);
+    try {
+      window.localStorage.setItem(PANEL_GIZLE_KEY, sonraki ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -26,12 +51,26 @@ export default function PanelCekicilerPage() {
             Kayıt olan kullanıcılar — detay ve panele geçiş
           </p>
         </div>
-        <Link
-          href="/cekici/kayit"
-          className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white"
-        >
-          + Yeni kayıt
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={gizlemeyiDegistir}
+            aria-pressed={gizli}
+            className={`rounded-xl px-4 py-2 text-sm font-semibold border transition ${
+              gizli
+                ? "border-violet-300 bg-violet-50 text-violet-800"
+                : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+            }`}
+          >
+            {gizli ? "Kişisel veriler gizli" : "Kişisel verileri gizle"}
+          </button>
+          <Link
+            href="/cekici/kayit"
+            className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white"
+          >
+            + Yeni kayıt
+          </Link>
+        </div>
       </div>
 
       {loading && <p className="text-sm text-slate-500">Yükleniyor…</p>}
@@ -51,8 +90,12 @@ export default function PanelCekicilerPage() {
             <Card className="hover:border-amber-300 transition">
               <div className="flex flex-wrap justify-between gap-2">
                 <div>
-                  <p className="font-semibold text-slate-900">{c.ad}</p>
-                  <p className="text-sm text-slate-600">{c.telefon}</p>
+                  <p className="font-semibold text-slate-900">
+                    {adSoyadSatirGoster(c.ad, seviye)}
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    {telefonGoster(c.telefon, seviye)}
+                  </p>
                 </div>
                 <div className="text-right text-sm">
                   <p className="text-amber-600 font-bold">

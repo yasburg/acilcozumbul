@@ -4,6 +4,7 @@ import { getSmsLog, getTalepler } from "@/lib/db";
 import { cekiciPuanOzeti } from "@/lib/cekici-puan";
 import { SMS_BILDIRIM_KREDI } from "@/lib/ihale";
 import { ensureSeedData } from "@/lib/seed";
+import type { Talep } from "@/lib/types";
 
 function haftaBaslangici(): Date {
   const d = new Date();
@@ -12,6 +13,31 @@ function haftaBaslangici(): Date {
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() - fark);
   return d;
+}
+
+/** YYYY-MM (Europe/Istanbul) */
+function istanbulAyAnahtari(iso: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+  }).format(new Date(iso));
+}
+
+function kazananTeklifFiyati(talep: Talep, cekiciId: string): number | null {
+  if (talep.kazananCekiciId !== cekiciId) return null;
+  if (talep.durum !== "anlaşıldı" && talep.durum !== "kazanan_belli") {
+    return null;
+  }
+  const teklif =
+    (talep.kazananTeklifId
+      ? talep.teklifler?.find((t) => t.id === talep.kazananTeklifId)
+      : undefined) ??
+    talep.teklifler?.find(
+      (t) => t.cekiciId === cekiciId && t.durum === "kazandi"
+    );
+  if (!teklif || typeof teklif.fiyat !== "number") return null;
+  return teklif.fiyat;
 }
 
 export async function GET() {
@@ -39,6 +65,19 @@ export async function GET() {
     (t.haricTutulanCekiciIds ?? []).includes(cekici.id)
   ).length;
 
+  const buAyAnahtar = istanbulAyAnahtari(new Date().toISOString());
+  let kazancBuAy = 0;
+  let kazancToplam = 0;
+  for (const talep of talepler) {
+    const fiyat = kazananTeklifFiyati(talep, cekici.id);
+    if (fiyat == null) continue;
+    kazancToplam += fiyat;
+    const tarih = talep.anlasildiAt ?? talep.olusturulma;
+    if (istanbulAyAnahtari(tarih) === buAyAnahtar) {
+      kazancBuAy += fiyat;
+    }
+  }
+
   return NextResponse.json({
     teklifVerdigim: puan.toplamTeklif,
     satinAldiklarim: puan.kazanilanTeklif,
@@ -52,5 +91,7 @@ export async function GET() {
     hizmetDegerlendirmeAdet: puan.hizmetDegerlendirmeAdet,
     buHaftaHarcanan,
     mevcutKredi: cekici.kredi,
+    kazancBuAy,
+    kazancToplam,
   });
 }
