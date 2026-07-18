@@ -285,8 +285,9 @@ export default function PanelDemoPage() {
             <Card>
               <h3 className="font-semibold mb-2">Müşteri ekranı</h3>
               <p className="text-sm text-slate-600 mb-2">
-                Bekleme sayfası — teklifleri görmek için aynı tarayıcıda açın
-                (demo çerezi gerekir).
+                Bekleme sayfası — linki telefonda açabilirsiniz. Adreste{" "}
+                <code className="text-xs bg-slate-100 px-1 rounded">?demo=</code>{" "}
+                parametresi demo çerezini bağlar.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Link

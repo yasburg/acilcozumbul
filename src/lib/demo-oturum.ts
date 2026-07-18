@@ -425,7 +425,7 @@ export async function demoSimuleOlay(
           aliciTipi: "musteri",
           telefon: ana!.telefon,
           mesaj: "acilcozumbul.com: Tekliflerinizi buradan görebilirsiniz — demo",
-          link: `/bekle/${anaId}`,
+          link: `/bekle/${anaId}?demo=${oturum.id}`,
         })
       );
     }

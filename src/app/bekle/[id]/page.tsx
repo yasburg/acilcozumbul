@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { DemoHeaderBadge } from "@/components/DemoHeaderBadge";
 import { Btn, Card } from "@/components/ui";
@@ -59,8 +59,26 @@ interface MemnuniyetState {
 }
 
 export default function BeklePage() {
+  return (
+    <Suspense
+      fallback={
+        <MobileShell>
+          <p className="text-center text-slate-500 py-12">Yükleniyor…</p>
+        </MobileShell>
+      }
+    >
+      <BekleIcerik />
+    </Suspense>
+  );
+}
+
+function BekleIcerik() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params.id as string;
+  const demoParam = searchParams.get("demo");
+  const [demoHazir, setDemoHazir] = useState(!demoParam);
+  const [headerYukseklik, setHeaderYukseklik] = useState(78);
   const [durum, setDurum] = useState<Durum>("ihale_bekliyor");
   const [teklifler, setTeklifler] = useState<TeklifOzet[]>([]);
   const [cekiciAd, setCekiciAd] = useState<string | null>(null);
@@ -106,12 +124,44 @@ export default function BeklePage() {
     return () => clearTimeout(t);
   }, [teklifBanner]);
 
+  useEffect(() => {
+    if (!demoParam) {
+      setDemoHazir(true);
+      return;
+    }
+    let iptal = false;
+    void fetch("/api/demo/oturum-bagla", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id: demoParam }),
+    })
+      .catch(() => null)
+      .finally(() => {
+        if (!iptal) setDemoHazir(true);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, [demoParam]);
+
+  useEffect(() => {
+    const el = document.getElementById("app-shell-header");
+    if (!el) return;
+    const guncelle = () =>
+      setHeaderYukseklik(Math.ceil(el.getBoundingClientRect().height));
+    guncelle();
+    const ro = new ResizeObserver(guncelle);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [durum, demoTalep, teklifBanner]);
+
   function gelenTeklifBanner() {
     if (!teklifBanner) return null;
     return (
       <div
         role="status"
-        className="sticky top-0 z-20 -mx-1 mb-3 rounded-xl bg-amber-500 px-3 py-2.5 text-center text-sm font-semibold text-white shadow-sm"
+        className="mb-3 rounded-xl bg-amber-500 px-3 py-2.5 text-center text-sm font-semibold text-white shadow-sm"
       >
         <button
           type="button"
@@ -135,6 +185,8 @@ export default function BeklePage() {
   }, [id]);
 
   useEffect(() => {
+    if (!demoHazir) return;
+
     let aktif = true;
     let zamanlayici: ReturnType<typeof setTimeout> | undefined;
 
@@ -269,7 +321,7 @@ export default function BeklePage() {
       aktif = false;
       if (zamanlayici) clearTimeout(zamanlayici);
     };
-  }, [id, memnuniyetYenile]);
+  }, [id, memnuniyetYenile, demoHazir]);
 
   async function teklifSec(teklifId: string) {
     setIslem(true);
@@ -477,15 +529,44 @@ export default function BeklePage() {
   }
 
   if (durum === "teklif_sec") {
+    const fiyatlar = teklifler.map((t) => t.fiyat);
+    const minFiyat = fiyatlar.length ? Math.min(...fiyatlar) : null;
+    const maxFiyat = fiyatlar.length ? Math.max(...fiyatlar) : null;
+    const fiyatOzet =
+      minFiyat == null || maxFiyat == null
+        ? null
+        : minFiyat === maxFiyat
+          ? `${minFiyat.toLocaleString("tr-TR")} TL`
+          : `${minFiyat.toLocaleString("tr-TR")} – ${maxFiyat.toLocaleString("tr-TR")} TL`;
+
     return (
       <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
         <div className="space-y-4 py-2">
           {gelenTeklifBanner()}
-          <div className="text-center mb-2">
-            <h2 className="text-xl font-bold text-slate-900">Gelen Teklifler</h2>
-            <p className="text-slate-500 text-sm mt-1">
-              Onaylı çekici teklifleri üstte listelenir
-            </p>
+          <div
+            className="sticky z-[9] -mx-4 px-4 pt-1 pb-3 mb-1 bg-slate-50/95 backdrop-blur-md border-b border-slate-200/90 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.25)]"
+            style={{ top: headerYukseklik }}
+          >
+            <div className="text-center">
+              <h2 className="text-xl font-bold text-slate-900">Gelen Teklifler</h2>
+              <p className="text-slate-500 text-sm mt-1">
+                Onaylı çekici teklifleri üstte listelenir
+              </p>
+              {teklifler.length > 0 && (
+                <div className="mt-3 rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-2.5">
+                  <p className="text-sm font-semibold text-amber-950">
+                    {teklifler.length} teklif
+                    {fiyatOzet ? (
+                      <span className="font-normal text-amber-900">
+                        {" "}
+                        · Fiyat aralığı:{" "}
+                        <span className="font-semibold tabular-nums">{fiyatOzet}</span>
+                      </span>
+                    ) : null}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {mesaj && (

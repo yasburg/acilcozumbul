@@ -37,7 +37,7 @@ export async function GET() {
     cekiciAd: cekici?.ad,
     kalanSn: oturum.kalanSn,
     anaTalepId: oturum.durum.anaTalepId,
-    musteriLink: `/bekle/${oturum.durum.anaTalepId}`,
+    musteriLink: `/bekle/${oturum.durum.anaTalepId}?demo=${oturum.id}`,
     sms: oturum.durum.sms.slice(0, 10),
     talepSayisi: oturum.durum.talepler.length,
   });

@@ -25,8 +25,9 @@ export async function POST(request: NextRequest) {
       cekiciId: oturum.cekiciId,
       kalanSn: oturum.kalanSn,
       anaTalepId: oturum.durum.anaTalepId,
-      musteriLink: `/bekle/${oturum.durum.anaTalepId}`,
-      mesaj: "Demo oturumu başlatıldı. Aynı tarayıcıda çekici hesabıyla giriş yapın.",
+      musteriLink: `/bekle/${oturum.durum.anaTalepId}?demo=${oturum.id}`,
+      mesaj:
+        "Demo oturumu başlatıldı. Müşteri linkini telefonda da açabilirsiniz (?demo= parametresi çerezi bağlar).",
     });
 
     res.cookies.set(DEMO_COOKIE, oturum.id, {
