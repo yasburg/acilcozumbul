@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
-import { demoOturumCekiciIcin, demoModuAcikMi } from "@/lib/demo-oturum";
+import {
+  demoCookieYanitaYaz,
+  demoModuAcikMi,
+  demoOturumCekiciIcin,
+} from "@/lib/demo-oturum";
 
 export async function GET(request: NextRequest) {
   if (!demoModuAcikMi()) {
@@ -17,9 +21,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ aktif: false });
   }
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     aktif: true,
     kalanSn: oturum.kalanSn,
     anaTalepId: oturum.durum.anaTalepId,
+    oturumId: oturum.id,
   });
+  demoCookieYanitaYaz(res, oturum);
+  return res;
 }

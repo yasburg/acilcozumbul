@@ -26,8 +26,9 @@ export async function POST(request: NextRequest) {
       kalanSn: oturum.kalanSn,
       anaTalepId: oturum.durum.anaTalepId,
       musteriLink: `/bekle/${oturum.durum.anaTalepId}?demo=${oturum.id}`,
+      cekiciPanelLink: `/cekici/panel`,
       mesaj:
-        "Demo oturumu başlatıldı. Müşteri linkini telefonda da açabilirsiniz (?demo= parametresi çerezi bağlar).",
+        "Demo başlatıldı. Seçili çekici hesabıyla telefonda /cekici/panel açın — demo otomatik görünür.",
     });
 
     res.cookies.set(DEMO_COOKIE, oturum.id, {

@@ -24,6 +24,7 @@ type DemoDurum = {
   kalanSn?: number;
   anaTalepId?: string;
   musteriLink?: string;
+  cekiciPanelLink?: string;
   sms?: DemoSms[];
   talepSayisi?: number;
 };
@@ -285,15 +286,15 @@ export default function PanelDemoPage() {
             <Card>
               <h3 className="font-semibold mb-2">Müşteri ekranı</h3>
               <p className="text-sm text-slate-600 mb-2">
-                Bekleme sayfası — linki telefonda açabilirsiniz. Adreste{" "}
+                Linki telefonda açabilirsiniz (
                 <code className="text-xs bg-slate-100 px-1 rounded">?demo=</code>{" "}
-                parametresi demo çerezini bağlar.
+                çerezi bağlar).
               </p>
               <div className="flex flex-wrap gap-2">
                 <Link
                   href={durum.musteriLink}
                   target="_blank"
-                  className="text-sm font-medium text-amber-600 underline"
+                  className="text-sm font-medium text-amber-600 underline break-all"
                 >
                   {durum.musteriLink}
                 </Link>
@@ -305,6 +306,23 @@ export default function PanelDemoPage() {
                   Kopyala
                 </button>
               </div>
+            </Card>
+          )}
+
+          {durum.aktif && (
+            <Card>
+              <h3 className="font-semibold mb-2">Çekici paneli (telefon)</h3>
+              <p className="text-sm text-slate-600 mb-2">
+                Seçili çekici hesabıyla telefonda{" "}
+                <Link
+                  href={durum.cekiciPanelLink ?? "/cekici/panel"}
+                  className="text-amber-700 underline font-medium"
+                >
+                  /cekici/panel
+                </Link>{" "}
+                açın. Demo çerezi laptop’ta kalsa bile oturum çekiciye bağlıdır;
+                panel otomatik demo moda geçer.
+              </p>
             </Card>
           )}
 

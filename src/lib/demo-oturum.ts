@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { cookies } from "next/headers";
-import type { NextRequest } from "next/server";
+import type { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { getCekiciById } from "./db";
 import type { Cekici, Talep, Teklif } from "./types";
@@ -85,8 +85,40 @@ async function oturumGet(id: string): Promise<DemoOturumRow | null> {
   };
 }
 
+/** Bu çekiciye ait süresi dolmamış en güncel demo oturumu */
+async function oturumGetByCekiciId(
+  cekiciId: string
+): Promise<DemoOturumRow | null> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("demo_oturum")
+    .select("*")
+    .eq("cekici_id", cekiciId)
+    .gt("bitis", new Date().toISOString())
+    .order("bitis", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    if (error.message.includes("demo_oturum")) return null;
+    throw error;
+  }
+  if (!data) return null;
+  const row = data as DemoOturumRow;
+  return {
+    ...row,
+    durum: normalizeDurum(row.durum),
+  };
+}
+
 async function oturumSil(id: string): Promise<void> {
   await getSupabaseAdmin().from("demo_oturum").delete().eq("id", id);
+}
+
+async function cekiciDemoOturumlariniTemizle(cekiciId: string): Promise<void> {
+  try {
+    await getSupabaseAdmin().from("demo_oturum").delete().eq("cekici_id", cekiciId);
+  } catch {
+    /* tablo yoksa yoksay */
+  }
 }
 
 async function oturumKaydet(row: DemoOturumRow): Promise<void> {
@@ -167,8 +199,8 @@ export async function getAktifDemoOturumRequest(
 }
 
 /**
- * Yalnızca `acil_demo` çerezi olan tarayıcıda ve oturum bu çekiciye aitse
- * overlay döner (plan: normal kullanıcılar mock görmez).
+ * Demo overlay: çerez eşleşmesi VEYA bu çekiciye atanmış aktif oturum.
+ * (Telefon: admin laptop’ta başlatır → çekici telefonda giriş yapar, çerez yok.)
  */
 export async function demoOturumCekiciIcin(
   cekiciId: string,
@@ -180,7 +212,37 @@ export async function demoOturumCekiciIcin(
     ? await getAktifDemoOturumRequest(request)
     : await getAktifDemoOturum();
   if (fromCookie?.cekiciId === cekiciId) return fromCookie;
-  return null;
+
+  const row = await oturumGetByCekiciId(cekiciId);
+  if (!row) return null;
+  const sn = kalanSn(row.bitis);
+  if (sn <= 0) {
+    await oturumSil(row.id);
+    return null;
+  }
+
+  return {
+    id: row.id,
+    cekiciId: row.cekici_id,
+    bitis: row.bitis,
+    kalanSn: sn,
+    durum: row.durum,
+    olusturan: row.olusturan,
+  };
+}
+
+/** API yanıtına demo çerezini yaz (telefonda sonraki istekler için) */
+export function demoCookieYanitaYaz(
+  res: NextResponse,
+  oturum: AktifDemoOturum
+): void {
+  res.cookies.set(DEMO_COOKIE, oturum.id, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: Math.max(60, oturum.kalanSn),
+    path: "/",
+  });
 }
 
 export async function baslatDemoOturum(opts: {
@@ -196,6 +258,7 @@ export async function baslatDemoOturum(opts: {
   if (!cekici) throw new Error("Çekici bulunamadı.");
 
   await suresiDolanOturumlariTemizle();
+  await cekiciDemoOturumlariniTemizle(cekici.id);
 
   const sureDk = Math.min(30, Math.max(1, opts.sureDk ?? 5));
   const id = randomUUID();

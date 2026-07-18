@@ -16,7 +16,7 @@ import {
   talepSorunOzet,
 } from "@/lib/talep-utils";
 import type { Cekici, ListeDurumu, Talep, TalepOzet } from "@/lib/types";
-import { demoOturumCekiciIcin, demoPanelVerisi } from "@/lib/demo-oturum";
+import { demoCookieYanitaYaz, demoOturumCekiciIcin, demoPanelVerisi } from "@/lib/demo-oturum";
 
 function listeDurumuBelirle(talep: Talep, cekici: Cekici): ListeDurumu {
   const cekiciId = cekici.id;
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
   const demoOturum = await demoOturumCekiciIcin(cekici.id, request);
   if (demoOturum) {
     const demo = demoPanelVerisi(demoOturum, cekici);
-    return NextResponse.json({
+    const res = NextResponse.json({
       bekleyen: [...demo.bekleyen, ...bekleyen],
       bekleyenGizli: [...demo.bekleyenGizli, ...bekleyenGizli],
       teklifVerdigim: [...demo.teklifVerdigim, ...teklifVerdigim],
@@ -126,6 +126,8 @@ export async function GET(request: NextRequest) {
       baskasiAldi: [...demo.kaybettiklerim, ...kaybettiklerim],
       demoModu: true,
     });
+    demoCookieYanitaYaz(res, demoOturum);
+    return res;
   }
 
   return NextResponse.json({
