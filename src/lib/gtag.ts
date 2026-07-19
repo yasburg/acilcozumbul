@@ -143,3 +143,29 @@ export function gtagAdsFiyatTeklifiDonusumu(): void {
     currency: "TRY",
   });
 }
+
+/**
+ * Hizmet veren kayıt onayı — tam sayfa yüklemesinde GA page_view + sign_up.
+ * Google Ads / Tag Assistant «sayfa yükleme» dönüşümleri için.
+ */
+export function gtagCekiciKayitOnayGoruntule(
+  sehir?: string,
+  opts?: { donusumOlayi?: boolean }
+): void {
+  if (typeof window === "undefined") return;
+  if (!cerezAnalitikAktif()) return;
+  if (GA_MEASUREMENT_ID) {
+    gtagCagir("config", GA_MEASUREMENT_ID, {
+      page_path: "/cekici/kayit/onay",
+      page_title: "Kayıt Onayı",
+    });
+  }
+  if (opts?.donusumOlayi === false) return;
+  gtagCagir("event", "sign_up", {
+    method: "cekici_kayit",
+    ...(sehir ? { sehir } : {}),
+  });
+  gtagCagir("event", "cekici_kayit_onay", {
+    ...(sehir ? { sehir } : {}),
+  });
+}

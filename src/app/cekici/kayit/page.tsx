@@ -366,11 +366,11 @@ function KayitIcerik() {
         sehir: form.sehir || undefined,
         davet_kodu: Boolean(form.davetKodu.trim()),
       });
-      router.refresh();
+      /* Tam sayfa yüklemesi: Google Ads / GA «sayfa yükleme» dönüşümü için soft navigate kullanma */
       const sehirQs = form.sehir.trim()
         ? `?sehir=${encodeURIComponent(form.sehir.trim())}`
         : "";
-      router.push(`/cekici/kayit/onay${sehirQs}`);
+      window.location.assign(`/cekici/kayit/onay${sehirQs}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Kayıt başarısız.");
     } finally {

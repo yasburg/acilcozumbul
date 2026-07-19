@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
 import { sehirKullanimAcikMi } from "@/lib/cekici-sehir-acilis";
-import { gtagOlay } from "@/lib/gtag";
+import { gtagCekiciKayitOnayGoruntule } from "@/lib/gtag";
 import { posthogOlayYakala } from "@/lib/posthog-client";
 
 const YONLENDIRME_SN = 5;
@@ -15,37 +15,42 @@ function OnayIcerik() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sehir = (searchParams.get("sehir") ?? "").trim();
-  const kullanimAcik = !sehir || sehirKullanimAcikMi(sehir);
+  const kullanimAcik = Boolean(sehir) && sehirKullanimAcikMi(sehir);
   const [kalanSn, setKalanSn] = useState(YONLENDIRME_SN);
 
   useEffect(() => {
+    let donusumOlayi = true;
     try {
-      if (sessionStorage.getItem(SIGN_UP_SESSION_KEY) === "1") return;
-      sessionStorage.setItem(SIGN_UP_SESSION_KEY, "1");
+      if (sessionStorage.getItem(SIGN_UP_SESSION_KEY) === "1") {
+        donusumOlayi = false;
+      } else {
+        sessionStorage.setItem(SIGN_UP_SESSION_KEY, "1");
+      }
     } catch {
-      /* yine de bir kez dene */
+      /* private mode */
     }
-    gtagOlay("sign_up", {
-      method: "cekici_kayit",
-      ...(sehir ? { sehir } : {}),
-    });
-    posthogOlayYakala("cekici_kayit_onay", {
-      rol: "cekici",
-      ...(sehir ? { sehir } : {}),
-    });
+    /* Tam sayfa yüklemesinde GA page_view + (bir kez) dönüşüm olayları */
+    gtagCekiciKayitOnayGoruntule(sehir || undefined, { donusumOlayi });
+    if (donusumOlayi) {
+      posthogOlayYakala("cekici_kayit_onay", {
+        rol: "cekici",
+        ...(sehir ? { sehir } : {}),
+      });
+    }
   }, [sehir]);
 
   useEffect(() => {
+    if (!kullanimAcik) return;
     const tick = window.setInterval(() => {
       setKalanSn((s) => Math.max(0, s - 1));
     }, 1000);
     return () => window.clearInterval(tick);
-  }, []);
+  }, [kullanimAcik]);
 
   useEffect(() => {
-    if (kalanSn > 0) return;
-    router.replace("/cekici/panel");
-  }, [kalanSn, router]);
+    if (!kullanimAcik || kalanSn > 0) return;
+    router.replace("/");
+  }, [kullanimAcik, kalanSn, router]);
 
   return (
     <MobileShell subtitle="Kayıt onayı">
@@ -81,27 +86,34 @@ function OnayIcerik() {
         >
           {kullanimAcik ? (
             <p className="text-sm text-emerald-950 leading-relaxed">
-              Erken fazda İstanbul kontenjanındasınız. Panele geçerek bölgenizdeki
-              talepleri görebilir, teklif verebilirsiniz.
+              Erken fazda İstanbul kontenjanındasınız. Ana sayfaya dönüp giriş
+              yaparak paneli kullanabilirsiniz.
             </p>
           ) : (
             <p className="text-sm text-amber-950 leading-relaxed">
-              Kaydınız alındı. <strong>{sehir}</strong> kullanıma açılana kadar
-              paneli kullanamazsınız; sizi bekleme listesinde önde tutacağız.
-              Şehriniz açılınca bilgilendirileceksiniz.
+              Kaydınız alındı. <strong>{sehir || "Şehriniz"}</strong> kullanıma
+              açılana kadar paneli kullanamazsınız; sizi bekleme listesinde önde
+              tutacağız. Şehriniz açılınca bilgilendirileceksiniz.
             </p>
           )}
         </Card>
 
-        <p className="text-center text-sm text-slate-500" role="status">
-          {kalanSn > 0
-            ? `${kalanSn} sn içinde çekici paneline yönlendirileceksiniz…`
-            : "Yönlendiriliyor…"}
-        </p>
-
-        <Btn type="button" onClick={() => router.replace("/cekici/panel")}>
-          Panele git
-        </Btn>
+        {kullanimAcik ? (
+          <>
+            <p className="text-center text-sm text-slate-500" role="status">
+              {kalanSn > 0
+                ? `${kalanSn} sn içinde ana sayfaya yönlendirileceksiniz…`
+                : "Yönlendiriliyor…"}
+            </p>
+            <Btn type="button" onClick={() => router.replace("/")}>
+              Hemen ana sayfaya git
+            </Btn>
+          </>
+        ) : (
+          <Btn type="button" variant="secondary" onClick={() => router.replace("/")}>
+            Ana sayfaya dön
+          </Btn>
+        )}
       </div>
     </MobileShell>
   );
