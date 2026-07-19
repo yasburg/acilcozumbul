@@ -35,7 +35,8 @@ export function SorunSecimi({
             return (
               <div
                 key={tip.id}
-                className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-500/30 overflow-hidden"
+                data-sorun-id={tip.id}
+                className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-500/30 overflow-hidden scroll-mt-24"
               >
                 <button
                   type="button"
@@ -64,8 +65,9 @@ export function SorunSecimi({
             <button
               key={tip.id}
               type="button"
+              data-sorun-id={tip.id}
               onClick={() => onTipSec(tip.id)}
-              className="w-full text-left rounded-xl border px-4 py-3.5 transition border-slate-200 bg-white hover:border-amber-300 flex items-center gap-3"
+              className="w-full text-left rounded-xl border px-4 py-3.5 transition border-slate-200 bg-white hover:border-amber-300 flex items-center gap-3 scroll-mt-24"
             >
               <span className="text-xl shrink-0">{tip.icon}</span>
               <span className="font-medium text-sm flex-1 min-w-0 text-slate-800">

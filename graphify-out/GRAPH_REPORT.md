@@ -1,16 +1,16 @@
 # Graph Report - acilcozumbul  (2026-07-19)
 
 ## Corpus Check
-- 345 files · ~373,559 words
+- 345 files · ~373,620 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1465 nodes · 4553 edges · 62 communities (53 shown, 9 thin omitted)
+- 1465 nodes · 4553 edges · 63 communities (54 shown, 9 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.67)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8a337f71`
+- Built from commit: `690b6be6`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -40,6 +40,7 @@
 - [[_COMMUNITY_compilerOptions|compilerOptions]]
 - [[_COMMUNITY_route.ts|route.ts]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
+- [[_COMMUNITY_kredi-odeme.ts|kredi-odeme.ts]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
 - [[_COMMUNITY_cekici-email-otp.ts|cekici-email-otp.ts]]
 - [[_COMMUNITY_cekici-puan.ts|cekici-puan.ts]]
@@ -100,7 +101,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (62 total, 9 thin omitted)
+## Communities (63 total, 9 thin omitted)
 
 ### Community 0 - "demo-oturum.ts"
 Cohesion: 0.06
@@ -198,6 +199,10 @@ Nodes (65): config, middleware(), GET(), POST(), GET(), GET(), istemciIp(), ozel
 Cohesion: 0.17
 Nodes (19): eslintConfig, main(), GET(), envGarantiAlan(), envTemizle(), GarantiAlan, GarantiConfig, garantiConfigOku() (+11 more)
 
+### Community 25 - "kredi-odeme.ts"
+Cohesion: 0.29
+Nodes (8): GET(), GET(), getKrediOdemeById(), kaydetKrediOdeme(), listeleKrediOdemeler(), krediOdemeFromRow(), KrediOdemeRow, krediOdemeToRow()
+
 ### Community 27 - "page.tsx"
 Cohesion: 0.12
 Nodes (26): BekleIcerik(), CekiciTalepClient(), TalepDurum, CekiciAyarlarPanel(), DavetKoduAyarlari(), BADGE, CekiciPanelTabs(), Istatistik (+18 more)
@@ -251,8 +256,8 @@ Cohesion: 0.26
 Nodes (11): POST(), KREDI_PAKET_TL_LISTESI, KREDI_PAKETLERI, KrediPaket, krediPaketBul(), krediPaketOdenecekTL(), KrediPaketTl, krediTutarKurus() (+3 more)
 
 ### Community 57 - "route.ts"
-Cohesion: 0.07
-Nodes (32): GET(), GET(), Saglik, BolgeApiData, BolgeApiData, hizmetBolgeleriFlatten(), getKrediOdemeById(), kaydetKrediOdeme() (+24 more)
+Cohesion: 0.09
+Nodes (24): Saglik, BolgeApiData, BolgeApiData, hizmetBolgeleriFlatten(), cekiciFromRow(), CekiciRow, cekiciToRow(), OdemeRow (+16 more)
 
 ### Community 58 - "cerez-onay.ts"
 Cohesion: 0.11
@@ -302,7 +307,7 @@ Nodes (10): SorunTipiSecimi(), SorunTipiSecimiProps, HIZMET_QUERY_HARITASI, hizm
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `getSupabaseAdmin()` connect `teklif-db.ts` to `demo-oturum.ts`, `route.ts`, `getSupabaseAdmin`, `seo.ts`, `mappers.ts`, `route.ts`, `google-maps.ts`, `memnuniyet.ts`, `ensureSeedData`, `davet-kayit.ts`, `page.tsx`, `route.ts`, `route.ts`, `route.ts`, `cekici-email-otp.ts`, `davet-panel.ts`, `davet-panel.ts`?**
+- **Why does `getSupabaseAdmin()` connect `teklif-db.ts` to `demo-oturum.ts`, `route.ts`, `getSupabaseAdmin`, `seo.ts`, `mappers.ts`, `route.ts`, `google-maps.ts`, `memnuniyet.ts`, `ensureSeedData`, `davet-kayit.ts`, `page.tsx`, `route.ts`, `route.ts`, `kredi-odeme.ts`, `cekici-email-otp.ts`, `davet-panel.ts`, `davet-panel.ts`?**
   _High betweenness centrality (0.062) - this node is a cross-community bridge._
 - **Why does `Card()` connect `ui.tsx` to `page.tsx`, `ensureSeedData`, `CekiciPanelTabs.tsx`, `db.ts`, `hizmet-veren-sayim.ts`, `MusteriAnaSayfa.tsx`, `page.tsx`, `davet-kayit.ts`, `davet-panel.ts`, `route.ts`, `page.tsx`, `route.ts`, `kredi-odeme.ts`, `davet-panel.ts`?**
   _High betweenness centrality (0.041) - this node is a cross-community bridge._

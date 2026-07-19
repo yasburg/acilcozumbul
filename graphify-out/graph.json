@@ -2240,7 +2240,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_kredi_odemeler_id_route",
-      "community": 57,
+      "community": 25,
       "norm_label": "route.ts"
     },
     {
@@ -2250,7 +2250,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_app_api_panel_kredi_odemeler_id_route_get",
-      "community": 57,
+      "community": 25,
       "norm_label": "get()"
     },
     {
@@ -2260,7 +2260,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_kredi_odemeler_route",
-      "community": 57,
+      "community": 25,
       "norm_label": "route.ts"
     },
     {
@@ -2270,7 +2270,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_app_api_panel_kredi_odemeler_route_get",
-      "community": 57,
+      "community": 25,
       "norm_label": "get()"
     },
     {
@@ -10430,7 +10430,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_kredi_odeme",
-      "community": 57,
+      "community": 25,
       "norm_label": "kredi-odeme.ts"
     },
     {
@@ -10440,7 +10440,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_lib_kredi_odeme_kaydetkrediodeme",
-      "community": 57,
+      "community": 25,
       "norm_label": "kaydetkrediodeme()"
     },
     {
@@ -10450,7 +10450,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_lib_kredi_odeme_getkrediodemebyid",
-      "community": 57,
+      "community": 25,
       "norm_label": "getkrediodemebyid()"
     },
     {
@@ -10460,7 +10460,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_lib_kredi_odeme_listelekrediodemeler",
-      "community": 57,
+      "community": 25,
       "norm_label": "listelekrediodemeler()"
     },
     {
@@ -12710,7 +12710,7 @@
       "source_location": "L346",
       "_origin": "ast",
       "id": "src_lib_supabase_mappers_krediodemerow",
-      "community": 57,
+      "community": 25,
       "norm_label": "krediodemerow"
     },
     {
@@ -12720,7 +12720,7 @@
       "source_location": "L367",
       "_origin": "ast",
       "id": "src_lib_supabase_mappers_krediodemefromrow",
-      "community": 57,
+      "community": 25,
       "norm_label": "krediodemefromrow()"
     },
     {
@@ -12730,7 +12730,7 @@
       "source_location": "L390",
       "_origin": "ast",
       "id": "src_lib_supabase_mappers_krediodemetorow",
-      "community": 57,
+      "community": 25,
       "norm_label": "krediodemetorow()"
     },
     {
@@ -41038,7 +41038,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L1077",
+      "source_location": "L1092",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_google_maps_googlemapsyapilandirildi"
@@ -41049,7 +41049,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L1398",
+      "source_location": "L1413",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_sorunaracmodeligereklimi"
@@ -41060,7 +41060,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L1483",
+      "source_location": "L1498",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_soruncagributonetiketi"
@@ -41071,7 +41071,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L1378",
+      "source_location": "L1393",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_sorunfotografalanigoster"
@@ -41082,7 +41082,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L1383",
+      "source_location": "L1398",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_sorunfotografgereklimi"
@@ -41093,7 +41093,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L1056",
+      "source_location": "L1071",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_sorunhedefkonumgereklimi"
@@ -41104,7 +41104,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L1063",
+      "source_location": "L1078",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_soruntipibul"
@@ -41115,7 +41115,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L1203",
+      "source_location": "L1218",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_telefon_telefonmaskele"
@@ -63599,5 +63599,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8a337f711f7be31f33e61e03656a0299b33bc977"
+  "built_at_commit": "690b6be645c69664526a0e44069fb71e0ecd3c04"
 }

@@ -117,6 +117,7 @@ function MusteriAnaSayfaIcerik() {
     useHizmetVerenSayim();
   const [step, setStep] = useState<Step>("sorun");
   const hizmetUygulandi = useRef(false);
+  const hizmetKaydirTip = useRef<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [bilgiMesaj, setBilgiMesaj] = useState("");
@@ -188,13 +189,27 @@ function MusteriAnaSayfaIcerik() {
     const tip = hizmetQuerydenSorunTipi(searchParams.get("hizmet"));
     if (!tip) return;
     hizmetUygulandi.current = true;
+    hizmetKaydirTip.current = tip;
     setForm((f) => ({ ...f, sorunTipi: tip }));
-    setStep("bilgi");
+    setStep("sorun");
     posthogOlayYakala("sorun_secildi", {
       sorun_tipi: tip,
       kaynak: "hizmet_query",
     });
   }, [searchParams]);
+
+  useEffect(() => {
+    const tip = hizmetKaydirTip.current;
+    if (!tip || form.sorunTipi !== tip || step !== "sorun") return;
+    hizmetKaydirTip.current = null;
+    const kaydir = () => {
+      document
+        .querySelector(`[data-sorun-id="${tip}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+    const t = window.setTimeout(kaydir, 80);
+    return () => window.clearTimeout(t);
+  }, [form.sorunTipi, step]);
 
   useEffect(() => {
     const olay = ADIM_OLAYLARI[step];
