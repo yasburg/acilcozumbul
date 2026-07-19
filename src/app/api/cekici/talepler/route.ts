@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
-import { getTalepler } from "@/lib/db";
+import { getTaleplerBugun } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import {
   cekiciAcikTalepUygunMu,
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
   }
 
-  const talepler = await getTalepler();
+  const talepler = await getTaleplerBugun();
   const bugun = talepler.filter((t) => isBugun(t.olusturulma));
 
   const ilgili = bugun.filter((t) => {

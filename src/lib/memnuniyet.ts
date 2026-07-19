@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { getTalepler } from "./db";
+import { getTaleplerMemnuniyetBekleyen } from "./db";
 import { notifyMusteriMemnuniyet } from "./sms";
 import { getSupabaseAdmin } from "./supabase/admin";
 import type { MusteriDegerlendirme, Talep } from "./types";
@@ -73,7 +73,7 @@ export async function memnuniyetSmsGonderGerekirse(
 
 /** Zamanı gelmiş tüm talepler için toplu SMS (cron / manuel) */
 export async function topluMemnuniyetSmsGonder(baseUrl: string): Promise<number> {
-  const talepler = await getTalepler();
+  const talepler = await getTaleplerMemnuniyetBekleyen();
   let adet = 0;
 
   for (const talep of talepler) {

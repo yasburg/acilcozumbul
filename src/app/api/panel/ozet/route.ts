@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { getCekiciler, getSmsLog, getTalepler } from "@/lib/db";
+import {
+  countSmsLog,
+  countTalepler,
+  getCekiciler,
+  getSmsLog,
+  getTaleplerSince,
+} from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import { funnelOzetHesapla } from "@/lib/funnel";
 import { smsDurumu } from "@/lib/sms-provider";
@@ -8,24 +14,32 @@ import { hizmetVerenSayimHesapla } from "@/lib/hizmet-veren-sayim";
 
 export async function GET() {
   await ensureSeedData();
-  const [cekiciler, talepler, smsLog] = await Promise.all([
-    getCekiciler(),
-    getTalepler(),
-    getSmsLog(),
-  ]);
+  const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const since7 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const since24 = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-  const smsGonderilen = smsLog.filter((s) => s.gonderildi).length;
-  const huni = await funnelOzetHesapla(talepler, 30);
+  const [cekiciler, talepler30, sms7, talepSayisi, smsSayisi, smsGonderilen] =
+    await Promise.all([
+      getCekiciler(),
+      getTaleplerSince(since30),
+      getSmsLog({ sinceIso: since7, limit: 5000 }),
+      countTalepler(),
+      countSmsLog(),
+      countSmsLog({ gonderildi: true }),
+    ]);
+
+  const huni = await funnelOzetHesapla(talepler30, 30);
   const hizmetVerenler = hizmetVerenSayimHesapla(cekiciler);
+  const sms24 = sms7.filter((s) => s.gonderim >= since24);
 
   return NextResponse.json({
     cekiciSayisi: cekiciler.length,
-    talepSayisi: talepler.length,
-    smsSayisi: smsLog.length,
+    talepSayisi,
+    smsSayisi,
     smsGonderilen,
     smsDurum: smsDurumu(),
     huni,
-    smsSaglik: smsSaglikOzet(smsLog, 24),
+    smsSaglik: smsSaglikOzet(sms24.length ? sms24 : sms7, 24),
     hizmetVerenler,
   });
 }

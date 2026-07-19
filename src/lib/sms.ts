@@ -1,7 +1,8 @@
-import { getCekiciler } from "./db";
+import { getCekicilerBildirimAdaylari } from "./db";
 import {
   cekiciBildirimKrediTutari,
   cekiciTalepSmsAdayiMi,
+  PANEL_BILDIRIM_KREDI,
 } from "./ihale";
 import { sendSms, smsInfraHatasiMi, type SmsKanal } from "./sms-provider";
 import type { Cekici, Talep } from "./types";
@@ -38,7 +39,7 @@ export async function notifyCekiciler(
   haricTutulan: string[] = [],
   options?: { yenidenArama?: boolean }
 ): Promise<string[]> {
-  const tumCekiciler = await getCekiciler();
+  const tumCekiciler = await getCekicilerBildirimAdaylari(PANEL_BILDIRIM_KREDI);
   const haric = new Set(haricTutulan);
   const yeniden = options?.yenidenArama ?? false;
 

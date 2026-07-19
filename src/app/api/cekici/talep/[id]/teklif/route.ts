@@ -12,6 +12,8 @@ import {
   cekiciTeklifVerebilirMi,
   SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
+import { insertTeklif } from "@/lib/teklif-db";
+import { refreshCekiciPuanOzet } from "@/lib/puan-ozet-db";
 import { notifyMusteri } from "@/lib/sms";
 import { smsBaseUrl } from "@/lib/sms-base-url";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
@@ -176,9 +178,21 @@ export async function POST(
     durum: "aktif",
   };
 
-  talep.teklifler = [...(talep.teklifler ?? []), teklif];
+  const eklendi = await insertTeklif(id, teklif).catch((e: unknown) => {
+    const code = e && typeof e === "object" && "code" in e ? String(e.code) : "";
+    if (code === "42P01" || code === "PGRST205") return true;
+    throw e;
+  });
+  if (!eklendi) {
+    return NextResponse.json(
+      { error: "Bu talebe az önce teklif verildi veya ihale kapandı." },
+      { status: 409 }
+    );
+  }
 
+  talep.teklifler = [...(talep.teklifler ?? []), teklif];
   await updateTalep(talep);
+  await refreshCekiciPuanOzet(cekici.id).catch(() => {});
 
   const baseUrl = smsBaseUrl(
     `${request.nextUrl.protocol}//${request.nextUrl.host}`

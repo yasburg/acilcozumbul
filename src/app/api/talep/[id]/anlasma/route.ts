@@ -4,6 +4,7 @@ import { notifyCekiciIptal, notifyCekiciler, notifyMusteri } from "@/lib/sms";
 import { smsBaseUrl } from "@/lib/sms-base-url";
 import { ensureSeedData } from "@/lib/seed";
 import { anlasamadiSonrasiIhaleyiSurdur } from "@/lib/ihale";
+import { refreshCekiciPuanOzet } from "@/lib/puan-ozet-db";
 
 export async function POST(
   request: NextRequest,
@@ -38,6 +39,9 @@ export async function POST(
     talep.anlasmaDurumu = "anlaşıldı";
     talep.anlasildiAt = new Date().toISOString();
     await updateTalep(talep);
+    if (talep.kazananCekiciId) {
+      await refreshCekiciPuanOzet(talep.kazananCekiciId).catch(() => {});
+    }
     return NextResponse.json({ durum: "anlaşıldı", mesaj: "Anlaşma kaydedildi." });
   }
 

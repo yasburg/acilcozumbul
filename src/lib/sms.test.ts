@@ -7,13 +7,13 @@ import {
 import { cekiciFixture, talepFixture } from "@/test/fixtures";
 import type { Cekici } from "./types";
 
-const getCekiciler = vi.fn();
+const getCekicilerBildirimAdaylari = vi.fn();
 const getCekiciById = vi.fn();
 const updateCekici = vi.fn();
 const sendSms = vi.fn();
 
 vi.mock("./db", () => ({
-  getCekiciler: (...args: unknown[]) => getCekiciler(...args),
+  getCekicilerBildirimAdaylari: (...args: unknown[]) => getCekicilerBildirimAdaylari(...args),
   getCekiciById: (...args: unknown[]) => getCekiciById(...args),
   updateCekici: (...args: unknown[]) => updateCekici(...args),
 }));
@@ -32,11 +32,11 @@ describe("D — Çekici bildirim (mock)", () => {
     sendSms.mockResolvedValue({ basarili: true, saglayici: "mock" });
     updateCekici.mockResolvedValue(undefined);
     getCekiciById.mockImplementation(async (id: string) => {
-      const list = getCekiciler.mock.results.at(-1)?.value;
+      const list = getCekicilerBildirimAdaylari.mock.results.at(-1)?.value;
       if (Array.isArray(list)) {
         return list.find((c: Cekici) => c.id === id) ?? null;
       }
-      const resolved = await Promise.resolve(getCekiciler.mock.results[0]?.value);
+      const resolved = await Promise.resolve(getCekicilerBildirimAdaylari.mock.results[0]?.value);
       if (Array.isArray(resolved)) {
         return resolved.find((c: Cekici) => c.id === id) ?? null;
       }
@@ -51,7 +51,7 @@ describe("D — Çekici bildirim (mock)", () => {
       id: "c3",
       hizmetBolgeleri: { İstanbul: ["Beşiktaş"] },
     });
-    getCekiciler.mockResolvedValue([c1, c2, c3]);
+    getCekicilerBildirimAdaylari.mockResolvedValue([c1, c2, c3]);
     getCekiciById.mockImplementation(async (id: string) =>
       [c1, c2, c3].find((c) => c.id === id) ?? null
     );
@@ -74,7 +74,7 @@ describe("D — Çekici bildirim (mock)", () => {
       premiumSmsAktif: true,
       kredi: 5,
     });
-    getCekiciler.mockResolvedValue([c1]);
+    getCekicilerBildirimAdaylari.mockResolvedValue([c1]);
     const t = talepFixture({ konumIl: "İstanbul", konumIlce: "Kadıköy" });
     const ids = await notifyCekiciler(t, "http://localhost:3000");
     expect(ids).toEqual(["c1"]);
@@ -88,7 +88,7 @@ describe("D — Çekici bildirim (mock)", () => {
   });
 
   it("D2: aktif false → bildirim yok", async () => {
-    getCekiciler.mockResolvedValue([
+    getCekicilerBildirimAdaylari.mockResolvedValue([
       cekiciFixture({ id: "c1", aktif: false }),
     ]);
     const ids = await notifyCekiciler(
@@ -100,7 +100,7 @@ describe("D — Çekici bildirim (mock)", () => {
   });
 
   it("D3: kredi < panel tutarı → bildirim yok", async () => {
-    getCekiciler.mockResolvedValue([
+    getCekicilerBildirimAdaylari.mockResolvedValue([
       cekiciFixture({ id: "c1", kredi: PANEL_BILDIRIM_KREDI - 0.5 }),
     ]);
     const ids = await notifyCekiciler(
@@ -111,7 +111,7 @@ describe("D — Çekici bildirim (mock)", () => {
   });
 
   it("D5: kredi 0 → bildirim yok", async () => {
-    getCekiciler.mockResolvedValue([cekiciFixture({ id: "c1", kredi: 0 })]);
+    getCekicilerBildirimAdaylari.mockResolvedValue([cekiciFixture({ id: "c1", kredi: 0 })]);
     const ids = await notifyCekiciler(
       talepFixture({ konumIl: "İstanbul", konumIlce: "Kadıköy" }),
       "http://localhost:3000"
@@ -122,7 +122,7 @@ describe("D — Çekici bildirim (mock)", () => {
   it("D6: haric tutulan çekiciye yeniden arama gitmez", async () => {
     const c1 = cekiciFixture({ id: "c1" });
     const c2 = cekiciFixture({ id: "c2" });
-    getCekiciler.mockResolvedValue([c1, c2]);
+    getCekicilerBildirimAdaylari.mockResolvedValue([c1, c2]);
     getCekiciById.mockImplementation(async (id: string) =>
       [c1, c2].find((c) => c.id === id) ?? null
     );
@@ -138,7 +138,7 @@ describe("D — Çekici bildirim (mock)", () => {
   });
 
   it("D7: premium yeniden arama mesajı", async () => {
-    getCekiciler.mockResolvedValue([
+    getCekicilerBildirimAdaylari.mockResolvedValue([
       cekiciFixture({ premiumSmsAktif: true, kredi: 5 }),
     ]);
     await notifyCekiciler(
@@ -157,7 +157,7 @@ describe("D — Çekici bildirim (mock)", () => {
       premiumSmsAktif: true,
       kredi: 5,
     });
-    getCekiciler.mockResolvedValue([c]);
+    getCekicilerBildirimAdaylari.mockResolvedValue([c]);
     const t = talepFixture({
       id: "t99",
       konumIl: "İstanbul",
@@ -178,7 +178,7 @@ describe("D — Çekici bildirim (mock)", () => {
       saglayici: "mock",
       hata: "Netgsm yapılandırılmamış",
     });
-    getCekiciler.mockResolvedValue([
+    getCekicilerBildirimAdaylari.mockResolvedValue([
       cekiciFixture({ id: "c1", premiumSmsAktif: true, kredi: 5 }),
     ]);
     const ids = await notifyCekiciler(
@@ -194,7 +194,7 @@ describe("D — Çekici bildirim (mock)", () => {
       saglayici: "mock",
       hata: "Yetersiz kredi (SMS bildirimi için 2 kredi gerekir)",
     });
-    getCekiciler.mockResolvedValue([
+    getCekicilerBildirimAdaylari.mockResolvedValue([
       cekiciFixture({ id: "c1", premiumSmsAktif: true, kredi: 5 }),
     ]);
     const ids = await notifyCekiciler(
@@ -208,7 +208,7 @@ describe("D — Çekici bildirim (mock)", () => {
     const list: Cekici[] = Array.from({ length: 5 }, (_, i) =>
       cekiciFixture({ id: `c${i}`, telefon: `0532000000${i}` })
     );
-    getCekiciler.mockResolvedValue(list);
+    getCekicilerBildirimAdaylari.mockResolvedValue(list);
     getCekiciById.mockImplementation(
       async (id: string) => list.find((c) => c.id === id) ?? null
     );
@@ -223,7 +223,7 @@ describe("D — Çekici bildirim (mock)", () => {
 
   it("D4: kredi tam 1 — toplu SMS dahil", async () => {
     const c1 = cekiciFixture({ id: "c1", kredi: 1 });
-    getCekiciler.mockResolvedValue([c1]);
+    getCekicilerBildirimAdaylari.mockResolvedValue([c1]);
     getCekiciById.mockResolvedValue(c1);
     const ids = await notifyCekiciler(
       talepFixture({ konumIl: "İstanbul", konumIlce: "Kadıköy" }),
@@ -233,7 +233,7 @@ describe("D — Çekici bildirim (mock)", () => {
   });
 
   it("premium için 1 kredi yetersiz", async () => {
-    getCekiciler.mockResolvedValue([
+    getCekicilerBildirimAdaylari.mockResolvedValue([
       cekiciFixture({ id: "c1", kredi: 1, premiumSmsAktif: true }),
     ]);
     const ids = await notifyCekiciler(

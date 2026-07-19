@@ -64,11 +64,51 @@ function talepToRow(t) {
     ihale_bitis: t.ihaleBitis,
     kazanan_cekici_id: t.kazananCekiciId ?? null,
     kazanan_teklif_id: t.kazananTeklifId ?? null,
-    bildirilen_cekici_ids: t.bildirilenCekiciIds ?? [],
     anlasma_durumu: t.anlasmaDurumu ?? null,
-    haric_tutulan_cekici_ids: t.haricTutulanCekiciIds ?? [],
-    teklifler: t.teklifler ?? [],
   };
+}
+
+function teklifRowsFromTalepler(talepler) {
+  const rows = [];
+  for (const t of talepler) {
+    for (const te of t.teklifler ?? []) {
+      rows.push({
+        id: te.id,
+        talep_id: t.id,
+        cekici_id: te.cekiciId,
+        cekici_ad: te.cekiciAd,
+        fiyat: te.fiyat,
+        ilk_fiyat: te.ilkFiyat ?? te.fiyat,
+        fiyat_degisti: Boolean(te.fiyatDegisti),
+        fiyat_guncelleme_tarihi: te.fiyatGuncellemeTarihi ?? null,
+        tahmini_sure_dk: te.tahminiSureDk ?? 30,
+        mesaj: te.mesaj ?? null,
+        tarih: te.tarih,
+        durum: te.durum ?? "aktif",
+      });
+    }
+  }
+  return rows;
+}
+
+function bildirimRowsFromTalepler(talepler) {
+  const rows = [];
+  for (const t of talepler) {
+    for (const cekici_id of t.bildirilenCekiciIds ?? []) {
+      rows.push({ talep_id: t.id, cekici_id });
+    }
+  }
+  return rows;
+}
+
+function haricRowsFromTalepler(talepler) {
+  const rows = [];
+  for (const t of talepler) {
+    for (const cekici_id of t.haricTutulanCekiciIds ?? []) {
+      rows.push({ talep_id: t.id, cekici_id });
+    }
+  }
+  return rows;
 }
 
 async function upsertBatch(table, rows, onConflict = "id") {
@@ -99,6 +139,18 @@ async function main() {
 
   console.log("Talepler:", talepler.length);
   await upsertBatch("talepler", talepler.map(talepToRow));
+
+  const teklifRows = teklifRowsFromTalepler(talepler);
+  console.log("Teklifler:", teklifRows.length);
+  await upsertBatch("teklifler", teklifRows);
+
+  const bildirimRows = bildirimRowsFromTalepler(talepler);
+  console.log("Bildirimler:", bildirimRows.length);
+  await upsertBatch("talep_bildirimleri", bildirimRows, "talep_id,cekici_id");
+
+  const haricRows = haricRowsFromTalepler(talepler);
+  console.log("Hariç:", haricRows.length);
+  await upsertBatch("talep_haric", haricRows, "talep_id,cekici_id");
 
   console.log("SMS log:", smsLog.length);
   await upsertBatch(

@@ -1,26 +1,51 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui";
+import { Btn, Card } from "@/components/ui";
 import type { Talep } from "@/lib/types";
+
+const PAGE_SIZE = 50;
 
 export default function PanelTaleplerPage() {
   const [liste, setListe] = useState<Talep[]>([]);
+  const [total, setTotal] = useState(0);
+  const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const yukle = useCallback(async (nextOffset: number, append: boolean) => {
+    if (append) setLoadingMore(true);
+    else setLoading(true);
+    try {
+      const r = await fetch(
+        `/api/panel/talepler?limit=${PAGE_SIZE}&offset=${nextOffset}`
+      );
+      const data = await r.json();
+      const items: Talep[] = data.talepler ?? (Array.isArray(data) ? data : []);
+      setTotal(typeof data.total === "number" ? data.total : items.length);
+      setListe((prev) => (append ? [...prev, ...items] : items));
+      setOffset(nextOffset + items.length);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetch("/api/panel/talepler")
-      .then((r) => r.json())
-      .then(setListe)
-      .finally(() => setLoading(false));
-  }, []);
+    void yukle(0, false);
+  }, [yukle]);
+
+  const dahaVar = liste.length < total;
 
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-bold">Talepler</h2>
-        <p className="text-sm text-slate-500">Müşteri talepleri ve durumları</p>
+        <p className="text-sm text-slate-500">
+          Müşteri talepleri ve durumları
+          {total > 0 ? ` · ${total} kayıt` : ""}
+        </p>
       </div>
 
       {loading && <p className="text-sm text-slate-500">Yükleniyor…</p>}
@@ -69,6 +94,18 @@ export default function PanelTaleplerPage() {
           </Card>
         ))}
       </div>
+
+      {!loading && dahaVar && (
+        <Btn
+          type="button"
+          variant="secondary"
+          className="w-auto"
+          disabled={loadingMore}
+          onClick={() => void yukle(offset, true)}
+        >
+          {loadingMore ? "Yükleniyor…" : "Daha fazla yükle"}
+        </Btn>
+      )}
     </div>
   );
 }

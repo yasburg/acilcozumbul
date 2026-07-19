@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCekiciById, getTalepById } from "@/lib/db";
 import { teklifleriSirala } from "@/lib/teklif-siralama";
-import { cekiciPuanOzeti, teklifFiyatDegistiMi } from "@/lib/cekici-puan";
+import { cekiciPuanOzetleri, teklifFiyatDegistiMi } from "@/lib/cekici-puan";
 import { ensureSeedData } from "@/lib/seed";
 import { aktifTeklifler, ihaleAcikMi } from "@/lib/ihale";
 import { demoTalepGetir, isDemoTalepId } from "@/lib/demo-oturum";
@@ -32,12 +32,22 @@ export async function GET(
   }
 
   const aktif = aktifTeklifler(talep);
-
+  const puanMap = await cekiciPuanOzetleri(aktif.map((t) => t.cekiciId));
   const rozetCache = new Map<string, boolean>();
 
   const tekliflerHam = await Promise.all(
     aktif.map(async (t) => {
-      const puan = await cekiciPuanOzeti(t.cekiciId);
+      const puan =
+        puanMap.get(t.cekiciId) ??
+        ({
+          gorunurTercihPuani: null,
+          tercihPuani: null,
+          tercihYuzde: null,
+          hizmetPuani: null,
+          hizmetDegerlendirmeAdet: 0,
+          fiyatGarantiPuani: 5,
+          fiyatGarantiYuzde: 100,
+        } as const);
       const fiyatDegisti = teklifFiyatDegistiMi(t);
       const ilkFiyat = t.ilkFiyat ?? t.fiyat;
 

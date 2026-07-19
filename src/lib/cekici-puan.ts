@@ -1,5 +1,11 @@
-import { getTalepler } from "./db";
+import {
+  getCekiciPuanOzetRow,
+  getCekiciPuanOzetRows,
+  refreshCekiciPuanOzet,
+} from "./puan-ozet-db";
 import { cekiciHizmetPuani, gorunurTercihPuani } from "./memnuniyet";
+import { countTekliflerByCekici } from "./teklif-db";
+import { getSupabaseAdmin } from "./supabase/admin";
 import type { Teklif } from "./types";
 
 export interface CekiciPuanOzeti {
@@ -41,30 +47,13 @@ export function fiyatGarantiPuaniHesapla(yuzde: number): number {
   return Math.round(ham * 10) / 10;
 }
 
-export async function cekiciPuanOzeti(cekiciId: string): Promise<CekiciPuanOzeti> {
-  const [talepler, hizmet] = await Promise.all([
-    getTalepler(),
-    cekiciHizmetPuani(cekiciId),
-  ]);
-
-  let kazanilanTeklif = 0;
-  let anlasilanIs = 0;
-  let toplamTeklif = 0;
-  let fiyatDegistirenTeklif = 0;
-
-  for (const talep of talepler) {
-    for (const raw of talep.teklifler ?? []) {
-      if (raw.cekiciId !== cekiciId) continue;
-      const t = normalizeTeklif(raw);
-      toplamTeklif += 1;
-      if (t.fiyatDegisti) fiyatDegistirenTeklif += 1;
-      if (t.durum === "kazandi") kazanilanTeklif += 1;
-    }
-    if (talep.durum === "anlaşıldı" && talep.kazananCekiciId === cekiciId) {
-      anlasilanIs += 1;
-    }
-  }
-
+function ozetFromCounts(
+  toplamTeklif: number,
+  kazanilanTeklif: number,
+  anlasilanIs: number,
+  fiyatDegistirenTeklif: number,
+  hizmet: { ortalama: number | null; adet: number }
+): CekiciPuanOzeti {
   const tercihYuzde =
     kazanilanTeklif > 0
       ? Math.round((anlasilanIs / kazanilanTeklif) * 100)
@@ -96,6 +85,102 @@ export async function cekiciPuanOzeti(cekiciId: string): Promise<CekiciPuanOzeti
     hizmetDegerlendirmeAdet: hizmet.adet,
     gorunurTercihPuani: gorunurTercih,
   };
+}
+
+async function anlasilanIsSay(cekiciId: string): Promise<number> {
+  const { count, error } = await getSupabaseAdmin()
+    .from("talepler")
+    .select("*", { count: "exact", head: true })
+    .eq("kazanan_cekici_id", cekiciId)
+    .eq("durum", "anlaşıldı");
+  if (error) throw error;
+  return count ?? 0;
+}
+
+async function computePuanFromTables(
+  cekiciId: string,
+  hizmet: { ortalama: number | null; adet: number }
+): Promise<CekiciPuanOzeti> {
+  const counts = await countTekliflerByCekici(cekiciId);
+  const anlasilanIs = await anlasilanIsSay(cekiciId);
+  return ozetFromCounts(
+    counts.toplam,
+    counts.kazanilan,
+    anlasilanIs,
+    counts.fiyatDegistiren,
+    hizmet
+  );
+}
+
+export async function cekiciPuanOzeti(cekiciId: string): Promise<CekiciPuanOzeti> {
+  const hizmet = await cekiciHizmetPuani(cekiciId);
+
+  try {
+    const cached = await getCekiciPuanOzetRow(cekiciId);
+    if (cached) {
+      return ozetFromCounts(
+        cached.toplam_teklif,
+        cached.kazanilan,
+        cached.anlasilan,
+        cached.fiyat_degistiren,
+        hizmet
+      );
+    }
+    const ozet = await computePuanFromTables(cekiciId, hizmet);
+    await refreshCekiciPuanOzet(cekiciId).catch(() => {});
+    return ozet;
+  } catch (e) {
+    const code = e && typeof e === "object" && "code" in e ? String(e.code) : "";
+    if (code === "42P01" || code === "PGRST205") {
+      return ozetFromCounts(0, 0, 0, 0, hizmet);
+    }
+    throw e;
+  }
+}
+
+/** N+1 önleme — birden fazla çekici için batch puan */
+export async function cekiciPuanOzetleri(
+  cekiciIds: string[]
+): Promise<Map<string, CekiciPuanOzeti>> {
+  const unique = [...new Set(cekiciIds.filter(Boolean))];
+  const map = new Map<string, CekiciPuanOzeti>();
+  if (unique.length === 0) return map;
+
+  const [cacheMap, hizmetEntries] = await Promise.all([
+    getCekiciPuanOzetRows(unique).catch(() => new Map()),
+    Promise.all(
+      unique.map(async (id) => [id, await cekiciHizmetPuani(id)] as const)
+    ),
+  ]);
+  const hizmetMap = new Map(hizmetEntries);
+
+  await Promise.all(
+    unique.map(async (id) => {
+      const hizmet = hizmetMap.get(id) ?? { ortalama: null, adet: 0 };
+      const cached = cacheMap.get(id);
+      if (cached) {
+        map.set(
+          id,
+          ozetFromCounts(
+            cached.toplam_teklif,
+            cached.kazanilan,
+            cached.anlasilan,
+            cached.fiyat_degistiren,
+            hizmet
+          )
+        );
+        return;
+      }
+      try {
+        map.set(id, await computePuanFromTables(id, hizmet));
+        await refreshCekiciPuanOzet(id).catch(() => {});
+      } catch {
+        map.set(id, ozetFromCounts(0, 0, 0, 0, hizmet));
+      }
+    })
+  );
+
+  return map;
 }
 
 export function teklifFiyatDegistiMi(teklif: Teklif): boolean {

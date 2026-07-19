@@ -1,4 +1,6 @@
 import { updateTalep } from "./db";
+import { setKaybedenTeklifler, updateTeklifDurum } from "./teklif-db";
+import { refreshCekiciPuanOzet } from "./puan-ozet-db";
 import { cekiciTalepBolgesineUygunMu } from "./cekici-bolge";
 import { cekiciMusaitMi } from "./cekici-musaitlik";
 import { cekiciTalepSorununaUygunMu } from "./cekici-sorun";
@@ -90,6 +92,20 @@ export async function kaybedenTeklifleriIsaretle(
     }
   }
   await updateTalep(talep);
+  try {
+    await updateTeklifDurum(kazananTeklifId, "kazandi");
+    await setKaybedenTeklifler(talep.id, kazananTeklifId);
+    const kazanan = talep.teklifler.find((t) => t.id === kazananTeklifId);
+    if (kazanan) await refreshCekiciPuanOzet(kazanan.cekiciId);
+    for (const t of talep.teklifler) {
+      if (t.id !== kazananTeklifId && t.cekiciId !== kazanan?.cekiciId) {
+        await refreshCekiciPuanOzet(t.cekiciId).catch(() => {});
+      }
+    }
+  } catch (e) {
+    const code = e && typeof e === "object" && "code" in e ? String(e.code) : "";
+    if (code !== "42P01" && code !== "PGRST205") throw e;
+  }
 }
 
 export function aktifTeklifler(talep: Talep): Teklif[] {

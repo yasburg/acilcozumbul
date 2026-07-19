@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
-import { getSmsLog, getTalepler } from "@/lib/db";
+import { getSmsLog, getTaleplerByKazananCekici } from "@/lib/db";
 import { cekiciPuanOzeti } from "@/lib/cekici-puan";
 import { SMS_BILDIRIM_KREDI } from "@/lib/ihale";
 import { ensureSeedData } from "@/lib/seed";
+import { countHaricByCekici } from "@/lib/talep-iliski-db";
 import type { Talep } from "@/lib/types";
 
 function haftaBaslangici(): Date {
@@ -48,22 +49,24 @@ export async function GET() {
   }
 
   const haftaBas = haftaBaslangici();
-  const puan = await cekiciPuanOzeti(cekici.id);
+  const [puan, smsLog, tercihEdilmedim, talepler] = await Promise.all([
+    cekiciPuanOzeti(cekici.id),
+    getSmsLog({
+      cekiciId: cekici.id,
+      sinceIso: haftaBas.toISOString(),
+      limit: 2000,
+    }),
+    countHaricByCekici(cekici.id),
+    getTaleplerByKazananCekici(cekici.id),
+  ]);
 
-  const smsLog = await getSmsLog();
   const buHaftaHarcanan =
     smsLog.filter(
       (k) =>
-        k.cekiciId === cekici.id &&
         k.aliciTipi === "cekici" &&
         k.gonderildi &&
         new Date(k.gonderim) >= haftaBas
     ).length * SMS_BILDIRIM_KREDI;
-
-  const talepler = await getTalepler();
-  const tercihEdilmedim = talepler.filter((t) =>
-    (t.haricTutulanCekiciIds ?? []).includes(cekici.id)
-  ).length;
 
   const buAyAnahtar = istanbulAyAnahtari(new Date().toISOString());
   let kazancBuAy = 0;

@@ -5,7 +5,12 @@ import { getAktifDemoOturumRequest } from "@/lib/demo-oturum";
 
 export async function GET(request: NextRequest) {
   await ensureSeedData();
-  const prodLog = (await getSmsLog()).slice(0, 50).map((s) => ({
+  const prodLog = (
+    await getSmsLog({
+      limit: 50,
+      sinceIso: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    })
+  ).map((s) => ({
     ...s,
     kaynak: "prod" as const,
   }));

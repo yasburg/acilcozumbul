@@ -70,12 +70,15 @@ export type TalepRow = {
   ihale_bitis: string;
   kazanan_cekici_id: string | null;
   kazanan_teklif_id: string | null;
-  bildirilen_cekici_ids: string[];
+  /** @deprecated normalize: talep_bildirimleri — migration öncesi fallback */
+  bildirilen_cekici_ids?: string[] | null;
   anlasma_durumu: string | null;
   anlasildi_at: string | null;
   memnuniyet_sms_gonderildi: boolean;
-  haric_tutulan_cekici_ids: string[];
-  teklifler: Teklif[];
+  /** @deprecated normalize: talep_haric — migration öncesi fallback */
+  haric_tutulan_cekici_ids?: string[] | null;
+  /** @deprecated normalize: teklifler tablosu — migration öncesi fallback */
+  teklifler?: Teklif[] | null;
 };
 
 export function cekiciFromRow(r: CekiciRow): Cekici {
@@ -204,7 +207,8 @@ export function talepFromRow(r: TalepRow): Talep {
   };
 }
 
-export function talepToRow(t: Talep): TalepRow {
+/** Talep satırı — ilişkili diziler ayrı tablolarda; JSON kolonları yazılmaz. */
+export function talepToRow(t: Talep): Record<string, unknown> {
   return {
     id: t.id,
     ad: t.ad,
@@ -224,12 +228,9 @@ export function talepToRow(t: Talep): TalepRow {
     ihale_bitis: t.ihaleBitis,
     kazanan_cekici_id: t.kazananCekiciId ?? null,
     kazanan_teklif_id: t.kazananTeklifId ?? null,
-    bildirilen_cekici_ids: t.bildirilenCekiciIds ?? [],
     anlasma_durumu: t.anlasmaDurumu ?? null,
     anlasildi_at: t.anlasildiAt ?? null,
     memnuniyet_sms_gonderildi: t.memnuniyetSmsGonderildi ?? false,
-    haric_tutulan_cekici_ids: t.haricTutulanCekiciIds ?? [],
-    teklifler: t.teklifler ?? [],
   };
 }
 
