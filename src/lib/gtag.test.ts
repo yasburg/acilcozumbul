@@ -29,4 +29,12 @@ describe("gtag consent mode (advanced)", () => {
     expect(GTAG_CONSENT_DENIED.analytics_storage).toBe("denied");
     expect(GTAG_CONSENT_GRANTED.analytics_storage).toBe("granted");
   });
+
+  it("Ads fiyat teklifi dönüşüm send_to tanımlı", async () => {
+    const { GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI, GOOGLE_ADS_ID } = await import(
+      "./gtag"
+    );
+    expect(GOOGLE_ADS_ID).toBe("AW-18328392362");
+    expect(GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI).toContain("Msc0CNjLnNMcEKql1KNE");
+  });
 });

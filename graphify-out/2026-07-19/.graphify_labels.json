@@ -63,10 +63,15 @@
   "61": "kredi-odeme.ts",
   "62": "HizmetVerenSayimGostergesi.tsx",
   "63": "davet-panel.ts",
+  "64": "page.tsx",
   "65": "route.ts",
   "66": "route.ts",
+  "67": "musteri-profil.ts",
+  "68": "NasilCalisirSerit.tsx",
   "69": "teklif-db.ts",
   "70": "page.tsx",
+  "71": "SorunTipiSecimi.tsx",
   "72": "Ölçeklenebilirlik regression smoke checklist",
-  "73": "verify-teklif-backfill.mjs"
+  "73": "verify-teklif-backfill.mjs",
+  "74": "YasalOnayKutusu.tsx"
 }

@@ -48,6 +48,7 @@ import {
   posthogKampanyaKaydet,
   posthogOlayYakala,
 } from "@/lib/posthog-client";
+import { gtagAdsFiyatTeklifiDonusumu } from "@/lib/gtag";
 import {
   musteriProfilKaydet,
   musteriProfilOku,
@@ -1005,6 +1006,7 @@ export default function MusteriAnaSayfa() {
         sorun_tipi: form.sorunTipi,
         bildirilen_sayisi: data.bildirilenSayisi ?? 0,
       });
+      gtagAdsFiyatTeklifiDonusumu();
       try {
         sessionStorage.setItem(
           `acil_bekle_${data.id}`,

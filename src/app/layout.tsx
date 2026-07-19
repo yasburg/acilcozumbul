@@ -14,6 +14,7 @@ import {
 } from "@/lib/seo";
 import {
   GA_MEASUREMENT_ID,
+  GOOGLE_ADS_ID,
   gtagConsentBootstrapInline,
 } from "@/lib/gtag";
 import "./globals.css";
@@ -105,7 +106,7 @@ export default function RootLayout({
   return (
     <html lang="tr" className={`${geist.variable} h-full`}>
       <body className="min-h-dvh font-sans antialiased">
-        {GA_MEASUREMENT_ID ? (
+        {GA_MEASUREMENT_ID || GOOGLE_ADS_ID ? (
           <Script
             id="google-consent-default"
             strategy="beforeInteractive"

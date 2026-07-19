@@ -8,8 +8,17 @@ import {
 export const GA_MEASUREMENT_ID =
   process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() || "G-RX7B85YF1D";
 
+/** Google Ads hesap kimliği (dönüşüm etiketi) */
+export const GOOGLE_ADS_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_ID?.trim() || "AW-18328392362";
+
+/** «Fiyat teklifi isteyin ACB» — müşteri talep formu tamamlanınca */
+export const GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI =
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL?.trim() ||
+  "AW-18328392362/Msc0CNjLnNMcEKql1KNE";
+
 export function gtagYapilandirildi(): boolean {
-  return Boolean(GA_MEASUREMENT_ID);
+  return Boolean(GA_MEASUREMENT_ID || GOOGLE_ADS_ID);
 }
 
 export type GtagConsentState = "granted" | "denied";
@@ -118,4 +127,19 @@ export function gtagOlay(
   if (typeof window === "undefined" || !gtagYapilandirildi()) return;
   if (!cerezAnalitikAktif()) return;
   gtagCagir("event", olay, params ?? {});
+}
+
+/**
+ * Müşteri talep formu başarıyla gönderildiğinde Google Ads dönüşümü.
+ * Google Ads «Fiyat teklifi isteyin ACB» (sayfa yükleme yerine SPA olay).
+ */
+export function gtagAdsFiyatTeklifiDonusumu(): void {
+  if (typeof window === "undefined") return;
+  if (!GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI) return;
+  if (!cerezAnalitikAktif()) return;
+  gtagCagir("event", "conversion", {
+    send_to: GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI,
+    value: 1.0,
+    currency: "TRY",
+  });
 }
