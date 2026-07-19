@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { SorunSecimi } from "@/components/SorunSecimi";
 import { ArizaFotografAlani } from "@/components/ArizaFotografAlani";
 import { Btn, Field, Card, Spinner, TextArea } from "@/components/ui";
 import {
+  hizmetQuerydenSorunTipi,
   sorunAracModeliGerekliMi,
   sorunCagriButonEtiketi,
   sorunFotografAlaniGoster,
@@ -96,10 +97,26 @@ function kayitliAdSoyadUygula(
 }
 
 export default function MusteriAnaSayfa() {
+  return (
+    <Suspense
+      fallback={
+        <MobileShell>
+          <p className="text-center text-slate-500 py-12">Yükleniyor…</p>
+        </MobileShell>
+      }
+    >
+      <MusteriAnaSayfaIcerik />
+    </Suspense>
+  );
+}
+
+function MusteriAnaSayfaIcerik() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { ozet: hizmetVerenSayim, yukleniyor: hizmetVerenYukleniyor } =
     useHizmetVerenSayim();
   const [step, setStep] = useState<Step>("sorun");
+  const hizmetUygulandi = useRef(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [bilgiMesaj, setBilgiMesaj] = useState("");
@@ -165,6 +182,19 @@ export default function MusteriAnaSayfa() {
     posthogKampanyaKaydet();
     funnelKaydet("form_basla");
   }, []);
+
+  useEffect(() => {
+    if (hizmetUygulandi.current) return;
+    const tip = hizmetQuerydenSorunTipi(searchParams.get("hizmet"));
+    if (!tip) return;
+    hizmetUygulandi.current = true;
+    setForm((f) => ({ ...f, sorunTipi: tip }));
+    setStep("bilgi");
+    posthogOlayYakala("sorun_secildi", {
+      sorun_tipi: tip,
+      kaynak: "hizmet_query",
+    });
+  }, [searchParams]);
 
   useEffect(() => {
     const olay = ADIM_OLAYLARI[step];

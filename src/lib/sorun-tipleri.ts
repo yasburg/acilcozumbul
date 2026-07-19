@@ -37,6 +37,26 @@ export function gecerliSorunTipi(id: string): id is SorunTipiId {
   return (TUM_SORUN_TIP_IDLERI as readonly string[]).includes(id);
 }
 
+/**
+ * Landing / Ads URL `?hizmet=` → sorun tipi.
+ * Örn. ?hizmet=anahtar → kilit (UI etiketi anahtar/kilit).
+ */
+export const HIZMET_QUERY_HARITASI: Record<string, SorunTipiId> = {
+  cekici: "cekici",
+  lastik: "lastik",
+  aku: "aku",
+  anahtar: "kilit",
+  kilit: "kilit",
+};
+
+export function hizmetQuerydenSorunTipi(
+  raw: string | null | undefined
+): SorunTipiId | null {
+  const key = raw?.trim().toLowerCase();
+  if (!key) return null;
+  return HIZMET_QUERY_HARITASI[key] ?? null;
+}
+
 export function tumSorunTipIdleri(): SorunTipiId[] {
   return [...TUM_SORUN_TIP_IDLERI];
 }
