@@ -34,11 +34,15 @@ function rowToDegerlendirme(r: DegerlendirmeRow): MusteriDegerlendirme {
   const genel = r.puan_genel ?? r.puan;
   const fiyat = r.puan_fiyat ?? r.puan;
   const sure = r.puan_sure ?? r.puan;
+  const ort =
+    r.puan_genel != null && r.puan_fiyat != null && r.puan_sure != null
+      ? memnuniyetOrtalamaPuan(r.puan_genel, r.puan_fiyat, r.puan_sure)
+      : r.puan;
   return {
     id: r.id,
     talepId: r.talep_id,
     cekiciId: r.cekici_id,
-    puan: r.puan,
+    puan: ort,
     puanGenel: genel,
     puanFiyat: fiyat,
     puanSure: sure,
@@ -171,7 +175,14 @@ export async function cekiciHizmetPuani(
 ): Promise<CekiciHizmetPuani> {
   const liste = await getDegerlendirmelerByCekiciId(cekiciId);
   if (liste.length === 0) return { ortalama: null, adet: 0 };
-  const ort = liste.reduce((s, d) => s + d.puan, 0) / liste.length;
+  const ort =
+    liste.reduce((s, d) => {
+      const detay =
+        d.puanGenel != null && d.puanFiyat != null && d.puanSure != null
+          ? memnuniyetOrtalamaPuan(d.puanGenel, d.puanFiyat, d.puanSure)
+          : d.puan;
+      return s + detay;
+    }, 0) / liste.length;
   return {
     ortalama: Math.round(ort * 10) / 10,
     adet: liste.length,
@@ -295,12 +306,14 @@ export async function kaydetMusteriDegerlendirme(
   }
 
   const ort = memnuniyetOrtalamaPuan(puanGenel, puanFiyat, puanSure);
+  /** DB kolonu int — ondalık ortalamayı 1–5 tam sayıya yuvarla */
+  const puanKayit = Math.min(5, Math.max(1, Math.round(ort)));
 
   const kayit: DegerlendirmeRow = {
     id: randomUUID(),
     talep_id: talep.id,
     cekici_id: talep.kazananCekiciId,
-    puan: ort,
+    puan: puanKayit,
     puan_genel: puanGenel,
     puan_fiyat: puanFiyat,
     puan_sure: puanSure,
@@ -311,7 +324,13 @@ export async function kaydetMusteriDegerlendirme(
   const { error } = await getSupabaseAdmin()
     .from("musteri_degerlendirmeler")
     .insert(kayit);
-  if (error) throw error;
+  if (error) {
+    throw new Error(error.message || "Kayıt başarısız.");
+  }
 
-  return rowToDegerlendirme(kayit);
+  return rowToDegerlendirme({
+    ...kayit,
+    // API/UI için boyut ortalamasını koru (4.7 gibi)
+    puan: ort,
+  });
 }

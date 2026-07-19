@@ -69,7 +69,15 @@ export async function POST(
       mesaj: "Değerlendirmeniz için teşekkürler.",
     });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Kayıt başarısız.";
+    const msg =
+      e instanceof Error
+        ? e.message
+        : e &&
+            typeof e === "object" &&
+            "message" in e &&
+            typeof (e as { message: unknown }).message === "string"
+          ? (e as { message: string }).message
+          : "Kayıt başarısız.";
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 }
