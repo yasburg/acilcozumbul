@@ -565,15 +565,25 @@ export default function CekiciPanelTabs() {
           onYenile={konumSync.yenile}
         />
       )}
-      {cekici.hizmetModu === "konum" && tab === "musteriler" && (
+      {tab === "musteriler" && cekici.hizmetModu === "konum" && (
         <Card className="mb-4 border-blue-200 bg-blue-50">
           <p className="text-sm text-blue-900 leading-relaxed">
-            📍 Konum modu aktif — menzil{" "}
+            📍 Konum menzili aktif — menzil{" "}
             <strong>{cekici.menzilKm ?? 0} km</strong>. Konumunuz dakikada bir
-            güncellenir.
+            güncellenir; talepler menzile göre gelir.
           </p>
         </Card>
       )}
+      {tab === "musteriler" &&
+        cekici.hizmetModu !== "konum" &&
+        cekici.hizmetModu != null && (
+          <Card className="mb-4 border-slate-200 bg-slate-50">
+            <p className="text-sm text-slate-800 leading-relaxed">
+              📍 İl/ilçe eşleşmesi aktif. Konumunuz yine de dakikada bir
+              güncellenir (canlı takip ve harita için).
+            </p>
+          </Card>
+        )}
 
       {flash && (
         <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex justify-between items-start gap-2">

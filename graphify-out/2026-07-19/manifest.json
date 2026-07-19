@@ -35,8 +35,8 @@
     "semantic_hash": ""
   },
   "scripts/migrate-json-to-supabase.mjs": {
-    "mtime": 1780239822.0552576,
-    "ast_hash": "833d9674e70a2502b16b28b686a8b371",
+    "mtime": 1784478685.451582,
+    "ast_hash": "7c0f7037f4c3cf724ab9783ddee04542",
     "semantic_hash": ""
   },
   "src/app/api/cekici/auth/route.ts": {
@@ -80,8 +80,8 @@
     "semantic_hash": ""
   },
   "src/app/api/cekici/istatistik/route.ts": {
-    "mtime": 1784408239.0769987,
-    "ast_hash": "dcf7f51dcd09aade3f3a5277f4e1c264",
+    "mtime": 1784478569.2179768,
+    "ast_hash": "2b094b129441370d1061edbde9945e68",
     "semantic_hash": ""
   },
   "src/app/api/cekici/kayit-kodu/dogrula/route.ts": {
@@ -205,13 +205,13 @@
     "semantic_hash": ""
   },
   "src/app/api/cekici/talep/[id]/teklif/route.ts": {
-    "mtime": 1784228660.6480324,
-    "ast_hash": "568e881bbf867e7f1f93453c1d97d597",
+    "mtime": 1784478662.571917,
+    "ast_hash": "81a1edfef05b99c05ea6689425c6e61f",
     "semantic_hash": ""
   },
   "src/app/api/cekici/talepler/route.ts": {
-    "mtime": 1784372066.3809762,
-    "ast_hash": "2930ac42e9e0f1f2b23891e23d80e921",
+    "mtime": 1784478543.8812153,
+    "ast_hash": "01c163f535aa6cfa3ce348837fd66cf0",
     "semantic_hash": ""
   },
   "src/app/api/cron/memnuniyet-sms/route.ts": {
@@ -230,8 +230,8 @@
     "semantic_hash": ""
   },
   "src/app/api/demo/sms/route.ts": {
-    "mtime": 1784062188.4108489,
-    "ast_hash": "0b5e702997de35d3297002c8f3394530",
+    "mtime": 1784478646.2982318,
+    "ast_hash": "83d4fce544009c25669fc7a8d174e41d",
     "semantic_hash": ""
   },
   "src/app/api/health/route.ts": {
@@ -365,8 +365,8 @@
     "semantic_hash": ""
   },
   "src/app/api/panel/ozet/route.ts": {
-    "mtime": 1781195351.8353071,
-    "ast_hash": "98455d2b54b3b521bfbbbc947b788a5c",
+    "mtime": 1784478647.6552029,
+    "ast_hash": "4753cd86abe76de3f9bdefd2bf3d6c72",
     "semantic_hash": ""
   },
   "src/app/api/panel/rozetler/route.ts": {
@@ -375,18 +375,18 @@
     "semantic_hash": ""
   },
   "src/app/api/panel/sms/route.ts": {
-    "mtime": 1780610388.5734794,
-    "ast_hash": "a71915616683df4135e9709e5f274175",
+    "mtime": 1784478580.9709349,
+    "ast_hash": "5abdd5df2a4e54656b4c24781423e057",
     "semantic_hash": ""
   },
   "src/app/api/panel/talepler/route.ts": {
-    "mtime": 1779987463.9933338,
-    "ast_hash": "50ffdfb0632becee37469e29bd83bc11",
+    "mtime": 1784478553.985379,
+    "ast_hash": "417b3309db2e0f3a2e826d769410360b",
     "semantic_hash": ""
   },
   "src/app/api/talep/[id]/anlasma/route.ts": {
-    "mtime": 1784280437.749801,
-    "ast_hash": "f49a23cbe00864ea4049e22771753bc6",
+    "mtime": 1784478671.680642,
+    "ast_hash": "a80ff91641cce504076bc0dfb5a7e25d",
     "semantic_hash": ""
   },
   "src/app/api/talep/[id]/cekici-konum/route.ts": {
@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "src/app/api/talep/[id]/teklifler/route.ts": {
-    "mtime": 1780784455.086292,
-    "ast_hash": "46a740e06267b744e9f8fc380150ea2e",
+    "mtime": 1784478643.5706155,
+    "ast_hash": "32e2711a4329f4698153f5b8ae947e90",
     "semantic_hash": ""
   },
   "src/app/api/talep/route.ts": {
@@ -525,7 +525,7 @@
     "semantic_hash": ""
   },
   "src/app/page.tsx": {
-    "mtime": 1784279841.6999118,
+    "mtime": 1784466827.3032725,
     "ast_hash": "06870a1d36f6b5f667bc2a342785e33d",
     "semantic_hash": ""
   },
@@ -595,8 +595,8 @@
     "semantic_hash": ""
   },
   "src/app/panel/talepler/page.tsx": {
-    "mtime": 1779987501.4633284,
-    "ast_hash": "84faa10c846f910a6dd77198b50350c8",
+    "mtime": 1784478686.7070415,
+    "ast_hash": "71e25185384498a4601f243543545f48",
     "semantic_hash": ""
   },
   "src/app/robots.ts": {
@@ -915,8 +915,8 @@
     "semantic_hash": ""
   },
   "src/lib/cekici-puan.ts": {
-    "mtime": 1780242089.9911304,
-    "ast_hash": "e6454bfb21c50b09b462f03d35bc2419",
+    "mtime": 1784478608.3494222,
+    "ast_hash": "3a3f98f17b72efa84cb6c1abc42bd08b",
     "semantic_hash": ""
   },
   "src/lib/cekici-sifre-otp.ts": {
@@ -975,8 +975,8 @@
     "semantic_hash": ""
   },
   "src/lib/db.ts": {
-    "mtime": 1780734441.880725,
-    "ast_hash": "1bd042c121909e1bdcc4f5e3f12733b4",
+    "mtime": 1784478517.5484304,
+    "ast_hash": "555685dba979475fabea3a4e506d7ebc",
     "semantic_hash": ""
   },
   "src/lib/demo-fixtures.ts": {
@@ -1085,8 +1085,8 @@
     "semantic_hash": ""
   },
   "src/lib/ihale.ts": {
-    "mtime": 1784280433.8623815,
-    "ast_hash": "07e078aae37fad35688a59685ad52741",
+    "mtime": 1784478617.6208012,
+    "ast_hash": "9c72000c8fe52a65a23a49da80dada68",
     "semantic_hash": ""
   },
   "src/lib/il-ilce.ts": {
@@ -1175,8 +1175,8 @@
     "semantic_hash": ""
   },
   "src/lib/memnuniyet.ts": {
-    "mtime": 1780242864.7406292,
-    "ast_hash": "4a3531835dc371f7202b9e58da9288ae",
+    "mtime": 1784478613.5733318,
+    "ast_hash": "f4eddd804d6ab65c154cb6a0bdb638fa",
     "semantic_hash": ""
   },
   "src/lib/musteri-auth.ts": {
@@ -1270,13 +1270,13 @@
     "semantic_hash": ""
   },
   "src/lib/sms.test.ts": {
-    "mtime": 1784067809.168899,
-    "ast_hash": "4e3efa030c7c0434e099b274bacd8f15",
+    "mtime": 1784478702.0234866,
+    "ast_hash": "1d7924981f650850be1a588c1391379c",
     "semantic_hash": ""
   },
   "src/lib/sms.ts": {
-    "mtime": 1784067729.6920722,
-    "ast_hash": "b4daf53a1bf2ea0cd17f57aadb548442",
+    "mtime": 1784478589.5417361,
+    "ast_hash": "4d4880e2ccbecd0c78ded0a241f0bf75",
     "semantic_hash": ""
   },
   "src/lib/sorun-akis-aciklama.ts": {
@@ -1320,8 +1320,8 @@
     "semantic_hash": ""
   },
   "src/lib/supabase/mappers.ts": {
-    "mtime": 1784280064.127126,
-    "ast_hash": "ea663966f9a6184cd860c09af8ac12cb",
+    "mtime": 1784478517.0879247,
+    "ast_hash": "9260f2a8fa167628ebf78843f56f26b0",
     "semantic_hash": ""
   },
   "src/lib/supabase/middleware.ts": {
@@ -1737,6 +1737,56 @@
   "src/app/api/demo/oturum-bagla/route.ts": {
     "mtime": 1784371407.5029051,
     "ast_hash": "72c83cb93ca21f8ec55ac7ea04f4ef5d",
+    "semantic_hash": ""
+  },
+  "scripts/verify-teklif-backfill.mjs": {
+    "mtime": 1784478671.9165428,
+    "ast_hash": "3f68a82652883585386fe7fee2d37a5c",
+    "semantic_hash": ""
+  },
+  "src/lib/puan-ozet-db.ts": {
+    "mtime": 1784478458.4408004,
+    "ast_hash": "8ffb86a3d1f45c3c41abec864a2a09ba",
+    "semantic_hash": ""
+  },
+  "src/lib/talep-iliski-db.ts": {
+    "mtime": 1784478458.4273276,
+    "ast_hash": "6385465fd2227d452b440e2257bd8de6",
+    "semantic_hash": ""
+  },
+  "src/lib/teklif-db.ts": {
+    "mtime": 1784478659.7534783,
+    "ast_hash": "484a1ab32d06bfcbefa33d91730f0f0f",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/019_talepler_scale_indexes.sql": {
+    "mtime": 1784478383.9192152,
+    "ast_hash": "b3c3b95d8d33a0659cac95625e871db7",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/020_teklifler_table.sql": {
+    "mtime": 1784478397.8392582,
+    "ast_hash": "3881533d4ad994bf91128d333f9fc297",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/021_talep_iliski_tablolari.sql": {
+    "mtime": 1784478402.6301675,
+    "ast_hash": "7c610d051776eff1aa145a44e257a57e",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/022_cekici_puan_ozet.sql": {
+    "mtime": 1784478403.8232622,
+    "ast_hash": "d0c34ad7de2c565ffbc4e5405cd363d6",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/023_drop_talep_json_arrays.sql": {
+    "mtime": 1784478403.9354043,
+    "ast_hash": "b5fa1a048fdc605da5bcad6c1fd72c48",
+    "semantic_hash": ""
+  },
+  "docs/scale-smoke-checklist.md": {
+    "mtime": 1784478378.2536428,
+    "ast_hash": "6f7b488a32158e309606d19b5d22b431",
     "semantic_hash": ""
   }
 }
