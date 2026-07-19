@@ -17,6 +17,11 @@ export const GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI =
   process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL?.trim() ||
   "AW-18328392362/Msc0CNjLnNMcEKql1KNE";
 
+/** «Kaydolma işlemi» — hizmet veren /cekici/kayit/onay sayfası */
+export const GOOGLE_ADS_DONUSUM_KAYDOLMA =
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_KAYDOLMA_LABEL?.trim() ||
+  "AW-18328392362/Y9juCP_Rm9McEKql1KNE";
+
 export function gtagYapilandirildi(): boolean {
   return Boolean(GA_MEASUREMENT_ID || GOOGLE_ADS_ID);
 }
@@ -145,8 +150,22 @@ export function gtagAdsFiyatTeklifiDonusumu(): void {
 }
 
 /**
- * Hizmet veren kayıt onayı — tam sayfa yüklemesinde GA page_view + sign_up.
- * Google Ads / Tag Assistant «sayfa yükleme» dönüşümleri için.
+ * Hizmet veren kayıt onayı — Google Ads «Kaydolma işlemi» dönüşümü.
+ * Ads sayfa yükleme snippet’inin SPA eşdeğeri (/cekici/kayit/onay).
+ */
+export function gtagAdsKaydolmaDonusumu(): void {
+  if (typeof window === "undefined") return;
+  if (!GOOGLE_ADS_DONUSUM_KAYDOLMA) return;
+  if (!cerezAnalitikAktif()) return;
+  gtagCagir("event", "conversion", {
+    send_to: GOOGLE_ADS_DONUSUM_KAYDOLMA,
+    value: 1.0,
+    currency: "TRY",
+  });
+}
+
+/**
+ * Hizmet veren kayıt onayı — tam sayfa yüklemesinde GA page_view + Ads conversion.
  */
 export function gtagCekiciKayitOnayGoruntule(
   sehir?: string,
@@ -161,6 +180,7 @@ export function gtagCekiciKayitOnayGoruntule(
     });
   }
   if (opts?.donusumOlayi === false) return;
+  gtagAdsKaydolmaDonusumu();
   gtagCagir("event", "sign_up", {
     method: "cekici_kayit",
     ...(sehir ? { sehir } : {}),

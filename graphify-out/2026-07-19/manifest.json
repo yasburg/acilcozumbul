@@ -635,8 +635,8 @@
     "semantic_hash": ""
   },
   "src/components/CerezOnayBanner.tsx": {
-    "mtime": 1784273060.1138911,
-    "ast_hash": "06287d484eb2bd155b15b876bf0013c1",
+    "mtime": 1784488251.9253197,
+    "ast_hash": "e5ea07d19699e4a89f5043387d760630",
     "semantic_hash": ""
   },
   "src/components/DemoHeaderBadge.tsx": {
