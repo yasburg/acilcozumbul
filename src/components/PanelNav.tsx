@@ -2,12 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  NavSayacRozet,
+  type PanelNavSayac,
+} from "@/hooks/usePanelNavSayac";
 
-const LINKS: { href: string; label: string; exact?: boolean }[] = [
+const LINKS: {
+  href: string;
+  label: string;
+  exact?: boolean;
+  sayac?: "cekici" | "rozet" | "talep";
+}[] = [
   { href: "/panel", label: "Özet", exact: true },
-  { href: "/panel/cekiciler", label: "Çekiciler" },
-  { href: "/panel/rozetler", label: "Rozetler" },
-  { href: "/panel/talepler", label: "Talepler" },
+  { href: "/panel/cekiciler", label: "Çekiciler", sayac: "cekici" },
+  { href: "/panel/rozetler", label: "Rozetler", sayac: "rozet" },
+  { href: "/panel/talepler", label: "Talepler", sayac: "talep" },
   { href: "/panel/sms", label: "SMS" },
   { href: "/panel/kredi-odemeler", label: "Kredi ödemeleri" },
   { href: "/panel/degerlendirmeler", label: "Değerlendirmeler" },
@@ -16,7 +25,23 @@ const LINKS: { href: string; label: string; exact?: boolean }[] = [
   { href: "/panel/kampanyalar", label: "Kampanyalar" },
 ];
 
-export function PanelNav({ onCikis }: { onCikis?: () => void }) {
+function sayacDeger(
+  tip: "cekici" | "rozet" | "talep" | undefined,
+  sayac: PanelNavSayac | null
+): number | undefined {
+  if (!tip || !sayac) return undefined;
+  if (tip === "cekici") return sayac.cekiciSayisi;
+  if (tip === "rozet") return sayac.rozetTalepSayisi;
+  return sayac.talepSayisi;
+}
+
+export function PanelNav({
+  onCikis,
+  sayac,
+}: {
+  onCikis?: () => void;
+  sayac?: PanelNavSayac | null;
+}) {
   const pathname = usePathname();
 
   return (
@@ -24,19 +49,21 @@ export function PanelNav({ onCikis }: { onCikis?: () => void }) {
       <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
         Yönetim
       </p>
-      {LINKS.map(({ href, label, exact }) => {
+      {LINKS.map(({ href, label, exact, sayac: tip }) => {
         const active = exact ? pathname === href : pathname.startsWith(href);
+        const adet = sayacDeger(tip, sayac ?? null);
         return (
           <Link
             key={href}
             href={href}
-            className={`rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+            className={`rounded-xl px-3 py-2.5 text-sm font-medium transition flex items-center justify-between gap-2 ${
               active
                 ? "bg-amber-500 text-white shadow-sm"
                 : "text-slate-700 hover:bg-slate-100"
             }`}
           >
-            {label}
+            <span>{label}</span>
+            <NavSayacRozet adet={adet} aktif={active} />
           </Link>
         );
       })}

@@ -5,11 +5,36 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BrandLogoYazili } from "@/components/BrandLogo";
 import { PanelNav } from "@/components/PanelNav";
+import { NavSayacRozet, usePanelNavSayac } from "@/hooks/usePanelNavSayac";
+
+function MobilNavLink({
+  href,
+  label,
+  adet,
+}: {
+  href: string;
+  label: string;
+  adet?: number;
+}) {
+  return (
+    <Link
+      href={href}
+      className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5 inline-flex items-center"
+    >
+      {label}
+      <NavSayacRozet adet={adet} aktif={false} />
+    </Link>
+  );
+}
 
 export function PanelChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [panelYetkili, setPanelYetkili] = useState<boolean | null>(null);
+  const chromeAcik =
+    pathname !== "/panel/giris" &&
+    !(pathname === "/panel" && panelYetkili !== true);
+  const sayac = usePanelNavSayac(chromeAcik && panelYetkili === true);
 
   useEffect(() => {
     let iptal = false;
@@ -44,7 +69,10 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
       <header className="border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
         <div className="flex items-center justify-between gap-2">
           <Link href="/panel" className="block">
-            <BrandLogoYazili href={null} className="h-7 w-auto max-w-[180px] object-contain object-left" />
+            <BrandLogoYazili
+              href={null}
+              className="h-7 w-auto max-w-[180px] object-contain object-left"
+            />
           </Link>
           <button
             type="button"
@@ -59,75 +87,45 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
         <aside className="hidden w-56 shrink-0 lg:block">
           <div className="sticky top-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-100 px-4 py-4 space-y-2">
-              <BrandLogoYazili href={null} className="h-8 w-auto max-w-full object-contain object-left" />
-              <h1 className="text-sm font-semibold text-slate-600">Yönetim Paneli</h1>
+              <BrandLogoYazili
+                href={null}
+                className="h-8 w-auto max-w-full object-contain object-left"
+              />
+              <h1 className="text-sm font-semibold text-slate-600">
+                Yönetim Paneli
+              </h1>
             </div>
-            <PanelNav onCikis={() => void cikis()} />
+            <PanelNav onCikis={() => void cikis()} sayac={sayac} />
           </div>
         </aside>
         <main className="min-w-0 flex-1">
           <div className="border-b border-slate-200 bg-white px-4 py-3 lg:hidden overflow-x-auto">
             <div className="flex gap-2 text-sm">
-              <Link
-                href="/panel"
-                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
-              >
-                Özet
-              </Link>
-              <Link
+              <MobilNavLink href="/panel" label="Özet" />
+              <MobilNavLink
                 href="/panel/cekiciler"
-                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
-              >
-                Çekiciler
-              </Link>
-              <Link
+                label="Çekiciler"
+                adet={sayac?.cekiciSayisi}
+              />
+              <MobilNavLink
                 href="/panel/rozetler"
-                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
-              >
-                Rozetler
-              </Link>
-              <Link
+                label="Rozetler"
+                adet={sayac?.rozetTalepSayisi}
+              />
+              <MobilNavLink
                 href="/panel/talepler"
-                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
-              >
-                Talepler
-              </Link>
-              <Link
-                href="/panel/sms"
-                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
-              >
-                SMS
-              </Link>
-              <Link
+                label="Talepler"
+                adet={sayac?.talepSayisi}
+              />
+              <MobilNavLink href="/panel/sms" label="SMS" />
+              <MobilNavLink
                 href="/panel/kredi-odemeler"
-                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
-              >
-                Kredi ödemeleri
-              </Link>
-              <Link
-                href="/panel/degerlendirmeler"
-                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
-              >
-                Puanlar
-              </Link>
-              <Link
-                href="/panel/davetler"
-                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
-              >
-                Davet
-              </Link>
-              <Link
-                href="/panel/demo"
-                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
-              >
-                Demo
-              </Link>
-              <Link
-                href="/panel/kampanyalar"
-                className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5"
-              >
-                Kampanya
-              </Link>
+                label="Kredi ödemeleri"
+              />
+              <MobilNavLink href="/panel/degerlendirmeler" label="Puanlar" />
+              <MobilNavLink href="/panel/davetler" label="Davet" />
+              <MobilNavLink href="/panel/demo" label="Demo" />
+              <MobilNavLink href="/panel/kampanyalar" label="Kampanya" />
             </div>
           </div>
           <div className="p-4 lg:p-0">{children}</div>

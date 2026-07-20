@@ -139,6 +139,18 @@ export async function countCekiciler(): Promise<number> {
   return count ?? 0;
 }
 
+/** Belge / rozet talebi bekleyen çekici sayısı */
+export async function countCekicilerBelgeDurum(
+  durum: BelgeDurum
+): Promise<number> {
+  const { count, error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .select("*", { count: "exact", head: true })
+    .eq("belge_durum", durum);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function getCekiciById(id: string): Promise<Cekici | undefined> {
   const { data, error } = await getSupabaseAdmin()
     .from("cekiciler")

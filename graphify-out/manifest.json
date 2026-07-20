@@ -710,13 +710,13 @@
     "semantic_hash": ""
   },
   "src/components/PanelChrome.tsx": {
-    "mtime": 1780782583.579612,
-    "ast_hash": "6c1bc082ac92398cd68317d4638d46ac",
+    "mtime": 1784546715.748398,
+    "ast_hash": "6d93bc3e78429f0c4308f39ebd9cc1ab",
     "semantic_hash": ""
   },
   "src/components/PanelNav.tsx": {
-    "mtime": 1780782583.281564,
-    "ast_hash": "ca718b0a849fc372893d3de66f6a17bb",
+    "mtime": 1784546715.7483964,
+    "ast_hash": "af6942f3c866fec3f9db756618962f86",
     "semantic_hash": ""
   },
   "src/components/PostHogProvider.tsx": {
@@ -975,8 +975,8 @@
     "semantic_hash": ""
   },
   "src/lib/db.ts": {
-    "mtime": 1784478517.5484304,
-    "ast_hash": "555685dba979475fabea3a4e506d7ebc",
+    "mtime": 1784546626.0905268,
+    "ast_hash": "e82ac503c9da1a0d48d693b670c76b7a",
     "semantic_hash": ""
   },
   "src/lib/demo-fixtures.ts": {
@@ -1797,6 +1797,16 @@
   "supabase/migrations/024_premium_sms_varsayilan_acik.sql": {
     "mtime": 1784546444.168674,
     "ast_hash": "403cc91d2c6a259acd2475bb944b3440",
+    "semantic_hash": ""
+  },
+  "src/app/api/panel/nav-sayac/route.ts": {
+    "mtime": 1784546646.4338937,
+    "ast_hash": "fd18ec49afbacff5c957e9805e6d39b7",
+    "semantic_hash": ""
+  },
+  "src/hooks/usePanelNavSayac.ts": {
+    "mtime": 1784546653.872349,
+    "ast_hash": "6859e7765476f3ed64bf18307663b5fe",
     "semantic_hash": ""
   }
 }
