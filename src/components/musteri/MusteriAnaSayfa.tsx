@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { SorunSecimi } from "@/components/SorunSecimi";
 import { ArizaFotografAlani } from "@/components/ArizaFotografAlani";
@@ -112,7 +112,6 @@ export default function MusteriAnaSayfa() {
 }
 
 function MusteriAnaSayfaIcerik() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { ozet: hizmetVerenSayim, yukleniyor: hizmetVerenYukleniyor } =
     useHizmetVerenSayim();
@@ -1053,16 +1052,24 @@ function MusteriAnaSayfaIcerik() {
         bildirilen_sayisi: data.bildirilenSayisi ?? 0,
       });
       gtagAdsFiyatTeklifiDonusumu();
-      metaPixelLead({ content_name: form.sorunTipi || "musteri_talep" });
+      /* Meta Lead: bekle sayfasına gitmeden önce + bir kez (bekle yedek) */
       try {
+        if (sessionStorage.getItem(`acil_meta_lead_${data.id}`) !== "1") {
+          sessionStorage.setItem(`acil_meta_lead_${data.id}`, "1");
+          metaPixelLead({ content_name: form.sorunTipi || "musteri_talep" });
+        }
         sessionStorage.setItem(
           `acil_bekle_${data.id}`,
           String(data.bildirilenSayisi ?? 0)
         );
+        if (form.sorunTipi) {
+          sessionStorage.setItem(`acil_bekle_sorun_${data.id}`, form.sorunTipi);
+        }
       } catch {
-        /* ignore */
+        metaPixelLead({ content_name: form.sorunTipi || "musteri_talep" });
       }
-      router.push(`/bekle/${data.id}`);
+      /* Tam sayfa: Pixel Helper / PageView için soft navigate kullanma */
+      window.location.assign(`/bekle/${data.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Talep gönderilemedi.");
     } finally {

@@ -18,6 +18,7 @@ import {
 } from "@/lib/musteri-bildirim";
 import { adSoyadSatirGoster } from "@/lib/kisisel-veri-gizle";
 import { posthogOlayYakala } from "@/lib/posthog-client";
+import { metaPixelLead } from "@/lib/meta-pixel";
 
 type Durum =
   | "ihale_bekliyor"
@@ -183,6 +184,20 @@ function BekleIcerik() {
     }
     void musteriBildirimIzniIste();
   }, [id]);
+
+  /* Müşteri formu tamamlandı → Lead (formda da ateşlenir; çift sayım yok) */
+  useEffect(() => {
+    if (demoTalep || demoParam) return;
+    let sorun: string | null = null;
+    try {
+      if (sessionStorage.getItem(`acil_meta_lead_${id}`) === "1") return;
+      sessionStorage.setItem(`acil_meta_lead_${id}`, "1");
+      sorun = sessionStorage.getItem(`acil_bekle_sorun_${id}`);
+    } catch {
+      /* private mode — yine de dene */
+    }
+    metaPixelLead({ content_name: sorun || "musteri_talep" });
+  }, [id, demoTalep, demoParam]);
 
   useEffect(() => {
     if (!demoHazir) return;
