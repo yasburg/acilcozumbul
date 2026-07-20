@@ -44,7 +44,7 @@ describe("D — Çekici bildirim (mock)", () => {
     });
   });
 
-  it("D1: 2 uygun çekici — toplu SMS + 1 kredi", async () => {
+  it("D1: varsayılan premium — OTP SMS + 2 kredi", async () => {
     const c1 = cekiciFixture({ id: "c1", telefon: "05321111111" });
     const c2 = cekiciFixture({ id: "c2", telefon: "05322222222" });
     const c3 = cekiciFixture({
@@ -59,6 +59,27 @@ describe("D — Çekici bildirim (mock)", () => {
     const ids = await notifyCekiciler(t, "http://localhost:3000");
     expect(ids.sort()).toEqual(["c1", "c2"]);
     expect(sendSms).toHaveBeenCalledTimes(2);
+    const meta = sendSms.mock.calls[0][2] as {
+      krediMiktar?: number;
+      kanal?: string;
+    };
+    expect(meta.krediMiktar).toBe(PREMIUM_SMS_BILDIRIM_KREDI);
+    expect(meta.kanal).toBe("otp");
+  });
+
+  it("D1a: premium kapalı → toplu SMS + 1 kredi", async () => {
+    const c1 = cekiciFixture({
+      id: "c1",
+      telefon: "05321111111",
+      premiumSmsAktif: false,
+    });
+    getCekicilerBildirimAdaylari.mockResolvedValue([c1]);
+    getCekiciById.mockImplementation(async (id: string) =>
+      id === "c1" ? c1 : null
+    );
+    const t = talepFixture({ konumIl: "İstanbul", konumIlce: "Kadıköy" });
+    const ids = await notifyCekiciler(t, "http://localhost:3000");
+    expect(ids).toEqual(["c1"]);
     const meta = sendSms.mock.calls[0][2] as {
       krediMiktar?: number;
       kanal?: string;
@@ -133,7 +154,7 @@ describe("D — Çekici bildirim (mock)", () => {
     expect(sendSms).toHaveBeenCalledTimes(1);
     expect(sendSms.mock.calls[0][2]).toMatchObject({
       cekiciId: "c2",
-      kanal: "xml",
+      kanal: "otp",
     });
   });
 
@@ -204,7 +225,7 @@ describe("D — Çekici bildirim (mock)", () => {
     expect(ids).toEqual([]);
   });
 
-  it("D10: çok sayıda uygun çekici — hepsine toplu SMS", async () => {
+  it("D10: çok sayıda uygun çekici — hepsine premium SMS", async () => {
     const list: Cekici[] = Array.from({ length: 5 }, (_, i) =>
       cekiciFixture({ id: `c${i}`, telefon: `0532000000${i}` })
     );
@@ -218,11 +239,14 @@ describe("D — Çekici bildirim (mock)", () => {
     );
     expect(ids).toHaveLength(5);
     expect(sendSms).toHaveBeenCalledTimes(5);
-    expect(sendSms.mock.calls[0][2]).toMatchObject({ kanal: "xml", krediMiktar: 1 });
+    expect(sendSms.mock.calls[0][2]).toMatchObject({
+      kanal: "otp",
+      krediMiktar: PREMIUM_SMS_BILDIRIM_KREDI,
+    });
   });
 
-  it("D4: kredi tam 1 — toplu SMS dahil", async () => {
-    const c1 = cekiciFixture({ id: "c1", kredi: 1 });
+  it("D4: premium kapalı + kredi 1 — toplu SMS dahil", async () => {
+    const c1 = cekiciFixture({ id: "c1", kredi: 1, premiumSmsAktif: false });
     getCekicilerBildirimAdaylari.mockResolvedValue([c1]);
     getCekiciById.mockResolvedValue(c1);
     const ids = await notifyCekiciler(

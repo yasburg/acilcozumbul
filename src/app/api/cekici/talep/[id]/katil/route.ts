@@ -5,6 +5,7 @@ import { ensureSeedData } from "@/lib/seed";
 import {
   cekiciAcikTalepUygunMu,
   cekiciBildirimKrediTutari,
+  cekiciPremiumSmsAktifMi,
   cekiciTalebeBildirildiMi,
   cekiciYeterliBildirimKredisi,
 } from "@/lib/ihale";
@@ -104,15 +105,15 @@ export async function POST(
     talepId: talep.id,
     link,
     krediDus: false,
-    kanal: cekici.premiumSmsAktif ? "otp" : "xml",
+    kanal: cekiciPremiumSmsAktifMi(cekici) ? "otp" : "xml",
   });
 
   return NextResponse.json({
     success: true,
     kredi: cekici.kredi,
     harcananKredi: tutar,
-    premiumSms: Boolean(cekici.premiumSmsAktif),
-    mesaj: cekici.premiumSmsAktif
+    premiumSms: cekiciPremiumSmsAktifMi(cekici),
+    mesaj: cekiciPremiumSmsAktifMi(cekici)
       ? "İhaleye katıldınız. Anlık OTP SMS gönderildi."
       : "İhaleye katıldınız. SMS gönderildi.",
   });

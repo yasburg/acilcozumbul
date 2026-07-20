@@ -123,6 +123,7 @@ export async function POST(request: NextRequest) {
     hizmetSorunTipleri: tumSorunTipIdleri(),
     aktif: true,
     kayitTarihi: new Date().toISOString(),
+    premiumSmsAktif: true,
     davetEdenId:
       kayitHazir.sonuc.uygulandi && kayitHazir.sonuc.tip === "davet"
         ? kayitHazir.sonuc.davet.davetEden.id

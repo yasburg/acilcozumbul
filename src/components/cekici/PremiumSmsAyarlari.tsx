@@ -135,7 +135,7 @@ export function PremiumSmsAyarlari() {
         </p>
         <p className="text-xs text-slate-600 leading-relaxed mb-3">
           {durum.premiumSmsAktif
-            ? `Yeni talepler anlık OTP SMS ile gelir. Bildirim başına ${durum.premiumKredi} kredi.`
+            ? `Yeni talepler anlık OTP SMS ile gelir. Bildirim başına ${durum.premiumKredi} kredi. İsterseniz kapatıp standart toplu SMS’e (${durum.panelKredi} kredi) dönebilirsiniz.`
             : `Yeni talepler toplu SMS ile gelir (${durum.panelKredi} kredi). Anlık OTP SMS için Premium’i telefon doğrulamasıyla açın (${durum.premiumKredi} kredi).`}
         </p>
 

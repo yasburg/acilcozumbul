@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
         cekiciBildirimKrediTutari(cekici)
       ),
       bildirimKredi: cekiciBildirimKrediTutari(cekici),
-      premiumSmsAktif: Boolean(cekici.premiumSmsAktif),
+      premiumSmsAktif: cekici.premiumSmsAktif !== false,
       satinAlinanlar: [...demo.kazandiklarim, ...kazandiklarim],
       baskasiAldi: [...demo.kaybettiklerim, ...kaybettiklerim],
       demoModu: true,
@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
       cekiciBildirimKrediTutari(cekici)
     ),
     bildirimKredi: cekiciBildirimKrediTutari(cekici),
-    premiumSmsAktif: Boolean(cekici.premiumSmsAktif),
+    premiumSmsAktif: cekici.premiumSmsAktif !== false,
     // Geriye uyumluluk
     satinAlinanlar: kazandiklarim,
     baskasiAldi: kaybettiklerim,

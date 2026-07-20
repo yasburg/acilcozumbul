@@ -4,6 +4,7 @@ import { updateCekici } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import {
   cekiciBildirimKrediTutari,
+  cekiciPremiumSmsAktifMi,
   PANEL_BILDIRIM_KREDI,
   PREMIUM_SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
@@ -29,7 +30,7 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    premiumSmsAktif: Boolean(cekici.premiumSmsAktif),
+    premiumSmsAktif: cekiciPremiumSmsAktifMi(cekici),
     bildirimKredi: cekiciBildirimKrediTutari(cekici),
     panelKredi: PANEL_BILDIRIM_KREDI,
     premiumKredi: PREMIUM_SMS_BILDIRIM_KREDI,

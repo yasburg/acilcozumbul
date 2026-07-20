@@ -13,8 +13,15 @@ export const PREMIUM_SMS_BILDIRIM_KREDI = 2;
 /** Geriye uyum — panel bildirimi ile aynı */
 export const SMS_BILDIRIM_KREDI = PANEL_BILDIRIM_KREDI;
 
+/** Varsayılan açık; yalnızca açıkça kapatılmışsa false */
+export function cekiciPremiumSmsAktifMi(
+  cekici: Pick<Cekici, "premiumSmsAktif">
+): boolean {
+  return cekici.premiumSmsAktif !== false;
+}
+
 export function cekiciBildirimKrediTutari(cekici: Pick<Cekici, "premiumSmsAktif">): number {
-  return cekici.premiumSmsAktif
+  return cekiciPremiumSmsAktifMi(cekici)
     ? PREMIUM_SMS_BILDIRIM_KREDI
     : PANEL_BILDIRIM_KREDI;
 }

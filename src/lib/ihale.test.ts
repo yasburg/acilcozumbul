@@ -27,8 +27,9 @@ describe("ihale kredi sabitleri", () => {
     expect(PANEL_BILDIRIM_KREDI).toBe(1);
     expect(SMS_BILDIRIM_KREDI).toBe(1);
     expect(PREMIUM_SMS_BILDIRIM_KREDI).toBe(2);
-    expect(cekiciBildirimKrediTutari({})).toBe(1);
+    expect(cekiciBildirimKrediTutari({})).toBe(2);
     expect(cekiciBildirimKrediTutari({ premiumSmsAktif: true })).toBe(2);
+    expect(cekiciBildirimKrediTutari({ premiumSmsAktif: false })).toBe(1);
   });
 
   it("bildirilen çekici talebi görebilir", () => {

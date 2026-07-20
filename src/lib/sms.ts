@@ -1,6 +1,7 @@
 import { getCekicilerBildirimAdaylari } from "./db";
 import {
   cekiciBildirimKrediTutari,
+  cekiciPremiumSmsAktifMi,
   cekiciTalepSmsAdayiMi,
   PANEL_BILDIRIM_KREDI,
 } from "./ihale";
@@ -30,8 +31,8 @@ export function cekiciTalepSmsMetni(
 
 /**
  * Uygun çekicilere talep bildirimi.
- * - premiumSmsAktif: OTP SMS + 2 kredi
- * - değilse: toplu (XML) SMS + 1 kredi
+ * - premium açık (varsayılan): OTP SMS + 2 kredi
+ * - kapatılmışsa: toplu (XML) SMS + 1 kredi
  */
 export async function notifyCekiciler(
   talep: Talep,
@@ -52,7 +53,7 @@ export async function notifyCekiciler(
   await Promise.all(
     adaylar.map(async (cekici: Cekici) => {
       const tutar = cekiciBildirimKrediTutari(cekici);
-      const kanal: SmsKanal = cekici.premiumSmsAktif ? "otp" : "xml";
+      const kanal: SmsKanal = cekiciPremiumSmsAktifMi(cekici) ? "otp" : "xml";
       const { mesaj, link } = cekiciTalepSmsMetni(
         talep,
         cekici,

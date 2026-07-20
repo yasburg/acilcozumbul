@@ -93,8 +93,8 @@ export interface Cekici {
   /** 1=Pzt … 7=Paz; boş = her gün */
   musaitlikGunler?: number[];
   /**
-   * true: talep gelince anlık SMS (2 kredi).
-   * false: yalnızca panelde görünür (1 kredi, SMS yok).
+   * Varsayılan açık. true: anlık OTP SMS (2 kredi).
+   * false: toplu XML SMS (1 kredi). undefined → açık.
    */
   premiumSmsAktif?: boolean;
   /** Paylaşılabilir davet / kupon kodu */
