@@ -163,6 +163,16 @@ export default function PanelCekiciDetayPage() {
 
       <Card className="space-y-3 text-sm">
         <Row label="Telefon" value={cekici.telefon} />
+        <Row
+          label="Doğum tarihi"
+          value={
+            cekici.dogumTarihi
+              ? new Date(cekici.dogumTarihi + "T12:00:00").toLocaleDateString(
+                  "tr-TR"
+                )
+              : "—"
+          }
+        />
         <Row label="Şehir" value={cekici.sehir} />
         <Row label="Kredi" value={formatKredi(cekici.kredi)} />
         <Row label="Durum" value={cekici.aktif ? "Aktif" : "Pasif"} />

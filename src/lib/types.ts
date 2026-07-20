@@ -77,6 +77,8 @@ export interface Cekici {
   hizmetSorunTipleri?: string[];
   aktif: boolean;
   kayitTarihi: string;
+  /** YYYY-MM-DD */
+  dogumTarihi?: string;
   faturaEposta?: string;
   faturaEpostaDogrulandi?: string;
   belgeRuhsatUrl?: string;

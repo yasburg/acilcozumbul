@@ -33,6 +33,7 @@ export type CekiciRow = {
   hizmet_sorun_tipleri: string[];
   aktif: boolean;
   kayit_tarihi: string;
+  dogum_tarihi?: string | null;
   fatura_eposta?: string | null;
   fatura_eposta_dogrulandi?: string | null;
   belge_ruhsat_url?: string | null;
@@ -109,6 +110,7 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     hizmetSorunTipleri: r.hizmet_sorun_tipleri ?? [],
     aktif: r.aktif,
     kayitTarihi: r.kayit_tarihi,
+    dogumTarihi: r.dogum_tarihi ?? undefined,
     faturaEposta: r.fatura_eposta ?? undefined,
     faturaEpostaDogrulandi: r.fatura_eposta_dogrulandi ?? undefined,
     belgeRuhsatUrl: r.belge_ruhsat_url ?? undefined,
@@ -156,6 +158,7 @@ export function cekiciToRow(
     hizmet_sorun_tipleri: c.hizmetSorunTipleri ?? [],
     aktif: c.aktif,
     kayit_tarihi: c.kayitTarihi,
+    dogum_tarihi: c.dogumTarihi ?? null,
     fatura_eposta: c.faturaEposta ?? null,
     fatura_eposta_dogrulandi: c.faturaEpostaDogrulandi ?? null,
     belge_ruhsat_url: c.belgeRuhsatUrl ?? null,

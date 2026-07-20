@@ -16,14 +16,28 @@ import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import { telefonDogrulamaHatasi, telefonGecerliMi, telefonMaskele } from "@/lib/telefon";
 import { davetKoduNormalize } from "@/lib/davet-kodu";
 import { posthogKampanyaKaydet, posthogOlayYakala } from "@/lib/posthog-client";
+import {
+  dogumTarihiDogrula,
+  dogumTarihiMaxIso,
+  dogumTarihiMinIso,
+} from "@/lib/dogum-tarihi";
 
-type KayitAlan = "ad" | "soyad" | "telefon" | "sehir" | "sifre" | "sifreTekrar" | "yasalOnay";
+type KayitAlan =
+  | "ad"
+  | "soyad"
+  | "dogumTarihi"
+  | "telefon"
+  | "sehir"
+  | "sifre"
+  | "sifreTekrar"
+  | "yasalOnay";
 
 type AlanHatalari = Record<KayitAlan, boolean>;
 
 const BOS_ALAN_HATALARI: AlanHatalari = {
   ad: false,
   soyad: false,
+  dogumTarihi: false,
   telefon: false,
   sehir: false,
   sifre: false,
@@ -66,6 +80,7 @@ function KayitIcerik() {
     "";
 
   const adRef = useRef<HTMLDivElement>(null);
+  const dogumRef = useRef<HTMLDivElement>(null);
   const telefonRef = useRef<HTMLDivElement>(null);
   const sehirRef = useRef<HTMLDivElement>(null);
   const sifreRef = useRef<HTMLDivElement>(null);
@@ -77,6 +92,7 @@ function KayitIcerik() {
   const [form, setForm] = useState({
     ad: "",
     soyad: "",
+    dogumTarihi: "",
     telefon: "",
     sehir: ISTANBUL_IL,
     sifre: "",
@@ -189,6 +205,7 @@ function KayitIcerik() {
   function formDogrula(): boolean {
     const adBos = !form.ad.trim();
     const soyadBos = !form.soyad.trim();
+    const dogum = dogumTarihiDogrula(form.dogumTarihi);
     const telefonBos = !form.telefon.trim();
     const telefonGecersiz = !telefonBos && !telefonGecerliMi(form.telefon);
     const sifreKisa =
@@ -205,6 +222,7 @@ function KayitIcerik() {
     const hatalar: AlanHatalari = {
       ad: adBos,
       soyad: soyadBos,
+      dogumTarihi: !dogum.ok,
       telefon: telefonBos || telefonGecersiz,
       sehir: sehirBos,
       sifre: sifreBos || sifreKisa,
@@ -216,6 +234,7 @@ function KayitIcerik() {
     const mesajlar: Partial<Record<KayitAlan, string>> = {};
     if (adBos) mesajlar.ad = "Ad girin.";
     if (soyadBos) mesajlar.soyad = "Soyad girin.";
+    if (!dogum.ok) mesajlar.dogumTarihi = dogum.hata;
     if (telefonBos) mesajlar.telefon = "Telefon numarası girin.";
     else if (telefonGecersiz)
       mesajlar.telefon = telefonDogrulamaHatasi(form.telefon);
@@ -249,6 +268,11 @@ function KayitIcerik() {
     }[] = [
       { alan: "ad", ref: adRef, mesaj: "Ad girin." },
       { alan: "soyad", ref: adRef, mesaj: "Soyad girin." },
+      {
+        alan: "dogumTarihi",
+        ref: dogumRef,
+        mesaj: mesajlar.dogumTarihi ?? "Doğum tarihi girin.",
+      },
       {
         alan: "telefon",
         ref: telefonRef,
@@ -353,6 +377,7 @@ function KayitIcerik() {
           telefon: form.telefon,
           sehir: form.sehir,
           sifre: form.sifre,
+          dogumTarihi: form.dogumTarihi,
           otpKod,
           kayitKodu: form.davetKodu.trim()
             ? davetKoduNormalize(form.davetKodu)
@@ -448,6 +473,26 @@ function KayitIcerik() {
               }
             />
           )}
+        </div>
+
+        <div ref={dogumRef} className="scroll-mt-28">
+          <Field
+            label="Doğum tarihi"
+            type="date"
+            value={form.dogumTarihi}
+            min={dogumTarihiMinIso()}
+            max={dogumTarihiMaxIso()}
+            onChange={(e) => {
+              alanHatasiTemizle("dogumTarihi");
+              setForm((f) => ({ ...f, dogumTarihi: e.target.value }));
+            }}
+            autoComplete="bday"
+            name="dogumTarihi"
+            invalid={alanHatalari.dogumTarihi}
+            required
+          />
+          <AlanHataMetni mesaj={alanMesajlari.dogumTarihi} />
+          <p className="text-xs text-slate-500 mt-1">En az 18 yaşında olmalısınız.</p>
         </div>
 
         <div ref={telefonRef} className="scroll-mt-28">

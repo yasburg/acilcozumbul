@@ -26,12 +26,13 @@ import {
   cekiciAuthKullaniciOlustur,
   cekiciAuthKullaniciSil,
 } from "@/lib/cekici-auth";
+import { dogumTarihiDogrula } from "@/lib/dogum-tarihi";
 
 export async function POST(request: NextRequest) {
   await ensureSeedData();
 
   const body = await request.json();
-  const { ad, telefon, sehir, sifre, otpKod } = body;
+  const { ad, telefon, sehir, sifre, otpKod, dogumTarihi } = body;
   const kodHam =
     typeof body.kayitKodu === "string"
       ? body.kayitKodu
@@ -44,6 +45,11 @@ export async function POST(request: NextRequest) {
       { error: "Tüm alanları doldurun." },
       { status: 400 }
     );
+  }
+
+  const dogum = dogumTarihiDogrula(dogumTarihi);
+  if (!dogum.ok) {
+    return NextResponse.json({ error: dogum.hata }, { status: 400 });
   }
 
   if (!telefonGecerliMi(telefon)) {
@@ -123,6 +129,7 @@ export async function POST(request: NextRequest) {
     hizmetSorunTipleri: tumSorunTipIdleri(),
     aktif: true,
     kayitTarihi: new Date().toISOString(),
+    dogumTarihi: dogum.deger,
     premiumSmsAktif: true,
     davetEdenId:
       kayitHazir.sonuc.uygulandi && kayitHazir.sonuc.tip === "davet"
