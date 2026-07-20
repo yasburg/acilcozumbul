@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  dogumAyGunSayisi,
+  dogumParcalarindanIso,
   dogumTarihiDogrula,
   dogumTarihiMaxIso,
   dogumTarihiMinIso,
+  dogumYilSecenekleri,
 } from "./dogum-tarihi";
 
 describe("dogumTarihiDogrula", () => {
@@ -29,5 +32,22 @@ describe("dogumTarihiDogrula", () => {
 
   it("min/max iso aralığı tutarlı", () => {
     expect(dogumTarihiMinIso() < dogumTarihiMaxIso()).toBe(true);
+  });
+});
+
+describe("dogum parça seçicileri", () => {
+  it("parçalardan ISO üretir", () => {
+    expect(dogumParcalarindanIso(3, 5, 2000)).toBe("2000-05-03");
+    expect(dogumParcalarindanIso("", 5, 2000)).toBe("");
+  });
+
+  it("Şubat gün sayısını hesaplar", () => {
+    expect(dogumAyGunSayisi(2024, 2)).toBe(29);
+    expect(dogumAyGunSayisi(2023, 2)).toBe(28);
+  });
+
+  it("yıl listesi yeniden eskiye", () => {
+    const yillar = dogumYilSecenekleri();
+    expect(yillar[0]).toBeGreaterThan(yillar[yillar.length - 1]);
   });
 });

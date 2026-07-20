@@ -17,9 +17,11 @@ import { telefonDogrulamaHatasi, telefonGecerliMi, telefonMaskele } from "@/lib/
 import { davetKoduNormalize } from "@/lib/davet-kodu";
 import { posthogKampanyaKaydet, posthogOlayYakala } from "@/lib/posthog-client";
 import {
+  DOGUM_AYLARI,
+  dogumAyGunSayisi,
+  dogumParcalarindanIso,
   dogumTarihiDogrula,
-  dogumTarihiMaxIso,
-  dogumTarihiMinIso,
+  dogumYilSecenekleri,
 } from "@/lib/dogum-tarihi";
 
 type KayitAlan =
@@ -92,7 +94,9 @@ function KayitIcerik() {
   const [form, setForm] = useState({
     ad: "",
     soyad: "",
-    dogumTarihi: "",
+    dogumGun: "",
+    dogumAy: "",
+    dogumYil: "",
     telefon: "",
     sehir: ISTANBUL_IL,
     sifre: "",
@@ -205,7 +209,12 @@ function KayitIcerik() {
   function formDogrula(): boolean {
     const adBos = !form.ad.trim();
     const soyadBos = !form.soyad.trim();
-    const dogum = dogumTarihiDogrula(form.dogumTarihi);
+    const dogumIso = dogumParcalarindanIso(
+      form.dogumGun,
+      form.dogumAy,
+      form.dogumYil
+    );
+    const dogum = dogumTarihiDogrula(dogumIso);
     const telefonBos = !form.telefon.trim();
     const telefonGecersiz = !telefonBos && !telefonGecerliMi(form.telefon);
     const sifreKisa =
@@ -377,7 +386,11 @@ function KayitIcerik() {
           telefon: form.telefon,
           sehir: form.sehir,
           sifre: form.sifre,
-          dogumTarihi: form.dogumTarihi,
+          dogumTarihi: dogumParcalarindanIso(
+            form.dogumGun,
+            form.dogumAy,
+            form.dogumYil
+          ),
           otpKod,
           kayitKodu: form.davetKodu.trim()
             ? davetKoduNormalize(form.davetKodu)
@@ -475,24 +488,108 @@ function KayitIcerik() {
           )}
         </div>
 
-        <div ref={dogumRef} className="scroll-mt-28">
-          <Field
-            label="Doğum tarihi"
-            type="date"
-            value={form.dogumTarihi}
-            min={dogumTarihiMinIso()}
-            max={dogumTarihiMaxIso()}
-            onChange={(e) => {
-              alanHatasiTemizle("dogumTarihi");
-              setForm((f) => ({ ...f, dogumTarihi: e.target.value }));
-            }}
-            autoComplete="bday"
-            name="dogumTarihi"
-            invalid={alanHatalari.dogumTarihi}
-            required
-          />
+        <div ref={dogumRef} className="scroll-mt-28 space-y-1.5">
+          <p
+            className={`text-sm font-medium ${
+              alanHatalari.dogumTarihi ? "text-red-700" : "text-slate-700"
+            }`}
+          >
+            Doğum tarihi
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            <SelectField
+              label="Gün"
+              value={form.dogumGun}
+              onChange={(e) => {
+                alanHatasiTemizle("dogumTarihi");
+                setForm((f) => ({ ...f, dogumGun: e.target.value }));
+              }}
+              invalid={alanHatalari.dogumTarihi}
+              required
+              aria-label="Doğum günü"
+            >
+              <option value="">Gün</option>
+              {Array.from(
+                {
+                  length: dogumAyGunSayisi(
+                    Number(form.dogumYil) || 2000,
+                    Number(form.dogumAy) || 1
+                  ),
+                },
+                (_, i) => i + 1
+              ).map((g) => (
+                <option key={g} value={String(g)}>
+                  {g}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              label="Ay"
+              value={form.dogumAy}
+              onChange={(e) => {
+                alanHatasiTemizle("dogumTarihi");
+                const ay = e.target.value;
+                setForm((f) => {
+                  const maxGun = dogumAyGunSayisi(
+                    Number(f.dogumYil) || 2000,
+                    Number(ay) || 1
+                  );
+                  const gun = Number(f.dogumGun);
+                  return {
+                    ...f,
+                    dogumAy: ay,
+                    dogumGun:
+                      gun && gun > maxGun ? String(maxGun) : f.dogumGun,
+                  };
+                });
+              }}
+              invalid={alanHatalari.dogumTarihi}
+              required
+              aria-label="Doğum ayı"
+            >
+              <option value="">Ay</option>
+              {DOGUM_AYLARI.map((a) => (
+                <option key={a.deger} value={String(a.deger)}>
+                  {a.etiket}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              label="Yıl"
+              value={form.dogumYil}
+              onChange={(e) => {
+                alanHatasiTemizle("dogumTarihi");
+                const yil = e.target.value;
+                setForm((f) => {
+                  const maxGun = dogumAyGunSayisi(
+                    Number(yil) || 2000,
+                    Number(f.dogumAy) || 1
+                  );
+                  const gun = Number(f.dogumGun);
+                  return {
+                    ...f,
+                    dogumYil: yil,
+                    dogumGun:
+                      gun && gun > maxGun ? String(maxGun) : f.dogumGun,
+                  };
+                });
+              }}
+              invalid={alanHatalari.dogumTarihi}
+              required
+              aria-label="Doğum yılı"
+            >
+              <option value="">Yıl</option>
+              {dogumYilSecenekleri().map((y) => (
+                <option key={y} value={String(y)}>
+                  {y}
+                </option>
+              ))}
+            </SelectField>
+          </div>
           <AlanHataMetni mesaj={alanMesajlari.dogumTarihi} />
-          <p className="text-xs text-slate-500 mt-1">En az 18 yaşında olmalısınız.</p>
+          <p className="text-xs text-slate-500 mt-1">
+            En az 18 yaşında olmalısınız.
+          </p>
         </div>
 
         <div ref={telefonRef} className="scroll-mt-28">

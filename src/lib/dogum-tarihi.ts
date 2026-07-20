@@ -5,6 +5,21 @@ export const DOGUM_MAX_YAS = 100;
 
 const ISO_GUN = /^\d{4}-\d{2}-\d{2}$/;
 
+export const DOGUM_AYLARI: { deger: number; etiket: string }[] = [
+  { deger: 1, etiket: "Ocak" },
+  { deger: 2, etiket: "Şubat" },
+  { deger: 3, etiket: "Mart" },
+  { deger: 4, etiket: "Nisan" },
+  { deger: 5, etiket: "Mayıs" },
+  { deger: 6, etiket: "Haziran" },
+  { deger: 7, etiket: "Temmuz" },
+  { deger: 8, etiket: "Ağustos" },
+  { deger: 9, etiket: "Eylül" },
+  { deger: 10, etiket: "Ekim" },
+  { deger: 11, etiket: "Kasım" },
+  { deger: 12, etiket: "Aralık" },
+];
+
 function yasHesapla(dogum: Date, bugun = new Date()): number {
   let yas = bugun.getFullYear() - dogum.getFullYear();
   const ay = bugun.getMonth() - dogum.getMonth();
@@ -26,6 +41,33 @@ export function dogumTarihiMinIso(bugun = new Date()): string {
   const d = new Date(bugun);
   d.setFullYear(d.getFullYear() - DOGUM_MAX_YAS);
   return d.toISOString().slice(0, 10);
+}
+
+/** Select için yıllar (yeniden eskiye) */
+export function dogumYilSecenekleri(bugun = new Date()): number[] {
+  const maxYil = bugun.getFullYear() - DOGUM_MIN_YAS;
+  const minYil = bugun.getFullYear() - DOGUM_MAX_YAS;
+  const yillar: number[] = [];
+  for (let y = maxYil; y >= minYil; y--) yillar.push(y);
+  return yillar;
+}
+
+export function dogumAyGunSayisi(yil: number, ay: number): number {
+  if (!yil || !ay) return 31;
+  return new Date(yil, ay, 0).getDate();
+}
+
+/** Gün / ay / yıl → YYYY-MM-DD (eksikse boş) */
+export function dogumParcalarindanIso(
+  gun: string | number,
+  ay: string | number,
+  yil: string | number
+): string {
+  const g = Number(gun);
+  const a = Number(ay);
+  const y = Number(yil);
+  if (!g || !a || !y) return "";
+  return `${y}-${String(a).padStart(2, "0")}-${String(g).padStart(2, "0")}`;
 }
 
 /**
