@@ -11,6 +11,8 @@ import { posthogOlayYakala } from "@/lib/posthog-client";
 
 const YONLENDIRME_SN = 5;
 const SIGN_UP_SESSION_KEY = "acil_ga_sign_up";
+/** Kayıt formunda da set edilir — Meta çift tetiklenmesin */
+const META_COMPLETE_REG_KEY = "acil_meta_complete_reg";
 
 function OnayIcerik() {
   const router = useRouter();
@@ -32,8 +34,20 @@ function OnayIcerik() {
     }
     /* Tam sayfa yüklemesinde GA page_view + (bir kez) dönüşüm olayları */
     gtagCekiciKayitOnayGoruntule(sehir || undefined, { donusumOlayi });
-    if (donusumOlayi) {
+    let metaDonusum = true;
+    try {
+      if (sessionStorage.getItem(META_COMPLETE_REG_KEY) === "1") {
+        metaDonusum = false;
+      } else {
+        sessionStorage.setItem(META_COMPLETE_REG_KEY, "1");
+      }
+    } catch {
+      /* private mode — yine de dene */
+    }
+    if (metaDonusum) {
       metaPixelCompleteRegistration({ content_name: "cekici_kayit" });
+    }
+    if (donusumOlayi) {
       posthogOlayYakala("cekici_kayit_onay", {
         rol: "cekici",
         ...(sehir ? { sehir } : {}),

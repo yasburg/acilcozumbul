@@ -16,6 +16,7 @@ import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import { telefonDogrulamaHatasi, telefonGecerliMi, telefonMaskele } from "@/lib/telefon";
 import { davetKoduNormalize } from "@/lib/davet-kodu";
 import { posthogKampanyaKaydet, posthogOlayYakala } from "@/lib/posthog-client";
+import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
 import {
   DOGUM_AYLARI,
   dogumAyGunSayisi,
@@ -23,6 +24,9 @@ import {
   dogumTarihiDogrula,
   dogumYilSecenekleri,
 } from "@/lib/dogum-tarihi";
+
+/** Meta CompleteRegistration bir kez (onay sayfası da aynı anahtarı kullanır) */
+const META_COMPLETE_REG_KEY = "acil_meta_complete_reg";
 
 type KayitAlan =
   | "ad"
@@ -404,6 +408,15 @@ function KayitIcerik() {
         sehir: form.sehir || undefined,
         davet_kodu: Boolean(form.davetKodu.trim()),
       });
+      /* Meta: onay URL’sine gitmeden önce tetikle (SPA / yönlendirme kaçaklarına karşı) */
+      try {
+        if (sessionStorage.getItem(META_COMPLETE_REG_KEY) !== "1") {
+          sessionStorage.setItem(META_COMPLETE_REG_KEY, "1");
+          metaPixelCompleteRegistration({ content_name: "cekici_kayit" });
+        }
+      } catch {
+        metaPixelCompleteRegistration({ content_name: "cekici_kayit" });
+      }
       /* Tam sayfa yüklemesi: Google Ads / GA «sayfa yükleme» dönüşümü için soft navigate kullanma */
       const sehirQs = form.sehir.trim()
         ? `?sehir=${encodeURIComponent(form.sehir.trim())}`
