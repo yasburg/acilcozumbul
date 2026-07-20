@@ -5864,19 +5864,19 @@
       "norm_label": "usekisiselverigizle()"
     },
     {
-      "label": "usePanelNavSayac.ts",
+      "label": "usePanelNavSayac.tsx",
       "file_type": "code",
-      "source_file": "src/hooks/usePanelNavSayac.ts",
+      "source_file": "src/hooks/usePanelNavSayac.tsx",
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_usepanelnavsayac",
       "community": 34,
-      "norm_label": "usepanelnavsayac.ts"
+      "norm_label": "usepanelnavsayac.tsx"
     },
     {
       "label": "PanelNavSayac",
       "file_type": "code",
-      "source_file": "src/hooks/usePanelNavSayac.ts",
+      "source_file": "src/hooks/usePanelNavSayac.tsx",
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_hooks_usepanelnavsayac_panelnavsayac",
@@ -5886,7 +5886,7 @@
     {
       "label": "usePanelNavSayac()",
       "file_type": "code",
-      "source_file": "src/hooks/usePanelNavSayac.ts",
+      "source_file": "src/hooks/usePanelNavSayac.tsx",
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_hooks_usepanelnavsayac_usepanelnavsayac",
@@ -5896,7 +5896,7 @@
     {
       "label": "NavSayacRozet()",
       "file_type": "code",
-      "source_file": "src/hooks/usePanelNavSayac.ts",
+      "source_file": "src/hooks/usePanelNavSayac.tsx",
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_hooks_usepanelnavsayac_navsayacrozet",
@@ -42178,7 +42178,7 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/hooks/usePanelNavSayac.ts",
+      "source_file": "src/hooks/usePanelNavSayac.tsx",
       "source_location": "L38",
       "weight": 1.0,
       "source": "src_hooks_usepanelnavsayac",
@@ -42188,7 +42188,7 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/hooks/usePanelNavSayac.ts",
+      "source_file": "src/hooks/usePanelNavSayac.tsx",
       "source_location": "L5",
       "weight": 1.0,
       "source": "src_hooks_usepanelnavsayac",
@@ -42198,7 +42198,7 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/hooks/usePanelNavSayac.ts",
+      "source_file": "src/hooks/usePanelNavSayac.tsx",
       "source_location": "L11",
       "weight": 1.0,
       "source": "src_hooks_usepanelnavsayac",
@@ -64112,5 +64112,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4b93a5dcebcafea2b850773dc9d7d818a66639ed"
+  "built_at_commit": "681a1883634e9f851c1e0d2a8d67d5a6bff88160"
 }
