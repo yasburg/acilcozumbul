@@ -9,7 +9,7 @@ import { CEREZ_ONAY_STORAGE_KEY } from "./cerez-onay";
 describe("meta pixel", () => {
   it("varsayılan pixel kimliği tanımlı", () => {
     expect(metaPixelYapilandirildi()).toBe(true);
-    expect(META_PIXEL_ID).toBe("1552497653179792");
+    expect(META_PIXEL_ID).toBe("486822841454810");
   });
 
   it("bootstrap revoke + init + çerez grant içerir", () => {

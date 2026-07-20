@@ -5,7 +5,7 @@ import {
 
 /** Meta (Facebook) Pixel kimliği */
 export const META_PIXEL_ID =
-  process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || "1552497653179792";
+  process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || "486822841454810";
 
 export function metaPixelYapilandirildi(): boolean {
   return Boolean(META_PIXEL_ID);
