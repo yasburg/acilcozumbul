@@ -100,8 +100,8 @@
     "semantic_hash": ""
   },
   "src/app/api/cekici/kayit/route.ts": {
-    "mtime": 1784280095.5497246,
-    "ast_hash": "67098b245f223b949da604edcc313040",
+    "mtime": 1784546451.3715918,
+    "ast_hash": "80da2670586e066bc819fd6b5cacfb33",
     "semantic_hash": ""
   },
   "src/app/api/cekici/konum/route.ts": {
@@ -190,8 +190,8 @@
     "semantic_hash": ""
   },
   "src/app/api/cekici/talep/[id]/katil/route.ts": {
-    "mtime": 1784228660.6466494,
-    "ast_hash": "301199e1a9da47a28a8ab0f6f4c6793b",
+    "mtime": 1784546475.3794746,
+    "ast_hash": "75846a5e1aa24faa57c99d10a8bf05c8",
     "semantic_hash": ""
   },
   "src/app/api/cekici/talep/[id]/konum-yol/route.ts": {
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "src/app/api/cekici/talepler/route.ts": {
-    "mtime": 1784478543.8812153,
-    "ast_hash": "01c163f535aa6cfa3ce348837fd66cf0",
+    "mtime": 1784546484.9002814,
+    "ast_hash": "b803a41adfa6dd7aea953ae095cb0053",
     "semantic_hash": ""
   },
   "src/app/api/cron/memnuniyet-sms/route.ts": {
@@ -1080,13 +1080,13 @@
     "semantic_hash": ""
   },
   "src/lib/ihale.test.ts": {
-    "mtime": 1784280506.115045,
-    "ast_hash": "df5d087d271da366338c41f169894942",
+    "mtime": 1784546464.8903105,
+    "ast_hash": "35f7d50d579dee244a437207efa6fe4e",
     "semantic_hash": ""
   },
   "src/lib/ihale.ts": {
-    "mtime": 1784478617.6208012,
-    "ast_hash": "9c72000c8fe52a65a23a49da80dada68",
+    "mtime": 1784546445.6902375,
+    "ast_hash": "7b1c57fb09e42daa79bbdc79479d2eea",
     "semantic_hash": ""
   },
   "src/lib/il-ilce.ts": {
@@ -1270,13 +1270,13 @@
     "semantic_hash": ""
   },
   "src/lib/sms.test.ts": {
-    "mtime": 1784478702.0234866,
-    "ast_hash": "1d7924981f650850be1a588c1391379c",
+    "mtime": 1784546512.764637,
+    "ast_hash": "25b17b851e480ff8500e426c4adc1597",
     "semantic_hash": ""
   },
   "src/lib/sms.ts": {
-    "mtime": 1784478589.5417361,
-    "ast_hash": "4d4880e2ccbecd0c78ded0a241f0bf75",
+    "mtime": 1784546450.2750993,
+    "ast_hash": "4049d3be2640d72c5e9f3ddf24d8f784",
     "semantic_hash": ""
   },
   "src/lib/sorun-akis-aciklama.ts": {
@@ -1320,8 +1320,8 @@
     "semantic_hash": ""
   },
   "src/lib/supabase/mappers.ts": {
-    "mtime": 1784478517.0879247,
-    "ast_hash": "9260f2a8fa167628ebf78843f56f26b0",
+    "mtime": 1784546452.4400525,
+    "ast_hash": "0bd009b3c09c96d3add683f01673c68b",
     "semantic_hash": ""
   },
   "src/lib/supabase/middleware.ts": {
@@ -1365,8 +1365,8 @@
     "semantic_hash": ""
   },
   "src/lib/types.ts": {
-    "mtime": 1784280056.74391,
-    "ast_hash": "734b67b971318e21ce06f2f6d0cf00c9",
+    "mtime": 1784546456.5350497,
+    "ast_hash": "43d6e137333217ad4bfe7ff3bd3d8407",
     "semantic_hash": ""
   },
   "src/lib/yasal-sirket.ts": {
@@ -1580,13 +1580,13 @@
     "semantic_hash": ""
   },
   "src/app/api/cekici/premium-sms/route.ts": {
-    "mtime": 1784067812.8565161,
-    "ast_hash": "d4d6f97e46d25d05f29fbeb6339ddf1a",
+    "mtime": 1784546469.214123,
+    "ast_hash": "c68d22897d98509248c7ace0cda47351",
     "semantic_hash": ""
   },
   "src/components/cekici/PremiumSmsAyarlari.tsx": {
-    "mtime": 1784067792.2603495,
-    "ast_hash": "16f328c05d630eaa2fe000300233d4cd",
+    "mtime": 1784546485.4515455,
+    "ast_hash": "ae407d5e7de97a0eec466748c1cee0bf",
     "semantic_hash": ""
   },
   "supabase/migrations/017_cekici_premium_sms.sql": {
@@ -1792,6 +1792,11 @@
   "src/lib/sorun-tipleri.test.ts": {
     "mtime": 1784492543.828173,
     "ast_hash": "be9f7cb56b9cb5c7c2caa30c3ebb4042",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/024_premium_sms_varsayilan_acik.sql": {
+    "mtime": 1784546444.168674,
+    "ast_hash": "403cc91d2c6a259acd2475bb944b3440",
     "semantic_hash": ""
   }
 }

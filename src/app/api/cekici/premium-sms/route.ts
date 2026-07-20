@@ -8,18 +8,8 @@ import {
   PANEL_BILDIRIM_KREDI,
   PREMIUM_SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
-import {
-  cekiciSifreOtpDogrula,
-  cekiciSifreOtpGonder,
-  cekiciSifreOtpTemizle,
-} from "@/lib/cekici-sifre-otp";
+import { cekiciGirisSifreKontrol } from "@/lib/cekici-auth";
 import { smsDurumu } from "@/lib/sms-provider";
-import {
-  otpBasariMesaji,
-  otpGelmediMesaji,
-  otpHataMesaji,
-  sendOtp,
-} from "@/lib/otp-gonder";
 import { telefonMaskele } from "@/lib/telefon";
 
 export async function GET() {
@@ -39,62 +29,7 @@ export async function GET() {
   });
 }
 
-/** OTP gönder — premium SMS açmak için telefon doğrulama */
-export async function POST(request: NextRequest) {
-  await ensureSeedData();
-  const cekici = await getCurrentCekici();
-  if (!cekici) {
-    return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
-  }
-
-  const body = await request.json().catch(() => ({}));
-  const islem = String(body.islem ?? "otp_gonder");
-
-  if (islem !== "otp_gonder") {
-    return NextResponse.json({ error: "Geçersiz işlem." }, { status: 400 });
-  }
-
-  const sonuc = await cekiciSifreOtpGonder(cekici.telefon);
-  if (!sonuc.ok) {
-    return NextResponse.json(
-      {
-        error: sonuc.hata,
-        yenidenGonderSn: sonuc.yenidenGonderSn,
-      },
-      { status: sonuc.yenidenGonderSn ? 429 : 400 }
-    );
-  }
-
-  const smsMesaj = `acilcozumbul.com: Premium SMS aktivasyon kodunuz: ${sonuc.kod}. 5 dakika gecerlidir.`;
-  const otp = await sendOtp(sonuc.telefon, sonuc.kod, {
-    aliciTipi: "cekici",
-    talepId: "premium-sms-otp",
-    smsMesaj,
-  });
-
-  if (!otp.basarili && !sonuc.gelistirmeKodu) {
-    return NextResponse.json(
-      {
-        error: otpHataMesaji(),
-        smsHatasi: otp.hata,
-        smsGonderildi: false,
-        otpKanal: otp.kanal,
-      },
-      { status: 503 }
-    );
-  }
-
-  return NextResponse.json({
-    smsGonderildi: otp.basarili,
-    otpKanal: otp.kanal,
-    yenidenGonderSn: sonuc.yenidenGonderSn,
-    gelistirmeKodu: otp.basarili ? undefined : sonuc.gelistirmeKodu,
-    mesaj: otp.basarili
-      ? otpBasariMesaji(telefonMaskele(cekici.telefon))
-      : otpGelmediMesaji(),
-  });
-}
-
+/** Premium SMS aç/kapa — hesap şifresi gerekir (SMS yok) */
 export async function PUT(request: NextRequest) {
   await ensureSeedData();
   const cekici = await getCurrentCekici();
@@ -104,33 +39,33 @@ export async function PUT(request: NextRequest) {
 
   const body = await request.json().catch(() => ({}));
   const premiumSmsAktif = Boolean(body.premiumSmsAktif);
+  const sifre = String(body.sifre ?? "");
+
+  if (!sifre.trim()) {
+    return NextResponse.json(
+      { error: "Değişiklik için hesap şifrenizi girin." },
+      { status: 400 }
+    );
+  }
+
+  const sifreOk = await cekiciGirisSifreKontrol(cekici, sifre);
+  if (!sifreOk) {
+    return NextResponse.json(
+      { error: "Şifre hatalı." },
+      { status: 401 }
+    );
+  }
+
+  cekici.premiumSmsAktif = premiumSmsAktif;
+  await updateCekici(cekici);
 
   if (!premiumSmsAktif) {
-    cekici.premiumSmsAktif = false;
-    await updateCekici(cekici);
     return NextResponse.json({
       premiumSmsAktif: false,
       bildirimKredi: PANEL_BILDIRIM_KREDI,
       mesaj: "Premium SMS kapatıldı. Talepler toplu SMS ile 1 kredi.",
     });
   }
-
-  const otpKod = String(body.otpKod ?? "").replace(/\D/g, "");
-  if (otpKod.length !== 6) {
-    return NextResponse.json(
-      { error: "Premium SMS için SMS doğrulama kodu gerekli." },
-      { status: 400 }
-    );
-  }
-
-  const dogru = await cekiciSifreOtpDogrula(cekici.telefon, otpKod);
-  if (!dogru.ok) {
-    return NextResponse.json({ error: dogru.hata }, { status: 400 });
-  }
-
-  cekici.premiumSmsAktif = true;
-  await updateCekici(cekici);
-  await cekiciSifreOtpTemizle(cekici.telefon);
 
   return NextResponse.json({
     premiumSmsAktif: true,

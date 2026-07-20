@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Btn, Card, Field } from "@/components/ui";
+import { Btn, Card, SifreAlani } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 
 type Durum = {
@@ -16,10 +16,9 @@ type Durum = {
 export function PremiumSmsAyarlari() {
   const [durum, setDurum] = useState<Durum | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
-  const [otpAsama, setOtpAsama] = useState(false);
-  const [otpKod, setOtpKod] = useState("");
-  const [yenidenSn, setYenidenSn] = useState(0);
-  const [gelistirmeKodu, setGelistirmeKodu] = useState<string | null>(null);
+  const [sifreAsama, setSifreAsama] = useState(false);
+  const [hedefAcik, setHedefAcik] = useState(false);
+  const [sifre, setSifre] = useState("");
   const [islem, setIslem] = useState(false);
   const [mesaj, setMesaj] = useState("");
   const [hata, setHata] = useState("");
@@ -34,39 +33,25 @@ export function PremiumSmsAyarlari() {
     void yukle().finally(() => setYukleniyor(false));
   }, []);
 
-  useEffect(() => {
-    if (yenidenSn <= 0) return;
-    const t = window.setInterval(() => {
-      setYenidenSn((s) => (s <= 1 ? 0 : s - 1));
-    }, 1000);
-    return () => window.clearInterval(t);
-  }, [yenidenSn]);
-
-  async function otpGonder() {
-    setIslem(true);
+  function sifreFormuAc(acikYap: boolean) {
+    setHedefAcik(acikYap);
+    setSifreAsama(true);
+    setSifre("");
     setHata("");
     setMesaj("");
-    try {
-      const res = await cekiciFetch("/api/cekici/premium-sms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ islem: "otp_gonder" }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Kod gönderilemedi.");
-      setOtpAsama(true);
-      setOtpKod("");
-      setYenidenSn(data.yenidenGonderSn ?? 60);
-      setGelistirmeKodu(data.gelistirmeKodu ?? null);
-      setMesaj(data.mesaj ?? "Doğrulama kodu gönderildi.");
-    } catch (e) {
-      setHata(e instanceof Error ? e.message : "Kod gönderilemedi.");
-    } finally {
-      setIslem(false);
-    }
   }
 
-  async function premiumAc() {
+  function sifreFormuKapat() {
+    setSifreAsama(false);
+    setSifre("");
+    setHata("");
+  }
+
+  async function kaydet() {
+    if (!sifre.trim()) {
+      setHata("Hesap şifrenizi girin.");
+      return;
+    }
     setIslem(true);
     setHata("");
     setMesaj("");
@@ -74,39 +59,16 @@ export function PremiumSmsAyarlari() {
       const res = await cekiciFetch("/api/cekici/premium-sms", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ premiumSmsAktif: true, otpKod }),
+        body: JSON.stringify({ premiumSmsAktif: hedefAcik, sifre }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Aktifleştirilemedi.");
+      if (!res.ok) throw new Error(data.error ?? "Kaydedilemedi.");
       setMesaj(data.mesaj);
-      setOtpAsama(false);
-      setOtpKod("");
-      setGelistirmeKodu(null);
+      setSifreAsama(false);
+      setSifre("");
       await yukle();
     } catch (e) {
-      setHata(e instanceof Error ? e.message : "Aktifleştirilemedi.");
-    } finally {
-      setIslem(false);
-    }
-  }
-
-  async function premiumKapat() {
-    setIslem(true);
-    setHata("");
-    setMesaj("");
-    try {
-      const res = await cekiciFetch("/api/cekici/premium-sms", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ premiumSmsAktif: false }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Kapatılamadı.");
-      setMesaj(data.mesaj);
-      setOtpAsama(false);
-      await yukle();
-    } catch (e) {
-      setHata(e instanceof Error ? e.message : "Kapatılamadı.");
+      setHata(e instanceof Error ? e.message : "Kaydedilemedi.");
     } finally {
       setIslem(false);
     }
@@ -136,7 +98,7 @@ export function PremiumSmsAyarlari() {
         <p className="text-xs text-slate-600 leading-relaxed mb-3">
           {durum.premiumSmsAktif
             ? `Yeni talepler anlık OTP SMS ile gelir. Bildirim başına ${durum.premiumKredi} kredi. İsterseniz kapatıp standart toplu SMS’e (${durum.panelKredi} kredi) dönebilirsiniz.`
-            : `Yeni talepler toplu SMS ile gelir (${durum.panelKredi} kredi). Anlık OTP SMS için Premium’i telefon doğrulamasıyla açın (${durum.premiumKredi} kredi).`}
+            : `Yeni talepler toplu SMS ile gelir (${durum.panelKredi} kredi). Anlık OTP SMS için Premium’i hesap şifrenizle açın (${durum.premiumKredi} kredi).`}
         </p>
 
         {hata && (
@@ -150,66 +112,49 @@ export function PremiumSmsAyarlari() {
           </p>
         )}
 
-        {durum.premiumSmsAktif ? (
-          <Btn
-            type="button"
-            onClick={() => void premiumKapat()}
-            disabled={islem}
-            className="!bg-slate-700 hover:!bg-slate-800"
-          >
-            {islem ? "Kaydediliyor…" : "Premium SMS’i kapat"}
-          </Btn>
-        ) : !otpAsama ? (
-          <Btn type="button" onClick={() => void otpGonder()} disabled={islem}>
-            {islem ? "Kod gönderiliyor…" : "Premium SMS’i aktif et"}
-          </Btn>
+        {!sifreAsama ? (
+          durum.premiumSmsAktif ? (
+            <Btn
+              type="button"
+              onClick={() => sifreFormuAc(false)}
+              disabled={islem}
+              className="!bg-slate-700 hover:!bg-slate-800"
+            >
+              Premium SMS’i kapat
+            </Btn>
+          ) : (
+            <Btn type="button" onClick={() => sifreFormuAc(true)} disabled={islem}>
+              Premium SMS’i aktif et
+            </Btn>
+          )
         ) : (
           <div className="space-y-3">
             <p className="text-xs text-slate-600">
-              {durum.telefon} numarasına gelen 6 haneli kodu girin.
+              {hedefAcik
+                ? "Premium SMS’i açmak için hesap şifrenizi girin."
+                : "Premium SMS’i kapatmak için hesap şifrenizi girin."}
             </p>
-            {gelistirmeKodu && (
-              <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                Geliştirme kodu:{" "}
-                <span className="font-mono font-bold">{gelistirmeKodu}</span>
-              </p>
-            )}
-            <Field
-              label="SMS doğrulama kodu"
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={otpKod}
-              onChange={(e) =>
-                setOtpKod(e.target.value.replace(/\D/g, "").slice(0, 6))
-              }
-              placeholder="123456"
+            <SifreAlani
+              label="Hesap şifresi"
+              value={sifre}
+              onChange={(e) => setSifre(e.target.value)}
+              autoComplete="current-password"
+              placeholder="Şifreniz"
             />
             <Btn
               type="button"
-              onClick={() => void premiumAc()}
-              disabled={islem || otpKod.length !== 6}
+              onClick={() => void kaydet()}
+              disabled={islem || !sifre.trim()}
             >
-              {islem ? "Doğrulanıyor…" : "Kodu onayla ve aktif et"}
+              {islem
+                ? "Kaydediliyor…"
+                : hedefAcik
+                  ? "Şifreyi onayla ve aç"
+                  : "Şifreyi onayla ve kapat"}
             </Btn>
             <button
               type="button"
-              onClick={() => void otpGonder()}
-              disabled={islem || yenidenSn > 0}
-              className="w-full text-sm text-amber-700 font-medium disabled:text-slate-400"
-            >
-              {yenidenSn > 0
-                ? `Kodu tekrar gönder (${yenidenSn}s)`
-                : "Kodu tekrar gönder"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setOtpAsama(false);
-                setOtpKod("");
-                setHata("");
-              }}
+              onClick={sifreFormuKapat}
               className="w-full text-sm text-slate-500 underline"
             >
               Vazgeç
