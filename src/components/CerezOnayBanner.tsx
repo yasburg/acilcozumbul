@@ -9,6 +9,10 @@ import {
 } from "@/lib/cerez-onay";
 import { posthogCerezSenkronize } from "@/lib/posthog-client";
 import { gtagCerezSenkronize } from "@/lib/gtag";
+import {
+  metaPixelCerezSenkronize,
+  metaPixelPageView,
+} from "@/lib/meta-pixel";
 
 type Gorunum = "ozet" | "ayarlar" | "onay";
 
@@ -16,6 +20,10 @@ function tercihKaydet(tercih: "tumu" | "zorunlu", kapat: () => void) {
   cerezOnayKaydet(tercih);
   posthogCerezSenkronize();
   gtagCerezSenkronize();
+  metaPixelCerezSenkronize();
+  if (tercih === "tumu") {
+    metaPixelPageView();
+  }
   kapat();
 }
 

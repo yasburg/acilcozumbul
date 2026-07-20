@@ -510,8 +510,8 @@
     "semantic_hash": ""
   },
   "src/app/layout.tsx": {
-    "mtime": 1784485345.4547276,
-    "ast_hash": "1b7a2c4f688c4a47a818ca8b037112ae",
+    "mtime": 1784581051.9735613,
+    "ast_hash": "d5615457ac125860e2c608f6b6e68c7f",
     "semantic_hash": ""
   },
   "src/app/manifest.ts": {
@@ -635,8 +635,8 @@
     "semantic_hash": ""
   },
   "src/components/CerezOnayBanner.tsx": {
-    "mtime": 1784488251.9253197,
-    "ast_hash": "e5ea07d19699e4a89f5043387d760630",
+    "mtime": 1784581058.449727,
+    "ast_hash": "d6800a7b2df700eb7dbbc34e67dfd425",
     "semantic_hash": ""
   },
   "src/components/DemoHeaderBadge.tsx": {
@@ -1822,6 +1822,21 @@
   "src/hooks/usePanelNavSayac.tsx": {
     "mtime": 1784547701.6519778,
     "ast_hash": "6859e7765476f3ed64bf18307663b5fe",
+    "semantic_hash": ""
+  },
+  "src/components/MetaPixel.tsx": {
+    "mtime": 1784581048.3141904,
+    "ast_hash": "985c8a2bc1953bcf0775f5008ca31489",
+    "semantic_hash": ""
+  },
+  "src/lib/meta-pixel.test.ts": {
+    "mtime": 1784581061.2085075,
+    "ast_hash": "203a26f8098b1ac6635876d324613a89",
+    "semantic_hash": ""
+  },
+  "src/lib/meta-pixel.ts": {
+    "mtime": 1784581047.2666748,
+    "ast_hash": "4abc4d03e0a6c64664e1d3be6f60dbca",
     "semantic_hash": ""
   }
 }

@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Geist } from "next/font/google";
 import { CerezOnayBanner } from "@/components/CerezOnayBanner";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { MetaPixel } from "@/components/MetaPixel";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import {
   SEO_ACIKLAMA,
@@ -116,6 +117,7 @@ export default function RootLayout({
           />
         ) : null}
         <GoogleAnalytics />
+        <MetaPixel />
         <PostHogProvider>{children}</PostHogProvider>
         <CerezOnayBanner />
       </body>

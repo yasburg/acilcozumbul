@@ -1,0 +1,70 @@
+import {
+  cerezAnalitikAktif,
+  cerezOnayOku,
+} from "./cerez-onay";
+
+/** Meta (Facebook) Pixel kimliği */
+export const META_PIXEL_ID =
+  process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || "1552497653179792";
+
+export function metaPixelYapilandirildi(): boolean {
+  return Boolean(META_PIXEL_ID);
+}
+
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void;
+    _fbq?: (...args: unknown[]) => void;
+  }
+}
+
+function fbqCagir(...args: unknown[]): void {
+  if (typeof window === "undefined") return;
+  if (typeof window.fbq === "function") {
+    window.fbq(...args);
+  }
+}
+
+/** Çerez tercihine göre Meta Pixel consent (grant / revoke) */
+export function metaPixelCerezSenkronize(): void {
+  if (typeof window === "undefined" || !metaPixelYapilandirildi()) return;
+
+  if (cerezAnalitikAktif()) {
+    fbqCagir("consent", "grant");
+    return;
+  }
+
+  if (cerezOnayOku() === "zorunlu") {
+    fbqCagir("consent", "revoke");
+  }
+}
+
+/** Analitik onayı varken PageView */
+export function metaPixelPageView(): void {
+  if (typeof window === "undefined") return;
+  if (!metaPixelYapilandirildi()) return;
+  if (!cerezAnalitikAktif()) return;
+  fbqCagir("track", "PageView");
+}
+
+/**
+ * Head / Script için bootstrap: queue + revoke varsayılan + init.
+ * Consent grant, çerez «tumu» ise hemen.
+ */
+export function metaPixelBootstrapInline(pixelId: string): string {
+  return `
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('consent','revoke');
+fbq('init','${pixelId}');
+try{
+  if(localStorage.getItem('acil_cerez_onay')==='tumu'){
+    fbq('consent','grant');
+    fbq('track','PageView');
+  }
+}catch(e){}
+`.trim();
+}
