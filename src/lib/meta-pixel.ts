@@ -48,6 +48,40 @@ export function metaPixelPageView(): void {
 }
 
 /**
+ * Müşteri talep formu tamamlandı → Meta standart olay «Lead».
+ */
+export function metaPixelLead(params?: {
+  content_name?: string;
+  value?: number;
+  currency?: string;
+}): void {
+  if (typeof window === "undefined") return;
+  if (!metaPixelYapilandirildi()) return;
+  if (!cerezAnalitikAktif()) return;
+  fbqCagir("track", "Lead", {
+    content_name: params?.content_name ?? "musteri_talep",
+    value: params?.value ?? 1.0,
+    currency: params?.currency ?? "TRY",
+  });
+}
+
+/**
+ * Hizmet veren kayıt onayı → Meta standart olay «CompleteRegistration».
+ */
+export function metaPixelCompleteRegistration(params?: {
+  content_name?: string;
+  status?: boolean;
+}): void {
+  if (typeof window === "undefined") return;
+  if (!metaPixelYapilandirildi()) return;
+  if (!cerezAnalitikAktif()) return;
+  fbqCagir("track", "CompleteRegistration", {
+    content_name: params?.content_name ?? "cekici_kayit",
+    status: params?.status ?? true,
+  });
+}
+
+/**
  * Head / Script için bootstrap: queue + revoke varsayılan + init.
  * Consent grant, çerez «tumu» ise hemen.
  */

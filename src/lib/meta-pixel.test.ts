@@ -21,4 +21,10 @@ describe("meta pixel", () => {
     expect(html).toContain(CEREZ_ONAY_STORAGE_KEY);
     expect(html).toContain("PageView");
   });
+
+  it("Lead ve CompleteRegistration export edilir", async () => {
+    const mod = await import("./meta-pixel");
+    expect(typeof mod.metaPixelLead).toBe("function");
+    expect(typeof mod.metaPixelCompleteRegistration).toBe("function");
+  });
 });

@@ -50,6 +50,7 @@ import {
   posthogOlayYakala,
 } from "@/lib/posthog-client";
 import { gtagAdsFiyatTeklifiDonusumu } from "@/lib/gtag";
+import { metaPixelLead } from "@/lib/meta-pixel";
 import {
   musteriProfilKaydet,
   musteriProfilOku,
@@ -1052,6 +1053,7 @@ function MusteriAnaSayfaIcerik() {
         bildirilen_sayisi: data.bildirilenSayisi ?? 0,
       });
       gtagAdsFiyatTeklifiDonusumu();
+      metaPixelLead({ content_name: form.sorunTipi || "musteri_talep" });
       try {
         sessionStorage.setItem(
           `acil_bekle_${data.id}`,

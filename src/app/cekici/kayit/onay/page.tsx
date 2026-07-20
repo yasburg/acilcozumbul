@@ -6,6 +6,7 @@ import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
 import { sehirKullanimAcikMi } from "@/lib/cekici-sehir-acilis";
 import { gtagCekiciKayitOnayGoruntule } from "@/lib/gtag";
+import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
 import { posthogOlayYakala } from "@/lib/posthog-client";
 
 const YONLENDIRME_SN = 5;
@@ -32,6 +33,7 @@ function OnayIcerik() {
     /* Tam sayfa yüklemesinde GA page_view + (bir kez) dönüşüm olayları */
     gtagCekiciKayitOnayGoruntule(sehir || undefined, { donusumOlayi });
     if (donusumOlayi) {
+      metaPixelCompleteRegistration({ content_name: "cekici_kayit" });
       posthogOlayYakala("cekici_kayit_onay", {
         rol: "cekici",
         ...(sehir ? { sehir } : {}),
