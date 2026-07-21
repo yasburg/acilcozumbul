@@ -11,3 +11,15 @@ export function cekiciPanelOzet(cekici: Cekici): CekiciPanelOzet {
     tokenOnizleme: `${token.slice(0, 8)}…`,
   };
 }
+
+/** Tester hesapları istatistik dışı; kayıt tarihine göre sıralı */
+export function cekiciPanelTesterAyir(liste: CekiciPanelOzet[]) {
+  const testerler = liste
+    .filter((c) => c.testerHesap)
+    .sort(
+      (a, b) =>
+        new Date(a.kayitTarihi).getTime() - new Date(b.kayitTarihi).getTime()
+    );
+  const cekiciler = liste.filter((c) => !c.testerHesap);
+  return { testerler, cekiciler };
+}

@@ -146,6 +146,11 @@ export default function PanelCekiciDetayPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-2xl font-bold">{cekici.ad}</h2>
+        {cekici.testerHesap && (
+          <span className="rounded-md bg-violet-200 px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-violet-900">
+            Tester
+          </span>
+        )}
         {cekici.rozetAktif && <OnayliCekiciRozeti />}
       </div>
 

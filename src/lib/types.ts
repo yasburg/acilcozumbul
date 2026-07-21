@@ -103,6 +103,8 @@ export interface Cekici {
   davetKodu?: string;
   /** Kayıtta kullanılan davet kodunun sahibi */
   davetEdenId?: string;
+  /** İç test hesabı — panel istatistiklerinden ayrı */
+  testerHesap?: boolean;
 }
 
 export type OdemeFatura = {

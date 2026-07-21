@@ -50,6 +50,7 @@ export type CekiciRow = {
   premium_sms_aktif?: boolean | null;
   davet_kodu?: string | null;
   davet_eden_id?: string | null;
+  tester_hesap?: boolean | null;
 };
 
 export type TalepRow = {
@@ -127,6 +128,7 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     premiumSmsAktif: r.premium_sms_aktif !== false,
     davetKodu: r.davet_kodu ?? undefined,
     davetEdenId: r.davet_eden_id ?? undefined,
+    testerHesap: Boolean(r.tester_hesap),
   };
 }
 
@@ -173,6 +175,7 @@ export function cekiciToRow(
     musaitlik_bitis: c.musaitlikBitis ?? null,
     musaitlik_gunler: c.musaitlikGunler ?? null,
     premium_sms_aktif: c.premiumSmsAktif !== false,
+    tester_hesap: c.testerHesap ?? false,
   };
   if (!opts?.migrationsOnly) {
     row.davet_kodu = c.davetKodu ?? null;

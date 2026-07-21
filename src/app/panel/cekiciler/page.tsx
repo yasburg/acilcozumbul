@@ -10,6 +10,7 @@ import {
   type GizlilikSeviye,
 } from "@/lib/kisisel-veri-gizle";
 import type { CekiciPanelOzet } from "@/lib/panel";
+import { cekiciPanelTesterAyir } from "@/lib/panel";
 import { PanelCekiciHarita } from "@/components/panel/PanelCekiciHarita";
 
 const PANEL_GIZLE_KEY = "acil_panel_kisisel_veri_gizli";
@@ -31,6 +32,58 @@ function sehirKarsilastir(
   if (siralama === "alfa") return a.sehir.localeCompare(b.sehir, "tr");
   if (b.adet !== a.adet) return b.adet - a.adet;
   return a.sehir.localeCompare(b.sehir, "tr");
+}
+
+function CekiciKart({
+  c,
+  seviye,
+  tester = false,
+}: {
+  c: CekiciPanelOzet;
+  seviye: GizlilikSeviye;
+  tester?: boolean;
+}) {
+  return (
+    <Link key={c.id} href={`/panel/cekiciler/${c.id}`}>
+      <Card
+        className={`hover:border-amber-300 transition ${
+          tester ? "border-violet-200 bg-violet-50/40" : ""
+        }`}
+      >
+        <div className="flex flex-wrap justify-between gap-2">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-semibold text-slate-900">
+                {adSoyadSatirGoster(c.ad, seviye)}
+              </p>
+              {tester && (
+                <span className="rounded-md bg-violet-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-900">
+                  Tester
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-slate-600">
+              {telefonGoster(c.telefon, seviye)}
+            </p>
+          </div>
+          <div className="text-right text-sm">
+            <p className="text-amber-600 font-bold">
+              {formatKredi(c.kredi)} kredi
+            </p>
+            <p className="text-slate-500">{c.sehir}</p>
+          </div>
+        </div>
+        <p className="text-xs text-slate-400 mt-2">
+          Kayıt: {new Date(c.kayitTarihi).toLocaleString("tr-TR")}
+          {c.hizmetBolgeleri && Object.keys(c.hizmetBolgeleri).length > 0
+            ? ` · ${Object.values(c.hizmetBolgeleri).flat().length} ilçe`
+            : c.hizmetIlceleri && c.hizmetIlceleri.length > 0
+              ? ` · ${c.hizmetIlceleri.length} ilçe`
+              : " · ilçe seçilmemiş"}
+        </p>
+      </Card>
+    </Link>
+  );
 }
 
 export default function PanelCekicilerPage() {
@@ -55,20 +108,25 @@ export default function PanelCekicilerPage() {
 
   const seviye: GizlilikSeviye = gizli ? "yari" : "yok";
 
+  const { testerler, cekiciler } = useMemo(
+    () => cekiciPanelTesterAyir(liste),
+    [liste]
+  );
+
   const sehirAdetleri = useMemo(() => {
     const map = new Map<string, number>();
-    for (const c of liste) {
+    for (const c of cekiciler) {
       const sehir = sehirEtiketi(c.sehir);
       map.set(sehir, (map.get(sehir) ?? 0) + 1);
     }
     return [...map.entries()]
       .map(([sehir, adet]) => ({ sehir, adet }))
       .sort((a, b) => sehirKarsilastir(a, b, siralama));
-  }, [liste, siralama]);
+  }, [cekiciler, siralama]);
 
   const gruplar = useMemo(() => {
     const map = new Map<string, CekiciPanelOzet[]>();
-    for (const c of liste) {
+    for (const c of cekiciler) {
       const sehir = sehirEtiketi(c.sehir);
       if (sehirFiltre && sehir !== sehirFiltre) continue;
       const mevcut = map.get(sehir);
@@ -82,7 +140,7 @@ export default function PanelCekicilerPage() {
         adet: cekiciler.length,
       }))
       .sort((a, b) => sehirKarsilastir(a, b, siralama));
-  }, [liste, sehirFiltre, siralama]);
+  }, [cekiciler, sehirFiltre, siralama]);
 
   const ozetSatirlar = useMemo(() => {
     if (!sehirFiltre) return sehirAdetleri;
@@ -108,10 +166,13 @@ export default function PanelCekicilerPage() {
           <h2 className="text-2xl font-bold">Çekiciler</h2>
           <p className="text-sm text-slate-500">
             Kayıt olan kullanıcılar — detay ve panele geçiş
-            {!loading && liste.length > 0
-              ? ` · ${liste.length} kayıt`
+            {!loading && cekiciler.length > 0
+              ? ` · ${cekiciler.length} kayıt`
               : ""}
-            {sehirFiltre && gosterilenAdet !== liste.length
+            {!loading && testerler.length > 0
+              ? ` · ${testerler.length} tester`
+              : ""}
+            {sehirFiltre && gosterilenAdet !== cekiciler.length
               ? ` · ${gosterilenAdet} gösteriliyor`
               : ""}
           </p>
@@ -146,7 +207,7 @@ export default function PanelCekicilerPage() {
               value={sehirFiltre}
               onChange={(e) => setSehirFiltre(e.target.value)}
             >
-              <option value="">Tüm şehirler ({liste.length})</option>
+              <option value="">Tüm şehirler ({cekiciler.length})</option>
               {sehirAdetleri.map(({ sehir, adet }) => (
                 <option key={sehir} value={sehir}>
                   {sehir} ({adet})
@@ -213,6 +274,28 @@ export default function PanelCekicilerPage() {
 
       {loading && <p className="text-sm text-slate-500">Yükleniyor…</p>}
 
+      {!loading && testerler.length > 0 && (
+        <section className="space-y-3 rounded-2xl border border-violet-200 bg-violet-50/30 p-4">
+          <div className="flex items-baseline justify-between gap-2">
+            <h3 className="text-sm font-bold uppercase tracking-wide text-violet-900">
+              Tester hesapları
+            </h3>
+            <span className="text-xs font-medium text-violet-700 tabular-nums">
+              {testerler.length} hesap · istatistik dışı
+            </span>
+          </div>
+          <p className="text-xs text-violet-800/80 leading-relaxed">
+            İlk kayıt olan test hesapları. Özet, harita ve şehir sayımlarına
+            dahil edilmez.
+          </p>
+          <div className="space-y-3">
+            {testerler.map((c) => (
+              <CekiciKart key={c.id} c={c} seviye={seviye} tester />
+            ))}
+          </div>
+        </section>
+      )}
+
       {!loading && liste.length === 0 && (
         <Card>
           <p className="text-slate-600 text-sm">Henüz kayıtlı çekici yok.</p>
@@ -225,7 +308,7 @@ export default function PanelCekicilerPage() {
         </Card>
       )}
 
-      {!loading && liste.length > 0 && gorunum === "ozet" && (
+      {!loading && cekiciler.length > 0 && gorunum === "ozet" && (
         <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
           <table className="min-w-full text-sm">
             <thead>
@@ -261,7 +344,7 @@ export default function PanelCekicilerPage() {
         </div>
       )}
 
-      {!loading && liste.length > 0 && gorunum === "harita" && (
+      {!loading && cekiciler.length > 0 && gorunum === "harita" && (
         <PanelCekiciHarita
           sehirAdetleri={ozetSatirlar}
           seciliSehir={sehirFiltre || undefined}
@@ -272,7 +355,7 @@ export default function PanelCekicilerPage() {
       )}
 
       {!loading &&
-        liste.length > 0 &&
+        cekiciler.length > 0 &&
         gorunum === "liste" &&
         gruplar.length === 0 && (
           <Card>
@@ -294,36 +377,7 @@ export default function PanelCekicilerPage() {
               </div>
               <div className="space-y-3">
                 {grup.cekiciler.map((c) => (
-                  <Link key={c.id} href={`/panel/cekiciler/${c.id}`}>
-                    <Card className="hover:border-amber-300 transition">
-                      <div className="flex flex-wrap justify-between gap-2">
-                        <div>
-                          <p className="font-semibold text-slate-900">
-                            {adSoyadSatirGoster(c.ad, seviye)}
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {telefonGoster(c.telefon, seviye)}
-                          </p>
-                        </div>
-                        <div className="text-right text-sm">
-                          <p className="text-amber-600 font-bold">
-                            {formatKredi(c.kredi)} kredi
-                          </p>
-                          <p className="text-slate-500">{c.sehir}</p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-slate-400 mt-2">
-                        Kayıt:{" "}
-                        {new Date(c.kayitTarihi).toLocaleString("tr-TR")}
-                        {c.hizmetBolgeleri &&
-                        Object.keys(c.hizmetBolgeleri).length > 0
-                          ? ` · ${Object.values(c.hizmetBolgeleri).flat().length} ilçe`
-                          : c.hizmetIlceleri && c.hizmetIlceleri.length > 0
-                            ? ` · ${c.hizmetIlceleri.length} ilçe`
-                            : " · ilçe seçilmemiş"}
-                      </p>
-                    </Card>
-                  </Link>
+                  <CekiciKart key={c.id} c={c} seviye={seviye} />
                 ))}
               </div>
             </section>
