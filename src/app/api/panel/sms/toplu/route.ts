@@ -4,19 +4,38 @@ import { netgsmSmsMesajGecerliMi } from "@/lib/sms-karakter";
 import { sendPanelTopluSms, smsDurumu } from "@/lib/sms-provider";
 import { createClient } from "@/lib/supabase/server";
 import { panelEpostaIzinli } from "@/lib/supabase/env";
+import {
+  kaydetTopluSmsGecmis,
+  topluSmsOncekiTelefonlariBul,
+} from "@/lib/toplu-sms-gecmis-db";
+import {
+  MIGRATION_027_MESAJ,
+  topluSmsGecmisTablolariVar,
+} from "@/lib/supabase/toplu-sms-schema";
 
 const MAX_ALICI = 500;
 
-export async function POST(request: Request) {
+async function panelKullanici() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user?.email || !panelEpostaIzinli(user.email)) {
+  if (!user?.email || !panelEpostaIzinli(user.email)) return null;
+  return user;
+}
+
+export async function POST(request: Request) {
+  const user = await panelKullanici();
+  if (!user) {
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
   }
 
-  let body: { mesaj?: string; telefonlar?: string[] };
+  let body: {
+    mesaj?: string;
+    telefonlar?: string[];
+    adlar?: Record<string, string>;
+    oncekileriAtla?: boolean;
+  };
   try {
     body = await request.json();
   } catch {
@@ -40,7 +59,7 @@ export async function POST(request: Request) {
     if (telefonGecerliMi(t)) gecerli.push(t);
     else if (String(ham ?? "").trim()) gecersiz.push(String(ham));
   }
-  const benzersiz = [...new Set(gecerli)];
+  let benzersiz = [...new Set(gecerli)];
 
   if (benzersiz.length === 0) {
     return NextResponse.json(
@@ -53,6 +72,25 @@ export async function POST(request: Request) {
       { error: `En fazla ${MAX_ALICI} alıcı gönderilebilir.` },
       { status: 400 }
     );
+  }
+
+  let oncekiAtlandi = 0;
+  const gecmisVar = await topluSmsGecmisTablolariVar();
+  if (body.oncekileriAtla && gecmisVar) {
+    const oncekiler = await topluSmsOncekiTelefonlariBul(benzersiz);
+    const oncekiSayisi = benzersiz.filter((t) => oncekiler.has(t)).length;
+    benzersiz = benzersiz.filter((t) => !oncekiler.has(t));
+    oncekiAtlandi = oncekiSayisi;
+    if (benzersiz.length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Tüm numaralar daha önce gönderilmiş; gönderilecek yeni numara kalmadı.",
+          oncekiAtlandi,
+        },
+        { status: 400 }
+      );
+    }
   }
 
   const durum = smsDurumu();
@@ -68,10 +106,35 @@ export async function POST(request: Request) {
 
   const sonuc = await sendPanelTopluSms(benzersiz, mesaj);
 
+  let listeId: string | null = null;
+  if (gecmisVar) {
+    try {
+      const adlar = body.adlar ?? {};
+      const kayit = await kaydetTopluSmsGecmis({
+        gonderenEposta: user.email,
+        mesaj,
+        mesajParca: mesajKontrol.parca,
+        mesajBirim: mesajKontrol.birim,
+        alicilar: sonuc.sonuclar.map((s) => ({
+          telefon: s.telefon,
+          ad: adlar[s.telefon] ?? null,
+          basarili: s.basarili,
+          hata: s.hata ?? null,
+        })),
+      });
+      listeId = kayit.listeId;
+    } catch (e) {
+      console.error("[toplu-sms] geçmiş kaydı başarısız", e);
+    }
+  }
+
   return NextResponse.json({
     ...sonuc,
     mesajBirim: mesajKontrol.birim,
     mesajParca: mesajKontrol.parca,
     gecersizAtlandi: gecersiz.length,
+    oncekiAtlandi,
+    listeId,
+    gecmisUyari: gecmisVar ? undefined : MIGRATION_027_MESAJ,
   });
 }
