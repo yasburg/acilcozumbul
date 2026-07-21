@@ -274,28 +274,6 @@ export default function PanelCekicilerPage() {
 
       {loading && <p className="text-sm text-slate-500">Yükleniyor…</p>}
 
-      {!loading && testerler.length > 0 && (
-        <section className="space-y-3 rounded-2xl border border-violet-200 bg-violet-50/30 p-4">
-          <div className="flex items-baseline justify-between gap-2">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-violet-900">
-              Tester hesapları
-            </h3>
-            <span className="text-xs font-medium text-violet-700 tabular-nums">
-              {testerler.length} hesap · istatistik dışı
-            </span>
-          </div>
-          <p className="text-xs text-violet-800/80 leading-relaxed">
-            İlk kayıt olan test hesapları. Özet, harita ve şehir sayımlarına
-            dahil edilmez.
-          </p>
-          <div className="space-y-3">
-            {testerler.map((c) => (
-              <CekiciKart key={c.id} c={c} seviye={seviye} tester />
-            ))}
-          </div>
-        </section>
-      )}
-
       {!loading && liste.length === 0 && (
         <Card>
           <p className="text-slate-600 text-sm">Henüz kayıtlı çekici yok.</p>
@@ -308,39 +286,71 @@ export default function PanelCekicilerPage() {
         </Card>
       )}
 
-      {!loading && cekiciler.length > 0 && gorunum === "ozet" && (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 text-left text-slate-500">
-                <th className="px-4 py-3 font-medium">Şehir</th>
-                <th className="px-4 py-3 font-medium text-right">
-                  Kayıt sayısı
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {ozetSatirlar.map(({ sehir, adet }) => (
-                <tr
-                  key={sehir}
-                  className="border-b border-slate-50 last:border-0"
-                >
-                  <td className="px-4 py-3 text-slate-900">{sehir}</td>
-                  <td className="px-4 py-3 text-right tabular-nums text-slate-700">
-                    {adet}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="border-t border-slate-200 bg-slate-50 font-semibold text-slate-900">
-                <td className="px-4 py-3">Toplam</td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {gosterilenAdet}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+      {!loading &&
+        (cekiciler.length > 0 || testerler.length > 0) &&
+        gorunum === "ozet" && (
+        <div className="space-y-4">
+          {cekiciler.length > 0 && (
+            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 text-left text-slate-500">
+                    <th className="px-4 py-3 font-medium">Şehir</th>
+                    <th className="px-4 py-3 font-medium text-right">
+                      Kayıt sayısı
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ozetSatirlar.map(({ sehir, adet }) => (
+                    <tr
+                      key={sehir}
+                      className="border-b border-slate-50 last:border-0"
+                    >
+                      <td className="px-4 py-3 text-slate-900">{sehir}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                        {adet}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t border-slate-200 bg-slate-50 font-semibold text-slate-900">
+                    <td className="px-4 py-3">Toplam</td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {gosterilenAdet}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+
+          {testerler.length > 0 && (
+            <div className="overflow-x-auto rounded-2xl border border-violet-200 bg-violet-50/40">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b border-violet-100 text-left text-violet-800">
+                    <th className="px-4 py-3 font-medium">Tester</th>
+                    <th className="px-4 py-3 font-medium text-right">Adet</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="px-4 py-3 text-violet-950">
+                      Tester hesapları
+                      <span className="block text-xs font-normal text-violet-700 mt-0.5">
+                        İstatistik dışı · şehir sayımlarına dahil değil
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums font-semibold text-violet-900">
+                      {testerler.length}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
@@ -382,6 +392,24 @@ export default function PanelCekicilerPage() {
               </div>
             </section>
           ))}
+
+          {testerler.length > 0 && (
+            <section className="space-y-3 rounded-2xl border border-violet-200 bg-violet-50/30 p-4">
+              <div className="flex items-baseline justify-between gap-2">
+                <h3 className="text-sm font-bold uppercase tracking-wide text-violet-900">
+                  Tester hesapları
+                </h3>
+                <span className="text-xs font-medium text-violet-700 tabular-nums">
+                  {testerler.length} hesap · istatistik dışı
+                </span>
+              </div>
+              <div className="space-y-3">
+                {testerler.map((c) => (
+                  <CekiciKart key={c.id} c={c} seviye={seviye} tester />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
     </div>
