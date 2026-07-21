@@ -134,7 +134,8 @@ export async function getCekicilerBildirimAdaylari(
 export async function countCekiciler(): Promise<number> {
   const { count, error } = await getSupabaseAdmin()
     .from("cekiciler")
-    .select("*", { count: "exact", head: true });
+    .select("*", { count: "exact", head: true })
+    .eq("tester_hesap", false);
   if (error) throw error;
   return count ?? 0;
 }
