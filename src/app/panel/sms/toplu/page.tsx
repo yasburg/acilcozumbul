@@ -10,7 +10,10 @@ import {
 } from "@/lib/sms-karakter";
 import {
   elleTelefonEkle,
+  excelAlicilariListeyeEkle,
   exceldenTopluSmsAliciOku,
+  topluSmsExcelSablonIndir,
+  type ExcelYukleOzet,
   type TopluSmsAlici,
 } from "@/lib/toplu-sms-excel";
 import { telefonMaskele } from "@/lib/telefon";
@@ -65,6 +68,7 @@ export default function PanelTopluSmsPage() {
   const [elleTel, setElleTel] = useState("");
   const [mesaj, setMesaj] = useState("");
   const [excelUyari, setExcelUyari] = useState("");
+  const [excelOzet, setExcelOzet] = useState<ExcelYukleOzet | null>(null);
   const [elleHata, setElleHata] = useState("");
   const [gonderiyor, setGonderiyor] = useState(false);
   const [sonuc, setSonuc] = useState<{
@@ -196,29 +200,27 @@ export default function PanelTopluSmsPage() {
 
   async function excelYukle(file: File | null) {
     setExcelUyari("");
+    setExcelOzet(null);
     setSonuc(null);
     if (!file) return;
     try {
       const buf = await file.arrayBuffer();
-      const { alicilar: yeni, uyari } = exceldenTopluSmsAliciOku(buf);
-      if (uyari) setExcelUyari(uyari);
-      setAlicilar((onceki) => {
-        const map = new Map<string, TopluSmsAlici>();
-        for (const a of onceki) {
-          if (!a.hata) map.set(a.telefon, a);
-        }
-        for (const a of yeni) {
-          if (a.hata) continue;
-          if (!map.has(a.telefon)) map.set(a.telefon, a);
-        }
-        const hatalilar = [
-          ...onceki.filter((a) => a.hata),
-          ...yeni.filter((a) => a.hata),
-        ];
-        return [...map.values(), ...hatalilar];
-      });
+      const { alicilar: yeni, ozet: dosyaOzet, uyari } =
+        exceldenTopluSmsAliciOku(buf);
+      if (uyari) {
+        setExcelUyari(uyari);
+        return;
+      }
+      const { alicilar: birlesik, ozet } = excelAlicilariListeyeEkle(
+        alicilar,
+        yeni,
+        dosyaOzet
+      );
+      setAlicilar(birlesik);
+      setExcelOzet(ozet);
     } catch {
       setExcelUyari("Excel okunamadı. .xlsx veya .csv deneyin.");
+      setExcelOzet(null);
     }
   }
 
@@ -243,6 +245,8 @@ export default function PanelTopluSmsPage() {
     setAlicilar([]);
     setSonuc(null);
     setHata("");
+    setExcelOzet(null);
+    setExcelUyari("");
     setOncekiSet(new Set());
   }
 
@@ -368,21 +372,57 @@ export default function PanelTopluSmsPage() {
       {sekme === "gonder" && (
         <>
           <Card className="space-y-3">
-            <h3 className="font-semibold text-slate-800">Excel yükle</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              İlk satır başlık olmalı. Zorunlu sütun:{" "}
-              <code className="bg-slate-100 px-1 rounded">telefon</code> (veya
-              tel / phone / gsm / cep). İsteğe bağlı:{" "}
-              <code className="bg-slate-100 px-1 rounded">ad</code>.
-            </p>
+            <div className="flex flex-wrap justify-between gap-2 items-start">
+              <div>
+                <h3 className="font-semibold text-slate-800">Excel yükle</h3>
+                <p className="text-xs text-slate-500 leading-relaxed mt-1">
+                  Şablonu indirip doldurun. Sütunlar:{" "}
+                  <code className="bg-slate-100 px-1 rounded">telefon</code>{" "}
+                  (zorunlu),{" "}
+                  <code className="bg-slate-100 px-1 rounded">ad</code>{" "}
+                  (isteğe bağlı).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => topluSmsExcelSablonIndir()}
+                className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50"
+              >
+                Şablonu indir
+              </button>
+            </div>
             <input
               type="file"
               accept=".xlsx,.xls,.csv"
               className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-amber-500 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
-              onChange={(e) => void excelYukle(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                void excelYukle(e.target.files?.[0] ?? null);
+                e.target.value = "";
+              }}
             />
             {excelUyari && (
               <p className="text-sm text-amber-700">{excelUyari}</p>
+            )}
+            {excelOzet && (
+              <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-2 text-sm text-slate-700 space-y-0.5">
+                <p className="font-medium text-slate-900">
+                  Yükleme özeti: {excelOzet.listeyeEklenen} numara listeye
+                  eklendi
+                </p>
+                <p className="text-xs text-slate-500">
+                  Dosyada {excelOzet.satirOkunan} satır ·{" "}
+                  {excelOzet.gecerli} geçerli
+                  {excelOzet.gecersiz > 0
+                    ? ` · ${excelOzet.gecersiz} geçersiz`
+                    : ""}
+                  {excelOzet.tekrarAtlandi > 0
+                    ? ` · ${excelOzet.tekrarAtlandi} dosya içi tekrar`
+                    : ""}
+                  {excelOzet.zatenListede > 0
+                    ? ` · ${excelOzet.zatenListede} zaten listedeydi`
+                    : ""}
+                </p>
+              </div>
             )}
           </Card>
 
