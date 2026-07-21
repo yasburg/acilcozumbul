@@ -112,22 +112,55 @@ function PanelIcerik() {
   const kartlar = [
     {
       label: "Kayıtlı çekici",
-      value: ozet.cekiciSayisi,
+      value: String(ozet.cekiciSayisi),
       href: "/panel/cekiciler",
       color: "text-amber-600",
+      sub: undefined as string | undefined,
+      cardClass: undefined as string | undefined,
     },
     {
       label: "Müşteri talebi",
-      value: ozet.talepSayisi,
+      value: String(ozet.talepSayisi),
       href: "/panel/talepler",
       color: "text-blue-600",
+      sub: undefined as string | undefined,
+      cardClass: undefined as string | undefined,
     },
     {
       label: "SMS kaydı",
-      value: ozet.smsSayisi,
+      value: String(ozet.smsSayisi),
       href: "/panel/sms",
       color: "text-emerald-600",
       sub: `${ozet.smsGonderilen} gönderildi`,
+      cardClass: undefined as string | undefined,
+    },
+    {
+      label: "SMS durumu",
+      value: ozet.smsDurum.gercekGonderim
+        ? "Aktif"
+        : "Kapalı",
+      href: "/panel/sms",
+      color: ozet.smsDurum.gercekGonderim
+        ? ozet.smsSaglik?.alarm
+          ? "text-red-600"
+          : "text-emerald-600"
+        : "text-amber-600",
+      sub: ozet.smsDurum.gercekGonderim
+        ? [
+            ozet.smsDurum.saglayici,
+            ozet.smsSaglik && ozet.smsSaglik.toplam > 0
+              ? `Son 24s hata: %${ozet.smsSaglik.hataOraniYuzde} (${ozet.smsSaglik.basarisiz}/${ozet.smsSaglik.toplam})`
+              : null,
+            ozet.smsSaglik?.alarm ? "Alarm eşiği aşıldı" : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")
+        : "Yapılandırılmamış — gönderim yapılmaz",
+      cardClass: ozet.smsDurum.gercekGonderim
+        ? ozet.smsSaglik?.alarm
+          ? "bg-red-50 border-red-200"
+          : "bg-emerald-50 border-emerald-200"
+        : "bg-amber-50 border-amber-200",
     },
   ];
 
@@ -139,34 +172,6 @@ function PanelIcerik() {
           Kullanıcı ve talep verilerine buradan ulaşın.
         </p>
       </div>
-
-      <Card
-        className={
-          ozet.smsDurum.gercekGonderim
-            ? ozet.smsSaglik?.alarm
-              ? "bg-red-50 border-red-200"
-              : "bg-emerald-50 border-emerald-200"
-            : "bg-amber-50 border-amber-200"
-        }
-      >
-        <p className="text-sm font-medium text-slate-800">
-          SMS:{" "}
-          {ozet.smsDurum.gercekGonderim
-            ? `Aktif (${ozet.smsDurum.saglayici})`
-            : "Yapılandırılmamış — gönderim yapılmaz"}
-        </p>
-        {ozet.smsSaglik && ozet.smsSaglik.toplam > 0 && (
-          <p
-            className={`text-xs mt-1 ${
-              ozet.smsSaglik.alarm ? "text-red-700 font-semibold" : "text-slate-600"
-            }`}
-          >
-            Son 24 saat hata oranı: %{ozet.smsSaglik.hataOraniYuzde} (
-            {ozet.smsSaglik.basarisiz}/{ozet.smsSaglik.toplam})
-            {ozet.smsSaglik.alarm && " — alarm eşiği aşıldı"}
-          </p>
-        )}
-      </Card>
 
       {ozet.huni && (
         <Card>
@@ -209,14 +214,18 @@ function PanelIcerik() {
         </Card>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kartlar.map((k) => (
-          <Link key={k.href} href={k.href}>
-            <Card className="hover:border-amber-300 transition h-full">
+          <Link key={k.label} href={k.href}>
+            <Card
+              className={`hover:border-amber-300 transition h-full ${k.cardClass ?? ""}`}
+            >
               <p className="text-sm text-slate-500">{k.label}</p>
               <p className={`text-3xl font-bold mt-1 ${k.color}`}>{k.value}</p>
               {k.sub && (
-                <p className="text-xs text-slate-500 mt-1">{k.sub}</p>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  {k.sub}
+                </p>
               )}
             </Card>
           </Link>

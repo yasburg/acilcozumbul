@@ -29,11 +29,12 @@ export async function GET() {
     ]);
 
   const huni = await funnelOzetHesapla(talepler30, 30);
-  const hizmetVerenler = hizmetVerenSayimHesapla(cekiciler);
+  const gercekCekiciler = cekiciler.filter((c) => !c.testerHesap);
+  const hizmetVerenler = hizmetVerenSayimHesapla(gercekCekiciler);
   const sms24 = sms7.filter((s) => s.gonderim >= since24);
 
   return NextResponse.json({
-    cekiciSayisi: cekiciler.length,
+    cekiciSayisi: gercekCekiciler.length,
     talepSayisi,
     smsSayisi,
     smsGonderilen,
