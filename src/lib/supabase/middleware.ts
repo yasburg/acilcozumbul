@@ -5,6 +5,17 @@ import {
   supabaseYapilandirildi,
 } from "./env";
 
+/** getUser / signOut ile yazılan oturum çerezlerini yeni yanıta taşı */
+function oturumCerezleriniKopyala(
+  kaynak: NextResponse,
+  hedef: NextResponse
+): NextResponse {
+  kaynak.cookies.getAll().forEach(({ name, value }) => {
+    hedef.cookies.set(name, value);
+  });
+  return hedef;
+}
+
 export async function updatePanelSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isPanelGiris =
@@ -62,7 +73,7 @@ export async function updatePanelSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const yetkili = user && panelEpostaIzinli(user.email);
+  const yetkili = Boolean(user && panelEpostaIzinli(user.email));
 
   if (user && !yetkili) {
     await supabase.auth.signOut();
@@ -70,19 +81,22 @@ export async function updatePanelSession(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/panel";
       url.searchParams.set("hata", "yetkisiz");
-      return NextResponse.redirect(url);
+      return oturumCerezleriniKopyala(response, NextResponse.redirect(url));
     }
   }
 
   if (!yetkili && isPanelApi && !isCikisApi && !isOturumApi && !isGirisApi) {
-    return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
+    return oturumCerezleriniKopyala(
+      response,
+      NextResponse.json({ error: "Giriş gerekli." }, { status: 401 })
+    );
   }
 
   if (!yetkili && isPanelPage && !isPanelGiris) {
     const url = request.nextUrl.clone();
     url.pathname = "/panel";
     url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
+    return oturumCerezleriniKopyala(response, NextResponse.redirect(url));
   }
 
   if (yetkili && pathname === "/panel/giris") {
@@ -90,7 +104,7 @@ export async function updatePanelSession(request: NextRequest) {
     const next = request.nextUrl.searchParams.get("next");
     url.pathname = next?.startsWith("/panel") ? next : "/panel";
     url.search = "";
-    return NextResponse.redirect(url);
+    return oturumCerezleriniKopyala(response, NextResponse.redirect(url));
   }
 
   return response;

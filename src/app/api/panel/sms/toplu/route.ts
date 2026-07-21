@@ -2,10 +2,20 @@ import { NextResponse } from "next/server";
 import { telefonGecerliMi, telefonNormalize } from "@/lib/telefon";
 import { netgsmSmsMesajGecerliMi } from "@/lib/sms-karakter";
 import { sendPanelTopluSms, smsDurumu } from "@/lib/sms-provider";
+import { createClient } from "@/lib/supabase/server";
+import { panelEpostaIzinli } from "@/lib/supabase/env";
 
 const MAX_ALICI = 500;
 
 export async function POST(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email || !panelEpostaIzinli(user.email)) {
+    return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
+  }
+
   let body: { mesaj?: string; telefonlar?: string[] };
   try {
     body = await request.json();

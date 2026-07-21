@@ -109,6 +109,15 @@ export default function PanelTopluSmsPage() {
 
     setGonderiyor(true);
     try {
+      const oturumRes = await fetch("/api/panel/oturum", {
+        credentials: "include",
+      });
+      const oturum = await oturumRes.json().catch(() => ({ yetkili: false }));
+      if (!oturum?.yetkili) {
+        setHata("Oturum sona ermiş. Tekrar giriş yapıp yeniden deneyin.");
+        return;
+      }
+
       const res = await fetch("/api/panel/sms/toplu", {
         method: "POST",
         credentials: "include",
@@ -118,7 +127,12 @@ export default function PanelTopluSmsPage() {
           telefonlar: gecerliAlicilar.map((a) => a.telefon),
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        throw new Error(
+          "Oturum sona ermiş. Tekrar giriş yapıp yeniden deneyin."
+        );
+      }
       if (!res.ok) throw new Error(data.error ?? "Gönderim başarısız.");
       setSonuc({
         basarili: data.basarili ?? 0,
