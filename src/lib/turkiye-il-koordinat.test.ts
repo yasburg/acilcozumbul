@@ -24,6 +24,13 @@ describe("turkiye-il-koordinat", () => {
     expect(r100).toBeLessThan(r1000);
     /* 100→1000 (10×) doğrusal olsaydı yarıçap farkı çok büyürdü; log sıkıştırır */
     expect(r1000 - r100).toBeLessThan(r100 - r1);
-    expect(r1000).toBe(72);
+    expect(r1000).toBe(36);
+  });
+
+  it("İstanbul için Avrupa ve Anadolu noktası döner", async () => {
+    const mod = await import("./turkiye-il-koordinat");
+    const noktalar = mod.haritaSehirNoktalari("İstanbul");
+    expect(noktalar).toHaveLength(2);
+    expect(noktalar[0]!.lon).toBeLessThan(noktalar[1]!.lon);
   });
 });

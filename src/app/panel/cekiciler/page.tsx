@@ -39,7 +39,7 @@ export default function PanelCekicilerPage() {
   const [gizli, setGizli] = useState(false);
   const [sehirFiltre, setSehirFiltre] = useState("");
   const [siralama, setSiralama] = useState<SehirSiralama>("adet");
-  const [gorunum, setGorunum] = useState<Gorunum>("liste");
+  const [gorunum, setGorunum] = useState<Gorunum>("ozet");
 
   useEffect(() => {
     try {

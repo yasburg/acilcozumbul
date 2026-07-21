@@ -1,5 +1,6 @@
 import {
   haritaYaricapLog,
+  haritaSehirNoktalari,
   TURKIYE_HARITA,
   TURKIYE_HARITA_OUTLINE,
   ilKoordinatBul,
@@ -7,6 +8,14 @@ import {
 } from "@/lib/turkiye-il-koordinat";
 
 type SehirAdet = { sehir: string; adet: number };
+
+type HaritaNokta = SehirAdet & {
+  noktaId: string;
+  x: number;
+  y: number;
+  r: number;
+  etiketGoster: boolean;
+};
 
 /** Google Analytics benzeri renkler */
 const RENK = {
@@ -28,15 +37,22 @@ export function PanelCekiciHarita({
   onSehirSec?: (sehir: string) => void;
 }) {
   const maxAdet = Math.max(0, ...sehirAdetleri.map((s) => s.adet));
-  const noktalar = sehirAdetleri
-    .map((s) => {
-      const koor = ilKoordinatBul(s.sehir);
-      if (!koor) return null;
-      const { x, y } = turkiyeProjeksiyon(koor.lon, koor.lat);
+  const noktalar: HaritaNokta[] = sehirAdetleri
+    .flatMap((s) => {
+      const koors = haritaSehirNoktalari(s.sehir);
       const r = haritaYaricapLog(s.adet, maxAdet);
-      return { ...s, x, y, r };
+      return koors.map((koor, i) => {
+        const { x, y } = turkiyeProjeksiyon(koor.lon, koor.lat);
+        return {
+          ...s,
+          noktaId: `${s.sehir}-${i}`,
+          x,
+          y,
+          r,
+          etiketGoster: i === 0,
+        };
+      });
     })
-    .filter((n): n is NonNullable<typeof n> => n != null)
     .sort((a, b) => b.r - a.r);
 
   const eslesmeyen = sehirAdetleri.filter((s) => !ilKoordinatBul(s.sehir));
@@ -59,7 +75,6 @@ export function PanelCekiciHarita({
 
           <rect width={width} height={height} fill={RENK.zemin} />
 
-          {/* Natural Earth Türkiye silüeti */}
           <path
             d={TURKIYE_HARITA_OUTLINE}
             fill={RENK.kara}
@@ -69,13 +84,12 @@ export function PanelCekiciHarita({
             filter="url(#harita-golge)"
           />
 
-          {/* Kayıt baloncukları — alttan üste */}
           {noktalar.map((n) => {
             const secili = seciliSehir === n.sehir;
             const renk = secili ? RENK.maviSecili : RENK.mavi;
             return (
               <g
-                key={n.sehir}
+                key={n.noktaId}
                 transform={`translate(${n.x}, ${n.y})`}
                 className={onSehirSec ? "cursor-pointer" : undefined}
                 onClick={() => onSehirSec?.(n.sehir)}
@@ -91,53 +105,49 @@ export function PanelCekiciHarita({
                   strokeOpacity={0.45}
                   strokeWidth={1}
                 />
-                <circle
-                  r={5}
-                  fill="#ffffff"
-                  stroke={renk}
-                  strokeWidth={2}
-                />
+                <circle r={3.5} fill="#ffffff" stroke={renk} strokeWidth={1.5} />
               </g>
             );
           })}
 
-          {/* Şehir etiketleri — baloncukların üstünde */}
-          {noktalar.map((n) => {
-            const secili = seciliSehir === n.sehir;
-            return (
-              <g
-                key={`label-${n.sehir}`}
-                transform={`translate(${n.x}, ${n.y + n.r + 14})`}
-                className={onSehirSec ? "cursor-pointer" : undefined}
-                onClick={() => onSehirSec?.(n.sehir)}
-              >
-                <text
-                  textAnchor="middle"
-                  className="select-none"
-                  fill={secili ? RENK.maviSecili : RENK.etiket}
-                  fontSize={12}
-                  fontWeight={secili ? 700 : 500}
+          {noktalar
+            .filter((n) => n.etiketGoster)
+            .map((n) => {
+              const secili = seciliSehir === n.sehir;
+              return (
+                <g
+                  key={`label-${n.noktaId}`}
+                  transform={`translate(${n.x}, ${n.y + n.r + 12})`}
+                  className={onSehirSec ? "cursor-pointer" : undefined}
+                  onClick={() => onSehirSec?.(n.sehir)}
                 >
-                  {n.sehir}
-                </text>
-                <text
-                  textAnchor="middle"
-                  y={14}
-                  className="select-none tabular-nums"
-                  fill={secili ? RENK.maviSecili : "#80868b"}
-                  fontSize={11}
-                  fontWeight={600}
-                >
-                  {n.adet} kayıt
-                </text>
-              </g>
-            );
-          })}
+                  <text
+                    textAnchor="middle"
+                    className="select-none"
+                    fill={secili ? RENK.maviSecili : RENK.etiket}
+                    fontSize={11}
+                    fontWeight={secili ? 700 : 500}
+                  >
+                    {n.sehir}
+                  </text>
+                  <text
+                    textAnchor="middle"
+                    y={13}
+                    className="select-none tabular-nums"
+                    fill={secili ? RENK.maviSecili : "#80868b"}
+                    fontSize={10}
+                    fontWeight={600}
+                  >
+                    {n.adet} kayıt
+                  </text>
+                </g>
+              );
+            })}
         </svg>
       </div>
       <p className="text-xs text-slate-500">
-        Daire boyutu kayıt sayısına göre logaritmik ölçeklenir (Google Analytics
-        benzeri). Şehre tıklayınca filtre uygulanır.
+        Daire boyutu kayıt sayısına göre logaritmik ölçeklenir. Şehre tıklayınca
+        filtre uygulanır.
       </p>
       {eslesmeyen.length > 0 && (
         <p className="text-xs text-amber-700">
