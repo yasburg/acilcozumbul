@@ -10,12 +10,13 @@ import {
   type GizlilikSeviye,
 } from "@/lib/kisisel-veri-gizle";
 import type { CekiciPanelOzet } from "@/lib/panel";
+import { PanelCekiciHarita } from "@/components/panel/PanelCekiciHarita";
 
 const PANEL_GIZLE_KEY = "acil_panel_kisisel_veri_gizli";
 const SEHIR_YOK = "Belirtilmemiş";
 
 type SehirSiralama = "adet" | "alfa";
-type Gorunum = "liste" | "ozet";
+type Gorunum = "liste" | "ozet" | "harita";
 
 function sehirEtiketi(sehir: string | undefined | null): string {
   const s = (sehir ?? "").trim();
@@ -194,6 +195,18 @@ export default function PanelCekicilerPage() {
             >
               Özet
             </button>
+            <button
+              type="button"
+              onClick={() => setGorunum("harita")}
+              aria-pressed={gorunum === "harita"}
+              className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                gorunum === "harita"
+                  ? "bg-slate-900 text-white"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Harita
+            </button>
           </div>
         </div>
       )}
@@ -246,6 +259,16 @@ export default function PanelCekicilerPage() {
             </tfoot>
           </table>
         </div>
+      )}
+
+      {!loading && liste.length > 0 && gorunum === "harita" && (
+        <PanelCekiciHarita
+          sehirAdetleri={ozetSatirlar}
+          seciliSehir={sehirFiltre || undefined}
+          onSehirSec={(sehir) =>
+            setSehirFiltre((onceki) => (onceki === sehir ? "" : sehir))
+          }
+        />
       )}
 
       {!loading &&
