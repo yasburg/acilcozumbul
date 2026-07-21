@@ -1005,11 +1005,30 @@ export default function CekiciPanelTabs() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="hesap-sil-onay-baslik"
+              onClick={() => {
+                if (hesapSiliyor || hesapSilKodGonderiliyor) return;
+                hesapSilSifirla();
+              }}
             >
-              <Card className="w-full max-w-md shadow-xl space-y-4 max-h-[90dvh] overflow-y-auto">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
-                  Adım {hesapSilAdim} / 4
-                </p>
+              <div
+                className="relative w-full max-w-md"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Card className="relative shadow-xl space-y-4 max-h-[90dvh] overflow-y-auto">
+                  <button
+                    type="button"
+                    aria-label="Kapat"
+                    className="absolute right-3 top-3 z-10 flex size-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40"
+                    disabled={hesapSiliyor || hesapSilKodGonderiliyor}
+                    onClick={hesapSilSifirla}
+                  >
+                    <span aria-hidden className="text-xl leading-none">
+                      ×
+                    </span>
+                  </button>
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400 pr-8">
+                    Adım {hesapSilAdim} / 4
+                  </p>
 
                 {hesapSilAdim === 1 && (
                   <>
@@ -1235,7 +1254,8 @@ export default function CekiciPanelTabs() {
                     </div>
                   </>
                 )}
-              </Card>
+                </Card>
+              </div>
             </div>
           )}
         </div>
