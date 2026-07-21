@@ -1,66 +1,22 @@
 import {
   haritaYaricapLog,
   TURKIYE_HARITA,
+  TURKIYE_HARITA_OUTLINE,
   ilKoordinatBul,
   turkiyeProjeksiyon,
 } from "@/lib/turkiye-il-koordinat";
 
 type SehirAdet = { sehir: string; adet: number };
 
-/**
- * Basitleştirilmiş Türkiye kara silüeti (WGS84 → aynı projeksiyon).
- * Kabaca kıyı hattı; illüstratif panel haritası için yeterli.
- */
-const TURKIYE_SILUET_LON_LAT: [number, number][] = [
-  [26.0, 41.85],
-  [26.55, 41.7],
-  [27.5, 41.75],
-  [28.0, 41.95],
-  [29.1, 41.25],
-  [29.9, 41.35],
-  [31.2, 41.55],
-  [32.5, 41.75],
-  [33.8, 42.05],
-  [35.0, 42.0],
-  [36.2, 41.55],
-  [37.5, 41.15],
-  [38.8, 41.05],
-  [40.0, 41.15],
-  [41.2, 41.35],
-  [42.5, 41.3],
-  [43.5, 41.15],
-  [44.2, 40.0],
-  [44.5, 39.5],
-  [44.3, 37.6],
-  [43.5, 37.1],
-  [42.5, 37.2],
-  [41.0, 37.0],
-  [40.0, 36.9],
-  [38.5, 36.7],
-  [36.5, 36.0],
-  [36.0, 35.9],
-  [35.5, 36.2],
-  [34.5, 36.3],
-  [33.0, 36.2],
-  [32.0, 36.5],
-  [30.5, 36.2],
-  [29.2, 36.6],
-  [28.0, 36.7],
-  [27.2, 37.0],
-  [26.5, 37.8],
-  [26.2, 38.5],
-  [26.4, 39.3],
-  [26.1, 39.8],
-  [26.0, 40.5],
-  [26.0, 41.85],
-];
-
-function siluetPath(): string {
-  return TURKIYE_SILUET_LON_LAT.map(([lon, lat], i) => {
-    const { x, y } = turkiyeProjeksiyon(lon, lat);
-    return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(" ") + " Z";
-}
+/** Google Analytics benzeri renkler */
+const RENK = {
+  zemin: "#f8f9fa",
+  kara: "#ffffff",
+  sinir: "#dadce0",
+  etiket: "#5f6368",
+  mavi: "#1a73e8",
+  maviSecili: "#174ea6",
+} as const;
 
 export function PanelCekiciHarita({
   sehirAdetleri,
@@ -81,7 +37,6 @@ export function PanelCekiciHarita({
       return { ...s, x, y, r };
     })
     .filter((n): n is NonNullable<typeof n> => n != null)
-    /* Büyük daireler altta kalsın, küçükler üstte okunur */
     .sort((a, b) => b.r - a.r);
 
   const eslesmeyen = sehirAdetleri.filter((s) => !ilKoordinatBul(s.sehir));
@@ -89,23 +44,35 @@ export function PanelCekiciHarita({
 
   return (
     <div className="space-y-2">
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-auto min-h-[240px]"
+          className="w-full h-auto min-h-[280px]"
           role="img"
           aria-label="Şehir bazında çekici kayıt haritası"
         >
-          <rect width={width} height={height} fill="#e8f1f8" />
+          <defs>
+            <filter id="harita-golge" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1" stdDeviation="2" floodOpacity="0.08" />
+            </filter>
+          </defs>
+
+          <rect width={width} height={height} fill={RENK.zemin} />
+
+          {/* Natural Earth Türkiye silüeti */}
           <path
-            d={siluetPath()}
-            fill="#f8fafc"
-            stroke="#94a3b8"
-            strokeWidth={2}
+            d={TURKIYE_HARITA_OUTLINE}
+            fill={RENK.kara}
+            stroke={RENK.sinir}
+            strokeWidth={1.2}
             strokeLinejoin="round"
+            filter="url(#harita-golge)"
           />
+
+          {/* Kayıt baloncukları — alttan üste */}
           {noktalar.map((n) => {
             const secili = seciliSehir === n.sehir;
+            const renk = secili ? RENK.maviSecili : RENK.mavi;
             return (
               <g
                 key={n.sehir}
@@ -118,40 +85,59 @@ export function PanelCekiciHarita({
                 </title>
                 <circle
                   r={n.r}
-                  fill={secili ? "#f59e0b" : "#fbbf24"}
-                  fillOpacity={0.85}
-                  stroke={secili ? "#b45309" : "#d97706"}
-                  strokeWidth={secili ? 2.5 : 1.5}
+                  fill={renk}
+                  fillOpacity={secili ? 0.38 : 0.28}
+                  stroke={renk}
+                  strokeOpacity={0.45}
+                  strokeWidth={1}
                 />
+                <circle
+                  r={5}
+                  fill="#ffffff"
+                  stroke={renk}
+                  strokeWidth={2}
+                />
+              </g>
+            );
+          })}
+
+          {/* Şehir etiketleri — baloncukların üstünde */}
+          {noktalar.map((n) => {
+            const secili = seciliSehir === n.sehir;
+            return (
+              <g
+                key={`label-${n.sehir}`}
+                transform={`translate(${n.x}, ${n.y + n.r + 14})`}
+                className={onSehirSec ? "cursor-pointer" : undefined}
+                onClick={() => onSehirSec?.(n.sehir)}
+              >
                 <text
                   textAnchor="middle"
-                  dominantBaseline="central"
                   className="select-none"
-                  fill="#78350f"
-                  fontSize={Math.max(11, Math.min(16, n.r * 0.55))}
-                  fontWeight={700}
+                  fill={secili ? RENK.maviSecili : RENK.etiket}
+                  fontSize={12}
+                  fontWeight={secili ? 700 : 500}
                 >
-                  {n.adet}
+                  {n.sehir}
                 </text>
-                {n.r >= 22 && (
-                  <text
-                    textAnchor="middle"
-                    y={n.r + 12}
-                    fill="#334155"
-                    fontSize={11}
-                    fontWeight={600}
-                  >
-                    {n.sehir}
-                  </text>
-                )}
+                <text
+                  textAnchor="middle"
+                  y={14}
+                  className="select-none tabular-nums"
+                  fill={secili ? RENK.maviSecili : "#80868b"}
+                  fontSize={11}
+                  fontWeight={600}
+                >
+                  {n.adet} kayıt
+                </text>
               </g>
             );
           })}
         </svg>
       </div>
       <p className="text-xs text-slate-500">
-        Daire boyutu kayıt sayısına göre logaritmik ölçeklenir. Şehre tıklayınca
-        filtre uygulanır.
+        Daire boyutu kayıt sayısına göre logaritmik ölçeklenir (Google Analytics
+        benzeri). Şehre tıklayınca filtre uygulanır.
       </p>
       {eslesmeyen.length > 0 && (
         <p className="text-xs text-amber-700">

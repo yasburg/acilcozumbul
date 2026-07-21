@@ -1,3 +1,4 @@
+import turkiyeHaritaOutline from "@/data/turkiye-harita-outline.json";
 import turkiyeIlKoordinat from "@/data/turkiye-il-koordinat.json";
 
 export type IlKoordinat = { lon: number; lat: number };
@@ -14,6 +15,8 @@ export const TURKIYE_HARITA = {
   width: 960,
   height: 460,
 } as const;
+
+export const TURKIYE_HARITA_OUTLINE = turkiyeHaritaOutline.path;
 
 export function ilKoordinatBul(sehir: string): IlKoordinat | null {
   const s = sehir.trim();
@@ -42,8 +45,8 @@ export function turkiyeProjeksiyon(
 export function haritaYaricapLog(
   adet: number,
   maxAdet: number,
-  rMin = 14,
-  rMax = 48
+  rMin = 18,
+  rMax = 72
 ): number {
   if (adet <= 0) return rMin;
   const tavan = Math.max(maxAdet, 1);

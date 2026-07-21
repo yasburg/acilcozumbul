@@ -24,6 +24,6 @@ describe("turkiye-il-koordinat", () => {
     expect(r100).toBeLessThan(r1000);
     /* 100→1000 (10×) doğrusal olsaydı yarıçap farkı çok büyürdü; log sıkıştırır */
     expect(r1000 - r100).toBeLessThan(r100 - r1);
-    expect(r1000).toBe(48);
+    expect(r1000).toBe(72);
   });
 });

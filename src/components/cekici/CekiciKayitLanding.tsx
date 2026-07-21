@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Btn, Card } from "@/components/ui";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 
@@ -24,6 +25,21 @@ const IS_AKISI = [
     ikon: "🤝",
     baslik: "Müşteri seçer",
     aciklama: "Sizi seçerse telefon ve konum açılır, işi siz tamamlarsınız",
+  },
+] as const;
+
+const HIZMET_BOLGESI = [
+  {
+    ikon: "📍",
+    baslik: "İlçe ve çalışma alanını seç",
+    aciklama:
+      "Kayıttan sonra panelden hizmet verdiğiniz ilçeleri belirlersiniz",
+  },
+  {
+    ikon: "🔔",
+    baslik: "Sana uygun işleri gör",
+    aciklama:
+      "Yalnızca seçtiğiniz bölgedeki talepler bildirilir; uzak işlerle uğraşmazsınız",
   },
 ] as const;
 
@@ -64,11 +80,24 @@ const YORUMLAR = [
   },
 ] as const;
 
+const ANCHOR_IDS = new Set(["nasil-calisir", "hizmet-bolgesi"]);
+
 type CekiciKayitLandingProps = {
   onKayitBasla: () => void;
 };
 
 export function CekiciKayitLanding({ onKayitBasla }: CekiciKayitLandingProps) {
+  useEffect(() => {
+    const hash = window.location.hash.replace(/^#/, "");
+    if (!ANCHOR_IDS.has(hash)) return;
+    const el = document.getElementById(hash);
+    if (!el) return;
+    const t = window.setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+    return () => window.clearTimeout(t);
+  }, []);
+
   return (
     <div className="space-y-4 mb-6">
       <section className="rounded-2xl border border-amber-200/80 bg-gradient-to-b from-amber-50 via-white to-white px-4 py-5 shadow-sm">
@@ -108,12 +137,16 @@ export function CekiciKayitLanding({ onKayitBasla }: CekiciKayitLandingProps) {
         </Btn>
       </section>
 
-      <section aria-labelledby="is-akisi-baslik">
+      <section
+        id="nasil-calisir"
+        aria-labelledby="nasil-calisir-baslik"
+        className="scroll-mt-28"
+      >
         <h2
-          id="is-akisi-baslik"
+          id="nasil-calisir-baslik"
           className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2 px-0.5"
         >
-          İş gelince ne olur?
+          Sistem nasıl çalışır?
         </h2>
         <div className="grid gap-2">
           {IS_AKISI.map((adim) => (
@@ -138,6 +171,43 @@ export function CekiciKayitLanding({ onKayitBasla }: CekiciKayitLandingProps) {
         <p className="text-xs text-slate-500 mt-2 px-0.5 leading-relaxed">
           Kazancınız müşteriyle anlaştığınız teklif tutarıdır; ödeme doğrudan
           müşteri ile aranızda gerçekleşir.
+        </p>
+      </section>
+
+      <section
+        id="hizmet-bolgesi"
+        aria-labelledby="hizmet-bolgesi-baslik"
+        className="scroll-mt-28"
+      >
+        <h2
+          id="hizmet-bolgesi-baslik"
+          className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2 px-0.5"
+        >
+          Bölgene iş talepleri
+        </h2>
+        <div className="grid gap-2">
+          {HIZMET_BOLGESI.map((adim) => (
+            <Card
+              key={adim.baslik}
+              className="!py-3 !px-3.5 flex gap-3 items-start border-slate-100"
+            >
+              <span className="text-2xl shrink-0" aria-hidden>
+                {adim.ikon}
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">
+                  {adim.baslik}
+                </p>
+                <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                  {adim.aciklama}
+                </p>
+              </div>
+            </Card>
+          ))}
+        </div>
+        <p className="text-xs text-slate-500 mt-2 px-0.5 leading-relaxed">
+          Erken fazda İstanbul’da ilçe bazlı çalışırsınız; diğer şehirler
+          açıldıkça aynı mantıkla bölgenizi yönetirsiniz.
         </p>
       </section>
 
