@@ -173,6 +173,24 @@ function PanelIcerik() {
         </p>
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {kartlar.map((k) => (
+          <Link key={k.label} href={k.href}>
+            <Card
+              className={`hover:border-amber-300 transition h-full ${k.cardClass ?? ""}`}
+            >
+              <p className="text-sm text-slate-500">{k.label}</p>
+              <p className={`text-3xl font-bold mt-1 ${k.color}`}>{k.value}</p>
+              {k.sub && (
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  {k.sub}
+                </p>
+              )}
+            </Card>
+          </Link>
+        ))}
+      </div>
+
       {ozet.huni && (
         <Card>
           <h3 className="font-semibold text-slate-800 mb-1">
@@ -213,24 +231,6 @@ function PanelIcerik() {
           </div>
         </Card>
       )}
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kartlar.map((k) => (
-          <Link key={k.label} href={k.href}>
-            <Card
-              className={`hover:border-amber-300 transition h-full ${k.cardClass ?? ""}`}
-            >
-              <p className="text-sm text-slate-500">{k.label}</p>
-              <p className={`text-3xl font-bold mt-1 ${k.color}`}>{k.value}</p>
-              {k.sub && (
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  {k.sub}
-                </p>
-              )}
-            </Card>
-          </Link>
-        ))}
-      </div>
 
       {ozet.hizmetVerenler && (
         <HizmetVerenSayimPanel ozet={ozet.hizmetVerenler} />
