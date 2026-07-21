@@ -4,10 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
-import { Btn, Card, SifreAlani } from "@/components/ui";
+import { Btn, Card, Field, SifreAlani } from "@/components/ui";
 import { formatKredi } from "@/lib/talep-utils";
 import type { ListeDurumu } from "@/lib/types";
 import { cekiciFetch } from "@/lib/cekici-fetch";
+import { HESAP_SIL_ONAY_METNI } from "@/lib/cekici-hesap-sil-onay";
 import { useCekiciKonumSync } from "@/hooks/useCekiciKonumSync";
 import { KonumGuncellemeGostergesi } from "@/components/KonumGuncellemeGostergesi";
 import { DavetKoduAyarlari } from "@/components/cekici/DavetKoduAyarlari";
@@ -242,10 +243,16 @@ export default function CekiciPanelTabs() {
   const [cikisYukleniyor, setCikisYukleniyor] = useState(false);
   const [katilYukleniyor, setKatilYukleniyor] = useState<string | null>(null);
   const [demoAktif, setDemoAktif] = useState(false);
-  const [hesapSilOnayAcik, setHesapSilOnayAcik] = useState(false);
+  const [hesapSilAdim, setHesapSilAdim] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [hesapSiliyor, setHesapSiliyor] = useState(false);
   const [hesapSilHata, setHesapSilHata] = useState("");
   const [hesapSilSifre, setHesapSilSifre] = useState("");
+  const [hesapSilOnayMetni, setHesapSilOnayMetni] = useState("");
+  const [hesapSilKod, setHesapSilKod] = useState("");
+  const [hesapSilSmsMesaj, setHesapSilSmsMesaj] = useState("");
+  const [hesapSilGelistirmeKodu, setHesapSilGelistirmeKodu] = useState("");
+  const [hesapSilYenidenSn, setHesapSilYenidenSn] = useState(0);
+  const [hesapSilKodGonderiliyor, setHesapSilKodGonderiliyor] = useState(false);
   const { seviye: gizlilik, hesapSeviye } = useKisiselVeriGizle(
     demoAktif || Boolean(data?.demoModu)
   );
@@ -267,9 +274,70 @@ export default function CekiciPanelTabs() {
     }
   }, [router]);
 
+  const hesapSilSifirla = useCallback(() => {
+    setHesapSilAdim(0);
+    setHesapSilHata("");
+    setHesapSilSifre("");
+    setHesapSilOnayMetni("");
+    setHesapSilKod("");
+    setHesapSilSmsMesaj("");
+    setHesapSilGelistirmeKodu("");
+    setHesapSilYenidenSn(0);
+  }, []);
+
+  useEffect(() => {
+    if (hesapSilYenidenSn <= 0) return;
+    const t = window.setInterval(() => {
+      setHesapSilYenidenSn((s) => Math.max(0, s - 1));
+    }, 1000);
+    return () => window.clearInterval(t);
+  }, [hesapSilYenidenSn]);
+
+  const hesapSilKodGonder = useCallback(async () => {
+    if (!hesapSilSifre.trim()) {
+      setHesapSilHata("Şifrenizi girin.");
+      return;
+    }
+    setHesapSilKodGonderiliyor(true);
+    setHesapSilHata("");
+    try {
+      const res = await cekiciFetch("/api/cekici/hesap/sil/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sifre: hesapSilSifre,
+          onayMetni: hesapSilOnayMetni,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof body.error === "string" ? body.error : "Kod gönderilemedi."
+        );
+      }
+      setHesapSilSmsMesaj(
+        typeof body.mesaj === "string" ? body.mesaj : "Kod gönderildi."
+      );
+      setHesapSilGelistirmeKodu(
+        typeof body.gelistirmeKodu === "string" ? body.gelistirmeKodu : ""
+      );
+      setHesapSilYenidenSn(Number(body.yenidenGonderSn) || 60);
+      setHesapSilAdim(4);
+      setHesapSilKod("");
+    } catch (e) {
+      setHesapSilHata(e instanceof Error ? e.message : "Kod gönderilemedi.");
+    } finally {
+      setHesapSilKodGonderiliyor(false);
+    }
+  }, [hesapSilSifre, hesapSilOnayMetni]);
+
   const hesabiSil = useCallback(async () => {
     if (!hesapSilSifre.trim()) {
       setHesapSilHata("Hesabı silmek için şifrenizi girin.");
+      return;
+    }
+    if (!hesapSilKod.trim()) {
+      setHesapSilHata("SMS kodunu girin.");
       return;
     }
     setHesapSiliyor(true);
@@ -278,7 +346,11 @@ export default function CekiciPanelTabs() {
       const res = await cekiciFetch("/api/cekici/hesap/sil", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sifre: hesapSilSifre }),
+        body: JSON.stringify({
+          sifre: hesapSilSifre,
+          kod: hesapSilKod,
+          onayMetni: hesapSilOnayMetni,
+        }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -287,8 +359,7 @@ export default function CekiciPanelTabs() {
         );
       }
       posthogOlayYakala("cekici_hesap_silindi", { rol: "cekici" });
-      setHesapSilOnayAcik(false);
-      setHesapSilSifre("");
+      hesapSilSifirla();
       router.push("/cekici/giris?mesaj=hesap-silindi");
       router.refresh();
     } catch (e) {
@@ -298,7 +369,7 @@ export default function CekiciPanelTabs() {
     } finally {
       setHesapSiliyor(false);
     }
-  }, [hesapSilSifre, router]);
+  }, [hesapSilSifre, hesapSilKod, hesapSilOnayMetni, hesapSilSifirla, router]);
 
   const ihaleyeKatil = useCallback(
     async (talepId: string) => {
@@ -913,79 +984,257 @@ export default function CekiciPanelTabs() {
               {cikisYukleniyor ? "Çıkış yapılıyor…" : "Çıkış yap"}
             </Btn>
 
-            <Card className="border-red-200 bg-red-50/50 space-y-3">
-              <p className="text-sm font-semibold text-red-800">Hesabı sil</p>
-              <p className="text-sm text-red-700 leading-relaxed">
-                Bu işlem geri alınamaz. Hesabınız, kredi bakiyeniz, ödeme
-                geçmişiniz ve yüklenen belgeler kalıcı olarak silinir.
-              </p>
-              <Btn
-                variant="danger"
+            <div className="pt-6 border-t border-slate-100">
+              <button
+                type="button"
+                className="text-[11px] text-slate-400 underline-offset-2 hover:text-slate-500 hover:underline disabled:opacity-50"
                 onClick={() => {
-                  setHesapSilHata("");
-                  setHesapSilSifre("");
-                  setHesapSilOnayAcik(true);
+                  hesapSilSifirla();
+                  setHesapSilAdim(1);
                 }}
                 disabled={hesapSiliyor || cikisYukleniyor}
               >
-                Hesabımı sil
-              </Btn>
-            </Card>
+                Hesap silme
+              </button>
+            </div>
           </div>
 
-          {hesapSilOnayAcik && (
+          {hesapSilAdim > 0 && (
             <div
               className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
               role="dialog"
               aria-modal="true"
               aria-labelledby="hesap-sil-onay-baslik"
             >
-              <Card className="w-full max-w-md shadow-xl space-y-4">
-                <h3
-                  id="hesap-sil-onay-baslik"
-                  className="text-lg font-bold text-slate-900"
-                >
-                  Hesabı silmek için şifre gerekli
-                </h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Hesabınız kalıcı olarak silinecek. Onaylamak için şifrenizi
-                  girin.
+              <Card className="w-full max-w-md shadow-xl space-y-4 max-h-[90dvh] overflow-y-auto">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                  Adım {hesapSilAdim} / 4
                 </p>
-                <SifreAlani
-                  label="Şifre"
-                  autoComplete="current-password"
-                  value={hesapSilSifre}
-                  onChange={(e) => {
-                    setHesapSilSifre(e.target.value);
-                    if (hesapSilHata) setHesapSilHata("");
-                  }}
-                  disabled={hesapSiliyor}
-                />
-                {hesapSilHata && (
-                  <p className="text-sm text-red-700" role="alert">
-                    {hesapSilHata}
-                  </p>
+
+                {hesapSilAdim === 1 && (
+                  <>
+                    <h3
+                      id="hesap-sil-onay-baslik"
+                      className="text-lg font-bold text-slate-900"
+                    >
+                      Emin misiniz?
+                    </h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      Hesap silme geri alınamaz. Kredi bakiyeniz, ödeme
+                      geçmişiniz, belgeleriniz ve tüm kayıtlarınız kalıcı olarak
+                      silinir.
+                    </p>
+                    <div className="flex flex-col-reverse sm:flex-row gap-2">
+                      <Btn
+                        variant="secondary"
+                        onClick={hesapSilSifirla}
+                      >
+                        Vazgeç
+                      </Btn>
+                      <Btn
+                        variant="danger"
+                        onClick={() => {
+                          setHesapSilHata("");
+                          setHesapSilAdim(2);
+                        }}
+                      >
+                        Evet, devam et
+                      </Btn>
+                    </div>
+                  </>
                 )}
-                <div className="flex flex-col-reverse sm:flex-row gap-2">
-                  <Btn
-                    variant="secondary"
-                    onClick={() => {
-                      setHesapSilOnayAcik(false);
-                      setHesapSilSifre("");
-                      setHesapSilHata("");
-                    }}
-                    disabled={hesapSiliyor}
-                  >
-                    Vazgeç
-                  </Btn>
-                  <Btn
-                    variant="danger"
-                    onClick={() => void hesabiSil()}
-                    disabled={hesapSiliyor || !hesapSilSifre.trim()}
-                  >
-                    {hesapSiliyor ? "Siliniyor…" : "Evet, hesabımı sil"}
-                  </Btn>
-                </div>
+
+                {hesapSilAdim === 2 && (
+                  <>
+                    <h3
+                      id="hesap-sil-onay-baslik"
+                      className="text-lg font-bold text-slate-900"
+                    >
+                      Onay metnini yazın
+                    </h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      Devam etmek için kutuya aynen şunu yazın:{" "}
+                      <span className="font-mono font-semibold text-slate-800">
+                        {HESAP_SIL_ONAY_METNI}
+                      </span>
+                    </p>
+                    <Field
+                      label="Onay metni"
+                      value={hesapSilOnayMetni}
+                      onChange={(e) => {
+                        setHesapSilOnayMetni(e.target.value);
+                        if (hesapSilHata) setHesapSilHata("");
+                      }}
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                    {hesapSilHata && (
+                      <p className="text-sm text-red-700" role="alert">
+                        {hesapSilHata}
+                      </p>
+                    )}
+                    <div className="flex flex-col-reverse sm:flex-row gap-2">
+                      <Btn
+                        variant="secondary"
+                        onClick={() => {
+                          setHesapSilHata("");
+                          setHesapSilAdim(1);
+                        }}
+                      >
+                        Geri
+                      </Btn>
+                      <Btn
+                        variant="danger"
+                        onClick={() => {
+                          const ok =
+                            hesapSilOnayMetni
+                              .trim()
+                              .toLocaleUpperCase("tr")
+                              .replace(/\s+/g, " ") === HESAP_SIL_ONAY_METNI;
+                          if (!ok) {
+                            setHesapSilHata(
+                              `Lütfen «${HESAP_SIL_ONAY_METNI}» yazın.`
+                            );
+                            return;
+                          }
+                          setHesapSilHata("");
+                          setHesapSilAdim(3);
+                        }}
+                      >
+                        Devam
+                      </Btn>
+                    </div>
+                  </>
+                )}
+
+                {hesapSilAdim === 3 && (
+                  <>
+                    <h3
+                      id="hesap-sil-onay-baslik"
+                      className="text-lg font-bold text-slate-900"
+                    >
+                      Şifre ve SMS doğrulama
+                    </h3>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      Şifrenizi girin; kayıtlı telefonunuza SMS ile kod
+                      göndereceğiz.
+                    </p>
+                    <SifreAlani
+                      label="Şifre"
+                      autoComplete="current-password"
+                      value={hesapSilSifre}
+                      onChange={(e) => {
+                        setHesapSilSifre(e.target.value);
+                        if (hesapSilHata) setHesapSilHata("");
+                      }}
+                      disabled={hesapSilKodGonderiliyor}
+                    />
+                    {hesapSilHata && (
+                      <p className="text-sm text-red-700" role="alert">
+                        {hesapSilHata}
+                      </p>
+                    )}
+                    <div className="flex flex-col-reverse sm:flex-row gap-2">
+                      <Btn
+                        variant="secondary"
+                        onClick={() => {
+                          setHesapSilHata("");
+                          setHesapSilAdim(2);
+                        }}
+                        disabled={hesapSilKodGonderiliyor}
+                      >
+                        Geri
+                      </Btn>
+                      <Btn
+                        variant="danger"
+                        onClick={() => void hesapSilKodGonder()}
+                        disabled={
+                          hesapSilKodGonderiliyor || !hesapSilSifre.trim()
+                        }
+                      >
+                        {hesapSilKodGonderiliyor
+                          ? "Kod gönderiliyor…"
+                          : "SMS kodu gönder"}
+                      </Btn>
+                    </div>
+                  </>
+                )}
+
+                {hesapSilAdim === 4 && (
+                  <>
+                    <h3
+                      id="hesap-sil-onay-baslik"
+                      className="text-lg font-bold text-slate-900"
+                    >
+                      SMS kodunu girin
+                    </h3>
+                    {hesapSilSmsMesaj && (
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        {hesapSilSmsMesaj}
+                      </p>
+                    )}
+                    {hesapSilGelistirmeKodu && (
+                      <p className="text-xs font-mono text-amber-800 bg-amber-50 rounded-lg px-2 py-1.5">
+                        Geliştirme kodu: {hesapSilGelistirmeKodu}
+                      </p>
+                    )}
+                    <Field
+                      label="6 haneli kod"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      value={hesapSilKod}
+                      onChange={(e) => {
+                        setHesapSilKod(
+                          e.target.value.replace(/\D/g, "").slice(0, 6)
+                        );
+                        if (hesapSilHata) setHesapSilHata("");
+                      }}
+                      disabled={hesapSiliyor}
+                    />
+                    {hesapSilHata && (
+                      <p className="text-sm text-red-700" role="alert">
+                        {hesapSilHata}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      className="text-xs text-slate-500 underline-offset-2 hover:underline disabled:opacity-40"
+                      disabled={
+                        hesapSilYenidenSn > 0 ||
+                        hesapSilKodGonderiliyor ||
+                        hesapSiliyor
+                      }
+                      onClick={() => void hesapSilKodGonder()}
+                    >
+                      {hesapSilYenidenSn > 0
+                        ? `Yeniden gönder (${hesapSilYenidenSn} sn)`
+                        : "Kodu yeniden gönder"}
+                    </button>
+                    <div className="flex flex-col-reverse sm:flex-row gap-2">
+                      <Btn
+                        variant="secondary"
+                        onClick={() => {
+                          setHesapSilHata("");
+                          setHesapSilAdim(3);
+                        }}
+                        disabled={hesapSiliyor}
+                      >
+                        Geri
+                      </Btn>
+                      <Btn
+                        variant="danger"
+                        onClick={() => void hesabiSil()}
+                        disabled={
+                          hesapSiliyor || hesapSilKod.replace(/\D/g, "").length !== 6
+                        }
+                      >
+                        {hesapSiliyor
+                          ? "Siliniyor…"
+                          : "Hesabımı kalıcı olarak sil"}
+                      </Btn>
+                    </div>
+                  </>
+                )}
               </Card>
             </div>
           )}
