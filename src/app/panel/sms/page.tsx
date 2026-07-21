@@ -56,12 +56,20 @@ export default function PanelSmsPage() {
             Netgsm gönderim geçmişi ve hata oranı
           </p>
         </div>
-        <Link
-          href="/demo/sms"
-          className="text-sm text-amber-600 font-medium self-end"
-        >
-          Netgsm test →
-        </Link>
+        <div className="flex flex-wrap gap-3 items-end">
+          <Link
+            href="/panel/sms/toplu"
+            className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white"
+          >
+            Toplu SMS gönder
+          </Link>
+          <Link
+            href="/demo/sms"
+            className="text-sm text-amber-600 font-medium self-end"
+          >
+            Netgsm test →
+          </Link>
+        </div>
       </div>
 
       {durum && (

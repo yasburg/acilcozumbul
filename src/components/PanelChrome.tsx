@@ -85,8 +85,8 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
       </header>
       <div className="mx-auto flex max-w-6xl gap-0 lg:gap-6 lg:p-6">
         <aside className="hidden w-56 shrink-0 lg:block">
-          <div className="sticky top-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 px-4 py-4 space-y-2">
+          <div className="sticky top-6 flex max-h-[calc(100dvh-3rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="shrink-0 border-b border-slate-100 px-4 py-4 space-y-2">
               <BrandLogoYazili
                 href={null}
                 className="h-8 w-auto max-w-full object-contain object-left"
@@ -95,7 +95,9 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
                 Yönetim Paneli
               </h1>
             </div>
-            <PanelNav onCikis={() => void cikis()} sayac={sayac} />
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <PanelNav onCikis={() => void cikis()} sayac={sayac} />
+            </div>
           </div>
         </aside>
         <main className="min-w-0 flex-1">
@@ -118,6 +120,7 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
                 adet={sayac?.talepSayisi}
               />
               <MobilNavLink href="/panel/sms" label="SMS" />
+              <MobilNavLink href="/panel/sms/toplu" label="Toplu SMS" />
               <MobilNavLink
                 href="/panel/kredi-odemeler"
                 label="Kredi ödemeleri"

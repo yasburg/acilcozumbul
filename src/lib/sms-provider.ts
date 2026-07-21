@@ -212,9 +212,10 @@ async function netgsmOtpSmsGonder(
 /**
  * Netgsm resmi XML POST SMS — https://www.netgsm.com.tr/dokuman/#xml-post-sms-gonderme
  * usercode + password XML gövdesinde; REST v2 Basic Auth değil.
+ * Birden fazla numara → type 1:n, aynı mesaj.
  */
 async function netgsmXmlGonder(
-  telefon: string,
+  telefonlar: string | string[],
   mesaj: string
 ): Promise<SmsGonderimSonuc> {
   if (!netgsmYapilandirildi()) {
@@ -225,16 +226,25 @@ async function netgsmXmlGonder(
     };
   }
 
-  const no = telefonXmlFormat(telefon);
-  if (!/^90[0-9]{10}$/.test(no)) {
-    return {
-      basarili: false,
-      saglayici: "netgsm",
-      hata: `Geçersiz telefon: ${telefon}`,
-    };
+  const liste = Array.isArray(telefonlar) ? telefonlar : [telefonlar];
+  const nolar: string[] = [];
+  for (const tel of liste) {
+    const no = telefonXmlFormat(tel);
+    if (!/^90[0-9]{10}$/.test(no)) {
+      return {
+        basarili: false,
+        saglayici: "netgsm",
+        hata: `Geçersiz telefon: ${tel}`,
+      };
+    }
+    nolar.push(no);
+  }
+  if (nolar.length === 0) {
+    return { basarili: false, saglayici: "netgsm", hata: "Alıcı yok." };
   }
 
   const { usercode, password, msgheader } = netgsmKimlik();
+  const noXml = nolar.map((no) => `    <no>${no}</no>`).join("\n");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <mainbody>
@@ -247,7 +257,7 @@ async function netgsmXmlGonder(
   </header>
   <body>
     <msg><![CDATA[${mesaj}]]></msg>
-    <no>${no}</no>
+${noXml}
   </body>
 </mainbody>`;
 
@@ -286,6 +296,62 @@ async function netgsmXmlGonder(
     console.error("[Netgsm XML SMS hata]", hata);
     return { basarili: false, saglayici: "netgsm", hata };
   }
+}
+
+/** Panel toplu SMS: Netgsm parti boyutu */
+export const TOPLU_SMS_PARTI = 50;
+
+/**
+ * Yönetim paneli toplu SMS (XML, kredi düşmez).
+ * Numaraları partiler halinde gönderir; her alıcı için sms_log yazar.
+ */
+export async function sendPanelTopluSms(
+  telefonlar: string[],
+  mesaj: string
+): Promise<{
+  basarili: number;
+  basarisiz: number;
+  sonuclar: Array<{ telefon: string; basarili: boolean; hata?: string }>;
+}> {
+  const benzersiz = [...new Set(telefonlar.map((t) => t.trim()).filter(Boolean))];
+  const sonuclar: Array<{ telefon: string; basarili: boolean; hata?: string }> =
+    [];
+
+  if (!netgsmYapilandirildi()) {
+    for (const telefon of benzersiz) {
+      const sonuc: SmsGonderimSonuc = {
+        basarili: false,
+        saglayici: "demo",
+        hata: "Netgsm yapılandırılmamış",
+      };
+      await logSmsKaydi(telefon, mesaj, { aliciTipi: "musteri" }, sonuc);
+      sonuclar.push({ telefon, basarili: false, hata: sonuc.hata });
+    }
+    return {
+      basarili: 0,
+      basarisiz: sonuclar.length,
+      sonuclar,
+    };
+  }
+
+  for (let i = 0; i < benzersiz.length; i += TOPLU_SMS_PARTI) {
+    const parti = benzersiz.slice(i, i + TOPLU_SMS_PARTI);
+    const sonuc = await netgsmXmlGonder(parti, mesaj);
+    for (const telefon of parti) {
+      await logSmsKaydi(telefon, mesaj, { aliciTipi: "musteri" }, sonuc);
+      sonuclar.push({
+        telefon,
+        basarili: sonuc.basarili,
+        hata: sonuc.hata,
+      });
+    }
+  }
+
+  return {
+    basarili: sonuclar.filter((s) => s.basarili).length,
+    basarisiz: sonuclar.filter((s) => !s.basarili).length,
+    sonuclar,
+  };
 }
 
 export async function sendSms(
