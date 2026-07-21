@@ -28,16 +28,9 @@ export function ilKoordinatBul(sehir: string): IlKoordinat | null {
   return bulunan ? TURKIYE_IL_KOORDINAT[bulunan] : null;
 }
 
-/** Haritada birden fazla nokta (İstanbul Avrupa + Anadolu) */
 export function haritaSehirNoktalari(sehir: string): IlKoordinat[] {
   const ana = ilKoordinatBul(sehir);
   if (!ana) return [];
-  if (sehir.localeCompare("İstanbul", "tr", { sensitivity: "accent" }) === 0) {
-    return [
-      { lon: 28.9, lat: 41.05 },
-      { lon: 29.06, lat: 40.98 },
-    ];
-  }
   return [ana];
 }
 

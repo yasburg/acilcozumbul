@@ -27,10 +27,9 @@ describe("turkiye-il-koordinat", () => {
     expect(r1000).toBe(36);
   });
 
-  it("İstanbul için Avrupa ve Anadolu noktası döner", async () => {
+  it("her şehir için tek harita noktası döner", async () => {
     const mod = await import("./turkiye-il-koordinat");
-    const noktalar = mod.haritaSehirNoktalari("İstanbul");
-    expect(noktalar).toHaveLength(2);
-    expect(noktalar[0]!.lon).toBeLessThan(noktalar[1]!.lon);
+    expect(mod.haritaSehirNoktalari("İstanbul")).toHaveLength(1);
+    expect(mod.haritaSehirNoktalari("Bursa")).toHaveLength(1);
   });
 });
