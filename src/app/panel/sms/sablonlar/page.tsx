@@ -1,8 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Btn, Card, Field, TextArea } from "@/components/ui";
+import {
+  NETGSM_TOPLU_SMS_MAX_BIRIM,
+  netgsmSmsMesajGecerliMi,
+} from "@/lib/sms-karakter";
 import {
   SMS50_VARYANTLAR,
   sms50KisaUrl,
@@ -30,6 +34,11 @@ export default function PanelSmsSablonlarPage() {
   const [kaydediyor, setKaydediyor] = useState(false);
   const [hata, setHata] = useState("");
   const [mesaj, setMesaj] = useState("");
+
+  const govdeDurum = useMemo(
+    () => netgsmSmsMesajGecerliMi(form.govde),
+    [form.govde]
+  );
 
   const yukle = useCallback(() => {
     setLoading(true);
@@ -227,15 +236,37 @@ export default function PanelSmsSablonlarPage() {
               Seçilen kısa yolu gövde metninin sonuna ekler.
             </p>
           </div>
-          <TextArea
-            label="Gövde metni"
-            value={form.govde}
-            onChange={(e) => setForm((f) => ({ ...f, govde: e.target.value }))}
-            rows={5}
-            placeholder="TANITIM | … https://www.acilcozumbul.com/sms50a"
-            required
-            maxLength={2000}
-          />
+          <div className="space-y-1">
+            <TextArea
+              label="Gövde metni"
+              value={form.govde}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, govde: e.target.value }))
+              }
+              rows={5}
+              placeholder="TANITIM | … https://www.acilcozumbul.com/sms50a"
+              required
+              maxLength={2000}
+            />
+            <p
+              className={`text-right text-xs tabular-nums ${
+                govdeDurum.birim > NETGSM_TOPLU_SMS_MAX_BIRIM
+                  ? "text-red-600 font-medium"
+                  : govdeDurum.parca > 1
+                    ? "text-amber-700"
+                    : "text-slate-500"
+              }`}
+            >
+              {govdeDurum.birim} / {NETGSM_TOPLU_SMS_MAX_BIRIM} birim ·{" "}
+              {govdeDurum.parca || 0} SMS
+              {govdeDurum.parca > 1 ? " (uzun SMS)" : ""}
+            </p>
+            {govdeDurum.hata && form.govde.trim() && (
+              <p className="text-right text-xs text-red-600">
+                {govdeDurum.hata}
+              </p>
+            )}
+          </div>
           <Field
             label="Sıra"
             type="number"
