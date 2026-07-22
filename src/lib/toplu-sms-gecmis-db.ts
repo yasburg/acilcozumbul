@@ -64,65 +64,16 @@ export async function topluSmsOncekiTelefonlariBul(
   return bulunan;
 }
 
-export async function kaydetTopluSmsGecmis(opts: {
-  gonderenEposta?: string | null;
-  mesaj: string;
-  mesajParca?: number;
-  mesajBirim?: number;
-  kampanyaKodu?: string | null;
-  varyant?: string | null;
+async function genelDeftereYaz(
+  listeId: string,
   alicilar: Array<{
     telefon: string;
     ad?: string | null;
     basarili: boolean;
-    hata?: string | null;
-  }>;
-}): Promise<{ listeId: string }> {
+  }>
+) {
   const sb = getSupabaseAdmin();
   const now = new Date().toISOString();
-  const alicilar = opts.alicilar.map((a) => ({
-    ...a,
-    telefon: telefonNormalize(a.telefon),
-  }));
-  const basarili = alicilar.filter((a) => a.basarili).length;
-  const basarisiz = alicilar.length - basarili;
-
-  const { data: liste, error: listeErr } = await sb
-    .from("panel_toplu_sms_listeler")
-    .insert({
-      gonderen_eposta: opts.gonderenEposta ?? null,
-      mesaj: opts.mesaj,
-      alici_sayisi: alicilar.length,
-      basarili,
-      basarisiz,
-      mesaj_parca: opts.mesajParca ?? null,
-      mesaj_birim: opts.mesajBirim ?? null,
-      kampanya_kodu: opts.kampanyaKodu ?? null,
-      varyant: opts.varyant ?? null,
-    })
-    .select("id")
-    .single();
-
-  if (listeErr || !liste?.id) {
-    throw listeErr ?? new Error("Liste kaydı oluşturulamadı.");
-  }
-
-  const listeId = String(liste.id);
-
-  if (alicilar.length > 0) {
-    const { error: aliciErr } = await sb
-      .from("panel_toplu_sms_liste_alicilar")
-      .insert(
-        alicilar.map((a) => ({
-          liste_id: listeId,
-          telefon: a.telefon,
-          ad: a.ad?.trim() || null,
-          basarili: a.basarili,
-          hata: a.hata ?? null,
-        }))
-      );
-    if (aliciErr) throw aliciErr;
-  }
 
   for (const parti of chunk(alicilar, IN_CHUNK)) {
     const telefonlar = parti.map((a) => a.telefon);
@@ -147,16 +98,12 @@ export async function kaydetTopluSmsGecmis(opts: {
       return {
         telefon: a.telefon,
         ad: a.ad?.trim() || onceki?.ad || null,
-        ilk_gonderim: onceki ? undefined : now,
-        son_gonderim: now,
         gonderim_sayisi: (onceki?.gonderim_sayisi ?? 0) + 1,
         basarili_sayisi:
           (onceki?.basarili_sayisi ?? 0) + (a.basarili ? 1 : 0),
-        son_liste_id: listeId,
       };
     });
 
-    /* ilk_gonderim yalnızca yeni kayıtta; mevcutta dokunma */
     const yeni = upsertRows.filter((r) => !mevcutMap.has(r.telefon));
     const guncelle = upsertRows.filter((r) => mevcutMap.has(r.telefon));
 
@@ -189,7 +136,116 @@ export async function kaydetTopluSmsGecmis(opts: {
       if (error) throw error;
     }
   }
+}
 
+/** Boş geçmiş listesi (arka plan işi başında) */
+export async function baslatTopluSmsGecmisListe(opts: {
+  gonderenEposta?: string | null;
+  mesaj: string;
+  mesajParca?: number;
+  mesajBirim?: number;
+  kampanyaKodu?: string | null;
+  varyant?: string | null;
+  aliciSayisi: number;
+}): Promise<{ listeId: string }> {
+  const { data: liste, error } = await getSupabaseAdmin()
+    .from("panel_toplu_sms_listeler")
+    .insert({
+      gonderen_eposta: opts.gonderenEposta ?? null,
+      mesaj: opts.mesaj,
+      alici_sayisi: opts.aliciSayisi,
+      basarili: 0,
+      basarisiz: 0,
+      mesaj_parca: opts.mesajParca ?? null,
+      mesaj_birim: opts.mesajBirim ?? null,
+      kampanya_kodu: opts.kampanyaKodu ?? null,
+      varyant: opts.varyant ?? null,
+    })
+    .select("id")
+    .single();
+  if (error || !liste?.id) {
+    throw error ?? new Error("Liste kaydı oluşturulamadı.");
+  }
+  return { listeId: String(liste.id) };
+}
+
+/** Parti sonucunu mevcut listeye ekler */
+export async function ekleTopluSmsGecmisAlicilar(
+  listeId: string,
+  alicilarHam: Array<{
+    telefon: string;
+    ad?: string | null;
+    basarili: boolean;
+    hata?: string | null;
+  }>
+): Promise<void> {
+  const sb = getSupabaseAdmin();
+  const alicilar = alicilarHam.map((a) => ({
+    ...a,
+    telefon: telefonNormalize(a.telefon),
+  }));
+  if (alicilar.length === 0) return;
+
+  const { error: aliciErr } = await sb.from("panel_toplu_sms_liste_alicilar").insert(
+    alicilar.map((a) => ({
+      liste_id: listeId,
+      telefon: a.telefon,
+      ad: a.ad?.trim() || null,
+      basarili: a.basarili,
+      hata: a.hata ?? null,
+    }))
+  );
+  if (aliciErr) throw aliciErr;
+
+  const ekBasarili = alicilar.filter((a) => a.basarili).length;
+  const ekBasarisiz = alicilar.length - ekBasarili;
+  const { data: mevcut, error: okuErr } = await sb
+    .from("panel_toplu_sms_listeler")
+    .select("basarili, basarisiz")
+    .eq("id", listeId)
+    .single();
+  if (okuErr) throw okuErr;
+
+  const { error: guncelleErr } = await sb
+    .from("panel_toplu_sms_listeler")
+    .update({
+      basarili: (Number(mevcut?.basarili) || 0) + ekBasarili,
+      basarisiz: (Number(mevcut?.basarisiz) || 0) + ekBasarisiz,
+    })
+    .eq("id", listeId);
+  if (guncelleErr) throw guncelleErr;
+
+  await genelDeftereYaz(listeId, alicilar);
+}
+
+export async function kaydetTopluSmsGecmis(opts: {
+  gonderenEposta?: string | null;
+  mesaj: string;
+  mesajParca?: number;
+  mesajBirim?: number;
+  kampanyaKodu?: string | null;
+  varyant?: string | null;
+  alicilar: Array<{
+    telefon: string;
+    ad?: string | null;
+    basarili: boolean;
+    hata?: string | null;
+  }>;
+}): Promise<{ listeId: string }> {
+  const alicilar = opts.alicilar.map((a) => ({
+    ...a,
+    telefon: telefonNormalize(a.telefon),
+  }));
+  const { listeId } = await baslatTopluSmsGecmisListe({
+    gonderenEposta: opts.gonderenEposta,
+    mesaj: opts.mesaj,
+    mesajParca: opts.mesajParca,
+    mesajBirim: opts.mesajBirim,
+    kampanyaKodu: opts.kampanyaKodu,
+    varyant: opts.varyant,
+    aliciSayisi: alicilar.length,
+  });
+  await ekleTopluSmsGecmisAlicilar(listeId, alicilar);
   return { listeId };
 }
 

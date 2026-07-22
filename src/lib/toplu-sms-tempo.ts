@@ -1,4 +1,4 @@
-/** Toplu SMS parçalı gönderim (istemci kuyruğu) */
+/** Toplu SMS parçalı gönderim temposu (sunucu kuyruğu) */
 
 export type TopluSmsTempo = {
   /** Bir Netgsm isteğindeki alıcı sayısı */

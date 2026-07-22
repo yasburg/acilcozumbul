@@ -26,14 +26,26 @@ import {
 import {
   TOPLU_SMS_TEMPO_PRESETLER,
   TOPLU_SMS_TEMPO_VARSAYILAN,
-  topluSmsPartiBeklemeMs,
-  topluSmsPartilereBol,
   topluSmsSureMetni,
   topluSmsTahminiSureSn,
   topluSmsTempoNormalize,
   type TopluSmsTempo,
   type TopluSmsTempoPresetId,
 } from "@/lib/toplu-sms-tempo";
+
+type KuyrukIs = {
+  id: string;
+  durum: "beklemede" | "suruyor" | "bitti" | "iptal" | "hata";
+  partiIndex: number;
+  partiToplam: number;
+  basarili: number;
+  basarisiz: number;
+  oncekiAtlandi: number;
+  kalanSn: number | null;
+  hata: string | null;
+  listeId: string | null;
+  mesajParca: number | null;
+};
 
 type Sekme = "gonder" | "testler" | "listeler" | "genel";
 type OncekiMod = "atla" | "yine";
@@ -101,14 +113,7 @@ export default function PanelTopluSmsPage() {
   const [excelOzet, setExcelOzet] = useState<ExcelYukleOzet | null>(null);
   const [elleHata, setElleHata] = useState("");
   const [gonderiyor, setGonderiyor] = useState(false);
-  const [kuyrukIlerleme, setKuyrukIlerleme] = useState<{
-    partiNo: number;
-    partiToplam: number;
-    basarili: number;
-    basarisiz: number;
-    durum: "gonderiyor" | "bekliyor" | "bitti" | "iptal";
-    kalanSn?: number;
-  } | null>(null);
+  const [aktifIs, setAktifIs] = useState<KuyrukIs | null>(null);
   const [tempo, setTempo] = useState<TopluSmsTempo>(TOPLU_SMS_TEMPO_VARSAYILAN);
   const [tempoPreset, setTempoPreset] =
     useState<TopluSmsTempoPresetId | "ozel">("dengeli");
@@ -120,7 +125,7 @@ export default function PanelTopluSmsPage() {
     partiSayisi?: number;
   } | null>(null);
   const [hata, setHata] = useState("");
-  const kuyrukIptalRef = useRef(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [oncekiSet, setOncekiSet] = useState<Set<string>>(new Set());
   const [oncekiKontrol, setOncekiKontrol] = useState(false);
@@ -384,10 +389,103 @@ export default function PanelTopluSmsPage() {
     setOncekiSet(new Set());
   }
 
+  function pollDurdur() {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }
+
+  function isDurumunaIsle(is: KuyrukIs) {
+    setAktifIs(is);
+    const aktif = is.durum === "beklemede" || is.durum === "suruyor";
+    setGonderiyor(aktif);
+    if (is.durum === "bitti") {
+      setSonuc({
+        basarili: is.basarili,
+        basarisiz: is.basarisiz,
+        mesajParca: is.mesajParca ?? undefined,
+        oncekiAtlandi: is.oncekiAtlandi || undefined,
+        partiSayisi: is.partiToplam,
+      });
+      setHata("");
+      pollDurdur();
+      void oncekileriKontrolEt(alicilar);
+    } else if (is.durum === "iptal") {
+      setSonuc({
+        basarili: is.basarili,
+        basarisiz: is.basarisiz,
+        mesajParca: is.mesajParca ?? undefined,
+        oncekiAtlandi: is.oncekiAtlandi || undefined,
+        partiSayisi: is.partiToplam,
+      });
+      setHata(
+        `Kuyruk durduruldu. Şimdiye kadar ${is.basarili} başarılı / ${is.basarisiz} başarısız.`
+      );
+      pollDurdur();
+      void oncekileriKontrolEt(alicilar);
+    } else if (is.durum === "hata") {
+      setSonuc({
+        basarili: is.basarili,
+        basarisiz: is.basarisiz,
+        mesajParca: is.mesajParca ?? undefined,
+        oncekiAtlandi: is.oncekiAtlandi || undefined,
+        partiSayisi: is.partiToplam,
+      });
+      setHata(is.hata ?? "Gönderim hatası.");
+      pollDurdur();
+    }
+  }
+
+  function kuyrukPollBaslat(isId: string) {
+    pollDurdur();
+    pollRef.current = setInterval(() => {
+      void (async () => {
+        try {
+          const res = await fetch(
+            `/api/panel/sms/toplu/kuyruk?id=${encodeURIComponent(isId)}`,
+            { credentials: "include" }
+          );
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.is) return;
+          isDurumunaIsle(data.is as KuyrukIs);
+        } catch {
+          /* poll hatası yutulur; sonraki tur dener */
+        }
+      })();
+    }, 2000);
+  }
+
+  useEffect(() => {
+    return () => pollDurdur();
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch("/api/panel/sms/toplu/kuyruk", {
+          credentials: "include",
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !Array.isArray(data.aktif) || data.aktif.length === 0) {
+          return;
+        }
+        const is = data.aktif[0] as KuyrukIs;
+        isDurumunaIsle(is);
+        if (is.durum === "beklemede" || is.durum === "suruyor") {
+          kuyrukPollBaslat(is.id);
+        }
+      } catch {
+        /* yok say */
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca mount
+  }, []);
+
   async function gonder() {
     setHata("");
     setSonuc(null);
-    setKuyrukIlerleme(null);
+    setAktifIs(null);
     if (!mesajDurum.gecerli) {
       setHata(mesajDurum.hata ?? "Mesaj geçersiz.");
       return;
@@ -412,18 +510,11 @@ export default function PanelTopluSmsPage() {
           : "";
 
     const onay = window.confirm(
-      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${atlaMetin}.\n\nSekme açık kalsın. Devam?`
+      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${atlaMetin}.\n\nGönderim sunucuda arka planda devam eder; ekranı kapatabilirsiniz. Devam?`
     );
     if (!onay) return;
 
-    kuyrukIptalRef.current = false;
     setGonderiyor(true);
-
-    let toplamBasarili = 0;
-    let toplamBasarisiz = 0;
-    let mesajParca: number | undefined = mesajDurum.parca;
-    const oncekiAtlandiSayisi =
-      oncekiAdet > 0 && oncekiMod === "atla" ? oncekiAdet : undefined;
 
     try {
       const oturumRes = await fetch("/api/panel/oturum", {
@@ -432,6 +523,7 @@ export default function PanelTopluSmsPage() {
       const oturum = await oturumRes.json().catch(() => ({ yetkili: false }));
       if (!oturum?.yetkili) {
         setHata("Oturum sona ermiş. Tekrar giriş yapıp yeniden deneyin.");
+        setGonderiyor(false);
         return;
       }
 
@@ -445,135 +537,61 @@ export default function PanelTopluSmsPage() {
         if (a.ad) adlar[a.telefon] = a.ad;
       }
 
-      const partiler = topluSmsPartilereBol(kuyruk, tempoN.partiBoyutu);
-      if (partiler.length === 0) {
+      if (kuyruk.length === 0) {
         setHata("Gönderilecek numara kalmadı.");
+        setGonderiyor(false);
         return;
       }
 
-      for (let i = 0; i < partiler.length; i++) {
-        if (kuyrukIptalRef.current) {
-          setKuyrukIlerleme({
-            partiNo: i,
-            partiToplam: partiler.length,
-            basarili: toplamBasarili,
-            basarisiz: toplamBasarisiz,
-            durum: "iptal",
-          });
-          break;
-        }
-
-        setKuyrukIlerleme({
-          partiNo: i + 1,
-          partiToplam: partiler.length,
-          basarili: toplamBasarili,
-          basarisiz: toplamBasarisiz,
-          durum: "gonderiyor",
-        });
-
-        const res = await fetch("/api/panel/sms/toplu", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            mesaj,
-            telefonlar: partiler[i],
-            adlar,
-            oncekileriAtla: false,
-            ...(sms50Varyant
-              ? { varyant: sms50Varyant, kampanyaKodu: SMS50_KAMPANYA_KODU }
-              : {}),
-          }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.status === 401) {
-          throw new Error(
-            "Oturum sona ermiş. Tekrar giriş yapıp yeniden deneyin."
-          );
-        }
-        if (!res.ok) {
-          throw new Error(
-            data.error ?? `Parti ${i + 1}/${partiler.length} başarısız.`
-          );
-        }
-
-        toplamBasarili += Number(data.basarili) || 0;
-        toplamBasarisiz += Number(data.basarisiz) || 0;
-        if (typeof data.mesajParca === "number") mesajParca = data.mesajParca;
-        if (data.gecmisUyari) setGecmisUyari(String(data.gecmisUyari));
-
-        setKuyrukIlerleme({
-          partiNo: i + 1,
-          partiToplam: partiler.length,
-          basarili: toplamBasarili,
-          basarisiz: toplamBasarisiz,
-          durum: i + 1 < partiler.length ? "bekliyor" : "bitti",
-        });
-
-        if (i + 1 < partiler.length) {
-          const bekleMs = topluSmsPartiBeklemeMs(tempoN);
-          const bitis = Date.now() + bekleMs;
-          while (Date.now() < bitis) {
-            if (kuyrukIptalRef.current) break;
-            const kalan = Math.ceil((bitis - Date.now()) / 1000);
-            setKuyrukIlerleme({
-              partiNo: i + 1,
-              partiToplam: partiler.length,
-              basarili: toplamBasarili,
-              basarisiz: toplamBasarisiz,
-              durum: "bekliyor",
-              kalanSn: Math.max(0, kalan),
-            });
-            await new Promise((r) => setTimeout(r, 500));
-          }
-        }
-      }
-
-      if (kuyrukIptalRef.current) {
-        setSonuc({
-          basarili: toplamBasarili,
-          basarisiz: toplamBasarisiz,
-          mesajParca,
-          oncekiAtlandi: oncekiAtlandiSayisi,
-          partiSayisi: partiler.length,
-        });
-        setHata(
-          `Kuyruk iptal edildi. Şimdiye kadar ${toplamBasarili} başarılı / ${toplamBasarisiz} başarısız.`
+      const res = await fetch("/api/panel/sms/toplu/kuyruk", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mesaj,
+          telefonlar: kuyruk,
+          adlar,
+          oncekileriAtla: false,
+          tempo: tempoN,
+          ...(sms50Varyant
+            ? { varyant: sms50Varyant, kampanyaKodu: SMS50_KAMPANYA_KODU }
+            : {}),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        throw new Error(
+          "Oturum sona ermiş. Tekrar giriş yapıp yeniden deneyin."
         );
-      } else {
-        setSonuc({
-          basarili: toplamBasarili,
-          basarisiz: toplamBasarisiz,
-          mesajParca,
-          oncekiAtlandi: oncekiAtlandiSayisi,
-          partiSayisi: partiler.length,
-        });
-        setKuyrukIlerleme({
-          partiNo: partiler.length,
-          partiToplam: partiler.length,
-          basarili: toplamBasarili,
-          basarisiz: toplamBasarisiz,
-          durum: "bitti",
-        });
       }
-      void oncekileriKontrolEt(alicilar);
+      if (!res.ok || !data.is) {
+        throw new Error(data.error ?? "Kuyruk başlatılamadı.");
+      }
+      if (data.gecmisUyari) setGecmisUyari(String(data.gecmisUyari));
+
+      const is = data.is as KuyrukIs;
+      isDurumunaIsle(is);
+      kuyrukPollBaslat(is.id);
     } catch (e) {
       setHata(e instanceof Error ? e.message : "Gönderim başarısız.");
-      if (toplamBasarili > 0 || toplamBasarisiz > 0) {
-        setSonuc({
-          basarili: toplamBasarili,
-          basarisiz: toplamBasarisiz,
-          mesajParca,
-          oncekiAtlandi: oncekiAtlandiSayisi,
-        });
-      }
-    } finally {
       setGonderiyor(false);
     }
   }
 
-  function kuyrukIptal() {
-    kuyrukIptalRef.current = true;
+  async function kuyrukIptal() {
+    if (!aktifIs?.id) return;
+    try {
+      const res = await fetch(
+        `/api/panel/sms/toplu/kuyruk/${encodeURIComponent(aktifIs.id)}/iptal`,
+        { method: "POST", credentials: "include" }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.is) {
+        isDurumunaIsle(data.is as KuyrukIs);
+      }
+    } catch {
+      /* ignore */
+    }
   }
 
   return (
@@ -1010,8 +1028,9 @@ export default function PanelTopluSmsPage() {
           <Card className="space-y-3">
             <h3 className="font-semibold text-slate-800">Gönderim temposu</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Liste küçük partilere bölünür; partiler arasında beklenir (istemci
-              kuyruğu). Böylece tek seferde büyük patlama olmaz. Sekmeyi kapatmayın.
+              Liste küçük partilere bölünür; partiler arasında sunucu bekler.
+              Gönderim arka planda sürer — ekranı kapatabilirsiniz; sayfaya
+              dönünce ilerlemeyi görürsünüz.
             </p>
             <label className="block space-y-1.5">
               <span className="text-sm font-medium text-slate-700">
@@ -1099,30 +1118,33 @@ export default function PanelTopluSmsPage() {
             </p>
           </Card>
 
-          {kuyrukIlerleme && gonderiyor && (
+          {aktifIs &&
+            (aktifIs.durum === "beklemede" ||
+              aktifIs.durum === "suruyor" ||
+              gonderiyor) && (
             <Card className="border-amber-200 bg-amber-50 space-y-2">
               <p className="text-sm font-medium text-amber-950">
-                {kuyrukIlerleme.durum === "gonderiyor"
-                  ? `Parti ${kuyrukIlerleme.partiNo}/${kuyrukIlerleme.partiToplam} gönderiliyor…`
-                  : kuyrukIlerleme.durum === "bekliyor"
-                    ? `Parti ${kuyrukIlerleme.partiNo}/${kuyrukIlerleme.partiToplam} bitti · sonraki için ${kuyrukIlerleme.kalanSn ?? "…"} sn`
-                    : kuyrukIlerleme.durum === "iptal"
-                      ? "Kuyruk iptal ediliyor…"
-                      : "Tamamlandı"}
+                {aktifIs.durum === "beklemede"
+                  ? "Kuyruk başlıyor…"
+                  : aktifIs.kalanSn != null && aktifIs.kalanSn > 0
+                    ? `Parti ${aktifIs.partiIndex}/${aktifIs.partiToplam} bitti · sonraki için ~${aktifIs.kalanSn} sn`
+                    : `Parti ${Math.min(aktifIs.partiIndex + 1, aktifIs.partiToplam)}/${aktifIs.partiToplam} gönderiliyor…`}
               </p>
               <p className="text-xs text-amber-900">
-                Şimdiye kadar {kuyrukIlerleme.basarili} başarılı
-                {kuyrukIlerleme.basarisiz > 0
-                  ? ` · ${kuyrukIlerleme.basarisiz} başarısız`
+                Şimdiye kadar {aktifIs.basarili} başarılı
+                {aktifIs.basarisiz > 0
+                  ? ` · ${aktifIs.basarisiz} başarısız`
                   : ""}
+                {" · "}
+                ekranı kapatabilirsiniz
               </p>
               <div className="h-2 rounded-full bg-amber-100 overflow-hidden">
                 <div
                   className="h-full bg-amber-500 transition-all"
                   style={{
                     width: `${
-                      (kuyrukIlerleme.partiNo /
-                        Math.max(1, kuyrukIlerleme.partiToplam)) *
+                      (aktifIs.partiIndex /
+                        Math.max(1, aktifIs.partiToplam)) *
                       100
                     }%`,
                   }}
@@ -1131,7 +1153,7 @@ export default function PanelTopluSmsPage() {
               <button
                 type="button"
                 className="text-xs font-medium text-red-700"
-                onClick={kuyrukIptal}
+                onClick={() => void kuyrukIptal()}
               >
                 Kuyruğu durdur
               </button>
@@ -1148,8 +1170,8 @@ export default function PanelTopluSmsPage() {
             onClick={() => void gonder()}
           >
             {gonderiyor
-              ? "Kuyruk çalışıyor…"
-              : `${gonderilecekAdet} kişiye parçalı gönder`}
+              ? "Arka planda gönderiliyor…"
+              : `${gonderilecekAdet} kişiye arka planda gönder`}
           </Btn>
         </>
       )}
