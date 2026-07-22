@@ -64,6 +64,12 @@ export default function PanelSmsPage() {
             Toplu SMS gönder
           </Link>
           <Link
+            href="/panel/sms/sablonlar"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+          >
+            SMS şablonları
+          </Link>
+          <Link
             href="/demo/sms"
             className="text-sm text-amber-600 font-medium self-end"
           >

@@ -19,6 +19,7 @@ const LINKS: {
   { href: "/panel/talepler", label: "Talepler", sayac: "talep" },
   { href: "/panel/sms", label: "SMS", exact: true },
   { href: "/panel/sms/toplu", label: "Toplu SMS" },
+  { href: "/panel/sms/sablonlar", label: "SMS şablonları" },
   { href: "/panel/kredi-odemeler", label: "Kredi ödemeleri" },
   { href: "/panel/degerlendirmeler", label: "Değerlendirmeler" },
   { href: "/panel/davetler", label: "Davet kodları" },

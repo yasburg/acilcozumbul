@@ -113,6 +113,7 @@ export default function PanelTopluSmsPage() {
 
   const [sms50Varyant, setSms50Varyant] = useState<Sms50Varyant | "">("");
   const [sms50Sablonlar, setSms50Sablonlar] = useState<KampanyaSablon[]>([]);
+  const [seciliSablonId, setSeciliSablonId] = useState("");
   const [sms50Footer, setSms50Footer] = useState<string[]>([]);
   const [sms50FooterEkle, setSms50FooterEkle] = useState(true);
   const [testLinkler, setTestLinkler] = useState<TestLinkOzet[]>([]);
@@ -248,6 +249,12 @@ export default function PanelTopluSmsPage() {
     }
     setMesaj(metin.trim());
     setHata("");
+  }
+
+  function sablonSec(id: string) {
+    setSeciliSablonId(id);
+    const s = sms50Sablonlar.find((x) => x.id === id);
+    if (s) sablonUygula(s.govde);
   }
 
   function linkiMesajaEkle() {
@@ -682,11 +689,24 @@ export default function PanelTopluSmsPage() {
               <select
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
                 value={sms50Varyant}
-                onChange={(e) =>
-                  setSms50Varyant(
-                    (e.target.value || "") as Sms50Varyant | ""
-                  )
-                }
+                onChange={(e) => {
+                  const v = (e.target.value || "") as Sms50Varyant | "";
+                  setSms50Varyant(v);
+                  if (v && seciliSablonId) {
+                    const s = sms50Sablonlar.find((x) => x.id === seciliSablonId);
+                    if (s) {
+                      const link = sms50KisaUrl(v);
+                      let metin = s.govde.includes("{{LINK}}")
+                        ? s.govde.replaceAll("{{LINK}}", link)
+                        : `${s.govde.trim()} ${link}`;
+                      if (sms50FooterEkle && sms50Footer.length > 0) {
+                        metin = `${metin.trim()}\n${sms50Footer.join(" — ")}`;
+                      }
+                      setMesaj(metin.trim());
+                      setHata("");
+                    }
+                  }
+                }}
               >
                 <option value="">Yok (serbest metin, ölçümsüz)</option>
                 {SMS50_VARYANTLAR.map((v) => (
@@ -721,20 +741,41 @@ export default function PanelTopluSmsPage() {
                 </button>
               </div>
             )}
-            {sms50Sablonlar.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {sms50Sablonlar.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                    onClick={() => sablonUygula(s.govde)}
-                  >
-                    {s.etiket}
-                  </button>
-                ))}
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap justify-between gap-2 items-end">
+                <span className="text-sm font-medium text-slate-700">
+                  Mesaj şablonu
+                </span>
+                <Link
+                  href="/panel/sms/sablonlar"
+                  className="text-xs font-medium text-amber-700"
+                >
+                  Şablonları yönet
+                </Link>
               </div>
-            )}
+              <select
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+                value={seciliSablonId}
+                onChange={(e) => sablonSec(e.target.value)}
+                disabled={sms50Sablonlar.length === 0}
+              >
+                <option value="">
+                  {sms50Sablonlar.length === 0
+                    ? "Şablon yok — yönet sayfasından ekleyin"
+                    : "Şablon seç…"}
+                </option>
+                {sms50Sablonlar.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.etiket}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-500">
+                Seçince gövde SMS metnine yazılır;{" "}
+                <code className="bg-slate-100 px-1 rounded">{"{{LINK}}"}</code>{" "}
+                seçili harfe bağlanır.
+              </p>
+            </div>
             <label className="flex items-center gap-2 text-xs text-slate-600">
               <input
                 type="checkbox"
