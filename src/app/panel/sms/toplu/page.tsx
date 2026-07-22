@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Btn, Card, Field, TextArea } from "@/components/ui";
 import {
@@ -23,6 +23,17 @@ import {
   sms50KisaUrl,
   type Sms50Varyant,
 } from "@/lib/sms50-kampanya";
+import {
+  TOPLU_SMS_TEMPO_PRESETLER,
+  TOPLU_SMS_TEMPO_VARSAYILAN,
+  topluSmsPartiBeklemeMs,
+  topluSmsPartilereBol,
+  topluSmsSureMetni,
+  topluSmsTahminiSureSn,
+  topluSmsTempoNormalize,
+  type TopluSmsTempo,
+  type TopluSmsTempoPresetId,
+} from "@/lib/toplu-sms-tempo";
 
 type Sekme = "gonder" | "testler" | "listeler" | "genel";
 type OncekiMod = "atla" | "yine";
@@ -90,13 +101,26 @@ export default function PanelTopluSmsPage() {
   const [excelOzet, setExcelOzet] = useState<ExcelYukleOzet | null>(null);
   const [elleHata, setElleHata] = useState("");
   const [gonderiyor, setGonderiyor] = useState(false);
+  const [kuyrukIlerleme, setKuyrukIlerleme] = useState<{
+    partiNo: number;
+    partiToplam: number;
+    basarili: number;
+    basarisiz: number;
+    durum: "gonderiyor" | "bekliyor" | "bitti" | "iptal";
+    kalanSn?: number;
+  } | null>(null);
+  const [tempo, setTempo] = useState<TopluSmsTempo>(TOPLU_SMS_TEMPO_VARSAYILAN);
+  const [tempoPreset, setTempoPreset] =
+    useState<TopluSmsTempoPresetId | "ozel">("dengeli");
   const [sonuc, setSonuc] = useState<{
     basarili: number;
     basarisiz: number;
     mesajParca?: number;
     oncekiAtlandi?: number;
+    partiSayisi?: number;
   } | null>(null);
   const [hata, setHata] = useState("");
+  const kuyrukIptalRef = useRef(false);
 
   const [oncekiSet, setOncekiSet] = useState<Set<string>>(new Set());
   const [oncekiKontrol, setOncekiKontrol] = useState(false);
@@ -140,6 +164,18 @@ export default function PanelTopluSmsPage() {
     oncekiAdet > 0 && oncekiMod === "atla"
       ? yeniAdet
       : gecerliAlicilar.length;
+
+  const tahminiSureSn = useMemo(
+    () => topluSmsTahminiSureSn(gonderilecekAdet, tempo),
+    [gonderilecekAdet, tempo]
+  );
+  const partiTahmini = useMemo(
+    () =>
+      Math.ceil(
+        Math.max(0, gonderilecekAdet) / Math.max(1, tempo.partiBoyutu)
+      ),
+    [gonderilecekAdet, tempo.partiBoyutu]
+  );
 
   const oncekileriKontrolEt = useCallback(async (liste: TopluSmsAlici[]) => {
     const telefonlar = liste.filter((a) => !a.hata).map((a) => a.telefon);
@@ -349,6 +385,7 @@ export default function PanelTopluSmsPage() {
   async function gonder() {
     setHata("");
     setSonuc(null);
+    setKuyrukIlerleme(null);
     if (!mesajDurum.gecerli) {
       setHata(mesajDurum.hata ?? "Mesaj geçersiz.");
       return;
@@ -364,6 +401,7 @@ export default function PanelTopluSmsPage() {
       return;
     }
 
+    const tempoN = topluSmsTempoNormalize(tempo);
     const atlaMetin =
       oncekiAdet > 0 && oncekiMod === "atla"
         ? ` · ${oncekiAdet} önceki numara atlanacak`
@@ -372,11 +410,19 @@ export default function PanelTopluSmsPage() {
           : "";
 
     const onay = window.confirm(
-      `${gonderilecekAdet} numaraya SMS gönderilecek (${mesajDurum.parca} SMS parçası / numara)${atlaMetin}. Devam?`
+      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${atlaMetin}.\n\nSekme açık kalsın. Devam?`
     );
     if (!onay) return;
 
+    kuyrukIptalRef.current = false;
     setGonderiyor(true);
+
+    let toplamBasarili = 0;
+    let toplamBasarisiz = 0;
+    let mesajParca: number | undefined = mesajDurum.parca;
+    const oncekiAtlandiSayisi =
+      oncekiAdet > 0 && oncekiMod === "atla" ? oncekiAdet : undefined;
+
     try {
       const oturumRes = await fetch("/api/panel/oturum", {
         credentials: "include",
@@ -387,45 +433,145 @@ export default function PanelTopluSmsPage() {
         return;
       }
 
+      let kuyruk = gecerliAlicilar.map((a) => a.telefon);
+      if (oncekiAdet > 0 && oncekiMod === "atla") {
+        kuyruk = kuyruk.filter((t) => !oncekiSet.has(t));
+      }
+
       const adlar: Record<string, string> = {};
       for (const a of gecerliAlicilar) {
         if (a.ad) adlar[a.telefon] = a.ad;
       }
 
-      const res = await fetch("/api/panel/sms/toplu", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mesaj,
-          telefonlar: gecerliAlicilar.map((a) => a.telefon),
-          adlar,
-          oncekileriAtla: oncekiAdet > 0 && oncekiMod === "atla",
-          ...(sms50Varyant
-            ? { varyant: sms50Varyant, kampanyaKodu: SMS50_KAMPANYA_KODU }
-            : {}),
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.status === 401) {
-        throw new Error(
-          "Oturum sona ermiş. Tekrar giriş yapıp yeniden deneyin."
-        );
+      const partiler = topluSmsPartilereBol(kuyruk, tempoN.partiBoyutu);
+      if (partiler.length === 0) {
+        setHata("Gönderilecek numara kalmadı.");
+        return;
       }
-      if (!res.ok) throw new Error(data.error ?? "Gönderim başarısız.");
-      setSonuc({
-        basarili: data.basarili ?? 0,
-        basarisiz: data.basarisiz ?? 0,
-        mesajParca: data.mesajParca,
-        oncekiAtlandi: data.oncekiAtlandi,
-      });
-      if (data.gecmisUyari) setGecmisUyari(String(data.gecmisUyari));
+
+      for (let i = 0; i < partiler.length; i++) {
+        if (kuyrukIptalRef.current) {
+          setKuyrukIlerleme({
+            partiNo: i,
+            partiToplam: partiler.length,
+            basarili: toplamBasarili,
+            basarisiz: toplamBasarisiz,
+            durum: "iptal",
+          });
+          break;
+        }
+
+        setKuyrukIlerleme({
+          partiNo: i + 1,
+          partiToplam: partiler.length,
+          basarili: toplamBasarili,
+          basarisiz: toplamBasarisiz,
+          durum: "gonderiyor",
+        });
+
+        const res = await fetch("/api/panel/sms/toplu", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mesaj,
+            telefonlar: partiler[i],
+            adlar,
+            oncekileriAtla: false,
+            ...(sms50Varyant
+              ? { varyant: sms50Varyant, kampanyaKodu: SMS50_KAMPANYA_KODU }
+              : {}),
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401) {
+          throw new Error(
+            "Oturum sona ermiş. Tekrar giriş yapıp yeniden deneyin."
+          );
+        }
+        if (!res.ok) {
+          throw new Error(
+            data.error ?? `Parti ${i + 1}/${partiler.length} başarısız.`
+          );
+        }
+
+        toplamBasarili += Number(data.basarili) || 0;
+        toplamBasarisiz += Number(data.basarisiz) || 0;
+        if (typeof data.mesajParca === "number") mesajParca = data.mesajParca;
+        if (data.gecmisUyari) setGecmisUyari(String(data.gecmisUyari));
+
+        setKuyrukIlerleme({
+          partiNo: i + 1,
+          partiToplam: partiler.length,
+          basarili: toplamBasarili,
+          basarisiz: toplamBasarisiz,
+          durum: i + 1 < partiler.length ? "bekliyor" : "bitti",
+        });
+
+        if (i + 1 < partiler.length) {
+          const bekleMs = topluSmsPartiBeklemeMs(tempoN);
+          const bitis = Date.now() + bekleMs;
+          while (Date.now() < bitis) {
+            if (kuyrukIptalRef.current) break;
+            const kalan = Math.ceil((bitis - Date.now()) / 1000);
+            setKuyrukIlerleme({
+              partiNo: i + 1,
+              partiToplam: partiler.length,
+              basarili: toplamBasarili,
+              basarisiz: toplamBasarisiz,
+              durum: "bekliyor",
+              kalanSn: Math.max(0, kalan),
+            });
+            await new Promise((r) => setTimeout(r, 500));
+          }
+        }
+      }
+
+      if (kuyrukIptalRef.current) {
+        setSonuc({
+          basarili: toplamBasarili,
+          basarisiz: toplamBasarisiz,
+          mesajParca,
+          oncekiAtlandi: oncekiAtlandiSayisi,
+          partiSayisi: partiler.length,
+        });
+        setHata(
+          `Kuyruk iptal edildi. Şimdiye kadar ${toplamBasarili} başarılı / ${toplamBasarisiz} başarısız.`
+        );
+      } else {
+        setSonuc({
+          basarili: toplamBasarili,
+          basarisiz: toplamBasarisiz,
+          mesajParca,
+          oncekiAtlandi: oncekiAtlandiSayisi,
+          partiSayisi: partiler.length,
+        });
+        setKuyrukIlerleme({
+          partiNo: partiler.length,
+          partiToplam: partiler.length,
+          basarili: toplamBasarili,
+          basarisiz: toplamBasarisiz,
+          durum: "bitti",
+        });
+      }
       void oncekileriKontrolEt(alicilar);
     } catch (e) {
       setHata(e instanceof Error ? e.message : "Gönderim başarısız.");
+      if (toplamBasarili > 0 || toplamBasarisiz > 0) {
+        setSonuc({
+          basarili: toplamBasarili,
+          basarisiz: toplamBasarisiz,
+          mesajParca,
+          oncekiAtlandi: oncekiAtlandiSayisi,
+        });
+      }
     } finally {
       setGonderiyor(false);
     }
+  }
+
+  function kuyrukIptal() {
+    kuyrukIptalRef.current = true;
   }
 
   return (
@@ -852,6 +998,9 @@ export default function PanelTopluSmsPage() {
                 {sonuc.oncekiAtlandi
                   ? ` · ${sonuc.oncekiAtlandi} önceki atlandı`
                   : ""}
+                {sonuc.partiSayisi
+                  ? ` · ${sonuc.partiSayisi} parti`
+                  : ""}
                 {sonuc.mesajParca
                   ? ` · mesaj ${sonuc.mesajParca} SMS parçası`
                   : ""}
@@ -866,6 +1015,137 @@ export default function PanelTopluSmsPage() {
             </Card>
           )}
 
+          <Card className="space-y-3">
+            <h3 className="font-semibold text-slate-800">Gönderim temposu</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Liste küçük partilere bölünür; partiler arasında beklenir (istemci
+              kuyruğu). Böylece tek seferde büyük patlama olmaz. Sekmeyi kapatmayın.
+            </p>
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">
+                Hazır ayar
+              </span>
+              <select
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+                value={tempoPreset}
+                disabled={gonderiyor}
+                onChange={(e) => {
+                  const v = e.target.value as TopluSmsTempoPresetId | "ozel";
+                  setTempoPreset(v);
+                  const p = TOPLU_SMS_TEMPO_PRESETLER.find((x) => x.id === v);
+                  if (p) setTempo({ ...p.tempo });
+                }}
+              >
+                {TOPLU_SMS_TEMPO_PRESETLER.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.etiket}
+                  </option>
+                ))}
+                <option value="ozel">Özel</option>
+              </select>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Field
+                label="Parti boyutu"
+                type="number"
+                min={1}
+                max={50}
+                disabled={gonderiyor}
+                value={String(tempo.partiBoyutu)}
+                onChange={(e) => {
+                  setTempoPreset("ozel");
+                  setTempo((t) =>
+                    topluSmsTempoNormalize({
+                      ...t,
+                      partiBoyutu: Number(e.target.value),
+                    })
+                  );
+                }}
+              />
+              <Field
+                label="Bekleme (sn)"
+                type="number"
+                min={0}
+                max={600}
+                disabled={gonderiyor}
+                value={String(tempo.beklemeSn)}
+                onChange={(e) => {
+                  setTempoPreset("ozel");
+                  setTempo((t) =>
+                    topluSmsTempoNormalize({
+                      ...t,
+                      beklemeSn: Number(e.target.value),
+                    })
+                  );
+                }}
+              />
+              <Field
+                label="Jitter (%)"
+                type="number"
+                min={0}
+                max={50}
+                disabled={gonderiyor}
+                value={String(Math.round(tempo.jitterOran * 100))}
+                onChange={(e) => {
+                  setTempoPreset("ozel");
+                  setTempo((t) =>
+                    topluSmsTempoNormalize({
+                      ...t,
+                      jitterOran: Number(e.target.value) / 100,
+                    })
+                  );
+                }}
+              />
+            </div>
+            <p className="text-xs text-slate-500">
+              Bu liste için: ~{partiTahmini} parti · tahmini süre{" "}
+              {topluSmsSureMetni(tahminiSureSn)}
+              {tempo.jitterOran > 0
+                ? ` · aralık ±%${Math.round(tempo.jitterOran * 100)} sapmalı`
+                : ""}
+              .
+            </p>
+          </Card>
+
+          {kuyrukIlerleme && gonderiyor && (
+            <Card className="border-amber-200 bg-amber-50 space-y-2">
+              <p className="text-sm font-medium text-amber-950">
+                {kuyrukIlerleme.durum === "gonderiyor"
+                  ? `Parti ${kuyrukIlerleme.partiNo}/${kuyrukIlerleme.partiToplam} gönderiliyor…`
+                  : kuyrukIlerleme.durum === "bekliyor"
+                    ? `Parti ${kuyrukIlerleme.partiNo}/${kuyrukIlerleme.partiToplam} bitti · sonraki için ${kuyrukIlerleme.kalanSn ?? "…"} sn`
+                    : kuyrukIlerleme.durum === "iptal"
+                      ? "Kuyruk iptal ediliyor…"
+                      : "Tamamlandı"}
+              </p>
+              <p className="text-xs text-amber-900">
+                Şimdiye kadar {kuyrukIlerleme.basarili} başarılı
+                {kuyrukIlerleme.basarisiz > 0
+                  ? ` · ${kuyrukIlerleme.basarisiz} başarısız`
+                  : ""}
+              </p>
+              <div className="h-2 rounded-full bg-amber-100 overflow-hidden">
+                <div
+                  className="h-full bg-amber-500 transition-all"
+                  style={{
+                    width: `${
+                      (kuyrukIlerleme.partiNo /
+                        Math.max(1, kuyrukIlerleme.partiToplam)) *
+                      100
+                    }%`,
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                className="text-xs font-medium text-red-700"
+                onClick={kuyrukIptal}
+              >
+                Kuyruğu durdur
+              </button>
+            </Card>
+          )}
+
           <Btn
             type="button"
             disabled={
@@ -876,8 +1156,8 @@ export default function PanelTopluSmsPage() {
             onClick={() => void gonder()}
           >
             {gonderiyor
-              ? "Gönderiliyor…"
-              : `${gonderilecekAdet} kişiye SMS gönder`}
+              ? "Kuyruk çalışıyor…"
+              : `${gonderilecekAdet} kişiye parçalı gönder`}
           </Btn>
         </>
       )}
