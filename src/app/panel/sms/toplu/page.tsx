@@ -271,17 +271,19 @@ export default function PanelTopluSmsPage() {
     }
   }
 
-  function sablonUygula(govde: string) {
-    if (!sms50Varyant) {
-      setHata("Önce test linki harfini (a–z) seçin.");
-      return;
+  function sablonUygula(govde: string, varyant?: Sms50Varyant | "") {
+    const harf = varyant !== undefined ? varyant : sms50Varyant;
+    let metin = govde.trim();
+    if (metin.includes("{{LINK}}")) {
+      if (!harf) {
+        setHata("Şablonda {{LINK}} var — önce test linki harfini (a–z) seçin.");
+        return;
+      }
+      metin = metin.replaceAll("{{LINK}}", sms50KisaUrl(harf));
     }
-    const link = sms50KisaUrl(sms50Varyant);
-    let metin = govde.includes("{{LINK}}")
-      ? govde.replaceAll("{{LINK}}", link)
-      : `${govde.trim()} ${link}`;
+    /* Şablonda sabit link varsa olduğu gibi bırak — ikinci kez ekleme */
     if (sms50FooterEkle && sms50Footer.length > 0) {
-      metin = `${metin.trim()}\n${sms50Footer.join(" — ")}`;
+      metin = `${metin}\n${sms50Footer.join(" — ")}`;
     }
     setMesaj(metin.trim());
     setHata("");
@@ -853,19 +855,9 @@ export default function PanelTopluSmsPage() {
                 onChange={(e) => {
                   const v = (e.target.value || "") as Sms50Varyant | "";
                   setSms50Varyant(v);
-                  if (v && seciliSablonId) {
+                  if (seciliSablonId) {
                     const s = sms50Sablonlar.find((x) => x.id === seciliSablonId);
-                    if (s) {
-                      const link = sms50KisaUrl(v);
-                      let metin = s.govde.includes("{{LINK}}")
-                        ? s.govde.replaceAll("{{LINK}}", link)
-                        : `${s.govde.trim()} ${link}`;
-                      if (sms50FooterEkle && sms50Footer.length > 0) {
-                        metin = `${metin.trim()}\n${sms50Footer.join(" — ")}`;
-                      }
-                      setMesaj(metin.trim());
-                      setHata("");
-                    }
+                    if (s) sablonUygula(s.govde, v);
                   }
                 }}
               >
@@ -932,9 +924,9 @@ export default function PanelTopluSmsPage() {
                 ))}
               </select>
               <p className="text-xs text-slate-500">
-                Seçince gövde SMS metnine yazılır;{" "}
+                Seçince şablon metni aynen gelir. Yalnızca{" "}
                 <code className="bg-slate-100 px-1 rounded">{"{{LINK}}"}</code>{" "}
-                seçili harfe bağlanır.
+                varsa seçili harfe çevrilir; sabit yazılmış link tekrar eklenmez.
               </p>
             </div>
             <label className="flex items-center gap-2 text-xs text-slate-600">
