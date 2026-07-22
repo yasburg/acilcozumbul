@@ -15,13 +15,13 @@
     "semantic_hash": ""
   },
   "next.config.ts": {
-    "mtime": 1781199982.3643825,
-    "ast_hash": "cdefde4a766b478f3cd7f0c9c548dc13",
+    "mtime": 1784710553.5512304,
+    "ast_hash": "d3a6e8248d2bf34b47b1f2c29698acd6",
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1784280135.2227411,
-    "ast_hash": "9c44f1514b44a6f68936e0b957d6d13d",
+    "mtime": 1784665783.1437607,
+    "ast_hash": "a849d5f7a6fe023102712ddd1aebe631",
     "semantic_hash": ""
   },
   "postcss.config.mjs": {
@@ -365,8 +365,8 @@
     "semantic_hash": ""
   },
   "src/app/api/panel/ozet/route.ts": {
-    "mtime": 1784478647.6552029,
-    "ast_hash": "4753cd86abe76de3f9bdefd2bf3d6c72",
+    "mtime": 1784635596.6690407,
+    "ast_hash": "d2c2d9306e610b74293dd80a1552d1c8",
     "semantic_hash": ""
   },
   "src/app/api/panel/rozetler/route.ts": {
@@ -525,18 +525,18 @@
     "semantic_hash": ""
   },
   "src/app/page.tsx": {
-    "mtime": 1784466827.3032725,
+    "mtime": 1784673846.7525249,
     "ast_hash": "06870a1d36f6b5f667bc2a342785e33d",
     "semantic_hash": ""
   },
   "src/app/panel/cekiciler/[id]/page.tsx": {
-    "mtime": 1784546830.7215934,
-    "ast_hash": "df1aa99016dfb1b238c1a1fdc70e4560",
+    "mtime": 1784627809.0749302,
+    "ast_hash": "66d3e5812d06c5307f7300d575d4d831",
     "semantic_hash": ""
   },
   "src/app/panel/cekiciler/page.tsx": {
-    "mtime": 1784627793.7343812,
-    "ast_hash": "4936a4a24739f216d51537b36dd39264",
+    "mtime": 1784629956.7009156,
+    "ast_hash": "5ece9c49c824294af6f112bbf2547372",
     "semantic_hash": ""
   },
   "src/app/panel/davetler/page.tsx": {
@@ -580,8 +580,8 @@
     "semantic_hash": ""
   },
   "src/app/panel/page.tsx": {
-    "mtime": 1781195360.7617023,
-    "ast_hash": "3b7a28e90318f123482a6bb3d59e650e",
+    "mtime": 1784637296.4750733,
+    "ast_hash": "984d50b88ab3beab1b7ff41674d8ca9c",
     "semantic_hash": ""
   },
   "src/app/panel/rozetler/page.tsx": {
@@ -590,8 +590,8 @@
     "semantic_hash": ""
   },
   "src/app/panel/sms/page.tsx": {
-    "mtime": 1780610429.5416958,
-    "ast_hash": "aeb72778bde1a4f2fb45d17880565e1c",
+    "mtime": 1784712413.6402545,
+    "ast_hash": "7c8c2bf96fa96bb50a4345a412b31b6f",
     "semantic_hash": ""
   },
   "src/app/panel/talepler/page.tsx": {
@@ -625,8 +625,8 @@
     "semantic_hash": ""
   },
   "src/components/CekiciPanelTabs.tsx": {
-    "mtime": 1784481867.5132473,
-    "ast_hash": "c56011a56184718910c6480b3170d50d",
+    "mtime": 1784675353.192016,
+    "ast_hash": "c247117e5df570da4b779dd67f8e9060",
     "semantic_hash": ""
   },
   "src/components/CekiciRotaPanel.tsx": {
@@ -710,13 +710,13 @@
     "semantic_hash": ""
   },
   "src/components/PanelChrome.tsx": {
-    "mtime": 1784546715.748398,
-    "ast_hash": "6d93bc3e78429f0c4308f39ebd9cc1ab",
+    "mtime": 1784712482.54793,
+    "ast_hash": "5534d2dd434f53c34594e3c5cee90111",
     "semantic_hash": ""
   },
   "src/components/PanelNav.tsx": {
-    "mtime": 1784546715.7483964,
-    "ast_hash": "af6942f3c866fec3f9db756618962f86",
+    "mtime": 1784712482.535527,
+    "ast_hash": "43373c2b06a852e976226594642c995f",
     "semantic_hash": ""
   },
   "src/components/PostHogProvider.tsx": {
@@ -975,8 +975,8 @@
     "semantic_hash": ""
   },
   "src/lib/db.ts": {
-    "mtime": 1784546626.0905268,
-    "ast_hash": "e82ac503c9da1a0d48d693b670c76b7a",
+    "mtime": 1784635342.1354802,
+    "ast_hash": "f6a7c481606c5a81d3bf35b7a136d033",
     "semantic_hash": ""
   },
   "src/lib/demo-fixtures.ts": {
@@ -1260,8 +1260,8 @@
     "semantic_hash": ""
   },
   "src/lib/sms-provider.ts": {
-    "mtime": 1784066620.3444576,
-    "ast_hash": "b431177e3ac8782e8a80a3dbb1dc848c",
+    "mtime": 1784665817.912153,
+    "ast_hash": "741defbf68e3572297c6b7841b84c1e0",
     "semantic_hash": ""
   },
   "src/lib/sms-saglik.ts": {
@@ -1325,8 +1325,8 @@
     "semantic_hash": ""
   },
   "src/lib/supabase/middleware.ts": {
-    "mtime": 1780609593.9273405,
-    "ast_hash": "0baea640d9754dbb38ea3a65d773dd68",
+    "mtime": 1784668158.5770552,
+    "ast_hash": "559d4a32d63a6ec5877c063dfa4ab20c",
     "semantic_hash": ""
   },
   "src/lib/supabase/route-handler.ts": {
@@ -1685,8 +1685,8 @@
     "semantic_hash": ""
   },
   "src/app/api/cekici/hesap/sil/route.ts": {
-    "mtime": 1784280222.255733,
-    "ast_hash": "93b163963bc0ee7b9520e384e2cdb5ce",
+    "mtime": 1784673944.1491268,
+    "ast_hash": "d65ff1e981d1d21096175c39d313694a",
     "semantic_hash": ""
   },
   "scripts/migrate-cekici-passwords-to-auth.mjs": {
@@ -1872,6 +1872,146 @@
   "supabase/migrations/026_cekici_tester_hesap.sql": {
     "mtime": 1784627776.624833,
     "ast_hash": "e5822cb6fb8938f48d0d2900ef60cdb4",
+    "semantic_hash": ""
+  },
+  "src/app/api/panel/sms/toplu/route.ts": {
+    "mtime": 1784710327.3407464,
+    "ast_hash": "f3b7581b4ed027a7737dddbdcef47c32",
+    "semantic_hash": ""
+  },
+  "src/app/panel/sms/toplu/page.tsx": {
+    "mtime": 1784712429.7829146,
+    "ast_hash": "43d79bcd8e7219627e46b053563bb777",
+    "semantic_hash": ""
+  },
+  "src/lib/sms-karakter.test.ts": {
+    "mtime": 1784665859.0575933,
+    "ast_hash": "94357d05d354e54f539ed88f4924a518",
+    "semantic_hash": ""
+  },
+  "src/lib/sms-karakter.ts": {
+    "mtime": 1784665799.010901,
+    "ast_hash": "9a13578a752f327f3f5afd0e988a20e6",
+    "semantic_hash": ""
+  },
+  "src/lib/toplu-sms-excel.ts": {
+    "mtime": 1784671432.819603,
+    "ast_hash": "edc4bd904bdaa8f643af884f47a8d762",
+    "semantic_hash": ""
+  },
+  "src/app/api/panel/sms/toplu/gecmis/route.ts": {
+    "mtime": 1784670447.0718458,
+    "ast_hash": "e886874f028dee74d77e53f45c226028",
+    "semantic_hash": ""
+  },
+  "src/app/api/panel/sms/toplu/kontrol/route.ts": {
+    "mtime": 1784670447.0601852,
+    "ast_hash": "0aefa878ecb5821d2ac410da73915e58",
+    "semantic_hash": ""
+  },
+  "src/lib/supabase/toplu-sms-schema.ts": {
+    "mtime": 1784670432.1664088,
+    "ast_hash": "357a3efa289936b61d7b47d221a22943",
+    "semantic_hash": ""
+  },
+  "src/lib/toplu-sms-gecmis-db.ts": {
+    "mtime": 1784710323.9185686,
+    "ast_hash": "6fe1e67f506ce00f9cbe42ad3d2d1931",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/027_panel_toplu_sms_gecmis.sql": {
+    "mtime": 1784670420.9182105,
+    "ast_hash": "0ecb62215de66d758931cc3349a14b69",
+    "semantic_hash": ""
+  },
+  "src/app/api/cekici/hesap/sil/otp/route.ts": {
+    "mtime": 1784673944.0542254,
+    "ast_hash": "46c45d8ebe6da4e5c03db59f2fdaaed5",
+    "semantic_hash": ""
+  },
+  "src/lib/cekici-hesap-sil-onay.ts": {
+    "mtime": 1784673996.0269475,
+    "ast_hash": "142ff65fecf0f9cf98f1b21cc443d76a",
+    "semantic_hash": ""
+  },
+  "src/lib/cekici-hesap-sil-otp.ts": {
+    "mtime": 1784674007.6126084,
+    "ast_hash": "322b6283798b4ea941856b50900ab9a2",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/028_cekici_hesap_sil_otp.sql": {
+    "mtime": 1784673933.9365873,
+    "ast_hash": "5aad2788e679c99ff0002e5b99fb37be",
+    "semantic_hash": ""
+  },
+  "src/app/api/panel/sms/toplu/kampanya/route.ts": {
+    "mtime": 1784712394.3003626,
+    "ast_hash": "05bba72d5c117666316980a1359c5756",
+    "semantic_hash": ""
+  },
+  "src/app/api/panel/sms/toplu/varyantlar/route.ts": {
+    "mtime": 1784710327.7068212,
+    "ast_hash": "5fc5c0155d625823b8077b45d6cae4ed",
+    "semantic_hash": ""
+  },
+  "src/app/sms50/[varyant]/route.ts": {
+    "mtime": 1784710555.1628177,
+    "ast_hash": "962300d845c7d321e8207f6fd74e824b",
+    "semantic_hash": ""
+  },
+  "src/lib/sms50-kampanya.test.ts": {
+    "mtime": 1784710442.5829155,
+    "ast_hash": "99e8a7ab43a3dd2ff6373bbca532c416",
+    "semantic_hash": ""
+  },
+  "src/lib/sms50-kampanya.ts": {
+    "mtime": 1784713170.8153899,
+    "ast_hash": "f9883de42c443e0f1f49dface60a9f9e",
+    "semantic_hash": ""
+  },
+  "src/lib/sms50-tiklama-db.ts": {
+    "mtime": 1784710343.8572857,
+    "ast_hash": "bb1f5ddde743c65fc7fb496cfaa452ef",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/029_sms50_kampanya_tiklama.sql": {
+    "mtime": 1784710262.59406,
+    "ast_hash": "05610f3e5219da1da415c991470720b7",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/030_sms50_kampanya_kodu.sql": {
+    "mtime": 1784710273.38084,
+    "ast_hash": "7e2a5fe3d0db72e18366d67bebdb6dfc",
+    "semantic_hash": ""
+  },
+  "src/app/api/panel/sms/sablonlar/[id]/route.ts": {
+    "mtime": 1784712386.2178142,
+    "ast_hash": "ec2bf3e64ba7d239084732af5b870f74",
+    "semantic_hash": ""
+  },
+  "src/app/api/panel/sms/sablonlar/route.ts": {
+    "mtime": 1784712345.0154803,
+    "ast_hash": "8666d1ed47a0c5aadf21319b79c48ddf",
+    "semantic_hash": ""
+  },
+  "src/app/panel/sms/sablonlar/page.tsx": {
+    "mtime": 1784712394.0726979,
+    "ast_hash": "f7767f358d7e720d5f745265cfd5bce2",
+    "semantic_hash": ""
+  },
+  "src/lib/sms-sablon-db.ts": {
+    "mtime": 1784713174.3124876,
+    "ast_hash": "aa03cb5ffade86aa4f3c8a6459a0e417",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/031_panel_sms_sablonlar.sql": {
+    "mtime": 1784713175.202115,
+    "ast_hash": "40fcff3a3f04e862eff497fcde8df5b1",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/032_panel_sms_sablonlar_govde_sil.sql": {
+    "mtime": 1784713175.9727237,
+    "ast_hash": "73cc4bbb0f11eb618b5ec7d4bd51d23a",
     "semantic_hash": ""
   }
 }

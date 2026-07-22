@@ -1,16 +1,16 @@
 # Graph Report - acilcozumbul  (2026-07-21)
 
 ## Corpus Check
-- 359 files · ~378,785 words
+- 361 files · ~379,296 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1516 nodes · 4679 edges · 72 communities (64 shown, 8 thin omitted)
+- 1520 nodes · 4689 edges · 74 communities (63 shown, 11 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.67)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `457bfe71`
+- Built from commit: `2f215e29`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -77,6 +77,8 @@
 - [[_COMMUNITY_layout.tsx|layout.tsx]]
 - [[_COMMUNITY_ArizaFotografAlani.tsx|ArizaFotografAlani.tsx]]
 - [[_COMMUNITY_cekici-belge.ts|cekici-belge.ts]]
+- [[_COMMUNITY_layout.tsx|layout.tsx]]
+- [[_COMMUNITY_route.ts|route.ts]]
 - [[_COMMUNITY_Cekici|Cekici]]
 - [[_COMMUNITY_Ölçeklenebilirlik regression smoke checklist|Ölçeklenebilirlik regression smoke checklist]]
 - [[_COMMUNITY_verify-teklif-backfill.mjs|verify-teklif-backfill.mjs]]
@@ -110,39 +112,39 @@
 ## Import Cycles
 - None detected.
 
-## Communities (72 total, 8 thin omitted)
+## Communities (74 total, 11 thin omitted)
 
 ### Community 0 - "demo-oturum.ts"
-Cohesion: 0.18
-Nodes (21): POST(), POST(), GET(), POST(), bekleyenCekiciEpostaOtp(), cekiciEpostaDogrulandiMi(), cekiciEpostaOtpDogrula(), cekiciEpostaOtpGonder() (+13 more)
+Cohesion: 0.23
+Nodes (18): POST(), GET(), bekleyenCekiciEpostaOtp(), cekiciEpostaDogrulandiMi(), cekiciEpostaOtpDogrula(), cekiciEpostaOtpGonder(), EmailOtpKayit, EmailOtpRow (+10 more)
 
 ### Community 1 - "telefonNormalize"
 Cohesion: 0.12
-Nodes (25): GET(), GET(), GET(), addSmsKaydi(), escapeXml(), GondericiAdiSorguSonuc, logSmsKaydi(), netgsmGondericiAdlariSorgula() (+17 more)
+Nodes (26): GET(), GET(), GET(), addSmsKaydi(), escapeXml(), GondericiAdiSorguSonuc, logSmsKaydi(), netgsmGondericiAdlariSorgula() (+18 more)
 
 ### Community 2 - "cekici-email-otp.ts"
-Cohesion: 0.07
-Nodes (32): metadata, CekiciKayitLayout(), metadata, metadata, metadata, metadata, metadata, metadata (+24 more)
+Cohesion: 0.17
+Nodes (15): CekiciKayitLayout(), metadata, HomePage(), metadata, MusteriAnaSayfa(), JsonLd(), JsonLdProps, SssBolumu() (+7 more)
 
 ### Community 3 - "getSupabaseAdmin"
 Cohesion: 0.20
 Nodes (14): config, middleware(), POST(), POST(), GET(), panelAdminEpostalari(), panelEpostaIzinli(), supabaseEksikEnvAlanlari() (+6 more)
 
 ### Community 4 - "seo.ts"
-Cohesion: 0.15
+Cohesion: 0.16
 Nodes (19): garantiHashHesapla(), garantiXmlDeger(), GARANTI_HATA_KODLARI, garantiKodNormalize(), garantiMesajGenelMi(), garantiMusteriHataMesaji(), garantiYetersizBakiyeMetniMi(), GENEL_MESAJ_ORNEKLERI (+11 more)
 
 ### Community 5 - "mappers.ts"
-Cohesion: 0.12
-Nodes (26): belgeBase64Ayikla(), cekiciBelgeYukle(), IZINLI_MIME, uzanti(), hydrateTalep(), syncTalepIliskileri(), getSupabaseAdmin(), supabaseDbAktif() (+18 more)
+Cohesion: 0.14
+Nodes (33): addTalep(), bugunBaslangicIso(), getCekiciByDogrulanmisFaturaEposta(), getCekicilerBildirimAdaylari(), getTalepler(), getTaleplerBugun(), getTaleplerMemnuniyetBekleyen(), getTaleplerSince() (+25 more)
 
 ### Community 6 - "ensureSeedData"
 Cohesion: 0.08
-Nodes (42): noktaOku(), POST(), GET(), CekiciRotaPanelProps, embedDirectionsUrl(), googleMapsDirUrl(), MusteriCekiciTakipHarita(), MusteriCekiciTakipHaritaProps (+34 more)
+Nodes (45): noktaOku(), POST(), GET(), CekiciRotaPanel(), CekiciRotaPanelProps, embedDirectionsUrl(), RotaSureleri, embedDirectionsUrl() (+37 more)
 
 ### Community 7 - "ui.tsx"
-Cohesion: 0.11
-Nodes (31): GET(), haftaBaslangici(), istanbulAyAnahtari(), kazananTeklifFiyati(), GET(), GET(), GET(), GET() (+23 more)
+Cohesion: 0.31
+Nodes (8): GET(), GET(), GET(), countCekiciler(), countCekicilerBelgeDurum(), countSmsLog(), countTalepler(), hizmetVerenSayimHesapla()
 
 ### Community 8 - "TikTok ve Instagram Tanıtım Rehberi — acilcozumbul.com"
 Cohesion: 0.06
@@ -153,92 +155,92 @@ Cohesion: 0.06
 Nodes (34): dependencies, @netgsm/sms, next, posthog-js, posthog-node, react, react-dom, @supabase/ssr (+26 more)
 
 ### Community 10 - "google-maps.ts"
-Cohesion: 0.15
-Nodes (20): eslintConfig, main(), GET(), GET(), envGarantiAlan(), envTemizle(), GarantiAlan, GarantiConfig (+12 more)
+Cohesion: 0.17
+Nodes (19): eslintConfig, main(), GET(), envGarantiAlan(), envTemizle(), GarantiAlan, GarantiConfig, garantiConfigOku() (+11 more)
 
 ### Community 11 - "CekiciPanelTabs.tsx"
-Cohesion: 0.06
-Nodes (95): POST(), POST(), POST(), IZINLI, POST(), GET(), POST(), GET() (+87 more)
+Cohesion: 0.05
+Nodes (101): POST(), POST(), POST(), POST(), POST(), IZINLI, POST(), GET() (+93 more)
 
 ### Community 12 - "sms-provider.ts"
-Cohesion: 0.20
-Nodes (17): GET(), PATCH(), POST(), ekleKampanya(), getKampanyaByKod(), getKampanyaKullanimlari(), getKampanyalar(), guncelleKampanya() (+9 more)
+Cohesion: 0.22
+Nodes (10): metadata, metadata, metadata, metadata, metadata, YasalBolum(), YasalListe(), YasalSayfaShell() (+2 more)
 
 ### Community 13 - "CekiciAyarlarPanel.tsx"
-Cohesion: 0.17
-Nodes (36): GET(), rotaKoordinatlari(), POST(), listeDurumuBelirle(), toOzet(), cekiciTalepBolgesineUygunMu(), sehirBeklemeMesaji(), cekiciTalepSorununaUygunMu() (+28 more)
+Cohesion: 0.24
+Nodes (27): GET(), rotaKoordinatlari(), POST(), listeDurumuBelirle(), toOzet(), cekiciTalepBolgesineUygunMu(), cekiciTalepSorununaUygunMu(), demoListeDurumuBelirle() (+19 more)
 
 ### Community 14 - "memnuniyet.ts"
-Cohesion: 0.18
-Nodes (20): GET(), PUT(), davetKayitBaslangicKredisiFromSonuc(), davetKayitBonusTamamla(), davetKayitHazirla(), DavetKayitSonuc, davetKayitBaslangicKredisi(), davetKoduGecerliMi() (+12 more)
+Cohesion: 0.10
+Nodes (43): GET(), GET(), PUT(), GET(), GET(), PATCH(), POST(), davetKayitBaslangicKredisiFromSonuc() (+35 more)
 
 ### Community 15 - "db.ts"
 Cohesion: 0.15
-Nodes (26): POST(), GET(), POST(), bolgeOzet(), GET(), POST(), PUT(), POST() (+18 more)
+Nodes (19): POST(), POST(), GET(), PUT(), saatGecerliMi(), GET(), PUT(), PATCH() (+11 more)
 
 ### Community 16 - "hizmet-veren-sayim.ts"
-Cohesion: 0.12
-Nodes (18): AlanHatalari, BOS_ALAN_HATALARI, KayitAlan, KayitIcerik(), KayitKontenjanBilgi(), Props, YasalOnayKutusu(), YasalSiteFooter() (+10 more)
+Cohesion: 0.14
+Nodes (16): AlanHatalari, BOS_ALAN_HATALARI, KayitAlan, KayitIcerik(), Props, YasalOnayKutusu(), YasalSiteFooter(), DOGUM_AYLARI (+8 more)
 
 ### Community 17 - "route.ts"
-Cohesion: 0.07
-Nodes (54): POST(), POST(), DELETE(), authAnonClient(), authSignIn(), cekiciAuthEmail(), cekiciAuthKullaniciOlustur(), cekiciAuthKullaniciSil() (+46 more)
+Cohesion: 0.10
+Nodes (42): bolgeOzet(), GET(), POST(), PUT(), BolgeApiData, BolgeApiData, cekiciTalepIlIlceyeUygunMu(), cekiciTalepMenzileUygunMu() (+34 more)
 
 ### Community 18 - "MusteriAnaSayfa.tsx"
-Cohesion: 0.15
-Nodes (21): GpsHttpsBanner(), GpsHttpsBannerProps, KonumIzniYardim(), KonumIzniYardimProps, ADIM_OLAYLARI, Step, STEP_SIRA, Spinner() (+13 more)
+Cohesion: 0.11
+Nodes (26): GpsHttpsBanner(), GpsHttpsBannerProps, KonumIzniYardim(), KonumIzniYardimProps, ADIM_OLAYLARI, Step, STEP_SIRA, FormAdimi (+18 more)
 
 ### Community 19 - "ensureSeedData"
-Cohesion: 0.17
-Nodes (14): OdemeOnayPage(), KREDI_ODEME_ADIMLARI, ROZET_ODEME_ADIMLARI, funnelKaydet(), OdemeOnayKayit, odemeOnaySessionKey(), posthogCerezSenkronize(), posthogKampanyaKaydet() (+6 more)
+Cohesion: 0.10
+Nodes (18): KrediPage(), OdemeOnayPage(), KREDI_ODEME_ADIMLARI, ROZET_ODEME_ADIMLARI, Adim, SmsKaydi, MobileShell(), MobileShellProps (+10 more)
 
 ### Community 20 - "page.tsx"
 Cohesion: 0.11
-Nodes (16): Durum, MemnuniyetState, TeklifOzet, Asama, ASAMA_METIN, IhaleBekleAnimasyon(), IhaleBekleAnimasyonProps, MemnuniyetFormu() (+8 more)
+Nodes (17): BekleIcerik(), Durum, MemnuniyetState, TeklifOzet, Asama, ASAMA_METIN, IhaleBekleAnimasyon(), IhaleBekleAnimasyonProps (+9 more)
 
 ### Community 21 - "davet-panel.ts"
-Cohesion: 0.21
-Nodes (15): anlasilanIsSay(), cekiciPuanOzeti, computePuanFromTables(), fiyatGarantiPuaniHesapla(), normalizeTeklif(), ozetFromCounts(), teklifFiyatDegistiMi(), tercihPuaniHesapla() (+7 more)
+Cohesion: 0.20
+Nodes (16): POST(), anlasilanIsSay(), cekiciPuanOzeti, computePuanFromTables(), fiyatGarantiPuaniHesapla(), ozetFromCounts(), tercihPuaniHesapla(), gorunurTercihPuani() (+8 more)
 
 ### Community 22 - "compilerOptions"
 Cohesion: 0.10
 Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+11 more)
 
 ### Community 23 - "route.ts"
-Cohesion: 0.08
-Nodes (50): GET(), POST(), POST(), POST(), GET(), GECERLI, POST(), DemoDurum (+42 more)
+Cohesion: 0.12
+Nodes (34): GET(), GET(), POST(), POST(), POST(), GET(), GECERLI, POST() (+26 more)
 
 ### Community 24 - "page.tsx"
-Cohesion: 0.16
-Nodes (23): POST(), GET(), baseUrlFrom(), GET(), POST(), DegerlendirmeRow, getDegerlendirmeByTalepId(), getDegerlendirmelerByCekiciId() (+15 more)
+Cohesion: 0.17
+Nodes (22): POST(), GET(), baseUrlFrom(), GET(), POST(), cekiciHizmetPuani, DegerlendirmeRow, getDegerlendirmeByTalepId() (+14 more)
 
 ### Community 25 - "kredi-odeme.ts"
-Cohesion: 0.23
-Nodes (16): POST(), GET(), GET(), POST(), GET(), BekleIcerik(), cekiciPuanOzetleri(), getCekiciById() (+8 more)
+Cohesion: 0.29
+Nodes (12): GET(), GET(), cekiciPuanOzetleri(), isDemoTalepId(), DEMO_PUAN, demoMusteriTalepDurumJson(), demoMusteriTekliflerJson(), rotaKoordinatlari() (+4 more)
 
 ### Community 26 - "route.ts"
-Cohesion: 0.27
-Nodes (12): PATCH(), POST(), sonKullanmaAyir(), tcKimlikGecerliMi(), vergiNoGecerliMi(), istemciIpAl(), faturaAlanlariniDogrula(), getBekleyenOdeme() (+4 more)
+Cohesion: 0.38
+Nodes (10): PUT(), authAnonClient(), authSignIn(), cekiciAuthEmail(), cekiciAuthKullaniciOlustur(), cekiciAuthSifreDogrula(), cekiciAuthSifreGuncelle(), cekiciGirisSifreKontrol() (+2 more)
 
 ### Community 27 - "page.tsx"
 Cohesion: 0.11
-Nodes (29): CekiciTalepClient(), TalepDurum, CekiciAyarlarPanel(), DavetKoduAyarlari(), KisiselVeriGizlemeAyarlari(), BADGE, CekiciPanelTabs(), Istatistik (+21 more)
+Nodes (27): CekiciTalepClient(), TalepDurum, CekiciKart(), Gorunum, SehirSiralama, CekiciAyarlarPanel(), BADGE, CekiciPanelTabs() (+19 more)
 
 ### Community 28 - "cekici-email-otp.ts"
-Cohesion: 0.22
-Nodes (13): POST(), KrediPage(), KREDI_PAKET_TL_LISTESI, KREDI_PAKETLERI, KrediPaket, krediPaketBul(), krediPaketOdenecekTL(), KrediPaketTl (+5 more)
+Cohesion: 0.33
+Nodes (7): KREDI_PAKET_TL_LISTESI, KREDI_PAKETLERI, KrediPaket, KrediPaketTl, krediTutarKurus(), krediTutarTL(), tlTutarKurus()
 
 ### Community 29 - "cekici-puan.ts"
 Cohesion: 0.15
 Nodes (12): API yüzeyi, Güvenlik ve izolasyon, Kapsam dışı (ilk PR), Kayıt akışı önerisi (video senaryosu), Mevcut kodla ilişki, Problem, Test planı, UI değişiklikleri (+4 more)
 
 ### Community 30 - "demo-responses.ts"
-Cohesion: 0.60
-Nodes (3): GET(), KULLANIMA_ACIK_ILLER, sehirKullanimAcikMi()
+Cohesion: 0.22
+Nodes (10): POST(), GET(), POST(), normalizeTeklif(), teklifFiyatDegistiMi(), getTalepById(), kaybedenTeklifleriIsaretle(), talepFromRow() (+2 more)
 
 ### Community 32 - "getCekiciById"
-Cohesion: 0.20
-Nodes (8): PATCH(), GET(), belgeDurumEtiket(), CekiciDetay, PanelCekiciDetayPage(), updateCekiciBelgeDurum(), cekiciPanelOzet, BelgeDurum
+Cohesion: 0.17
+Nodes (12): POST(), POST(), DELETE(), GET(), cekiciAuthKullaniciSil(), cekiciBelgeleriniSil(), silCekiciCascade(), mockFrom (+4 more)
 
 ### Community 33 - "migrate-json-to-supabase.mjs"
 Cohesion: 0.31
@@ -249,8 +251,8 @@ Cohesion: 0.23
 Nodes (7): metadata, PanelChrome(), LINKS, PanelNav(), NavSayacRozet(), PanelNavSayac, usePanelNavSayac()
 
 ### Community 35 - "NasilCalisirSerit.tsx"
-Cohesion: 0.19
-Nodes (17): GET(), HizmetVerenSayimGostergesi(), useAnimatedNumber(), cekiciMusaitMi(), istanbulGunVeDakika(), saatMetniDakika(), cevrimiciJitterFaktor(), cevrimiciJitterUygula() (+9 more)
+Cohesion: 0.11
+Nodes (16): TalepOzet, cekiciMusaitMi(), istanbulGunVeDakika(), saatMetniDakika(), anlasamadiSonrasiIhaleyiSurdur(), SMS_BILDIRIM_KREDI, getCekiciById, getCekicilerBildirimAdaylari (+8 more)
 
 ### Community 36 - "Supabase veritabanı"
 Cohesion: 0.29
@@ -261,8 +263,8 @@ Cohesion: 0.33
 Nodes (5): Akış, API, Teknik notlar, Video demo modu, Önkoşullar
 
 ### Community 38 - "route.ts"
-Cohesion: 0.16
-Nodes (17): MusteriAnaSayfaIcerik(), SorunTipiSecimi(), SorunTipiSecimiProps, HIZMET_QUERY_HARITASI, hizmetQuerydenSorunTipi(), SORUN_ARAC_MODELI_TIPLERI, SORUN_CAGRI_BUTON, SORUN_FOTOGRAF_TIPLERI (+9 more)
+Cohesion: 0.06
+Nodes (55): GET(), POST(), hataMesajiFromParam(), Ozet, PanelIcerik(), HizmetVerenSayimGostergesi(), HizmetVerenSayimGostergesiProps, useAnimatedNumber() (+47 more)
 
 ### Community 39 - "README.md"
 Cohesion: 0.50
@@ -278,95 +280,91 @@ Nodes (3): GET(), istemciIp(), ozelIp()
 
 ### Community 52 - "CerezOnayBanner.tsx"
 Cohesion: 0.17
-Nodes (22): POST(), POST(), getCekicilerBildirimAdaylari(), updateTalep(), demoKatilMesaji(), anlasamadiSonrasiIhaleyiSurdur(), cekiciBildirimKrediTutari(), cekiciPremiumSmsAktifMi() (+14 more)
+Nodes (18): GET(), POST(), OnayIcerik(), KULLANIMA_ACIK_ILLER, sehirBeklemeMesaji(), sehirKullanimAcikMi(), demoKatil(), demoKatilMesaji() (+10 more)
 
 ### Community 53 - "KayitKontenjanBilgi.tsx"
 Cohesion: 0.08
-Nodes (23): GET(), GET(), Saglik, hizmetBolgeleriFlatten(), getKrediOdemeById(), kaydetKrediOdeme(), listeleKrediOdemeler(), cekiciFromRow() (+15 more)
+Nodes (23): GET(), GET(), Saglik, hizmetBolgeleriFlatten(), getKrediOdemeById(), kaydetKrediOdeme(), listeleKrediOdemeler(), CekiciRow (+15 more)
 
 ### Community 54 - "ArizaFotografAlani.tsx"
 Cohesion: 0.23
 Nodes (11): HaritaNokta, PanelCekiciHarita(), RENK, SehirAdet, haritaSehirNoktalari(), haritaYaricapLog(), IlKoordinat, ilKoordinatBul() (+3 more)
 
 ### Community 55 - "route.ts"
-Cohesion: 0.13
-Nodes (9): OnayIcerik(), Adim, SmsKaydi, BrandLogoYazili(), MobileShell(), MobileShellProps, PanelGirisFormProps, Field (+1 more)
+Cohesion: 0.26
+Nodes (11): demoBaslangicDurumu(), DemoOturumDurum, demoRakipAd(), demoRakipCekiciId(), DemoSmsKaydi, ihaleBitis(), ilceForCekici(), demoPanelVerisi() (+3 more)
 
 ### Community 56 - "route.ts"
-Cohesion: 0.15
-Nodes (15): adimAciklamaMetni(), Props, SorunAkisOzeti(), SorunAkisOzetiIcerik(), SorunSecimi(), SorunSecimiProps, TextArea(), CEKICI_ADIMLAR (+7 more)
+Cohesion: 0.36
+Nodes (8): GET(), haftaBaslangici(), istanbulAyAnahtari(), kazananTeklifFiyati(), GET(), getSmsLog(), getTaleplerByKazananCekici(), countHaricByCekici()
 
 ### Community 57 - "NasilCalisirSerit.tsx"
-Cohesion: 0.19
-Nodes (8): hataMesajiFromParam(), Ozet, PanelIcerik(), HizmetVerenSayimGostergesiProps, HizmetVerenSayimPanel(), PanelGirisForm(), useHizmetVerenSayim(), HizmetVerenSayimOzet
+Cohesion: 0.39
+Nodes (6): GET(), POST(), belgeBase64Ayikla(), cekiciBelgeYukle(), IZINLI_MIME, uzanti()
 
 ### Community 58 - "cerez-onay.ts"
 Cohesion: 0.10
-Nodes (39): geist, metadata, RootLayout(), viewport, CerezOnayBanner(), Gorunum, tercihKaydet(), GoogleAnalytics() (+31 more)
+Nodes (40): geist, metadata, RootLayout(), viewport, CerezOnayBanner(), Gorunum, tercihKaydet(), GoogleAnalytics() (+32 more)
 
 ### Community 59 - "payment.ts"
 Cohesion: 0.33
 Nodes (6): admin, anon, authEmail(), main(), service, url
 
 ### Community 60 - "route.ts"
-Cohesion: 0.22
-Nodes (8): ANCHOR_IDS, AVANTAJLAR, CekiciKayitLanding(), CekiciKayitLandingProps, GUVEN_MADDELERI, HIZMET_BOLGESI, IS_AKISI, YORUMLAR
+Cohesion: 0.08
+Nodes (22): belgeDurumEtiket(), CekiciDetay, PanelCekiciDetayPage(), ArizaFotografAlani(), ArizaFotografAlaniProps, BelgeYuklemeAlani(), Props, ANCHOR_IDS (+14 more)
 
 ### Community 61 - "kredi-odeme.ts"
 Cohesion: 0.24
 Nodes (6): GET(), DavetKullanimRow, DavetKullanimSatir, DavetLiderSatir, DavetPanelOzet, getDavetPanelVerisi()
 
 ### Community 62 - "page.tsx"
-Cohesion: 0.36
-Nodes (8): kayitliAdSoyadUygula(), depolama(), MusteriProfil, musteriProfilKaydet(), musteriProfilOku(), okuHarita(), ProfilHaritasi, yazHarita()
+Cohesion: 0.43
+Nodes (4): KayitKontenjanBilgi(), Props, KayitKontenjanDurum, kayitKontenjanHesapla()
 
 ### Community 63 - "davet-panel.ts"
-Cohesion: 0.33
-Nodes (7): POST(), BelgeYuklemeAlani(), BelgeDurumResponse, durumEtiket(), OnayliCekiciHesap(), olusturBekleyenRozetOdeme(), rozetIndirimYuzde()
+Cohesion: 0.17
+Nodes (14): POST(), GET(), POST(), POST(), PATCH(), GET(), POST(), getCurrentCekici() (+6 more)
 
 ### Community 64 - "layout.tsx"
-Cohesion: 0.29
-Nodes (5): FormAdimi, NASIL_ADIMLAR, NasilAdim, NasilCalisirSerit(), Props
+Cohesion: 0.40
+Nodes (5): DemoDurum, DemoSms, kalanSureFormat(), PanelDemoPage(), SIMULE_ADIMLAR
 
-### Community 65 - "ArizaFotografAlani.tsx"
-Cohesion: 0.50
-Nodes (3): ArizaFotografAlani(), ArizaFotografAlaniProps, fotografSikistir()
-
-### Community 66 - "cekici-belge.ts"
-Cohesion: 0.60
-Nodes (4): GET(), GET(), kayitKoduDogrula(), kampanyaKoduSutunuVar()
+### Community 68 - "route.ts"
+Cohesion: 0.31
+Nodes (10): POST(), sonKullanmaAyir(), tcKimlikGecerliMi(), vergiNoGecerliMi(), istemciIpAl(), faturaAlanlariniDogrula(), getBekleyenOdeme(), guncelleBekleyenOdemeFatura() (+2 more)
 
 ### Community 70 - "Cekici"
-Cohesion: 0.21
-Nodes (6): gonderimZamani(), onaylanmisSira(), RozetPanelOzet, RozetPanelSatir, rozetPanelVerisi, satirFromCekici()
+Cohesion: 0.19
+Nodes (7): GET(), gonderimZamani(), onaylanmisSira(), RozetPanelOzet, RozetPanelSatir, rozetPanelVerisi, satirFromCekici()
 
 ### Community 74 - "page.tsx"
-Cohesion: 0.08
-Nodes (15): Gorunum, SehirSiralama, DegerlendirmeSatir, Ozet, BOS_FORM, KampanyaSatir, KullanimSatir, Ozet (+7 more)
+Cohesion: 0.09
+Nodes (15): DegerlendirmeSatir, Ozet, Ozet, BrandLogoYazili(), formatKalan(), MemnuniyetBekle(), PanelGirisFormProps, SorunSecimi() (+7 more)
 
 ### Community 79 - "SorunTipiSecimi.tsx"
-Cohesion: 0.14
-Nodes (19): BolgeApiData, BolgeAyarlari(), BolgeAyarlariProps, BolgeApiData, DavetKoduDurum, GUNLER, MusaitlikAyarlari(), Durum (+11 more)
+Cohesion: 0.10
+Nodes (18): BOS_FORM, KampanyaSatir, KullanimSatir, Ozet, BolgeAyarlari(), BolgeAyarlariProps, DavetKoduAyarlari(), DavetKoduDurum (+10 more)
 
 ## Knowledge Gaps
 - **294 isolated node(s):** `eslintConfig`, `config`, `nextConfig`, `name`, `version` (+289 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **8 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `getSupabaseAdmin()` connect `mappers.ts` to `demo-oturum.ts`, `telefonNormalize`, `ui.tsx`, `CekiciPanelTabs.tsx`, `sms-provider.ts`, `memnuniyet.ts`, `db.ts`, `route.ts`, `davet-panel.ts`, `route.ts`, `page.tsx`, `kredi-odeme.ts`, `route.ts`, `cekici-email-otp.ts`, `getCekiciById`, `CerezOnayBanner.tsx`, `KayitKontenjanBilgi.tsx`, `kredi-odeme.ts`, `davet-panel.ts`, `cekici-belge.ts`?**
-  _High betweenness centrality (0.061) - this node is a cross-community bridge._
-- **Why does `telefonNormalize()` connect `CekiciPanelTabs.tsx` to `demo-oturum.ts`, `route.ts`, `MusteriAnaSayfa.tsx`, `page.tsx`, `page.tsx`?**
+- **Why does `getSupabaseAdmin()` connect `mappers.ts` to `demo-oturum.ts`, `telefonNormalize`, `ui.tsx`, `CekiciPanelTabs.tsx`, `memnuniyet.ts`, `db.ts`, `davet-panel.ts`, `route.ts`, `page.tsx`, `route.ts`, `demo-responses.ts`, `getCekiciById`, `route.ts`, `KayitKontenjanBilgi.tsx`, `route.ts`, `NasilCalisirSerit.tsx`, `kredi-odeme.ts`, `davet-panel.ts`, `route.ts`?**
+  _High betweenness centrality (0.067) - this node is a cross-community bridge._
+- **Why does `Card()` connect `SorunTipiSecimi.tsx` to `layout.tsx`, `route.ts`, `Cekici`, `ensureSeedData`, `page.tsx`, `hizmet-veren-sayim.ts`, `MusteriAnaSayfa.tsx`, `ensureSeedData`, `page.tsx`, `KayitKontenjanBilgi.tsx`, `page.tsx`, `route.ts`, `kredi-odeme.ts`, `page.tsx`?**
+  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **Why does `telefonNormalize()` connect `CekiciPanelTabs.tsx` to `page.tsx`, `MusteriAnaSayfa.tsx`, `route.ts`, `route.ts`?**
   _High betweenness centrality (0.038) - this node is a cross-community bridge._
-- **Why does `Card()` connect `page.tsx` to `getCekiciById`, `ArizaFotografAlani.tsx`, `layout.tsx`, `Cekici`, `ensureSeedData`, `SorunTipiSecimi.tsx`, `hizmet-veren-sayim.ts`, `MusteriAnaSayfa.tsx`, `ensureSeedData`, `page.tsx`, `route.ts`, `KayitKontenjanBilgi.tsx`, `route.ts`, `NasilCalisirSerit.tsx`, `page.tsx`, `route.ts`, `kredi-odeme.ts`, `davet-panel.ts`?**
-  _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **What connects `eslintConfig`, `config`, `nextConfig` to the rest of the system?**
   _294 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `telefonNormalize` be split into smaller, more focused modules?**
-  _Cohesion score 0.11724137931034483 - nodes in this community are weakly interconnected._
-- **Should `cekici-email-otp.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.07005649717514124 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.12043010752688173 - nodes in this community are weakly interconnected._
 - **Should `mappers.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.12477718360071301 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.14285714285714285 - nodes in this community are weakly interconnected._
+- **Should `ensureSeedData` be split into smaller, more focused modules?**
+  _Cohesion score 0.07622504537205081 - nodes in this community are weakly interconnected._
