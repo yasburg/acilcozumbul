@@ -17,10 +17,10 @@ import {
 } from "@/lib/sms50-kampanya";
 import { topluSmsTempoNormalize } from "@/lib/toplu-sms-tempo";
 import {
-  calistirTopluSmsIsi,
   getAktifTopluSmsIsler,
   getTopluSmsIs,
   olusturTopluSmsIsi,
+  tetikleTopluSmsKuyruk,
 } from "@/lib/toplu-sms-is-db";
 
 const MAX_ALICI = 500;
@@ -55,10 +55,21 @@ export async function GET(request: Request) {
     if (!is) {
       return NextResponse.json({ error: "İş bulunamadı." }, { status: 404 });
     }
+    /* Durum sorgusu sırasında vadesi gelen partiyi de ilerlet */
+    if (is.durum === "beklemede" || is.durum === "suruyor") {
+      after(() => {
+        void tetikleTopluSmsKuyruk();
+      });
+    }
     return NextResponse.json({ is });
   }
 
   const aktif = await getAktifTopluSmsIsler(20);
+  if (aktif.length > 0) {
+    after(() => {
+      void tetikleTopluSmsKuyruk();
+    });
+  }
   return NextResponse.json({ aktif });
 }
 
@@ -182,7 +193,7 @@ export async function POST(request: Request) {
   });
 
   after(() => {
-    void calistirTopluSmsIsi(is.id);
+    void tetikleTopluSmsKuyruk();
   });
 
   return NextResponse.json({

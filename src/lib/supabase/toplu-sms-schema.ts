@@ -36,3 +36,6 @@ export const MIGRATION_027_MESAJ =
 
 export const MIGRATION_033_MESAJ =
   "Toplu SMS arka plan kuyruğu için Supabase’de supabase/migrations/033_panel_toplu_sms_isler.sql dosyasını SQL Editor’da çalıştırın.";
+
+export const MIGRATION_034_MESAJ =
+  "Toplu SMS kilit durumu için supabase/migrations/034_panel_toplu_sms_is_alicilar_kilit.sql dosyasını da çalıştırın.";

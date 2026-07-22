@@ -38,7 +38,7 @@ create table if not exists public.panel_toplu_sms_is_alicilar (
   telefon text not null,
   ad text,
   durum text not null default 'beklemede'
-    check (durum in ('beklemede', 'gonderildi', 'basarisiz')),
+    check (durum in ('beklemede', 'gonderiliyor', 'gonderildi', 'basarisiz')),
   hata text,
   constraint panel_toplu_sms_is_alicilar_unique unique (is_id, telefon)
 );

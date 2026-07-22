@@ -40,9 +40,10 @@ Test için kısa süre: `MEMNUNIYET_BEKLE_DK=1` (.env).
 Form açılınca müşteriye SMS (link: `/bekle/{talep-id}`). Ek olarak cron:
 `POST /api/cron/memnuniyet-sms` + `Authorization: Bearer CRON_SECRET` (her 5–10 dk).
 
-Panel toplu SMS arka plan kuyruğu: migration `033_panel_toplu_sms_isler.sql`.
-Kurtarma cron: `POST /api/cron/toplu-sms` + aynı `CRON_SECRET` (her 1–2 dk önerilir).
-Gönderim başlayınca sunucu işi kendisi sürdürür; cron yalnızca yarım kalanları tamamlar.
+Panel toplu SMS arka plan kuyruğu: migration `033_panel_toplu_sms_isler.sql`
+(+ `034_panel_toplu_sms_is_alicilar_kilit.sql`).
+Sunucu içinde ~8 sn’lik scheduler partileri sürdürür; sekme açık kalması gerekmez.
+Ek kurtarma cron: `POST /api/cron/toplu-sms` + aynı `CRON_SECRET` (her 1–2 dk önerilir).
 
 ## Güvenlik
 

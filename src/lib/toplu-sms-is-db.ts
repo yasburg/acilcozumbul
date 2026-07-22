@@ -313,7 +313,14 @@ export async function isleTopluSmsSiradakiParti(
     }
   }
 
-  const { data: alicilar, error: aliciErr } = await sb
+  /* Crash sonrası takılı kilitleri geri al */
+  await sb
+    .from("panel_toplu_sms_is_alicilar")
+    .update({ durum: "beklemede", hata: null })
+    .eq("is_id", isId)
+    .eq("durum", "gonderiliyor");
+
+  const { data: adayAlicilar, error: aliciErr } = await sb
     .from("panel_toplu_sms_is_alicilar")
     .select("id, telefon, ad")
     .eq("is_id", isId)
@@ -322,7 +329,7 @@ export async function isleTopluSmsSiradakiParti(
     .limit(Math.max(1, Number(is.parti_boyutu) || 1));
   if (aliciErr) throw aliciErr;
 
-  if (!alicilar || alicilar.length === 0) {
+  if (!adayAlicilar || adayAlicilar.length === 0) {
     const { data: biten, error } = await sb
       .from("panel_toplu_sms_isler")
       .update({
@@ -341,6 +348,40 @@ export async function isleTopluSmsSiradakiParti(
     return { devam: false, bitti: true, iptal: false, bekleMs: 0, ozet };
   }
 
+  const adayIds = adayAlicilar.map((a) => a.id);
+  const { data: alicilar, error: kilitErr } = await sb
+    .from("panel_toplu_sms_is_alicilar")
+    .update({ durum: "gonderiliyor" })
+    .in("id", adayIds)
+    .eq("durum", "beklemede")
+    .select("id, telefon, ad");
+  if (kilitErr) {
+    /* 034 migration yoksa eski yolla devam */
+    if (
+      String(kilitErr.message ?? "").includes("gonderiliyor") ||
+      String(kilitErr.code ?? "") === "23514"
+    ) {
+      console.warn(
+        "[toplu-sms-is] gonderiliyor kilidi yok; migration 034 gerekli",
+        kilitErr.message
+      );
+    } else {
+      throw kilitErr;
+    }
+  }
+
+  const kilitli =
+    alicilar && alicilar.length > 0 ? alicilar : adayAlicilar;
+  if (kilitli.length === 0) {
+    return {
+      devam: true,
+      bitti: false,
+      iptal: false,
+      bekleMs: 500,
+      ozet: rowToOzet(is, await aliciSayisi(isId)),
+    };
+  }
+
   const now = new Date().toISOString();
   const { error: suruyorErr } = await sb
     .from("panel_toplu_sms_isler")
@@ -349,13 +390,21 @@ export async function isleTopluSmsSiradakiParti(
     .in("durum", ["beklemede", "suruyor"]);
   if (suruyorErr) throw suruyorErr;
 
-  const telefonlar = alicilar.map((a) => String(a.telefon));
+  const telefonlar = kilitli.map((a) => String(a.telefon));
   let sonuclar: Array<{ telefon: string; basarili: boolean; hata?: string }>;
   try {
     const sonuc = await sendPanelTopluSms(telefonlar, String(is.mesaj));
     sonuclar = sonuc.sonuclar;
   } catch (e) {
     const mesaj = e instanceof Error ? e.message : "Gönderim hatası";
+    await sb
+      .from("panel_toplu_sms_is_alicilar")
+      .update({ durum: "beklemede", hata: null })
+      .in(
+        "id",
+        kilitli.map((a) => a.id)
+      )
+      .eq("durum", "gonderiliyor");
     await sb
       .from("panel_toplu_sms_isler")
       .update({
@@ -383,7 +432,7 @@ export async function isleTopluSmsSiradakiParti(
     hata: string | null;
   }> = [];
 
-  for (const a of alicilar) {
+  for (const a of kilitli) {
     const tel = String(a.telefon);
     const s = sonucMap.get(tel);
     const basarili = Boolean(s?.basarili);
@@ -481,26 +530,51 @@ export async function isleTopluSmsSiradakiParti(
   };
 }
 
-function sleep(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
+type GlobalScheduler = typeof globalThis & {
+  __topluSmsScheduler?: ReturnType<typeof setInterval>;
+  __topluSmsSchedulerBusy?: boolean;
+};
+
+const SCHEDULER_MS = 8_000;
+
+/**
+ * Node süreci ayakta kaldığı sürece tempo bekleyen partileri işler.
+ * `after()` uzun uyku yapamaz (istek bitince kesilir); bu yüzden süreç
+ * zamanlayıcısı zorunlu.
+ */
+export function ensureTopluSmsScheduler(): void {
+  const g = globalThis as GlobalScheduler;
+  if (g.__topluSmsScheduler) return;
+  g.__topluSmsScheduler = setInterval(() => {
+    if (g.__topluSmsSchedulerBusy) return;
+    g.__topluSmsSchedulerBusy = true;
+    void isleBekleyenTopluSmsIsleri(5)
+      .catch((e) => console.error("[toplu-sms-is] scheduler", e))
+      .finally(() => {
+        g.__topluSmsSchedulerBusy = false;
+      });
+  }, SCHEDULER_MS);
 }
 
-/** Tek işi tempo aralıklarıyla bitene kadar çalıştırır (arka plan) */
+/** Zamanlayıcıyı aç + vadesi gelen partileri hemen bir tur işle */
+export async function tetikleTopluSmsKuyruk(): Promise<{
+  islenen: number;
+  isIds: string[];
+}> {
+  ensureTopluSmsScheduler();
+  return isleBekleyenTopluSmsIsleri(5);
+}
+
+/** @deprecated Uzun uyku güvenilir değil; tetikleTopluSmsKuyruk kullan */
 export async function calistirTopluSmsIsi(isId: string): Promise<void> {
+  ensureTopluSmsScheduler();
   if (calisanIsler.has(isId)) return;
   calisanIsler.add(isId);
   try {
     while (true) {
       const r = await isleTopluSmsSiradakiParti(isId);
       if (!r.devam) break;
-      if (r.bekleMs > 0) {
-        const bitis = Date.now() + r.bekleMs;
-        while (Date.now() < bitis) {
-          const is = await okuIs(isId);
-          if (!is || is.durum === "iptal" || is.durum === "hata") return;
-          await sleep(Math.min(1000, bitis - Date.now()));
-        }
-      }
+      if (r.bekleMs > 0) break; // beklemeyi scheduler'a bırak
     }
   } catch (e) {
     console.error("[toplu-sms-is] runner hata", isId, e);
@@ -523,13 +597,13 @@ export async function calistirTopluSmsIsi(isId: string): Promise<void> {
 }
 
 /**
- * Cron / kurtarma: zamanı gelen partileri işle.
- * Tempo beklemesi yapmaz; bekleme gereken işte durur (sonraki cron devam eder).
- * Canlı `calistirTopluSmsIsi` runner'ı olan işlere dokunmaz.
+ * Cron / kurtarma / scheduler: zamanı gelen partileri işle.
+ * Tempo beklemesi yapmaz; bekleme gereken işte durur.
  */
 export async function isleBekleyenTopluSmsIsleri(
   limit = 5
 ): Promise<{ islenen: number; isIds: string[] }> {
+  ensureTopluSmsScheduler();
   const sb = getSupabaseAdmin();
   const { data, error } = await sb
     .from("panel_toplu_sms_isler")
@@ -552,13 +626,18 @@ export async function isleBekleyenTopluSmsIsleri(
   for (const row of adaylar) {
     const id = String(row.id);
     if (calisanIsler.has(id)) continue;
-    let dokunuldu = false;
-    while (true) {
-      const r = await isleTopluSmsSiradakiParti(id);
-      dokunuldu = true;
-      if (!r.devam || r.bekleMs > 0) break;
+    calisanIsler.add(id);
+    try {
+      let dokunuldu = false;
+      while (true) {
+        const r = await isleTopluSmsSiradakiParti(id);
+        dokunuldu = true;
+        if (!r.devam || r.bekleMs > 0) break;
+      }
+      if (dokunuldu) isIds.push(id);
+    } finally {
+      calisanIsler.delete(id);
     }
-    if (dokunuldu) isIds.push(id);
   }
   return { islenen: isIds.length, isIds };
 }
