@@ -1,5 +1,9 @@
 import * as XLSX from "xlsx";
-import { telefonGecerliMi, telefonNormalize } from "./telefon";
+import {
+  telefonGecerliMi,
+  telefonNormalize,
+  telefonSabitHatMi,
+} from "./telefon";
 
 export type TopluSmsAlici = {
   telefon: string;
@@ -12,6 +16,7 @@ export type ExcelYukleOzet = {
   satirOkunan: number;
   gecerli: number;
   gecersiz: number;
+  sabitHatAtlandi: number;
   tekrarAtlandi: number;
   listeyeEklenen: number;
   zatenListede: number;
@@ -81,6 +86,8 @@ export function topluSmsExcelSablonIndir(): void {
  * Excel / CSV: ilk satır başlık.
  * Zorunlu sütun: telefon | tel | phone | gsm | cep
  * İsteğe bağlı: ad | isim | name
+ *
+ * Sabit hatlar ve dosya içi tekrarlar listeye alınmaz.
  */
 export function exceldenTopluSmsAliciOku(buffer: ArrayBuffer): {
   alicilar: TopluSmsAlici[];
@@ -91,6 +98,7 @@ export function exceldenTopluSmsAliciOku(buffer: ArrayBuffer): {
     satirOkunan: 0,
     gecerli: 0,
     gecersiz: 0,
+    sabitHatAtlandi: 0,
     tekrarAtlandi: 0,
   };
 
@@ -129,6 +137,7 @@ export function exceldenTopluSmsAliciOku(buffer: ArrayBuffer): {
   let satirOkunan = 0;
   let gecerli = 0;
   let gecersiz = 0;
+  let sabitHatAtlandi = 0;
   let tekrarAtlandi = 0;
 
   for (let r = 1; r < rows.length; r++) {
@@ -138,15 +147,16 @@ export function exceldenTopluSmsAliciOku(buffer: ArrayBuffer): {
     satirOkunan += 1;
     const ad =
       adIdx >= 0 ? String(row[adIdx] ?? "").trim() || undefined : undefined;
+
+    if (telefonSabitHatMi(hamTel)) {
+      sabitHatAtlandi += 1;
+      continue;
+    }
+
     const telefon = telefonNormalize(hamTel);
     if (!telefonGecerliMi(telefon)) {
       gecersiz += 1;
-      alicilar.push({
-        telefon: hamTel,
-        ad,
-        kaynak: "excel",
-        hata: "Geçersiz telefon",
-      });
+      /* Listeye ekleme — SMS’e gitmez; özet sayılır */
       continue;
     }
     if (gorulen.has(telefon)) {
@@ -160,7 +170,13 @@ export function exceldenTopluSmsAliciOku(buffer: ArrayBuffer): {
 
   return {
     alicilar,
-    ozet: { satirOkunan, gecerli, gecersiz, tekrarAtlandi },
+    ozet: {
+      satirOkunan,
+      gecerli,
+      gecersiz,
+      sabitHatAtlandi,
+      tekrarAtlandi,
+    },
   };
 }
 
@@ -187,10 +203,8 @@ export function excelAlicilariListeyeEkle(
     listeyeEklenen += 1;
   }
 
-  const hatalilar = [
-    ...mevcut.filter((a) => a.hata),
-    ...yeni.filter((a) => a.hata),
-  ];
+  /* Hatalı satırlar Excel’den artık gelmiyor; elle hatalıları koru */
+  const hatalilar = mevcut.filter((a) => a.hata);
 
   return {
     alicilar: [...map.values(), ...hatalilar],
@@ -206,6 +220,9 @@ export function elleTelefonEkle(
   ham: string,
   mevcut: TopluSmsAlici[]
 ): { alici?: TopluSmsAlici; hata?: string } {
+  if (telefonSabitHatMi(ham)) {
+    return { hata: "Sabit hat numaralarına SMS gönderilmez." };
+  }
   const telefon = telefonNormalize(ham);
   if (!telefonGecerliMi(telefon)) {
     return { hata: "Geçerli bir Türkiye cep numarası girin (05XX…)." };

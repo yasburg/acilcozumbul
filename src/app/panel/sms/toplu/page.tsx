@@ -510,16 +510,31 @@ export default function PanelTopluSmsPage() {
                   eklendi
                 </p>
                 <p className="text-xs text-slate-500">
+                  Sabit hatlar ve tekrarlayan numaralar otomatik elendi
+                  {excelOzet.sabitHatAtlandi > 0 ||
+                  excelOzet.tekrarAtlandi > 0 ||
+                  excelOzet.zatenListede > 0
+                    ? ` (${[
+                        excelOzet.sabitHatAtlandi > 0
+                          ? `${excelOzet.sabitHatAtlandi} sabit hat`
+                          : null,
+                        excelOzet.tekrarAtlandi > 0
+                          ? `${excelOzet.tekrarAtlandi} dosya içi tekrar`
+                          : null,
+                        excelOzet.zatenListede > 0
+                          ? `${excelOzet.zatenListede} zaten listede`
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")})`
+                    : ""}
+                  .
+                </p>
+                <p className="text-xs text-slate-500">
                   Dosyada {excelOzet.satirOkunan} satır ·{" "}
-                  {excelOzet.gecerli} geçerli
+                  {excelOzet.gecerli} geçerli cep
                   {excelOzet.gecersiz > 0
                     ? ` · ${excelOzet.gecersiz} geçersiz`
-                    : ""}
-                  {excelOzet.tekrarAtlandi > 0
-                    ? ` · ${excelOzet.tekrarAtlandi} dosya içi tekrar`
-                    : ""}
-                  {excelOzet.zatenListede > 0
-                    ? ` · ${excelOzet.zatenListede} zaten listedeydi`
                     : ""}
                 </p>
               </div>

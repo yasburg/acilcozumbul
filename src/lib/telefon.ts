@@ -18,6 +18,19 @@ export function telefonGecerliMi(tel: string): boolean {
   return /^05[0-9]{9}$/.test(n);
 }
 
+/**
+ * Türkiye sabit hat (alan kodu 2–4xx). SMS gönderilmez.
+ * Örn. 0212…, 0312…, 212xxxxxxx, +90212…
+ */
+export function telefonSabitHatMi(tel: string): boolean {
+  if (telefonGecerliMi(tel)) return false;
+  let d = tel.trim().replace(/\D/g, "");
+  if (d.startsWith("90") && d.length >= 12) d = d.slice(2);
+  if (d.startsWith("0") && d.length >= 11) d = d.slice(1);
+  /* 10 hane: alan (2–4xx) + 7 abone */
+  return /^[2-4]\d{9}$/.test(d);
+}
+
 /** TR cep değil; muhtemelen yabancı veya hatalı ülke kodu */
 export function telefonYabanciGorunuyorMu(tel: string): boolean {
   const raw = tel.trim();
