@@ -1128,6 +1128,15 @@ function MusteriAnaSayfaIcerik() {
         teklif alın
       </h1>
 
+      <p className="text-center text-xs text-slate-500 mb-4 -mt-1">
+        <Link
+          href="/cekici/giris"
+          className="text-amber-600 underline font-medium"
+        >
+          Çekici / lastikçi / anahtarcı girişi
+        </Link>
+      </p>
+
       <div className="flex gap-1.5 mb-6">
         {steps.map((s) => (
           <button
@@ -1895,19 +1904,7 @@ function MusteriAnaSayfaIcerik() {
         </div>
       )}
 
-      {step === "sorun" && (
-        <>
-          <SssBolumu />
-          <p className="text-center text-xs text-slate-500 mt-6">
-            <Link
-              href="/cekici/giris"
-              className="text-amber-600 underline font-medium"
-            >
-              Çekici / lastikçi / anahtarcı girişi
-            </Link>
-          </p>
-        </>
-      )}
+      {step === "sorun" && <SssBolumu />}
     </MobileShell>
   );
 }
