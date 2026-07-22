@@ -1,5 +1,4 @@
 import { getSupabaseAdmin, supabaseDbAktif } from "./supabase/admin";
-import { SMS50_GOVDE_SABLONLARI } from "./sms50-kampanya";
 
 export type PanelSmsSablon = {
   id: string;
@@ -48,14 +47,10 @@ function satirMap(r: Record<string, unknown>): PanelSmsSablon {
   };
 }
 
-/** Toplu SMS dropdown: aktif şablonlar; tablo yoksa kod sabitleri */
+/** Toplu SMS dropdown: aktif şablonlar; tablo yoksa boş */
 export async function listeAktifSmsSablonOzetleri(): Promise<PanelSmsSablonOzet[]> {
   if (!(await panelSmsSablonTablosuVar())) {
-    return SMS50_GOVDE_SABLONLARI.map((s) => ({
-      id: s.id,
-      etiket: s.etiket,
-      govde: s.govde,
-    }));
+    return [];
   }
   const { data, error } = await getSupabaseAdmin()
     .from("panel_sms_sablonlar")

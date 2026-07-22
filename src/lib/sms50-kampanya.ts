@@ -36,24 +36,6 @@ export function sms50KayitUrl(varyant: Sms50Varyant, base?: string): string {
   return `${origin}/cekici/kayit?${q.toString()}`;
 }
 
-/** Gövde şablonları — link yer tutucusu {{LINK}} */
-export const SMS50_GOVDE_SABLONLARI = [
-  {
-    id: "fayda",
-    etiket: "Gövde 1 — doğrudan fayda",
-    govde:
-      "TANITIM | Acil Çözüm Bul: İstanbul çekici kayıtları açıldı. Ücretsiz kaydolun, uygun iş talepleri SMS ve panelden gelsin. İlk 50 kayda 50 kredi: {{LINK}}",
-  },
-  {
-    id: "sistem",
-    etiket: "Gövde 2 — sistem anlatımı",
-    govde:
-      "TANITIM | Çekici hizmeti veriyorsanız çalışma bölgenizi seçin, yakınınızdaki taleplere fiyat ve süre teklifi verin. Kayıt ücretsiz: {{LINK}}",
-  },
-] as const;
-
-export type Sms50GovdeId = (typeof SMS50_GOVDE_SABLONLARI)[number]["id"];
-
 export function sms50FooterSatirlari(): string[] {
   const satirlar: string[] = [];
   const mersis = process.env.SMS_MERSIS_NO?.trim();
