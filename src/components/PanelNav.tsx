@@ -17,7 +17,7 @@ const LINKS: {
   { href: "/panel/cekiciler", label: "Çekiciler", sayac: "cekici" },
   { href: "/panel/rozetler", label: "Rozetler", sayac: "rozet" },
   { href: "/panel/talepler", label: "Talepler", sayac: "talep" },
-  { href: "/panel/sms", label: "SMS", exact: true },
+  { href: "/panel/sms", label: "SMS Sağlık", exact: true },
   { href: "/panel/sms/toplu", label: "Toplu SMS" },
   { href: "/panel/sms/sablonlar", label: "SMS şablonları" },
   { href: "/panel/kredi-odemeler", label: "Kredi ödemeleri" },

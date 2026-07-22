@@ -119,7 +119,7 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
                 label="Talepler"
                 adet={sayac?.talepSayisi}
               />
-              <MobilNavLink href="/panel/sms" label="SMS" />
+              <MobilNavLink href="/panel/sms" label="SMS Sağlık" />
               <MobilNavLink href="/panel/sms/toplu" label="Toplu SMS" />
               <MobilNavLink href="/panel/sms/sablonlar" label="SMS şablonları" />
               <MobilNavLink
