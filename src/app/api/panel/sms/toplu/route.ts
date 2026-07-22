@@ -12,6 +12,10 @@ import {
   MIGRATION_027_MESAJ,
   topluSmsGecmisTablolariVar,
 } from "@/lib/supabase/toplu-sms-schema";
+import {
+  SMS50_KAMPANYA_KODU,
+  sms50VaryantMi,
+} from "@/lib/sms50-kampanya";
 
 const MAX_ALICI = 500;
 
@@ -35,6 +39,8 @@ export async function POST(request: Request) {
     telefonlar?: string[];
     adlar?: Record<string, string>;
     oncekileriAtla?: boolean;
+    kampanyaKodu?: string;
+    varyant?: string;
   };
   try {
     body = await request.json();
@@ -50,6 +56,13 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+
+  const varyantHam = String(body.varyant ?? "").toLowerCase().trim();
+  const varyant = varyantHam && sms50VaryantMi(varyantHam) ? varyantHam : null;
+  const kampanyaKodu = varyant
+    ? String(body.kampanyaKodu ?? SMS50_KAMPANYA_KODU).trim() ||
+      SMS50_KAMPANYA_KODU
+    : null;
 
   const hamListe = Array.isArray(body.telefonlar) ? body.telefonlar : [];
   const gecerli: string[] = [];
@@ -115,6 +128,8 @@ export async function POST(request: Request) {
         mesaj,
         mesajParca: mesajKontrol.parca,
         mesajBirim: mesajKontrol.birim,
+        kampanyaKodu,
+        varyant,
         alicilar: sonuc.sonuclar.map((s) => ({
           telefon: s.telefon,
           ad: adlar[s.telefon] ?? null,
@@ -135,6 +150,8 @@ export async function POST(request: Request) {
     gecersizAtlandi: gecersiz.length,
     oncekiAtlandi,
     listeId,
+    kampanyaKodu,
+    varyant,
     gecmisUyari: gecmisVar ? undefined : MIGRATION_027_MESAJ,
   });
 }

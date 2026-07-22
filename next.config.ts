@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        /* /sms50a … /sms50z → App Router /sms50/[varyant] */
+        source: "/sms50:varyant([a-z])",
+        destination: "/sms50/:varyant",
+      },
+      {
         source: "/ingest/static/:path*",
         destination: "https://eu-assets.i.posthog.com/static/:path*",
       },

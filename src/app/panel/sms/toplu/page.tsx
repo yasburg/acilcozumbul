@@ -17,8 +17,14 @@ import {
   type TopluSmsAlici,
 } from "@/lib/toplu-sms-excel";
 import { telefonMaskele } from "@/lib/telefon";
+import {
+  SMS50_KAMPANYA_KODU,
+  SMS50_VARYANTLAR,
+  sms50KisaUrl,
+  type Sms50Varyant,
+} from "@/lib/sms50-kampanya";
 
-type Sekme = "gonder" | "listeler" | "genel";
+type Sekme = "gonder" | "testler" | "listeler" | "genel";
 type OncekiMod = "atla" | "yine";
 
 type ListeOzet = {
@@ -30,6 +36,8 @@ type ListeOzet = {
   basarili: number;
   basarisiz: number;
   mesajParca: number | null;
+  kampanyaKodu?: string | null;
+  varyant?: string | null;
 };
 
 type GenelTelefon = {
@@ -47,6 +55,17 @@ type ListeAlici = {
   basarili: boolean;
   hata: string | null;
 };
+
+type TestLinkOzet = {
+  varyant: Sms50Varyant;
+  kisaUrl: string;
+  gonderilen: number;
+  tiklama: number;
+  ctr: number | null;
+  sonTiklama: string | null;
+};
+
+type KampanyaSablon = { id: string; etiket: string; govde: string };
 
 function tarihKisa(iso: string) {
   try {
@@ -91,6 +110,14 @@ export default function PanelTopluSmsPage() {
   const [acikListeId, setAcikListeId] = useState<string | null>(null);
   const [listeAlicilar, setListeAlicilar] = useState<ListeAlici[]>([]);
   const [listeAliciYukleniyor, setListeAliciYukleniyor] = useState(false);
+
+  const [sms50Varyant, setSms50Varyant] = useState<Sms50Varyant | "">("");
+  const [sms50Sablonlar, setSms50Sablonlar] = useState<KampanyaSablon[]>([]);
+  const [sms50Footer, setSms50Footer] = useState<string[]>([]);
+  const [sms50FooterEkle, setSms50FooterEkle] = useState(true);
+  const [testLinkler, setTestLinkler] = useState<TestLinkOzet[]>([]);
+  const [testLinkHata, setTestLinkHata] = useState("");
+  const [testLinkYukleniyor, setTestLinkYukleniyor] = useState(false);
 
   const mesajDurum = useMemo(() => netgsmSmsMesajGecerliMi(mesaj), [mesaj]);
 
@@ -173,7 +200,69 @@ export default function PanelTopluSmsPage() {
   useEffect(() => {
     if (sekme === "listeler") void gecmisYukle("listeler");
     if (sekme === "genel") void gecmisYukle("genel");
+    if (sekme === "testler") void testLinkleriYukle();
   }, [sekme]);
+
+  useEffect(() => {
+    void fetch("/api/panel/sms/toplu/kampanya", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d) return;
+        setSms50Sablonlar(d.sablonlar ?? []);
+        setSms50Footer(Array.isArray(d.footerSatirlari) ? d.footerSatirlari : []);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  async function testLinkleriYukle() {
+    setTestLinkYukleniyor(true);
+    setTestLinkHata("");
+    try {
+      const res = await fetch(
+        `/api/panel/sms/toplu/varyantlar?kampanya=${encodeURIComponent(SMS50_KAMPANYA_KODU)}`,
+        { credentials: "include" }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Test linkleri yüklenemedi.");
+      setTestLinkler(data.liste ?? []);
+    } catch (e) {
+      setTestLinkHata(
+        e instanceof Error ? e.message : "Test linkleri yüklenemedi."
+      );
+    } finally {
+      setTestLinkYukleniyor(false);
+    }
+  }
+
+  function sablonUygula(govde: string) {
+    if (!sms50Varyant) {
+      setHata("Önce test linki harfini (a–z) seçin.");
+      return;
+    }
+    const link = sms50KisaUrl(sms50Varyant);
+    let metin = govde.includes("{{LINK}}")
+      ? govde.replaceAll("{{LINK}}", link)
+      : `${govde.trim()} ${link}`;
+    if (sms50FooterEkle && sms50Footer.length > 0) {
+      metin = `${metin.trim()}\n${sms50Footer.join(" — ")}`;
+    }
+    setMesaj(metin.trim());
+    setHata("");
+  }
+
+  function linkiMesajaEkle() {
+    if (!sms50Varyant) {
+      setHata("Önce test linki harfini (a–z) seçin.");
+      return;
+    }
+    const link = sms50KisaUrl(sms50Varyant);
+    setMesaj((m) => {
+      if (m.includes(link)) return m;
+      const base = m.trim();
+      return base ? `${base}\n${link}` : link;
+    });
+    setHata("");
+  }
 
   async function listeDetayAc(id: string) {
     if (acikListeId === id) {
@@ -305,6 +394,9 @@ export default function PanelTopluSmsPage() {
           telefonlar: gecerliAlicilar.map((a) => a.telefon),
           adlar,
           oncekileriAtla: oncekiAdet > 0 && oncekiMod === "atla",
+          ...(sms50Varyant
+            ? { varyant: sms50Varyant, kampanyaKodu: SMS50_KAMPANYA_KODU }
+            : {}),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -335,7 +427,7 @@ export default function PanelTopluSmsPage() {
         <div>
           <h2 className="text-2xl font-bold">Toplu SMS</h2>
           <p className="text-sm text-slate-500">
-            Excel / elle gönder · geçmiş listeler ve genel defter
+            Excel / elle · SMS50 test linkleri (a–z) · geçmiş
           </p>
         </div>
         <Link
@@ -350,6 +442,7 @@ export default function PanelTopluSmsPage() {
         {(
           [
             ["gonder", "Gönder"],
+            ["testler", "Test linkleri"],
             ["listeler", "Listeler"],
             ["genel", "Genel liste"],
           ] as const
@@ -574,6 +667,88 @@ export default function PanelTopluSmsPage() {
           )}
 
           <Card className="space-y-3">
+            <h3 className="font-semibold text-slate-800">SMS50 test linki</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Bir gönderim = bir harf. Link:{" "}
+              <code className="bg-slate-100 px-1 rounded">
+                /sms50{sms50Varyant || "a"}
+              </code>{" "}
+              → kayıt + UTM. Ölçüm için «Test linkleri» sekmesine bakın.
+            </p>
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium text-slate-700">
+                Harf (a–z)
+              </span>
+              <select
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"
+                value={sms50Varyant}
+                onChange={(e) =>
+                  setSms50Varyant(
+                    (e.target.value || "") as Sms50Varyant | ""
+                  )
+                }
+              >
+                <option value="">Yok (serbest metin, ölçümsüz)</option>
+                {SMS50_VARYANTLAR.map((v) => (
+                  <option key={v} value={v}>
+                    {v.toUpperCase()} — {sms50KisaUrl(v)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {sms50Varyant && (
+              <div className="flex flex-wrap gap-2 items-center">
+                <code className="text-xs bg-slate-100 px-2 py-1 rounded break-all">
+                  {sms50KisaUrl(sms50Varyant)}
+                </code>
+                <button
+                  type="button"
+                  className="text-xs font-medium text-amber-700"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(
+                      sms50KisaUrl(sms50Varyant)
+                    );
+                  }}
+                >
+                  Kopyala
+                </button>
+                <button
+                  type="button"
+                  className="text-xs font-medium text-amber-700"
+                  onClick={linkiMesajaEkle}
+                >
+                  Mesaja ekle
+                </button>
+              </div>
+            )}
+            {sms50Sablonlar.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {sms50Sablonlar.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                    onClick={() => sablonUygula(s.govde)}
+                  >
+                    {s.etiket}
+                  </button>
+                ))}
+              </div>
+            )}
+            <label className="flex items-center gap-2 text-xs text-slate-600">
+              <input
+                type="checkbox"
+                checked={sms50FooterEkle}
+                onChange={(e) => setSms50FooterEkle(e.target.checked)}
+              />
+              Şablona MERSİS / ret satırı ekle
+              {sms50Footer.length === 0
+                ? " (SMS_MERSIS_NO / SMS_IPTAL_METNI tanımlı değil)"
+                : ""}
+            </label>
+          </Card>
+
+          <Card className="space-y-3">
             <TextArea
               label="SMS metni"
               value={mesaj}
@@ -684,6 +859,12 @@ export default function PanelTopluSmsPage() {
                 >
                   <p className="text-sm font-medium text-slate-900">
                     {tarihKisa(l.olusturulma)} · {l.aliciSayisi} alıcı
+                    {l.varyant ? (
+                      <span className="text-amber-700">
+                        {" "}
+                        · sms50{l.varyant}
+                      </span>
+                    ) : null}
                     <span className="text-emerald-700">
                       {" "}
                       · {l.basarili} ok
@@ -737,6 +918,93 @@ export default function PanelTopluSmsPage() {
               </li>
             ))}
           </ul>
+        </Card>
+      )}
+
+      {sekme === "testler" && (
+        <Card className="space-y-3">
+          <div className="flex justify-between items-center gap-2">
+            <h3 className="font-semibold text-slate-800">
+              SMS50 test linkleri (a–z)
+            </h3>
+            <button
+              type="button"
+              className="text-xs text-amber-700 font-medium"
+              onClick={() => void testLinkleriYukle()}
+            >
+              Yenile
+            </button>
+          </div>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Her harf ayrı test yuvası. CTR = tıklama ÷ başarılı gönderim.
+            Kayıt hedefi: kampanya kodu {SMS50_KAMPANYA_KODU}.
+          </p>
+          {testLinkYukleniyor && (
+            <p className="text-sm text-slate-500">Yükleniyor…</p>
+          )}
+          {testLinkHata && (
+            <p className="text-sm text-red-600">{testLinkHata}</p>
+          )}
+          {!testLinkYukleniyor && !testLinkHata && (
+            <div className="overflow-x-auto rounded-xl border border-slate-100">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-slate-50 text-xs text-slate-500 uppercase tracking-wide">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold">Harf</th>
+                    <th className="px-3 py-2 font-semibold">Link</th>
+                    <th className="px-3 py-2 font-semibold tabular-nums">
+                      Gönderilen
+                    </th>
+                    <th className="px-3 py-2 font-semibold tabular-nums">
+                      Tıklama
+                    </th>
+                    <th className="px-3 py-2 font-semibold tabular-nums">
+                      CTR
+                    </th>
+                    <th className="px-3 py-2 font-semibold">Son tık</th>
+                    <th className="px-3 py-2 font-semibold" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {testLinkler.map((row) => (
+                    <tr key={row.varyant} className="hover:bg-slate-50/80">
+                      <td className="px-3 py-2 font-semibold text-slate-900">
+                        {row.varyant.toUpperCase()}
+                      </td>
+                      <td className="px-3 py-2 text-xs text-slate-600 max-w-[10rem] truncate">
+                        {row.kisaUrl}
+                      </td>
+                      <td className="px-3 py-2 tabular-nums text-slate-800">
+                        {row.gonderilen}
+                      </td>
+                      <td className="px-3 py-2 tabular-nums text-slate-800">
+                        {row.tiklama}
+                      </td>
+                      <td className="px-3 py-2 tabular-nums text-slate-800">
+                        {row.ctr == null
+                          ? "—"
+                          : `${(row.ctr * 100).toFixed(1)}%`}
+                      </td>
+                      <td className="px-3 py-2 text-xs text-slate-500 whitespace-nowrap">
+                        {row.sonTiklama ? tarihKisa(row.sonTiklama) : "—"}
+                      </td>
+                      <td className="px-3 py-2">
+                        <button
+                          type="button"
+                          className="text-xs font-medium text-amber-700"
+                          onClick={() => {
+                            void navigator.clipboard.writeText(row.kisaUrl);
+                          }}
+                        >
+                          Kopyala
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
       )}
 

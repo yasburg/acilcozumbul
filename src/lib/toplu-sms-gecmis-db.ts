@@ -10,6 +10,8 @@ export type TopluSmsListeOzet = {
   basarili: number;
   basarisiz: number;
   mesajParca: number | null;
+  kampanyaKodu: string | null;
+  varyant: string | null;
 };
 
 export type TopluSmsListeAlici = {
@@ -67,6 +69,8 @@ export async function kaydetTopluSmsGecmis(opts: {
   mesaj: string;
   mesajParca?: number;
   mesajBirim?: number;
+  kampanyaKodu?: string | null;
+  varyant?: string | null;
   alicilar: Array<{
     telefon: string;
     ad?: string | null;
@@ -93,6 +97,8 @@ export async function kaydetTopluSmsGecmis(opts: {
       basarisiz,
       mesaj_parca: opts.mesajParca ?? null,
       mesaj_birim: opts.mesajBirim ?? null,
+      kampanya_kodu: opts.kampanyaKodu ?? null,
+      varyant: opts.varyant ?? null,
     })
     .select("id")
     .single();
@@ -193,7 +199,7 @@ export async function getTopluSmsListeler(
   const { data, error } = await getSupabaseAdmin()
     .from("panel_toplu_sms_listeler")
     .select(
-      "id, olusturulma, gonderen_eposta, mesaj, alici_sayisi, basarili, basarisiz, mesaj_parca"
+      "id, olusturulma, gonderen_eposta, mesaj, alici_sayisi, basarili, basarisiz, mesaj_parca, kampanya_kodu, varyant"
     )
     .order("olusturulma", { ascending: false })
     .limit(limit);
@@ -207,6 +213,8 @@ export async function getTopluSmsListeler(
     basarili: Number(r.basarili) || 0,
     basarisiz: Number(r.basarisiz) || 0,
     mesajParca: r.mesaj_parca != null ? Number(r.mesaj_parca) : null,
+    kampanyaKodu: r.kampanya_kodu ? String(r.kampanya_kodu) : null,
+    varyant: r.varyant ? String(r.varyant) : null,
   }));
 }
 
