@@ -109,6 +109,15 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
         body: JSON.stringify({ telefon: telefon.trim() }),
       });
       const d = await res.json().catch(() => ({}));
+      if (res.status === 409) {
+        const q = new URLSearchParams({
+          telefon: telefon.trim(),
+          mesaj: "zaten-kayitli",
+          otp: "1",
+        });
+        router.push(`/cekici/giris?${q.toString()}`);
+        return;
+      }
       if (!res.ok && !d.kodBekliyor) {
         throw new Error(typeof d.error === "string" ? d.error : "Kod gönderilemedi.");
       }
@@ -147,6 +156,15 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
         }),
       });
       const d = await res.json().catch(() => ({}));
+      if (res.status === 409) {
+        const q = new URLSearchParams({
+          telefon: telefon.trim(),
+          mesaj: "zaten-kayitli",
+          otp: "1",
+        });
+        router.push(`/cekici/giris?${q.toString()}`);
+        return;
+      }
       if (!res.ok) {
         throw new Error(typeof d.error === "string" ? d.error : "Kayıt başarısız.");
       }

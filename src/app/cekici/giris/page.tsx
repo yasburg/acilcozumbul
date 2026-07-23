@@ -27,6 +27,7 @@ function GirisIcerik() {
   const [error, setError] = useState("");
   const [mesaj, setMesaj] = useState("");
   const [yenidenSn, setYenidenSn] = useState(0);
+  const [bilgiBanner, setBilgiBanner] = useState("");
 
   useEffect(() => {
     if (searchParams.get("eposta") !== "1") return;
@@ -40,8 +41,20 @@ function GirisIcerik() {
   }, [searchParams, router]);
 
   useEffect(() => {
+    const tel = searchParams.get("telefon")?.trim();
+    if (tel) setTelefon(tel);
+    if (searchParams.get("otp") === "1") setOtpMod(true);
+    if (searchParams.get("mesaj") === "zaten-kayitli") {
+      setBilgiBanner(
+        "Telefonunuz zaten kayıtlı, giriş yapabilirsiniz."
+      );
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     if (searchParams.get("eposta") === "1") return;
     if (searchParams.get("mesaj") === "hesap-silindi") return;
+    if (searchParams.get("mesaj") === "zaten-kayitli") return;
     void cekiciFetch("/api/cekici/me").then((res) => {
       if (res.ok) router.replace("/cekici/panel");
     });
@@ -166,6 +179,12 @@ function GirisIcerik() {
           <p className="text-emerald-800 text-sm">
             Hesabınız silindi. Yeniden kayıt olarak devam edebilirsiniz.
           </p>
+        </Card>
+      )}
+
+      {bilgiBanner && (
+        <Card className="border-amber-200 bg-amber-50 mb-4">
+          <p className="text-amber-950 text-sm font-medium">{bilgiBanner}</p>
         </Card>
       )}
 
