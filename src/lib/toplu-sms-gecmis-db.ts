@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "./supabase/admin";
 import { telefonNormalize } from "./telefon";
+import { getSms50TokenOzetByTelefonlar } from "./sms50-token";
 
 export type TopluSmsListeOzet = {
   id: string;
@@ -28,6 +29,12 @@ export type TopluSmsGenelTelefon = {
   sonGonderim: string;
   gonderimSayisi: number;
   basariliSayisi: number;
+  /** Token’lı gönderim varsa: link açıldı mı; yoksa null (—) */
+  linkActi: boolean | null;
+  ilkTiklama: string | null;
+  /** Token kaydı veya cekiciler eşleşmesi */
+  kayitli: boolean;
+  kayitAt: string | null;
 };
 
 const IN_CHUNK = 200;
@@ -294,7 +301,8 @@ export async function getTopluSmsListeAlicilar(
 export async function getTopluSmsGenelTelefonlar(
   limit = 500
 ): Promise<TopluSmsGenelTelefon[]> {
-  const { data, error } = await getSupabaseAdmin()
+  const sb = getSupabaseAdmin();
+  const { data, error } = await sb
     .from("panel_toplu_sms_telefonlar")
     .select(
       "telefon, ad, ilk_gonderim, son_gonderim, gonderim_sayisi, basarili_sayisi"
@@ -302,12 +310,39 @@ export async function getTopluSmsGenelTelefonlar(
     .order("son_gonderim", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return (data ?? []).map((r) => ({
-    telefon: String(r.telefon),
-    ad: r.ad ? String(r.ad) : null,
-    ilkGonderim: String(r.ilk_gonderim),
-    sonGonderim: String(r.son_gonderim),
-    gonderimSayisi: Number(r.gonderim_sayisi) || 0,
-    basariliSayisi: Number(r.basarili_sayisi) || 0,
-  }));
+
+  const rows = data ?? [];
+  const telefonlar = rows.map((r) => String(r.telefon));
+  const tokenMap = await getSms50TokenOzetByTelefonlar(telefonlar);
+
+  const kayitliSet = new Set<string>();
+  for (let i = 0; i < telefonlar.length; i += IN_CHUNK) {
+    const parti = telefonlar.slice(i, i + IN_CHUNK);
+    const { data: cekiciler } = await sb
+      .from("cekiciler")
+      .select("telefon")
+      .in("telefon", parti);
+    for (const c of cekiciler ?? []) {
+      if (c.telefon) kayitliSet.add(String(c.telefon));
+    }
+  }
+
+  return rows.map((r) => {
+    const telefon = String(r.telefon);
+    const token = tokenMap.get(telefon);
+    const kayitAt = token?.kayitAt ?? null;
+    const kayitli = Boolean(kayitAt) || kayitliSet.has(telefon);
+    return {
+      telefon,
+      ad: r.ad ? String(r.ad) : null,
+      ilkGonderim: String(r.ilk_gonderim),
+      sonGonderim: String(r.son_gonderim),
+      gonderimSayisi: Number(r.gonderim_sayisi) || 0,
+      basariliSayisi: Number(r.basarili_sayisi) || 0,
+      linkActi: token ? token.linkActi : null,
+      ilkTiklama: token?.ilkTiklama ?? null,
+      kayitli,
+      kayitAt,
+    };
+  });
 }

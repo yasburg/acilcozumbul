@@ -11,7 +11,13 @@ import {
 } from "./toplu-sms-tempo";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { telefonNormalize } from "./telefon";
-
+import {
+  sms50MesajOlustur,
+  sms50VaryantMi,
+  type Sms50Varyant,
+} from "./sms50-kampanya";
+import { olusturSms50LinkToken } from "./sms50-token";
+import { smsBaseUrl } from "./sms-base-url";
 export type TopluSmsIsDurum =
   | "beklemede"
   | "suruyor"
@@ -43,6 +49,7 @@ export type TopluSmsIsOzet = {
   hata: string | null;
   aliciSayisi: number;
   kalanSn: number | null;
+  kisiBazliTakip: boolean;
 };
 
 type IsRow = {
@@ -67,10 +74,11 @@ type IsRow = {
   sonraki_parti_at: string | null;
   liste_id: string | null;
   hata: string | null;
+  kisi_bazli_takip?: boolean | null;
 };
 
 const IS_SELECT =
-  "id, olusturulma, guncelleme, gonderen_eposta, mesaj, mesaj_parca, mesaj_birim, kampanya_kodu, varyant, durum, parti_boyutu, bekleme_sn, jitter_oran, parti_index, parti_toplam, basarili, basarisiz, onceki_atlandi, sonraki_parti_at, liste_id, hata";
+  "id, olusturulma, guncelleme, gonderen_eposta, mesaj, mesaj_parca, mesaj_birim, kampanya_kodu, varyant, durum, parti_boyutu, bekleme_sn, jitter_oran, parti_index, parti_toplam, basarili, basarisiz, onceki_atlandi, sonraki_parti_at, liste_id, hata, kisi_bazli_takip";
 
 /** Aynı işi aynı anda iki runner işlemesin diye */
 const calisanIsler = new Set<string>();
@@ -106,6 +114,7 @@ function rowToOzet(r: IsRow, aliciSayisi = 0): TopluSmsIsOzet {
     aliciSayisi,
     kalanSn:
       r.durum === "suruyor" || r.durum === "beklemede" ? kalanSn : null,
+    kisiBazliTakip: Boolean(r.kisi_bazli_takip),
   };
 }
 
@@ -155,9 +164,16 @@ export async function olusturTopluSmsIsi(opts: {
   varyant?: string | null;
   oncekiAtlandi?: number;
   tempo: TopluSmsTempo;
+  kisiBazliTakip?: boolean;
   alicilar: Array<{ telefon: string; ad?: string | null }>;
 }): Promise<TopluSmsIsOzet> {
-  const tempo = topluSmsTempoNormalize(opts.tempo);
+  const kisiBazliTakip = Boolean(
+    opts.kisiBazliTakip && opts.varyant && sms50VaryantMi(opts.varyant)
+  );
+  const tempoHam = kisiBazliTakip
+    ? { ...opts.tempo, partiBoyutu: 1 }
+    : opts.tempo;
+  const tempo = topluSmsTempoNormalize(tempoHam);
   const alicilar = opts.alicilar.map((a, i) => ({
     sira: i,
     telefon: telefonNormalize(a.telefon),
@@ -209,6 +225,7 @@ export async function olusturTopluSmsIsi(opts: {
       onceki_atlandi: opts.oncekiAtlandi ?? 0,
       sonraki_parti_at: null,
       liste_id: listeId,
+      kisi_bazli_takip: kisiBazliTakip,
     })
     .select(IS_SELECT)
     .single();
@@ -392,9 +409,45 @@ export async function isleTopluSmsSiradakiParti(
 
   const telefonlar = kilitli.map((a) => String(a.telefon));
   let sonuclar: Array<{ telefon: string; basarili: boolean; hata?: string }>;
+  const kisiBazli =
+    Boolean(is.kisi_bazli_takip) &&
+    is.varyant &&
+    sms50VaryantMi(String(is.varyant));
   try {
-    const sonuc = await sendPanelTopluSms(telefonlar, String(is.mesaj));
-    sonuclar = sonuc.sonuclar;
+    if (kisiBazli) {
+      const varyant = String(is.varyant) as Sms50Varyant;
+      const kampanyaKodu = is.kampanya_kodu
+        ? String(is.kampanya_kodu)
+        : undefined;
+      sonuclar = [];
+      for (const a of kilitli) {
+        const tel = String(a.telefon);
+        try {
+          const tokenKayit = await olusturSms50LinkToken({
+            varyant,
+            telefon: tel,
+            kampanyaKodu,
+            isId,
+            listeId: is.liste_id ? String(is.liste_id) : null,
+          });
+          const kisiselMesaj = sms50MesajOlustur({
+            govde: String(is.mesaj),
+            varyant,
+            footerEkle: false,
+            baseUrl: smsBaseUrl(),
+            token: tokenKayit.token,
+          });
+          const sonuc = await sendPanelTopluSms([tel], kisiselMesaj);
+          sonuclar.push(...sonuc.sonuclar);
+        } catch (e) {
+          const hata = e instanceof Error ? e.message : "Gönderim hatası";
+          sonuclar.push({ telefon: tel, basarili: false, hata });
+        }
+      }
+    } else {
+      const sonuc = await sendPanelTopluSms(telefonlar, String(is.mesaj));
+      sonuclar = sonuc.sonuclar;
+    }
   } catch (e) {
     const mesaj = e instanceof Error ? e.message : "Gönderim hatası";
     await sb

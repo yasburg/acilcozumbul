@@ -32,6 +32,7 @@ import {
   type TopluSmsTempo,
   type TopluSmsTempoPresetId,
 } from "@/lib/toplu-sms-tempo";
+import { Sms50TiklamaSaatTablosu } from "@/components/panel/Sms50TiklamaSaatTablosu";
 
 type KuyrukIs = {
   id: string;
@@ -70,6 +71,10 @@ type GenelTelefon = {
   sonGonderim: string;
   gonderimSayisi: number;
   basariliSayisi: number;
+  linkActi?: boolean | null;
+  ilkTiklama?: string | null;
+  kayitli?: boolean;
+  kayitAt?: string | null;
 };
 
 type ListeAlici = {
@@ -86,6 +91,14 @@ type TestLinkOzet = {
   tiklama: number;
   ctr: number | null;
   sonTiklama: string | null;
+};
+
+type SaatIzgarasi = {
+  grid: number[][];
+  gunToplam: number[];
+  saatToplam: number[];
+  toplam: number;
+  maxHucre: number;
 };
 
 type KampanyaSablon = { id: string; etiket: string; govde: string };
@@ -141,13 +154,24 @@ export default function PanelTopluSmsPage() {
   const [listeAliciYukleniyor, setListeAliciYukleniyor] = useState(false);
 
   const [sms50Varyant, setSms50Varyant] = useState<Sms50Varyant | "">("");
+  const [kisiBazliTakip, setKisiBazliTakip] = useState(false);
   const [sms50Sablonlar, setSms50Sablonlar] = useState<KampanyaSablon[]>([]);
   const [seciliSablonId, setSeciliSablonId] = useState("");
   const [sms50Footer, setSms50Footer] = useState<string[]>([]);
   const [sms50FooterEkle, setSms50FooterEkle] = useState(true);
   const [testLinkler, setTestLinkler] = useState<TestLinkOzet[]>([]);
+  const [tiklamaSaatIzgarasi, setTiklamaSaatIzgarasi] =
+    useState<SaatIzgarasi | null>(null);
   const [testLinkHata, setTestLinkHata] = useState("");
   const [testLinkYukleniyor, setTestLinkYukleniyor] = useState(false);
+
+  const etkiliTempo = useMemo(
+    () =>
+      kisiBazliTakip && sms50Varyant
+        ? topluSmsTempoNormalize({ ...tempo, partiBoyutu: 1 })
+        : tempo,
+    [kisiBazliTakip, sms50Varyant, tempo]
+  );
 
   const mesajDurum = useMemo(() => netgsmSmsMesajGecerliMi(mesaj), [mesaj]);
 
@@ -171,15 +195,15 @@ export default function PanelTopluSmsPage() {
       : gecerliAlicilar.length;
 
   const tahminiSureSn = useMemo(
-    () => topluSmsTahminiSureSn(gonderilecekAdet, tempo),
-    [gonderilecekAdet, tempo]
+    () => topluSmsTahminiSureSn(gonderilecekAdet, etkiliTempo),
+    [gonderilecekAdet, etkiliTempo]
   );
   const partiTahmini = useMemo(
     () =>
       Math.ceil(
-        Math.max(0, gonderilecekAdet) / Math.max(1, tempo.partiBoyutu)
+        Math.max(0, gonderilecekAdet) / Math.max(1, etkiliTempo.partiBoyutu)
       ),
-    [gonderilecekAdet, tempo.partiBoyutu]
+    [gonderilecekAdet, etkiliTempo.partiBoyutu]
   );
 
   const oncekileriKontrolEt = useCallback(async (liste: TopluSmsAlici[]) => {
@@ -267,10 +291,12 @@ export default function PanelTopluSmsPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Test linkleri yüklenemedi.");
       setTestLinkler(data.liste ?? []);
+      setTiklamaSaatIzgarasi(data.saatIzgarasi ?? null);
     } catch (e) {
       setTestLinkHata(
         e instanceof Error ? e.message : "Test linkleri yüklenemedi."
       );
+      setTiklamaSaatIzgarasi(null);
     } finally {
       setTestLinkYukleniyor(false);
     }
@@ -501,7 +527,11 @@ export default function PanelTopluSmsPage() {
       return;
     }
 
-    const tempoN = topluSmsTempoNormalize(tempo);
+    const tempoN = etkiliTempo;
+    const takipMetin =
+      kisiBazliTakip && sms50Varyant
+        ? " · kişiye özel link (parti 1)"
+        : "";
     const atlaMetin =
       oncekiAdet > 0 && oncekiMod === "atla"
         ? ` · ${oncekiAdet} önceki numara atlanacak`
@@ -510,7 +540,7 @@ export default function PanelTopluSmsPage() {
           : "";
 
     const onay = window.confirm(
-      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${atlaMetin}.\n\nGönderim sunucuda arka planda devam eder; ekranı kapatabilirsiniz. Devam?`
+      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${takipMetin}${atlaMetin}.\n\nGönderim sunucuda arka planda devam eder; ekranı kapatabilirsiniz. Devam?`
     );
     if (!onay) return;
 
@@ -553,6 +583,7 @@ export default function PanelTopluSmsPage() {
           adlar,
           oncekileriAtla: false,
           tempo: tempoN,
+          kisiBazliTakip: Boolean(kisiBazliTakip && sms50Varyant),
           ...(sms50Varyant
             ? { varyant: sms50Varyant, kampanyaKodu: SMS50_KAMPANYA_KODU }
             : {}),
@@ -873,6 +904,7 @@ export default function PanelTopluSmsPage() {
                 onChange={(e) => {
                   const v = (e.target.value || "") as Sms50Varyant | "";
                   setSms50Varyant(v);
+                  if (!v) setKisiBazliTakip(false);
                   if (seciliSablonId) {
                     const s = sms50Sablonlar.find((x) => x.id === seciliSablonId);
                     if (s) sablonUygula(s.govde, v);
@@ -911,6 +943,27 @@ export default function PanelTopluSmsPage() {
                   Mesaja ekle
                 </button>
               </div>
+            )}
+            {sms50Varyant && (
+              <label className="flex items-start gap-2 text-sm text-slate-700 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={kisiBazliTakip}
+                  disabled={gonderiyor}
+                  onChange={(e) => setKisiBazliTakip(e.target.checked)}
+                />
+                <span>
+                  <span className="font-medium">
+                    Kişiye özel link (tıklama + kayıt takibi)
+                  </span>
+                  <span className="block text-xs text-slate-500 mt-0.5 leading-relaxed">
+                    Her alıcıya rastgele kısa kodlu link gider; Genel listede
+                    kim açtı / kayıt oldu görünür. Bu modda parti boyutu 1
+                    olur (mevcut parti ayarı kapalıyken değişmez).
+                  </span>
+                </span>
+              </label>
             )}
             <div className="space-y-1.5">
               <div className="flex flex-wrap justify-between gap-2 items-end">
@@ -1061,8 +1114,8 @@ export default function PanelTopluSmsPage() {
                 type="number"
                 min={1}
                 max={50}
-                disabled={gonderiyor}
-                value={String(tempo.partiBoyutu)}
+                disabled={gonderiyor || Boolean(kisiBazliTakip && sms50Varyant)}
+                value={String(etkiliTempo.partiBoyutu)}
                 onChange={(e) => {
                   setTempoPreset("ozel");
                   setTempo((t) =>
@@ -1111,8 +1164,11 @@ export default function PanelTopluSmsPage() {
             <p className="text-xs text-slate-500">
               Bu liste için: ~{partiTahmini} parti · tahmini süre{" "}
               {topluSmsSureMetni(tahminiSureSn)}
-              {tempo.jitterOran > 0
-                ? ` · aralık ±%${Math.round(tempo.jitterOran * 100)} sapmalı`
+              {etkiliTempo.jitterOran > 0
+                ? ` · aralık ±%${Math.round(etkiliTempo.jitterOran * 100)} sapmalı`
+                : ""}
+              {kisiBazliTakip && sms50Varyant
+                ? " · kişiye özel link (parti 1)"
                 : ""}
               .
             </p>
@@ -1272,7 +1328,13 @@ export default function PanelTopluSmsPage() {
       )}
 
       {sekme === "testler" && (
-        <Card className="space-y-3">
+        <div className="space-y-4">
+          {!testLinkYukleniyor && !testLinkHata && tiklamaSaatIzgarasi && (
+            <Card className="space-y-2">
+              <Sms50TiklamaSaatTablosu data={tiklamaSaatIzgarasi} />
+            </Card>
+          )}
+          <Card className="space-y-3">
           <div className="flex justify-between items-center gap-2">
             <h3 className="font-semibold text-slate-800">
               SMS50 test linkleri (a–z)
@@ -1356,6 +1418,7 @@ export default function PanelTopluSmsPage() {
             </div>
           )}
         </Card>
+        </div>
       )}
 
       {sekme === "genel" && (
@@ -1376,7 +1439,8 @@ export default function PanelTopluSmsPage() {
             </button>
           </div>
           <p className="text-xs text-slate-500">
-            Daha önce toplu SMS gönderilen tüm numaralar (son gönderime göre).
+            Toplu SMS giden numaralar. Kişiye özel link kullanıldıysa tıklama ve
+            kayıt durumu görünür.
           </p>
           {gecmisYukleniyor && (
             <p className="text-sm text-slate-500">Yükleniyor…</p>
@@ -1389,36 +1453,72 @@ export default function PanelTopluSmsPage() {
             genelTelefonlar.length === 0 && (
               <p className="text-sm text-slate-500">Henüz kayıt yok.</p>
             )}
-          <ul className="max-h-[28rem] overflow-y-auto divide-y divide-slate-100 text-sm">
-            {genelTelefonlar.map((t) => (
-              <li
-                key={t.telefon}
-                className="flex flex-wrap justify-between gap-2 py-2"
-              >
-                <div>
-                  <p className="font-medium text-slate-900">
-                    {telefonMaskele(t.telefon)}
-                    {t.ad ? (
-                      <span className="text-slate-500 font-normal">
-                        {" "}
-                        · {t.ad}
-                      </span>
-                    ) : null}
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    Son: {tarihKisa(t.sonGonderim)} · İlk:{" "}
-                    {tarihKisa(t.ilkGonderim)}
-                  </p>
-                </div>
-                <p className="text-xs text-slate-600 tabular-nums">
-                  {t.gonderimSayisi} gönderim
-                  {t.basariliSayisi > 0
-                    ? ` · ${t.basariliSayisi} başarılı`
-                    : ""}
-                </p>
-              </li>
-            ))}
-          </ul>
+          {!gecmisYukleniyor &&
+            !gecmisHata &&
+            genelTelefonlar.length > 0 && (
+              <div className="overflow-x-auto rounded-xl border border-slate-100 max-h-[28rem]">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50 text-xs text-slate-500 uppercase tracking-wide sticky top-0">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">Telefon</th>
+                      <th className="px-3 py-2 font-semibold">Ad</th>
+                      <th className="px-3 py-2 font-semibold tabular-nums">
+                        Gönderim
+                      </th>
+                      <th className="px-3 py-2 font-semibold">Link açtı</th>
+                      <th className="px-3 py-2 font-semibold">İlk tık</th>
+                      <th className="px-3 py-2 font-semibold">Kayıt</th>
+                      <th className="px-3 py-2 font-semibold">Son SMS</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {genelTelefonlar.map((t) => (
+                      <tr key={t.telefon} className="hover:bg-slate-50/80">
+                        <td className="px-3 py-2 font-medium text-slate-900 whitespace-nowrap">
+                          {telefonMaskele(t.telefon)}
+                        </td>
+                        <td className="px-3 py-2 text-slate-600 max-w-[8rem] truncate">
+                          {t.ad || "—"}
+                        </td>
+                        <td className="px-3 py-2 tabular-nums text-slate-800 whitespace-nowrap">
+                          {t.gonderimSayisi}
+                          {t.basariliSayisi > 0
+                            ? ` · ${t.basariliSayisi} ok`
+                            : ""}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {t.linkActi == null
+                            ? "—"
+                            : t.linkActi
+                              ? "Evet"
+                              : "Hayır"}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-slate-500 whitespace-nowrap">
+                          {t.ilkTiklama ? tarihKisa(t.ilkTiklama) : "—"}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap">
+                          {t.kayitli ? (
+                            <span className="text-emerald-700">
+                              Evet
+                              {t.kayitAt ? (
+                                <span className="block text-xs text-slate-400 font-normal">
+                                  {tarihKisa(t.kayitAt)}
+                                </span>
+                              ) : null}
+                            </span>
+                          ) : (
+                            "Hayır"
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-slate-500 whitespace-nowrap">
+                          {tarihKisa(t.sonGonderim)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
         </Card>
       )}
     </div>

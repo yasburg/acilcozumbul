@@ -84,6 +84,7 @@ function KayitIcerik() {
     searchParams.get("davet")?.trim() ||
     searchParams.get("kod")?.trim() ||
     "";
+  const smsTokenParam = searchParams.get("sms_token")?.trim() || "";
 
   const adRef = useRef<HTMLDivElement>(null);
   const dogumRef = useRef<HTMLDivElement>(null);
@@ -399,6 +400,7 @@ function KayitIcerik() {
           kayitKodu: form.davetKodu.trim()
             ? davetKoduNormalize(form.davetKodu)
             : undefined,
+          smsToken: smsTokenParam || undefined,
         }),
       });
       const data = await res.json();

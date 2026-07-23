@@ -39,3 +39,6 @@ export const MIGRATION_033_MESAJ =
 
 export const MIGRATION_034_MESAJ =
   "Toplu SMS kilit durumu için supabase/migrations/034_panel_toplu_sms_is_alicilar_kilit.sql dosyasını da çalıştırın.";
+
+export const MIGRATION_035_MESAJ =
+  "Kişiye özel SMS50 link için supabase/migrations/035_sms50_kisi_token.sql dosyasını SQL Editor’da çalıştırın.";

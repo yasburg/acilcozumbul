@@ -55,6 +55,77 @@ export type Sms50VaryantOzet = {
   sonTiklama: string | null;
 };
 
+/** 0=Pazar … 6=Cumartesi (Europe/Istanbul) */
+export function sms50TiklamaGunSaat(iso: string): {
+  gun: number;
+  saat: number;
+} | null {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Istanbul",
+    weekday: "short",
+    hour: "numeric",
+    hourCycle: "h23",
+  }).formatToParts(d);
+  const wd = parts.find((p) => p.type === "weekday")?.value ?? "";
+  const hourRaw = parts.find((p) => p.type === "hour")?.value;
+  const gunMap: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+  const gun = gunMap[wd];
+  const saat = hourRaw != null ? Number(hourRaw) : NaN;
+  if (gun == null || !Number.isFinite(saat) || saat < 0 || saat > 23) {
+    return null;
+  }
+  return { gun, saat };
+}
+
+export type Sms50TiklamaSaatIzgarasi = {
+  /** grid[gun][saat] — 7×24 */
+  grid: number[][];
+  gunToplam: number[];
+  saatToplam: number[];
+  toplam: number;
+  maxHucre: number;
+};
+
+export async function getSms50TiklamaSaatIzgarasi(
+  kampanyaKodu = SMS50_KAMPANYA_KODU
+): Promise<Sms50TiklamaSaatIzgarasi> {
+  const grid = Array.from({ length: 7 }, () =>
+    Array.from({ length: 24 }, () => 0)
+  );
+  const gunToplam = Array.from({ length: 7 }, () => 0);
+  const saatToplam = Array.from({ length: 24 }, () => 0);
+  let toplam = 0;
+  let maxHucre = 0;
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("sms_kampanya_tiklama")
+    .select("olusturulma")
+    .eq("kampanya_kodu", kampanyaKodu);
+  if (error) throw error;
+
+  for (const row of data ?? []) {
+    const gs = sms50TiklamaGunSaat(String(row.olusturulma ?? ""));
+    if (!gs) continue;
+    grid[gs.gun]![gs.saat]! += 1;
+    gunToplam[gs.gun]! += 1;
+    saatToplam[gs.saat]! += 1;
+    toplam += 1;
+    maxHucre = Math.max(maxHucre, grid[gs.gun]![gs.saat]!);
+  }
+
+  return { grid, gunToplam, saatToplam, toplam, maxHucre };
+}
+
 export async function getSms50VaryantOzetleri(
   kampanyaKodu = SMS50_KAMPANYA_KODU
 ): Promise<Sms50VaryantOzet[]> {

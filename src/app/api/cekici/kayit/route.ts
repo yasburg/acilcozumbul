@@ -27,6 +27,8 @@ import {
   cekiciAuthKullaniciSil,
 } from "@/lib/cekici-auth";
 import { dogumTarihiDogrula } from "@/lib/dogum-tarihi";
+import { baglaSms50TokenKayit } from "@/lib/sms50-token";
+import { sms50TokenGecerliMi } from "@/lib/sms50-kampanya";
 
 export async function POST(request: NextRequest) {
   await ensureSeedData();
@@ -39,6 +41,13 @@ export async function POST(request: NextRequest) {
       : typeof body.davetKodu === "string"
         ? body.davetKodu
         : undefined;
+  const smsTokenHam =
+    typeof body.smsToken === "string"
+      ? body.smsToken.trim()
+      : typeof body.sms_token === "string"
+        ? body.sms_token.trim()
+        : "";
+  const smsToken = sms50TokenGecerliMi(smsTokenHam) ? smsTokenHam : null;
 
   if (!ad?.trim() || !telefon?.trim() || !sehir?.trim() || !sifre?.trim()) {
     return NextResponse.json(
@@ -151,6 +160,14 @@ export async function POST(request: NextRequest) {
       await kayitKoduBonusTamamla(cekici.id, kayitHazir.sonuc);
     } catch (e) {
       console.error("[kayit] kod bonusu tamamlanamadı:", e);
+    }
+  }
+
+  if (smsToken) {
+    try {
+      await baglaSms50TokenKayit({ token: smsToken, cekiciId: cekici.id });
+    } catch (e) {
+      console.error("[kayit] sms_token bağlama:", e);
     }
   }
 

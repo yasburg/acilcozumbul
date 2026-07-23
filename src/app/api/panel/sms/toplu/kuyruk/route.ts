@@ -94,6 +94,7 @@ export async function POST(request: Request) {
     oncekileriAtla?: boolean;
     kampanyaKodu?: string;
     varyant?: string;
+    kisiBazliTakip?: boolean;
     tempo?: {
       partiBoyutu?: number;
       beklemeSn?: number;
@@ -121,6 +122,16 @@ export async function POST(request: Request) {
     ? String(body.kampanyaKodu ?? SMS50_KAMPANYA_KODU).trim() ||
       SMS50_KAMPANYA_KODU
     : null;
+  const kisiBazliTakip = Boolean(body.kisiBazliTakip) && Boolean(varyant);
+  if (body.kisiBazliTakip && !varyant) {
+    return NextResponse.json(
+      {
+        error:
+          "Kişiye özel link için SMS50 test harfi (a–z) seçilmeli.",
+      },
+      { status: 400 }
+    );
+  }
 
   const hamListe = Array.isArray(body.telefonlar) ? body.telefonlar : [];
   const gecerli: string[] = [];
@@ -175,7 +186,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const tempo = topluSmsTempoNormalize(body.tempo ?? {});
+  const tempo = topluSmsTempoNormalize(
+    kisiBazliTakip
+      ? { ...(body.tempo ?? {}), partiBoyutu: 1 }
+      : (body.tempo ?? {})
+  );
   const adlar = body.adlar ?? {};
   const is = await olusturTopluSmsIsi({
     gonderenEposta: user.email,
@@ -186,6 +201,7 @@ export async function POST(request: Request) {
     varyant,
     oncekiAtlandi,
     tempo,
+    kisiBazliTakip,
     alicilar: benzersiz.map((telefon) => ({
       telefon,
       ad: adlar[telefon] ?? null,
@@ -204,6 +220,7 @@ export async function POST(request: Request) {
     mesajParca: mesajKontrol.parca,
     kampanyaKodu,
     varyant,
+    kisiBazliTakip,
     gecmisUyari: gecmisVar ? undefined : MIGRATION_027_MESAJ,
   });
 }

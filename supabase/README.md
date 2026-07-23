@@ -41,7 +41,7 @@ Form açılınca müşteriye SMS (link: `/bekle/{talep-id}`). Ek olarak cron:
 `POST /api/cron/memnuniyet-sms` + `Authorization: Bearer CRON_SECRET` (her 5–10 dk).
 
 Panel toplu SMS arka plan kuyruğu: migration `033_panel_toplu_sms_isler.sql`
-(+ `034_panel_toplu_sms_is_alicilar_kilit.sql`).
+(+ `034_panel_toplu_sms_is_alicilar_kilit.sql`, kişiye özel link için `035_sms50_kisi_token.sql`).
 Sunucu içinde ~8 sn’lik scheduler partileri sürdürür; sekme açık kalması gerekmez.
 Ek kurtarma cron: `POST /api/cron/toplu-sms` + aynı `CRON_SECRET` (her 1–2 dk önerilir).
 

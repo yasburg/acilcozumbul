@@ -22,6 +22,7 @@ describe("sms50-kampanya", () => {
     expect(kayit).toContain("kampanya=SMS50");
     expect(kayit).toContain("utm_content=c");
     expect(kayit).toContain("utm_campaign=istanbul_cekici");
+    expect(kayit).not.toContain("sms_token=");
   });
 
   it("şablonda {{LINK}} değiştirir", () => {

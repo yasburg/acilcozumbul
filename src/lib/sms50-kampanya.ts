@@ -9,22 +9,43 @@ export const SMS50_VARYANTLAR = [
 
 export type Sms50Varyant = (typeof SMS50_VARYANTLAR)[number];
 
+export const SMS50_TOKEN_LEN = 8;
+export const SMS50_TOKEN_ALFABE =
+  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
 export function sms50VaryantMi(v: string): v is Sms50Varyant {
   return /^[a-z]$/.test(v) && (SMS50_VARYANTLAR as readonly string[]).includes(v);
 }
 
-/** Kısa path: /sms50a */
-export function sms50KisaPath(varyant: Sms50Varyant): string {
-  return `/sms50${varyant}`;
+export function sms50TokenGecerliMi(token: string): boolean {
+  return new RegExp(`^[0-9A-Za-z]{${SMS50_TOKEN_LEN}}$`).test(token);
+}
+
+/** Kısa path: /sms50a veya /sms50a/{token} */
+export function sms50KisaPath(
+  varyant: Sms50Varyant,
+  token?: string | null
+): string {
+  const base = `/sms50${varyant}`;
+  if (token && sms50TokenGecerliMi(token)) return `${base}/${token}`;
+  return base;
 }
 
 /** Tam kısa URL (www) */
-export function sms50KisaUrl(varyant: Sms50Varyant, base?: string): string {
-  return `${base ?? smsBaseUrl()}${sms50KisaPath(varyant)}`;
+export function sms50KisaUrl(
+  varyant: Sms50Varyant,
+  base?: string,
+  token?: string | null
+): string {
+  return `${base ?? smsBaseUrl()}${sms50KisaPath(varyant, token)}`;
 }
 
-/** Yönlendirme hedefi: kayıt + UTM */
-export function sms50KayitUrl(varyant: Sms50Varyant, base?: string): string {
+/** Yönlendirme hedefi: kayıt + UTM (+ isteğe bağlı sms_token) */
+export function sms50KayitUrl(
+  varyant: Sms50Varyant,
+  base?: string,
+  opts?: { smsToken?: string | null }
+): string {
   const origin = base ?? smsBaseUrl();
   const q = new URLSearchParams({
     kampanya: SMS50_KAMPANYA_KODU,
@@ -33,6 +54,9 @@ export function sms50KayitUrl(varyant: Sms50Varyant, base?: string): string {
     utm_campaign: "istanbul_cekici",
     utm_content: varyant,
   });
+  if (opts?.smsToken && sms50TokenGecerliMi(opts.smsToken)) {
+    q.set("sms_token", opts.smsToken);
+  }
   return `${origin}/cekici/kayit?${q.toString()}`;
 }
 
@@ -51,14 +75,25 @@ export function sms50FooterSatirlari(): string[] {
   return satirlar;
 }
 
+/**
+ * Şablondaki {{LINK}} veya gövdede geçen ortak /sms50{v} linkini
+ * (token varsa) kişiye özel URL ile değiştirir.
+ */
 export function sms50MesajOlustur(opts: {
   govde: string;
   varyant: Sms50Varyant;
   footerEkle?: boolean;
   baseUrl?: string;
+  token?: string | null;
 }): string {
-  const link = sms50KisaUrl(opts.varyant, opts.baseUrl);
-  let metin = opts.govde.replaceAll("{{LINK}}", link);
+  const link = sms50KisaUrl(opts.varyant, opts.baseUrl, opts.token);
+  const ortakLink = sms50KisaUrl(opts.varyant, opts.baseUrl);
+  let metin = opts.govde;
+  /* Önce gövdedeki ortak /sms50{v} linklerini değiştir (token’lıya çift eklememek için) */
+  if (opts.token && ortakLink !== link) {
+    metin = metin.replaceAll(ortakLink, link);
+  }
+  metin = metin.replaceAll("{{LINK}}", link);
   if (!metin.includes(link) && !/\{\{LINK\}\}/.test(opts.govde)) {
     /* Serbest metinde {{LINK}} yoksa link ekleme — operatör elle yazmış olabilir */
   }

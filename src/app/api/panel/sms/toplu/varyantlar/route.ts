@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { panelEpostaIzinli } from "@/lib/supabase/env";
 import { SMS50_KAMPANYA_KODU } from "@/lib/sms50-kampanya";
 import {
+  getSms50TiklamaSaatIzgarasi,
   getSms50VaryantOzetleri,
   smsKampanyaTiklamaTablosuVar,
 } from "@/lib/sms50-tiklama-db";
@@ -31,8 +32,11 @@ export async function GET(request: NextRequest) {
     SMS50_KAMPANYA_KODU;
 
   try {
-    const liste = await getSms50VaryantOzetleri(kampanya);
-    return NextResponse.json({ kampanya, liste });
+    const [liste, saatIzgarasi] = await Promise.all([
+      getSms50VaryantOzetleri(kampanya),
+      getSms50TiklamaSaatIzgarasi(kampanya),
+    ]);
+    return NextResponse.json({ kampanya, liste, saatIzgarasi });
   } catch (e) {
     const mesaj = e instanceof Error ? e.message : "Özet yüklenemedi.";
     return NextResponse.json({ error: mesaj }, { status: 500 });
