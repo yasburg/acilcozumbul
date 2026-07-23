@@ -28,6 +28,7 @@ function GirisIcerik() {
   const [mesaj, setMesaj] = useState("");
   const [yenidenSn, setYenidenSn] = useState(0);
   const [bilgiBanner, setBilgiBanner] = useState("");
+  const [beniAnimsa, setBeniAnimsa] = useState(true);
 
   useEffect(() => {
     if (searchParams.get("eposta") !== "1") return;
@@ -73,8 +74,8 @@ function GirisIcerik() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(
         epostaIle
-          ? { eposta: kimlik.trim(), sifre: sifreDeger }
-          : { telefon: kimlik.trim(), sifre: sifreDeger }
+          ? { eposta: kimlik.trim(), sifre: sifreDeger, beniAnimsa }
+          : { telefon: kimlik.trim(), sifre: sifreDeger, beniAnimsa }
       ),
     });
     const d = await res.json().catch(() => ({}));
@@ -126,6 +127,7 @@ function GirisIcerik() {
         body: JSON.stringify({
           telefon: telefon.trim(),
           otpKod: otp.trim(),
+          beniAnimsa,
         }),
       });
       const d = await res.json().catch(() => ({}));
@@ -262,6 +264,16 @@ function GirisIcerik() {
           value={telefon}
           onChange={(e) => setTelefon(e.target.value)}
         />
+
+        <label className="flex items-center gap-2.5 text-sm text-slate-700 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+            checked={beniAnimsa}
+            onChange={(e) => setBeniAnimsa(e.target.checked)}
+          />
+          <span>Beni bu cihazda anımsa</span>
+        </label>
 
         {!otpMod ? (
           <>

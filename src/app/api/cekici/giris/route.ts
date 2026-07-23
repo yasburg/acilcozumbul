@@ -3,7 +3,7 @@ import {
   getCekiciByDogrulanmisFaturaEposta,
   getCekiciByTelefon,
 } from "@/lib/db";
-import { CEKICI_COOKIE } from "@/lib/auth";
+import { CEKICI_COOKIE, beniAnimsaOku, cekiciOturumCookieAyarlari } from "@/lib/auth";
 import { cekiciGirisSifreKontrol } from "@/lib/cekici-auth";
 import { ensureSeedData } from "@/lib/seed";
 import { epostaGecerliMi, epostaNormalize } from "@/lib/eposta";
@@ -16,8 +16,9 @@ import {
 export async function POST(request: NextRequest) {
   await ensureSeedData();
   const body = await request.json();
-  const { telefon, eposta, sifre } = body;
+  const { telefon, eposta, sifre, beniAnimsa: beniAnimsaHam } = body;
   const sifreDeger = String(sifre ?? "").trim();
+  const beniAnimsa = beniAnimsaOku(beniAnimsaHam);
 
   if (!sifreDeger) {
     return NextResponse.json({ error: "Şifre gerekli." }, { status: 400 });
@@ -82,13 +83,11 @@ export async function POST(request: NextRequest) {
     kredi: cekici.kredi,
   });
 
-  response.cookies.set(CEKICI_COOKIE, cekici.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
-  });
+  response.cookies.set(
+    CEKICI_COOKIE,
+    cekici.token,
+    cekiciOturumCookieAyarlari(beniAnimsa)
+  );
 
   return response;
 }

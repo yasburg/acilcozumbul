@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCekiciByTelefon } from "@/lib/db";
-import { CEKICI_COOKIE } from "@/lib/auth";
+import { CEKICI_COOKIE, beniAnimsaOku, cekiciOturumCookieAyarlari } from "@/lib/auth";
 import {
   cekiciGirisOtpDogrula,
   cekiciGirisOtpTemizle,
@@ -16,7 +16,8 @@ import { cekiciProfilHazirMi } from "@/lib/cekici-profil-hazir";
 export async function POST(request: NextRequest) {
   await ensureSeedData();
   const body = await request.json();
-  const { telefon, otpKod } = body;
+  const { telefon, otpKod, beniAnimsa: beniAnimsaHam } = body;
+  const beniAnimsa = beniAnimsaOku(beniAnimsaHam);
 
   if (!telefonGecerliMi(telefon ?? "")) {
     return NextResponse.json(
@@ -46,13 +47,11 @@ export async function POST(request: NextRequest) {
     yonlendir: hazir ? "/cekici/panel" : "/kayit/kurulum",
   });
 
-  response.cookies.set(CEKICI_COOKIE, cekici.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
-  });
+  response.cookies.set(
+    CEKICI_COOKIE,
+    cekici.token,
+    cekiciOturumCookieAyarlari(beniAnimsa)
+  );
 
   return response;
 }

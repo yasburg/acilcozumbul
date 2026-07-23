@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCekiciByToken } from "@/lib/db";
-import { CEKICI_COOKIE } from "@/lib/auth";
+import { CEKICI_COOKIE, cekiciOturumCookieAyarlari } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
 
 export async function POST(request: NextRequest) {
@@ -22,13 +22,7 @@ export async function POST(request: NextRequest) {
     kredi: cekici.kredi,
   });
 
-  response.cookies.set(CEKICI_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
-  });
+  response.cookies.set(CEKICI_COOKIE, token, cekiciOturumCookieAyarlari(true));
 
   return response;
 }

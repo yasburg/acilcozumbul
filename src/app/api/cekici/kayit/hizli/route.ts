@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { addCekici, getCekiciByTelefon } from "@/lib/db";
-import { CEKICI_COOKIE } from "@/lib/auth";
+import { CEKICI_COOKIE, cekiciOturumCookieAyarlari } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
 import {
   kayitBaslangicKredisi,
@@ -178,13 +178,7 @@ export async function POST(request: NextRequest) {
     kodUygulandi: kayitHazir.sonuc.uygulandi,
   });
 
-  response.cookies.set(CEKICI_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
-  });
+  response.cookies.set(CEKICI_COOKIE, token, cekiciOturumCookieAyarlari(true));
 
   return response;
 }

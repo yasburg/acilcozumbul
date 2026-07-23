@@ -4,6 +4,36 @@ import type { Cekici } from "./types";
 
 export const CEKICI_COOKIE = "cekici_token";
 
+/**
+ * Kalıcı oturum süresi. Chrome/Chromium kalıcı çerezleri ~400 gün ile sınırlar;
+ * daha uzun maxAge yine de bu tavana iner.
+ */
+export const CEKICI_OTURUM_MAX_AGE_ANIMSA = 60 * 60 * 24 * 400;
+
+export function cekiciOturumCookieAyarlari(beniAnimsa = true): {
+  httpOnly: true;
+  secure: boolean;
+  sameSite: "lax";
+  path: "/";
+  maxAge?: number;
+} {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    ...(beniAnimsa ? { maxAge: CEKICI_OTURUM_MAX_AGE_ANIMSA } : {}),
+  };
+}
+
+/** İstek gövdesinden «beni anımsa»; tanımsızsa varsayılan true */
+export function beniAnimsaOku(deger: unknown): boolean {
+  if (deger === false || deger === "false" || deger === 0 || deger === "0") {
+    return false;
+  }
+  return true;
+}
+
 export async function getCurrentCekici(): Promise<Cekici | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(CEKICI_COOKIE)?.value;
