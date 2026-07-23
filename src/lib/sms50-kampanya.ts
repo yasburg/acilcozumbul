@@ -1,4 +1,9 @@
 import { smsBaseUrl } from "./sms-base-url";
+import {
+  KAYIT_FUNNEL_VARSAYILAN,
+  KAYIT_FUNNELS,
+  type KayitFunnelId,
+} from "./kayit-funnel";
 
 export const SMS50_KAMPANYA_KODU = "SMS50";
 
@@ -21,6 +26,16 @@ export const SMS50_ORNEK_TOKEN = "Aa0Bb1Cc";
 
 /** Kişiye özel link yer tutucu */
 export const SMS50_KISISEL_LINK_PH = "{{KisiselLink}}";
+
+/**
+ * Kısa SMS linki → kayıt funnel haritası.
+ * Tanımsız harfler `KAYIT_FUNNEL_VARSAYILAN` (a) kullanır.
+ */
+export const SMS50_KAYIT_FUNNEL_HARITASI: Partial<
+  Record<Sms50Varyant, KayitFunnelId>
+> = {
+  c: "b",
+};
 
 export function sms50VaryantMi(v: string): v is Sms50Varyant {
   return /^[a-z]$/.test(v) && (SMS50_VARYANTLAR as readonly string[]).includes(v);
@@ -49,13 +64,18 @@ export function sms50KisaUrl(
   return `${base ?? smsBaseUrl()}${sms50KisaPath(varyant, token)}`;
 }
 
-/** Yönlendirme hedefi: kayıt + UTM (+ isteğe bağlı sms_token) */
+export function sms50KayitFunnelId(varyant: Sms50Varyant): KayitFunnelId {
+  return SMS50_KAYIT_FUNNEL_HARITASI[varyant] ?? KAYIT_FUNNEL_VARSAYILAN;
+}
+
+/** Yönlendirme hedefi: kayıt funnel + kampanya + UTM (+ isteğe bağlı sms_token) */
 export function sms50KayitUrl(
   varyant: Sms50Varyant,
   base?: string,
   opts?: { smsToken?: string | null }
 ): string {
   const origin = base ?? smsBaseUrl();
+  const funnel = sms50KayitFunnelId(varyant);
   const q = new URLSearchParams({
     kampanya: SMS50_KAMPANYA_KODU,
     utm_source: "sms",
@@ -66,7 +86,49 @@ export function sms50KayitUrl(
   if (opts?.smsToken && sms50TokenGecerliMi(opts.smsToken)) {
     q.set("sms_token", opts.smsToken);
   }
-  return `${origin}/kayit/a?${q.toString()}`;
+  return `${origin}/kayit/${funnel}?${q.toString()}`;
+}
+
+export type Sms50LinkHaritaSatir = {
+  varyant: Sms50Varyant;
+  kisaPath: string;
+  kisaUrl: string;
+  kayitFunnel: KayitFunnelId;
+  kayitFunnelEtiket: string;
+  hedefPath: string;
+  hedefUrl: string;
+  kampanyaKodu: string;
+  ozelHarita: boolean;
+};
+
+/** Panel: tüm /sms50{a–z} → kayıt hedefi listesi */
+export function sms50LinkHaritasi(base?: string): Sms50LinkHaritaSatir[] {
+  const origin = base ?? smsBaseUrl();
+  return SMS50_VARYANTLAR.map((varyant) => {
+    const kayitFunnel = sms50KayitFunnelId(varyant);
+    const hedefUrl = sms50KayitUrl(varyant, origin);
+    let hedefPath = hedefUrl;
+    try {
+      const u = new URL(hedefUrl);
+      hedefPath = u.pathname + u.search;
+    } catch {
+      /* ignore */
+    }
+    return {
+      varyant,
+      kisaPath: sms50KisaPath(varyant),
+      kisaUrl: sms50KisaUrl(varyant, origin),
+      kayitFunnel,
+      kayitFunnelEtiket: KAYIT_FUNNELS[kayitFunnel].etiket,
+      hedefPath,
+      hedefUrl,
+      kampanyaKodu: SMS50_KAMPANYA_KODU,
+      ozelHarita: Object.prototype.hasOwnProperty.call(
+        SMS50_KAYIT_FUNNEL_HARITASI,
+        varyant
+      ),
+    };
+  });
 }
 
 export function sms50FooterSatirlari(): string[] {

@@ -17,12 +17,16 @@ describe("sms50-kampanya", () => {
 
   it("kısa path ve kayıt URL üretir", () => {
     expect(sms50KisaPath("c")).toBe("/sms50c");
-    const kayit = sms50KayitUrl("c", "https://www.acilcozumbul.com");
-    expect(kayit).toContain("/kayit/a?");
-    expect(kayit).toContain("kampanya=SMS50");
-    expect(kayit).toContain("utm_content=c");
-    expect(kayit).toContain("utm_campaign=istanbul_cekici");
-    expect(kayit).not.toContain("sms_token=");
+    const kayitC = sms50KayitUrl("c", "https://www.acilcozumbul.com");
+    expect(kayitC).toContain("/kayit/b?");
+    expect(kayitC).toContain("kampanya=SMS50");
+    expect(kayitC).toContain("utm_content=c");
+    expect(kayitC).toContain("utm_campaign=istanbul_cekici");
+    expect(kayitC).not.toContain("sms_token=");
+
+    const kayitA = sms50KayitUrl("a", "https://www.acilcozumbul.com");
+    expect(kayitA).toContain("/kayit/a?");
+    expect(kayitA).toContain("kampanya=SMS50");
   });
 
   it("şablonda {{LINK}} değiştirir", () => {

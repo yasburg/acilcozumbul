@@ -26,6 +26,7 @@ const LINKS: {
   { href: "/panel/demo", label: "Demo" },
   { href: "/panel/kampanyalar", label: "Kampanyalar" },
   { href: "/panel/kayit-funnels", label: "Kayıt funnels" },
+  { href: "/panel/link-haritasi", label: "Link haritası" },
 ];
 
 function sayacDeger(

@@ -131,6 +131,7 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
               <MobilNavLink href="/panel/demo" label="Demo" />
               <MobilNavLink href="/panel/kampanyalar" label="Kampanya" />
               <MobilNavLink href="/panel/kayit-funnels" label="Kayıt funnels" />
+              <MobilNavLink href="/panel/link-haritasi" label="Link haritası" />
             </div>
           </div>
           <div className="p-4 lg:p-0">{children}</div>
