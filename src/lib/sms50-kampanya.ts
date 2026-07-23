@@ -13,6 +13,12 @@ export const SMS50_TOKEN_LEN = 8;
 export const SMS50_TOKEN_ALFABE =
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
+/** Panel birim hesabı için sabit uzunlukta örnek token (gerçek gönderimde kullanılmaz) */
+export const SMS50_ORNEK_TOKEN = "Aa0Bb1Cc";
+
+/** Kişiye özel link yer tutucu */
+export const SMS50_KISISEL_LINK_PH = "{{KisiselLink}}";
+
 export function sms50VaryantMi(v: string): v is Sms50Varyant {
   return /^[a-z]$/.test(v) && (SMS50_VARYANTLAR as readonly string[]).includes(v);
 }
@@ -76,8 +82,50 @@ export function sms50FooterSatirlari(): string[] {
 }
 
 /**
- * Şablondaki {{LINK}} veya gövdede geçen ortak /sms50{v} linkini
- * (token varsa) kişiye özel URL ile değiştirir.
+ * Gövdedeki {{KisiselLink}} / {{LINK}} veya herhangi bir /sms50{v}
+ * URL’sini kişiye özel token’lı linkle değiştirir.
+ */
+export function sms50MesajKisisellestir(opts: {
+  govde: string;
+  varyant: Sms50Varyant;
+  token: string;
+  baseUrl?: string;
+}): string {
+  if (!sms50TokenGecerliMi(opts.token)) {
+    throw new Error("Geçersiz SMS50 token.");
+  }
+  const link = sms50KisaUrl(opts.varyant, opts.baseUrl, opts.token);
+  const pathToken = sms50KisaPath(opts.varyant, opts.token);
+  let metin = opts.govde;
+
+  metin = metin.replaceAll(SMS50_KISISEL_LINK_PH, link);
+  metin = metin.replaceAll("{{KISISELLINK}}", link);
+  metin = metin.replaceAll("{{kisisellink}}", link);
+  metin = metin.replaceAll("{{LINK}}", link);
+
+  /* Token’suz …/sms50c — zaten /sms50c/{8} olanlara dokunma */
+  const barePath =
+    `\\/sms50${opts.varyant}(?!\\/[0-9A-Za-z]{${SMS50_TOKEN_LEN}})(?![0-9A-Za-z])`;
+  const absRe = new RegExp(
+    `https?:\\/\\/[^\\s<>"'\\]\\)]+${barePath}`,
+    "gi"
+  );
+  metin = metin.replace(absRe, link);
+
+  const relRe = new RegExp(barePath, "gi");
+  metin = metin.replace(relRe, pathToken);
+
+  if (!metin.includes(opts.token)) {
+    throw new Error(
+      `Mesajda /sms50${opts.varyant} linki veya ${SMS50_KISISEL_LINK_PH} yok; kişiye özel kod eklenemedi.`
+    );
+  }
+  return metin.trim();
+}
+
+/**
+ * Şablondaki {{LINK}} / {{KisiselLink}} veya gövdede geçen ortak /sms50{v}
+ * linkini (token varsa) kişiye özel URL ile değiştirir.
  */
 export function sms50MesajOlustur(opts: {
   govde: string;
@@ -86,16 +134,20 @@ export function sms50MesajOlustur(opts: {
   baseUrl?: string;
   token?: string | null;
 }): string {
-  const link = sms50KisaUrl(opts.varyant, opts.baseUrl, opts.token);
-  const ortakLink = sms50KisaUrl(opts.varyant, opts.baseUrl);
   let metin = opts.govde;
-  /* Önce gövdedeki ortak /sms50{v} linklerini değiştir (token’lıya çift eklememek için) */
-  if (opts.token && ortakLink !== link) {
-    metin = metin.replaceAll(ortakLink, link);
-  }
-  metin = metin.replaceAll("{{LINK}}", link);
-  if (!metin.includes(link) && !/\{\{LINK\}\}/.test(opts.govde)) {
-    /* Serbest metinde {{LINK}} yoksa link ekleme — operatör elle yazmış olabilir */
+  if (opts.token) {
+    metin = sms50MesajKisisellestir({
+      govde: metin,
+      varyant: opts.varyant,
+      token: opts.token,
+      baseUrl: opts.baseUrl,
+    });
+  } else {
+    const link = sms50KisaUrl(opts.varyant, opts.baseUrl);
+    metin = metin.replaceAll(SMS50_KISISEL_LINK_PH, link);
+    metin = metin.replaceAll("{{KISISELLINK}}", link);
+    metin = metin.replaceAll("{{kisisellink}}", link);
+    metin = metin.replaceAll("{{LINK}}", link);
   }
   if (opts.footerEkle !== false) {
     const footer = sms50FooterSatirlari();
@@ -104,4 +156,28 @@ export function sms50MesajOlustur(opts: {
     }
   }
   return metin.trim();
+}
+
+/** Takip açıkken birim hesabı için örnek token’lı mesaj */
+export function sms50MesajBirimOnizleme(opts: {
+  govde: string;
+  varyant: Sms50Varyant;
+  baseUrl?: string;
+}): string {
+  try {
+    return sms50MesajKisisellestir({
+      govde: opts.govde,
+      varyant: opts.varyant,
+      token: SMS50_ORNEK_TOKEN,
+      baseUrl: opts.baseUrl ?? "https://www.acilcozumbul.com",
+    });
+  } catch {
+    /* Placeholder yoksa örnek link eklenmiş gibi +9 birim hesabı için ekle */
+    const ornek = sms50KisaUrl(
+      opts.varyant,
+      opts.baseUrl ?? "https://www.acilcozumbul.com",
+      SMS50_ORNEK_TOKEN
+    );
+    return `${opts.govde.trim()} ${ornek}`.trim();
+  }
 }

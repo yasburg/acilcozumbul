@@ -437,6 +437,9 @@ export async function isleTopluSmsSiradakiParti(
             baseUrl: smsBaseUrl(),
             token: tokenKayit.token,
           });
+          if (!kisiselMesaj.includes(tokenKayit.token)) {
+            throw new Error("Kişisel token mesaja yazılamadı.");
+          }
           const sonuc = await sendPanelTopluSms([tel], kisiselMesaj);
           sonuclar.push(...sonuc.sonuclar);
         } catch (e) {

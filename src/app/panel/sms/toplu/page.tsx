@@ -19,8 +19,10 @@ import {
 import { telefonMaskele } from "@/lib/telefon";
 import {
   SMS50_KAMPANYA_KODU,
+  SMS50_KISISEL_LINK_PH,
   SMS50_VARYANTLAR,
   sms50KisaUrl,
+  sms50MesajBirimOnizleme,
   type Sms50Varyant,
 } from "@/lib/sms50-kampanya";
 import {
@@ -173,7 +175,17 @@ export default function PanelTopluSmsPage() {
     [kisiBazliTakip, sms50Varyant, tempo]
   );
 
-  const mesajDurum = useMemo(() => netgsmSmsMesajGecerliMi(mesaj), [mesaj]);
+  const mesajDurum = useMemo(() => {
+    if (kisiBazliTakip && sms50Varyant) {
+      return netgsmSmsMesajGecerliMi(
+        sms50MesajBirimOnizleme({
+          govde: mesaj,
+          varyant: sms50Varyant,
+        })
+      );
+    }
+    return netgsmSmsMesajGecerliMi(mesaj);
+  }, [mesaj, kisiBazliTakip, sms50Varyant]);
 
   const gecerliAlicilar = useMemo(
     () => alicilar.filter((a) => !a.hata),
@@ -958,9 +970,22 @@ export default function PanelTopluSmsPage() {
                     Kişiye özel link (tıklama + kayıt takibi)
                   </span>
                   <span className="block text-xs text-slate-500 mt-0.5 leading-relaxed">
-                    Her alıcıya rastgele kısa kodlu link gider; Genel listede
-                    kim açtı / kayıt oldu görünür. Bu modda parti boyutu 1
-                    olur (mevcut parti ayarı kapalıyken değişmez).
+                    Her alıcıya rastgele 8 karakterlik kod eklenir (ör.{" "}
+                    <code className="bg-white px-1 rounded">
+                      /sms50{sms50Varyant}/Aa0Bb1Cc
+                    </code>
+                    ). Metinde{" "}
+                    <code className="bg-white px-1 rounded">
+                      {SMS50_KISISEL_LINK_PH}
+                    </code>
+                    ,{" "}
+                    <code className="bg-white px-1 rounded">{"{{LINK}}"}</code>{" "}
+                    veya sabit{" "}
+                    <code className="bg-white px-1 rounded">
+                      /sms50{sms50Varyant}
+                    </code>{" "}
+                    olmalı. Birim hesabı bu uzun linke göre yapılır. Genel
+                    listede kim açtı / kayıt oldu görünür; parti boyutu 1 olur.
                   </span>
                 </span>
               </label>
@@ -995,9 +1020,15 @@ export default function PanelTopluSmsPage() {
                 ))}
               </select>
               <p className="text-xs text-slate-500">
-                Seçince şablon metni aynen gelir. Yalnızca{" "}
+                Seçince şablon metni aynen gelir. Takip için{" "}
+                <code className="bg-slate-100 px-1 rounded">
+                  {SMS50_KISISEL_LINK_PH}
+                </code>{" "}
+                veya{" "}
                 <code className="bg-slate-100 px-1 rounded">{"{{LINK}}"}</code>{" "}
-                varsa seçili harfe çevrilir; sabit yazılmış link tekrar eklenmez.
+                kullanın; sabit{" "}
+                <code className="bg-slate-100 px-1 rounded">/sms50…</code> de
+                gönderimde kişiye özel koda çevrilir.
               </p>
             </div>
             <label className="flex items-center gap-2 text-xs text-slate-600">
@@ -1040,6 +1071,9 @@ export default function PanelTopluSmsPage() {
                 {mesajDurum.birim} / {NETGSM_TOPLU_SMS_MAX_BIRIM} birim ·{" "}
                 {mesajDurum.parca || 0} SMS
                 {mesajDurum.parca > 1 ? " (uzun SMS)" : ""}
+                {kisiBazliTakip && sms50Varyant
+                  ? " · takip: +/8 karakter kod"
+                  : ""}
               </p>
             </div>
             {mesajDurum.hata && mesaj.trim() && (
