@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { istekIp } from "@/lib/request-ip";
+import { smsBaseUrl } from "@/lib/sms-base-url";
 import {
   sms50KayitUrl,
   sms50TokenGecerliMi,
@@ -44,7 +45,10 @@ export async function GET(
     console.error("[sms50-token] tıklama", e);
   }
 
-  const base = `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+  /* Proxy/Host localhost gelebilir — SMS kayıt linki her zaman canlı domain */
+  const base = smsBaseUrl(
+    `${request.nextUrl.protocol}//${request.nextUrl.host}`
+  );
   return NextResponse.redirect(
     sms50KayitUrl(varyant, base, { smsToken: token }),
     302

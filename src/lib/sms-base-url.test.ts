@@ -14,6 +14,12 @@ describe("smsBaseUrl", () => {
     );
   });
 
+  it("localhost:8080 (proxy Host) yerine www canlı domain döner", () => {
+    expect(smsBaseUrl("https://localhost:8080")).toBe(
+      "https://www.acilcozumbul.com"
+    );
+  });
+
   it("apex domain www'ye normalize edilir", () => {
     expect(smsBaseUrl("https://acilcozumbul.com")).toBe(
       "https://www.acilcozumbul.com"
