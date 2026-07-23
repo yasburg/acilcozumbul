@@ -70,12 +70,16 @@
   "68": "PanelCekiciHarita.tsx",
   "69": "route.ts",
   "70": "SorunAkisOzeti.tsx",
+  "71": "toplu-sms-gecmis-db.ts",
   "72": "Ölçeklenebilirlik regression smoke checklist",
   "73": "verify-teklif-backfill.mjs",
   "74": "page.tsx",
   "75": "getCekiciById",
+  "76": "cekici-sifre-otp.ts",
   "77": "KayitKontenjanBilgi.tsx",
   "78": "NasilCalisirSerit.tsx",
   "79": "cekici-belge.ts",
-  "80": "talep-fotograf.ts"
+  "80": "talep-fotograf.ts",
+  "81": "eposta.ts",
+  "82": "page.tsx"
 }

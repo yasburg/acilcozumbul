@@ -9,6 +9,9 @@ export const SMS50_VARYANTLAR = [
 
 export type Sms50Varyant = (typeof SMS50_VARYANTLAR)[number];
 
+/** Elle test / smoke linki — gün×saat grafiğine dahil edilmez */
+export const SMS50_TEST_VARYANT: Sms50Varyant = "z";
+
 export const SMS50_TOKEN_LEN = 8;
 export const SMS50_TOKEN_ALFABE =
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";

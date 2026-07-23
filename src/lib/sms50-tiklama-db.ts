@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { getSupabaseAdmin, supabaseDbAktif } from "./supabase/admin";
 import {
   SMS50_KAMPANYA_KODU,
+  SMS50_TEST_VARYANT,
   SMS50_VARYANTLAR,
   type Sms50Varyant,
   sms50KisaUrl,
@@ -96,9 +97,10 @@ export type Sms50TiklamaSaatIzgarasi = {
   maxHucre: number;
 };
 
-export async function getSms50TiklamaSaatIzgarasi(
-  kampanyaKodu = SMS50_KAMPANYA_KODU
-): Promise<Sms50TiklamaSaatIzgarasi> {
+/** Test varyantı (z) hariç gün×saat ızgarası */
+export function sms50TiklamaSatirlarindanIzgara(
+  rows: { olusturulma?: string | null; varyant?: string | null }[]
+): Sms50TiklamaSaatIzgarasi {
   const grid = Array.from({ length: 7 }, () =>
     Array.from({ length: 24 }, () => 0)
   );
@@ -107,13 +109,10 @@ export async function getSms50TiklamaSaatIzgarasi(
   let toplam = 0;
   let maxHucre = 0;
 
-  const { data, error } = await getSupabaseAdmin()
-    .from("sms_kampanya_tiklama")
-    .select("olusturulma")
-    .eq("kampanya_kodu", kampanyaKodu);
-  if (error) throw error;
-
-  for (const row of data ?? []) {
+  for (const row of rows) {
+    if (String(row.varyant ?? "").toLowerCase() === SMS50_TEST_VARYANT) {
+      continue;
+    }
     const gs = sms50TiklamaGunSaat(String(row.olusturulma ?? ""));
     if (!gs) continue;
     grid[gs.gun]![gs.saat]! += 1;
@@ -124,6 +123,18 @@ export async function getSms50TiklamaSaatIzgarasi(
   }
 
   return { grid, gunToplam, saatToplam, toplam, maxHucre };
+}
+
+export async function getSms50TiklamaSaatIzgarasi(
+  kampanyaKodu = SMS50_KAMPANYA_KODU
+): Promise<Sms50TiklamaSaatIzgarasi> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("sms_kampanya_tiklama")
+    .select("olusturulma, varyant")
+    .eq("kampanya_kodu", kampanyaKodu);
+  if (error) throw error;
+
+  return sms50TiklamaSatirlarindanIzgara(data ?? []);
 }
 
 export async function getSms50VaryantOzetleri(

@@ -20,6 +20,7 @@ import { telefonMaskele } from "@/lib/telefon";
 import {
   SMS50_KAMPANYA_KODU,
   SMS50_KISISEL_LINK_PH,
+  SMS50_TEST_VARYANT,
   SMS50_VARYANTLAR,
   sms50KisaUrl,
   sms50MesajBirimOnizleme,
@@ -904,7 +905,11 @@ export default function PanelTopluSmsPage() {
               <code className="bg-slate-100 px-1 rounded">
                 /sms50{sms50Varyant || "a"}
               </code>{" "}
-              → kayıt + UTM. Ölçüm için «Test linkleri» sekmesine bakın.
+              → kayıt + UTM. Elle smoke test için{" "}
+              <code className="bg-slate-100 px-1 rounded">
+                /sms50{SMS50_TEST_VARYANT}
+              </code>{" "}
+              kullanın (gün×saat grafiğine yazılmaz). Ölçüm: «Test linkleri».
             </p>
             <label className="block space-y-1.5">
               <span className="text-sm font-medium text-slate-700">
@@ -926,7 +931,9 @@ export default function PanelTopluSmsPage() {
                 <option value="">Yok (serbest metin, ölçümsüz)</option>
                 {SMS50_VARYANTLAR.map((v) => (
                   <option key={v} value={v}>
-                    {v.toUpperCase()} — {sms50KisaUrl(v)}
+                    {v.toUpperCase()}
+                    {v === SMS50_TEST_VARYANT ? " (test)" : ""} —{" "}
+                    {sms50KisaUrl(v)}
                   </option>
                 ))}
               </select>
@@ -1382,8 +1389,12 @@ export default function PanelTopluSmsPage() {
             </button>
           </div>
           <p className="text-xs text-slate-500 leading-relaxed">
-            Her harf ayrı test yuvası. CTR = tıklama ÷ başarılı gönderim.
-            Kayıt hedefi: kampanya kodu {SMS50_KAMPANYA_KODU}.
+            Her harf ayrı yuva. CTR = tıklama ÷ başarılı gönderim.{" "}
+            <code className="bg-slate-100 px-1 rounded">
+              /sms50{SMS50_TEST_VARYANT}
+            </code>{" "}
+            elle test linki; üstteki gün×saat grafiğine dahil edilmez. Kayıt
+            hedefi: {SMS50_KAMPANYA_KODU}.
           </p>
           {testLinkYukleniyor && (
             <p className="text-sm text-slate-500">Yükleniyor…</p>
@@ -1416,6 +1427,11 @@ export default function PanelTopluSmsPage() {
                     <tr key={row.varyant} className="hover:bg-slate-50/80">
                       <td className="px-3 py-2 font-semibold text-slate-900">
                         {row.varyant.toUpperCase()}
+                        {row.varyant === SMS50_TEST_VARYANT ? (
+                          <span className="ml-1 text-[10px] font-medium text-slate-500">
+                            test
+                          </span>
+                        ) : null}
                       </td>
                       <td className="px-3 py-2 text-xs text-slate-600 max-w-[10rem] truncate">
                         {row.kisaUrl}

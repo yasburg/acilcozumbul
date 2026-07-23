@@ -38,7 +38,8 @@ export function Sms50TiklamaSaatTablosu({ data }: { data: SaatIzgarasi }) {
         <div>
           <h3 className="font-semibold text-slate-800">Tıklama zamanı</h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Gün × saat (Europe/Istanbul). Toplam: {data.toplam}
+            Gün × saat (Europe/Istanbul). Toplam: {data.toplam}. Test linki Z
+            dahil değil.
           </p>
         </div>
       </div>

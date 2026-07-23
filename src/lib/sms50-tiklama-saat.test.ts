@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { sms50TiklamaGunSaat } from "./sms50-tiklama-db";
+import { SMS50_TEST_VARYANT } from "./sms50-kampanya";
+import {
+  sms50TiklamaGunSaat,
+  sms50TiklamaSatirlarindanIzgara,
+} from "./sms50-tiklama-db";
 
 describe("sms50TiklamaGunSaat", () => {
   it("Istanbul saat diliminde gün/saat üretir", () => {
@@ -10,5 +14,17 @@ describe("sms50TiklamaGunSaat", () => {
 
   it("geçersiz tarihte null döner", () => {
     expect(sms50TiklamaGunSaat("not-a-date")).toBeNull();
+  });
+});
+
+describe("sms50TiklamaSatirlarindanIzgara", () => {
+  it("test varyantı z tıklamalarını grafikten çıkarır", () => {
+    const izgara = sms50TiklamaSatirlarindanIzgara([
+      { olusturulma: "2026-07-22T15:30:00.000Z", varyant: "a" },
+      { olusturulma: "2026-07-22T15:30:00.000Z", varyant: SMS50_TEST_VARYANT },
+      { olusturulma: "2026-07-22T15:30:00.000Z", varyant: "z" },
+    ]);
+    expect(izgara.toplam).toBe(1);
+    expect(izgara.grid[3]![18]).toBe(1);
   });
 });
