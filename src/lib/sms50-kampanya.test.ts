@@ -18,7 +18,7 @@ describe("sms50-kampanya", () => {
   it("kısa path ve kayıt URL üretir", () => {
     expect(sms50KisaPath("c")).toBe("/sms50c");
     const kayit = sms50KayitUrl("c", "https://www.acilcozumbul.com");
-    expect(kayit).toContain("/cekici/kayit?");
+    expect(kayit).toContain("/kayit/a?");
     expect(kayit).toContain("kampanya=SMS50");
     expect(kayit).toContain("utm_content=c");
     expect(kayit).toContain("utm_campaign=istanbul_cekici");

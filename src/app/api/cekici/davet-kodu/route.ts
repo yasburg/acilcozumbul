@@ -32,7 +32,7 @@ export async function GET() {
     davetliBonus: DAVETLI_BONUS_KREDI,
     davetEdenBonus: DAVET_EDEN_BONUS_KREDI,
     kayitLink: cekici.davetKodu
-      ? `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.acilcozumbul.com"}/cekici/kayit?davet=${encodeURIComponent(cekici.davetKodu)}`
+      ? `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.acilcozumbul.com"}/kayit/a?davet=${encodeURIComponent(cekici.davetKodu)}`
       : null,
   });
 }
@@ -91,6 +91,6 @@ export async function PUT(request: NextRequest) {
   return NextResponse.json({
     davetKodu: dogrulama.kod,
     mesaj: "Davet kodunuz hazır. Paylaştığınız her kayıt size 10, yeni üyeye 20 kredi kazandırır.",
-    kayitLink: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.acilcozumbul.com"}/cekici/kayit?davet=${encodeURIComponent(dogrulama.kod)}`,
+    kayitLink: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.acilcozumbul.com"}/kayit/a?davet=${encodeURIComponent(dogrulama.kod)}`,
   });
 }

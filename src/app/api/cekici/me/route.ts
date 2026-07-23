@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
 import { sehirKullanimAcikMi } from "@/lib/cekici-sehir-acilis";
+import {
+  cekiciKurulumIlerleme,
+  cekiciProfilHazirMi,
+} from "@/lib/cekici-profil-hazir";
 
 export async function GET() {
   await ensureSeedData();
@@ -10,6 +14,9 @@ export async function GET() {
   if (!cekici) {
     return NextResponse.json({ error: "Giriş yapılmamış." }, { status: 401 });
   }
+
+  const profilHazir = cekiciProfilHazirMi(cekici);
+  const ilerleme = cekiciKurulumIlerleme(cekici);
 
   return NextResponse.json({
     id: cekici.id,
@@ -24,5 +31,8 @@ export async function GET() {
     faturaEpostaDogrulandi: Boolean(cekici.faturaEpostaDogrulandi),
     belgeDurum: cekici.belgeDurum ?? "yok",
     rozetAktif: Boolean(cekici.rozetAktif),
+    profilHazir,
+    kurulumTamam: cekici.kurulumTamam !== false,
+    kurulumYuzde: ilerleme.yuzde,
   });
 }

@@ -258,7 +258,7 @@ function PanelIcerik() {
             Gönderim geçmişi
           </li>
           <li>
-            <Link href="/cekici/kayit" className="text-amber-600 font-medium">
+            <Link href="/kayit/a" className="text-amber-600 font-medium">
               Yeni çekici kaydı →
             </Link>
           </li>

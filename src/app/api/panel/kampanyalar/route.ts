@@ -31,7 +31,7 @@ export async function GET() {
   return NextResponse.json({
     liste: kampanyalar.map((k) => ({
       ...k,
-      kayitLink: `${siteUrl}/cekici/kayit?kampanya=${encodeURIComponent(k.kod)}`,
+      kayitLink: `${siteUrl}/kayit/a?kampanya=${encodeURIComponent(k.kod)}`,
     })),
     kullanimlar,
     ozet: {
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     kod: dogrulama.kod,
     mesaj: "Kampanya kodu oluşturuldu.",
-    kayitLink: `${siteUrl}/cekici/kayit?kampanya=${encodeURIComponent(dogrulama.kod)}`,
+    kayitLink: `${siteUrl}/kayit/a?kampanya=${encodeURIComponent(dogrulama.kod)}`,
   });
 }
 

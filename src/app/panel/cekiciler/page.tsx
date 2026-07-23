@@ -191,7 +191,7 @@ export default function PanelCekicilerPage() {
             {gizli ? "Kişisel veriler gizli" : "Kişisel verileri gizle"}
           </button>
           <Link
-            href="/cekici/kayit"
+            href="/kayit/a"
             className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white"
           >
             + Yeni kayıt
@@ -278,7 +278,7 @@ export default function PanelCekicilerPage() {
         <Card>
           <p className="text-slate-600 text-sm">Henüz kayıtlı çekici yok.</p>
           <Link
-            href="/cekici/kayit"
+            href="/kayit/a"
             className="text-amber-600 text-sm font-medium mt-2 inline-block"
           >
             İlk kaydı oluştur →

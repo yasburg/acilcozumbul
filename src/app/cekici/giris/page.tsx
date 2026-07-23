@@ -20,8 +20,13 @@ function GirisIcerik() {
 
   const [telefon, setTelefon] = useState("");
   const [sifre, setSifre] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpMod, setOtpMod] = useState(false);
+  const [otpAsama, setOtpAsama] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mesaj, setMesaj] = useState("");
+  const [yenidenSn, setYenidenSn] = useState(0);
 
   useEffect(() => {
     if (searchParams.get("eposta") !== "1") return;
@@ -41,6 +46,12 @@ function GirisIcerik() {
       if (res.ok) router.replace("/cekici/panel");
     });
   }, [router, searchParams]);
+
+  useEffect(() => {
+    if (yenidenSn <= 0) return;
+    const t = setTimeout(() => setYenidenSn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [yenidenSn]);
 
   async function uyeGiris(kimlik: string, sifreDeger: string) {
     const epostaIle = epostaGecerliMi(kimlik);
@@ -63,6 +74,61 @@ function GirisIcerik() {
     });
     router.refresh();
     router.push("/cekici/panel");
+  }
+
+  async function otpKodGonder() {
+    setLoading(true);
+    setError("");
+    setMesaj("");
+    try {
+      const res = await cekiciFetch("/api/cekici/giris/otp/gonder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telefon: telefon.trim() }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok && !d.kodBekliyor) {
+        throw new Error(typeof d.error === "string" ? d.error : "Kod gönderilemedi.");
+      }
+      setOtpAsama(true);
+      setYenidenSn(Number(d.yenidenGonderSn) || 60);
+      setMesaj(typeof d.mesaj === "string" ? d.mesaj : "Kod gönderildi.");
+      if (d.gelistirmeKodu) {
+        setMesaj((m) => `${m} (geliştirme: ${d.gelistirmeKodu})`);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Kod gönderilemedi.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function otpIleGiris() {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await cekiciFetch("/api/cekici/giris/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          telefon: telefon.trim(),
+          otpKod: otp.trim(),
+        }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(typeof d.error === "string" ? d.error : "Giriş başarısız.");
+      }
+      posthogOlayYakala("cekici_giris", { rol: "cekici", yontem: "otp" });
+      router.refresh();
+      router.push(
+        typeof d.yonlendir === "string" ? d.yonlendir : "/cekici/panel"
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Giriş başarısız.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function girisOturumAc() {
@@ -122,50 +188,125 @@ function GirisIcerik() {
       )}
 
       <div className="space-y-4">
+        <div className="flex rounded-xl border border-slate-200 p-1 bg-slate-50">
+          <button
+            type="button"
+            className={`flex-1 rounded-lg py-2 text-sm font-medium ${
+              !otpMod ? "bg-white shadow text-slate-900" : "text-slate-600"
+            }`}
+            onClick={() => {
+              setOtpMod(false);
+              setOtpAsama(false);
+              setError("");
+            }}
+          >
+            Şifre ile
+          </button>
+          <button
+            type="button"
+            className={`flex-1 rounded-lg py-2 text-sm font-medium ${
+              otpMod ? "bg-white shadow text-slate-900" : "text-slate-600"
+            }`}
+            onClick={() => {
+              setOtpMod(true);
+              setError("");
+            }}
+          >
+            SMS kodu ile
+          </button>
+        </div>
+
         <p className="text-sm text-slate-600 leading-relaxed">
-          Üye hesabı için telefon numaranızı ve şifrenizi girin. Kredi ödemesinde
-          doğruladığınız fatura e-postası ile de giriş yapabilirsiniz.
+          {otpMod
+            ? "Telefonunuza gelen kod ile giriş yapın. Şifresiz kayıt olan hesaplar için bu yolu kullanın."
+            : "Üye hesabı için telefon numaranızı ve şifrenizi girin. Kredi ödemesinde doğruladığınız fatura e-postası ile de giriş yapabilirsiniz."}
         </p>
-        <p className="text-xs text-slate-500 leading-relaxed">
-          Kabul edilen telefon girişleri:{" "}
-          {TELEFON_ORNEK_GIRISLERI.map((ornek, i) => (
-            <span key={ornek}>
-              {i > 0 && ", "}
-              <span className="font-mono text-slate-600">{ornek}</span>
-            </span>
-          ))}
-        </p>
+        {!otpMod && (
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Kabul edilen telefon girişleri:{" "}
+            {TELEFON_ORNEK_GIRISLERI.map((ornek, i) => (
+              <span key={ornek}>
+                {i > 0 && ", "}
+                <span className="font-mono text-slate-600">{ornek}</span>
+              </span>
+            ))}
+          </p>
+        )}
 
         <Field
-          label="Telefon veya e-posta"
+          label={otpMod ? "Telefon" : "Telefon veya e-posta"}
           type="text"
           autoComplete="username"
-          placeholder="05XX XXX XX XX veya ornek@mail.com"
+          placeholder={
+            otpMod ? "05XX XXX XX XX" : "05XX XXX XX XX veya ornek@mail.com"
+          }
           value={telefon}
           onChange={(e) => setTelefon(e.target.value)}
         />
-        <SifreAlani
-          label="Şifre"
-          autoComplete="current-password"
-          value={sifre}
-          onChange={(e) => setSifre(e.target.value)}
-        />
-        <div className="flex justify-end">
-          <Link
-            href="/cekici/sifremi-unuttum"
-            className="text-sm text-amber-600 font-medium"
+
+        {!otpMod ? (
+          <>
+            <SifreAlani
+              label="Şifre"
+              autoComplete="current-password"
+              value={sifre}
+              onChange={(e) => setSifre(e.target.value)}
+            />
+            <div className="flex justify-end">
+              <Link
+                href="/cekici/sifremi-unuttum"
+                className="text-sm text-amber-600 font-medium"
+              >
+                Şifremi unuttum
+              </Link>
+            </div>
+            <Btn onClick={() => void girisOturumAc()} disabled={loading}>
+              {loading ? "Giriş yapılıyor…" : "Giriş Yap"}
+            </Btn>
+          </>
+        ) : !otpAsama ? (
+          <Btn
+            onClick={() => void otpKodGonder()}
+            disabled={loading || telefon.trim().length < 10}
           >
-            Şifremi unuttum
-          </Link>
-        </div>
-        <Btn onClick={() => void girisOturumAc()} disabled={loading}>
-          {loading ? "Giriş yapılıyor…" : "Giriş Yap"}
-        </Btn>
+            {loading ? "Gönderiliyor…" : "SMS kodu gönder"}
+          </Btn>
+        ) : (
+          <>
+            <Field
+              label="SMS kodu"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              value={otp}
+              onChange={(e) =>
+                setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
+            />
+            {mesaj && <p className="text-sm text-emerald-700">{mesaj}</p>}
+            <Btn
+              onClick={() => void otpIleGiris()}
+              disabled={loading || otp.length !== 6}
+            >
+              {loading ? "Doğrulanıyor…" : "Kod ile giriş yap"}
+            </Btn>
+            <button
+              type="button"
+              className="text-sm text-amber-700 font-medium disabled:opacity-40"
+              disabled={yenidenSn > 0 || loading}
+              onClick={() => void otpKodGonder()}
+            >
+              {yenidenSn > 0
+                ? `Tekrar gönder (${yenidenSn})`
+                : "Kodu tekrar gönder"}
+            </button>
+          </>
+        )}
       </div>
 
       <p className="text-center text-sm text-slate-500 mt-6">
         Hesabınız yok mu?{" "}
-        <Link href="/cekici/kayit" className="text-amber-600 font-medium">
+        <Link href="/kayit/b" className="text-amber-600 font-medium">
           Kayıt olun
         </Link>
       </p>

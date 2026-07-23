@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { updateCekici } from "./db";
@@ -8,6 +9,11 @@ import { telefonNormalize } from "./telefon";
 export function cekiciAuthEmail(telefonHam: string): string {
   const tel = telefonNormalize(telefonHam);
   return `${tel}@cekici.acilcozumbul.internal`;
+}
+
+/** Kullanıcıya gösterilmeyen rastgele parola (passwordless kayıt) */
+export function cekiciAuthRastgeleSifre(): string {
+  return randomBytes(24).toString("base64url");
 }
 
 function authAnonClient() {

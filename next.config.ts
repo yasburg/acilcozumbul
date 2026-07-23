@@ -9,6 +9,20 @@ const nextConfig: NextConfig = {
     "127.0.0.1",
   ],
   skipTrailingSlashRedirect: true,
+  async redirects() {
+    return [
+      {
+        source: "/cekici/kayit",
+        destination: "/kayit/a",
+        permanent: false,
+      },
+      {
+        source: "/kayit",
+        destination: "/kayit/a",
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

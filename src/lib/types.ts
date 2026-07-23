@@ -105,6 +105,13 @@ export interface Cekici {
   davetEdenId?: string;
   /** İç test hesabı — panel istatistiklerinden ayrı */
   testerHesap?: boolean;
+  /** /kayit/{harf} funnel kimliği */
+  kayitFunnel?: string;
+  /**
+   * false = hızlı kayıt sonrası kurulum eksik (soft-lock).
+   * undefined/true = hazır (eski kayıtlar).
+   */
+  kurulumTamam?: boolean;
 }
 
 export type OdemeFatura = {

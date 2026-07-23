@@ -230,6 +230,8 @@ export default function CekiciPanelTabs() {
     menzilKm?: number;
     rozetAktif?: boolean;
     sehirKullanimAcik?: boolean;
+    profilHazir?: boolean;
+    kurulumYuzde?: number;
   } | null>(null);
 
   const konumSync = useCekiciKonumSync(cekici?.hizmetModu);
@@ -617,6 +619,26 @@ export default function CekiciPanelTabs() {
       }
       footer={tabBar}
     >
+      {cekici.profilHazir === false && (
+        <Card className="mb-4 border-amber-300 bg-amber-50 space-y-3">
+          <p className="text-sm font-semibold text-amber-950">
+            Bölgenizdeki işleri görmek için hesabınızı tamamlayın
+          </p>
+          <p className="text-sm text-amber-900">
+            Hesabınız %{cekici.kurulumYuzde ?? 40} hazır. Eksik adımları
+            tamamlayın.
+          </p>
+          <div className="rounded-xl bg-white/70 border border-amber-100 p-3 blur-[1px] select-none pointer-events-none opacity-80">
+            <p className="font-semibold text-slate-800">Örnek talep</p>
+            <p className="text-sm text-slate-500">Kadıköy · Çekici talebi</p>
+          </div>
+          <Link href="/kayit/kurulum" className="block">
+            <Btn className="w-full bg-amber-600 hover:bg-amber-700">
+              Hesabımı tamamla
+            </Btn>
+          </Link>
+        </Card>
+      )}
       {(demoAktif || data?.demoModu) && (
         <Card className="mb-4 border-amber-300 bg-amber-50">
           <p className="text-sm font-semibold text-amber-900">

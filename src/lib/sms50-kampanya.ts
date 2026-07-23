@@ -66,7 +66,7 @@ export function sms50KayitUrl(
   if (opts?.smsToken && sms50TokenGecerliMi(opts.smsToken)) {
     q.set("sms_token", opts.smsToken);
   }
-  return `${origin}/cekici/kayit?${q.toString()}`;
+  return `${origin}/kayit/a?${q.toString()}`;
 }
 
 export function sms50FooterSatirlari(): string[] {

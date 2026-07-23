@@ -25,6 +25,7 @@ const LINKS: {
   { href: "/panel/davetler", label: "Davet kodları" },
   { href: "/panel/demo", label: "Demo" },
   { href: "/panel/kampanyalar", label: "Kampanyalar" },
+  { href: "/panel/kayit-funnels", label: "Kayıt funnels" },
 ];
 
 function sayacDeger(
@@ -80,7 +81,7 @@ export function PanelNav({
         Ana sayfa
       </Link>
       <Link
-        href="/cekici/kayit"
+        href="/kayit/b"
         className="rounded-xl px-3 py-2.5 text-sm text-slate-600 hover:bg-slate-100"
       >
         Çekici kayıt
