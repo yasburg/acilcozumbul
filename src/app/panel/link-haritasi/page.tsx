@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Card } from "@/components/ui";
 import { smsBaseUrl } from "@/lib/sms-base-url";
