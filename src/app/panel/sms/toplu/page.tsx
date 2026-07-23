@@ -46,6 +46,7 @@ type KuyrukIs = {
   basarisiz: number;
   oncekiAtlandi: number;
   kalanSn: number | null;
+  sonrakiPartiAt?: string | null;
   hata: string | null;
   listeId: string | null;
   mesajParca: number | null;
@@ -53,6 +54,7 @@ type KuyrukIs = {
 
 type Sekme = "gonder" | "testler" | "listeler" | "genel";
 type OncekiMod = "atla" | "yine";
+type ZamanlamaMod = "simdi" | "zamanli";
 
 type ListeOzet = {
   id: string;
@@ -120,6 +122,16 @@ function tarihKisa(iso: string) {
   }
 }
 
+/** datetime-local için yerel YYYY-MM-DDTHH:mm */
+function yerelDatetimeDegeri(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function varsayilanZamanlamaDegeri() {
+  return yerelDatetimeDegeri(new Date(Date.now() + 60 * 60 * 1000));
+}
+
 export default function PanelTopluSmsPage() {
   const [sekme, setSekme] = useState<Sekme>("gonder");
   const [alicilar, setAlicilar] = useState<TopluSmsAlici[]>([]);
@@ -133,6 +145,8 @@ export default function PanelTopluSmsPage() {
   const [tempo, setTempo] = useState<TopluSmsTempo>(TOPLU_SMS_TEMPO_VARSAYILAN);
   const [tempoPreset, setTempoPreset] =
     useState<TopluSmsTempoPresetId | "ozel">("dengeli");
+  const [zamanlamaMod, setZamanlamaMod] = useState<ZamanlamaMod>("simdi");
+  const [baslangicYerel, setBaslangicYerel] = useState(varsayilanZamanlamaDegeri);
   const [sonuc, setSonuc] = useState<{
     basarili: number;
     basarisiz: number;
@@ -552,8 +566,28 @@ export default function PanelTopluSmsPage() {
           ? ` · ${oncekiAdet} önceki numara dahil`
           : "";
 
+    let baslangicAt: string | null = null;
+    let zamanMetin = " · şimdi başla";
+    if (zamanlamaMod === "zamanli") {
+      const t = new Date(baslangicYerel).getTime();
+      if (!baslangicYerel || !Number.isFinite(t)) {
+        setHata("Geçerli bir başlangıç tarihi ve saati seçin.");
+        return;
+      }
+      if (t <= Date.now() + 30_000) {
+        setHata("Zamanlanmış başlangıç en az ~1 dakika sonra olmalı.");
+        return;
+      }
+      if (t - Date.now() > 30 * 24 * 60 * 60 * 1000) {
+        setHata("Başlangıç en fazla 30 gün sonrası olabilir.");
+        return;
+      }
+      baslangicAt = new Date(t).toISOString();
+      zamanMetin = ` · başlangıç ${tarihKisa(baslangicAt)}`;
+    }
+
     const onay = window.confirm(
-      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${takipMetin}${atlaMetin}.\n\nGönderim sunucuda arka planda devam eder; ekranı kapatabilirsiniz. Devam?`
+      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${takipMetin}${atlaMetin}${zamanMetin}.\n\nGönderim sunucuda arka planda devam eder; ekranı kapatabilirsiniz. Devam?`
     );
     if (!onay) return;
 
@@ -597,6 +631,7 @@ export default function PanelTopluSmsPage() {
           oncekileriAtla: false,
           tempo: tempoN,
           kisiBazliTakip: Boolean(kisiBazliTakip && sms50Varyant),
+          baslangicAt,
           ...(sms50Varyant
             ? { varyant: sms50Varyant, kampanyaKodu: SMS50_KAMPANYA_KODU }
             : {}),
@@ -1213,6 +1248,60 @@ export default function PanelTopluSmsPage() {
                 : ""}
               .
             </p>
+            <div className="border-t border-slate-100 pt-3 space-y-2">
+              <p className="text-sm font-medium text-slate-700">Zamanlama</p>
+              <div className="flex flex-col gap-2">
+                <label className="flex items-start gap-2 text-sm text-slate-700 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="zamanlama"
+                    className="mt-1"
+                    checked={zamanlamaMod === "simdi"}
+                    disabled={gonderiyor}
+                    onChange={() => setZamanlamaMod("simdi")}
+                  />
+                  <span>
+                    <span className="font-medium">Şimdi başla</span>
+                    <span className="block text-xs text-slate-500">
+                      Kuyruğa eklenir eklenmez ilk parti gider.
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm text-slate-700 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="zamanlama"
+                    className="mt-1"
+                    checked={zamanlamaMod === "zamanli"}
+                    disabled={gonderiyor}
+                    onChange={() => {
+                      setZamanlamaMod("zamanli");
+                      setBaslangicYerel((v) =>
+                        v && new Date(v).getTime() > Date.now() + 60_000
+                          ? v
+                          : varsayilanZamanlamaDegeri()
+                      );
+                    }}
+                  />
+                  <span>
+                    <span className="font-medium">Tarih ve saat belirle</span>
+                    <span className="block text-xs text-slate-500">
+                      Seçilen anda gönderim başlar; tempo aralıkları aynı kalır.
+                    </span>
+                  </span>
+                </label>
+              </div>
+              {zamanlamaMod === "zamanli" && (
+                <Field
+                  label="Başlangıç"
+                  type="datetime-local"
+                  disabled={gonderiyor}
+                  value={baslangicYerel}
+                  min={yerelDatetimeDegeri(new Date(Date.now() + 60_000))}
+                  onChange={(e) => setBaslangicYerel(e.target.value)}
+                />
+              )}
+            </div>
           </Card>
 
           {aktifIs &&
@@ -1221,11 +1310,20 @@ export default function PanelTopluSmsPage() {
               gonderiyor) && (
             <Card className="border-amber-200 bg-amber-50 space-y-2">
               <p className="text-sm font-medium text-amber-950">
-                {aktifIs.durum === "beklemede"
-                  ? "Kuyruk başlıyor…"
-                  : aktifIs.kalanSn != null && aktifIs.kalanSn > 0
-                    ? `Parti ${aktifIs.partiIndex}/${aktifIs.partiToplam} bitti · sonraki için ~${aktifIs.kalanSn} sn`
-                    : `Parti ${Math.min(aktifIs.partiIndex + 1, aktifIs.partiToplam)}/${aktifIs.partiToplam} gönderiliyor…`}
+                {aktifIs.durum === "beklemede" &&
+                aktifIs.partiIndex === 0 &&
+                aktifIs.sonrakiPartiAt &&
+                (aktifIs.kalanSn ?? 0) > 30
+                  ? `Zamanlandı · başlangıç ${tarihKisa(aktifIs.sonrakiPartiAt)}${
+                      aktifIs.kalanSn != null
+                        ? ` · ~${topluSmsSureMetni(aktifIs.kalanSn)} kaldı`
+                        : ""
+                    }`
+                  : aktifIs.durum === "beklemede"
+                    ? "Kuyruk başlıyor…"
+                    : aktifIs.kalanSn != null && aktifIs.kalanSn > 0
+                      ? `Parti ${aktifIs.partiIndex}/${aktifIs.partiToplam} bitti · sonraki için ~${aktifIs.kalanSn} sn`
+                      : `Parti ${Math.min(aktifIs.partiIndex + 1, aktifIs.partiToplam)}/${aktifIs.partiToplam} gönderiliyor…`}
               </p>
               <p className="text-xs text-amber-900">
                 Şimdiye kadar {aktifIs.basarili} başarılı
@@ -1267,8 +1365,14 @@ export default function PanelTopluSmsPage() {
             onClick={() => void gonder()}
           >
             {gonderiyor
-              ? "Arka planda gönderiliyor…"
-              : `${gonderilecekAdet} kişiye arka planda gönder`}
+              ? zamanlamaMod === "zamanli" &&
+                aktifIs?.partiIndex === 0 &&
+                (aktifIs.kalanSn ?? 0) > 30
+                ? "Zamanlandı, bekleniyor…"
+                : "Arka planda gönderiliyor…"
+              : zamanlamaMod === "zamanli"
+                ? `${gonderilecekAdet} kişiye zamanla`
+                : `${gonderilecekAdet} kişiye arka planda gönder`}
           </Btn>
         </>
       )}

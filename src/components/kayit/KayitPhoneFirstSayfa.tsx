@@ -21,14 +21,17 @@ const GUVEN = [
 
 const ADIMLAR = [
   {
+    ikon: "📍",
     baslik: "Çalıştığınız bölgeyi seçin",
     metin: "Hangi ilçelerde hizmet verdiğinizi belirtin.",
   },
   {
+    ikon: "📲",
     baslik: "Yeni talep gelince SMS alın",
     metin: "Bölgenizde müşteri talep açtığında telefonunuza bildirim gelir.",
   },
   {
+    ikon: "💰",
     baslik: "Fiyat verin, müşteri sizi seçsin",
     metin:
       "Fiyatınızı ve varış sürenizi yazın. Seçilirseniz telefon ve konum açılır.",
@@ -65,7 +68,6 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   const [telefon, setTelefon] = useState("");
   const [otp, setOtp] = useState("");
   const [otpAsama, setOtpAsama] = useState(false);
-  const [davetAcik, setDavetAcik] = useState(false);
   const [davetKodu, setDavetKodu] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -82,7 +84,6 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
       "";
     if (kod.trim()) {
       setDavetKodu(kod.trim());
-      setDavetAcik(false);
     }
     posthogOlayYakala("cekici_kayit_goruldu", {
       rol: "cekici",
@@ -323,72 +324,92 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
             </div>
           )}
 
-          <details className="text-sm text-slate-600">
-            <summary
-              className="cursor-pointer font-medium text-slate-800"
-              onClick={() => setDavetAcik(true)}
-            >
-              Davet kodum var
-            </summary>
-            {(davetAcik || davetKodu) && (
-              <div className="mt-2">
-                <Field
-                  label="Davet / kampanya kodu"
-                  value={davetKodu}
-                  onChange={(e) => setDavetKodu(e.target.value)}
-                  placeholder="Opsiyonel"
-                />
-              </div>
-            )}
-          </details>
+          <div className="rounded-xl border border-slate-100 bg-white px-3.5 py-3 space-y-2">
+            <p className="text-sm font-medium text-slate-800">Davet kodum var</p>
+            <Field
+              label="Davet / kampanya kodu"
+              value={davetKodu}
+              onChange={(e) => setDavetKodu(e.target.value)}
+              placeholder="Opsiyonel"
+            />
+          </div>
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-lg font-bold text-slate-900">
+        <section aria-labelledby="nasil-calisir-baslik">
+          <h2
+            id="nasil-calisir-baslik"
+            className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2 px-0.5"
+          >
             Sistem nasıl çalışıyor?
           </h2>
-          <ol className="space-y-3">
-            {ADIMLAR.map((a, i) => (
-              <li
+          <div className="grid gap-2">
+            {ADIMLAR.map((a) => (
+              <Card
                 key={a.baslik}
-                className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+                className="!py-3 !px-3.5 flex gap-3 items-start border-slate-100"
               >
-                <p className="font-semibold text-slate-900">
-                  {i + 1}. {a.baslik}
-                </p>
-                <p className="text-[16px] text-slate-600 mt-1">{a.metin}</p>
-              </li>
+                <span className="text-2xl shrink-0" aria-hidden>
+                  {a.ikon}
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {a.baslik}
+                  </p>
+                  <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                    {a.metin}
+                  </p>
+                </div>
+              </Card>
             ))}
-          </ol>
+          </div>
         </section>
 
-        <section className="space-y-2">
-          <h2 className="text-lg font-bold text-slate-900">
+        <section aria-labelledby="ucretler-baslik">
+          <h2
+            id="ucretler-baslik"
+            className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2 px-0.5"
+          >
             Ücretler nasıl çalışıyor?
           </h2>
-          <p className="text-[17px] font-semibold text-slate-900">
-            Kayıt ve teklif vermek ücretsizdir
-          </p>
-          <p className="text-[16px] text-slate-600 leading-relaxed">
-            Bölgenizdeki yeni bir talep size SMS ve panel bildirimi olarak
-            açıldığında 1 bildirim kredisi kullanılır. Teklif verirken ek kredi
-            düşmez. Paket satın almak zorunlu değildir.
-          </p>
-          <p className="text-[16px] text-slate-800 font-medium leading-relaxed">
-            Müşteriden komisyon kesmeyiz. Ödemeyi müşteriyle doğrudan kendi
-            aranızda yaparsınız.
-          </p>
+          <Card className="!p-3.5 border-emerald-100 bg-emerald-50/40 space-y-2">
+            <p className="text-sm font-semibold text-slate-900">
+              Kayıt ve teklif vermek ücretsizdir
+            </p>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Bölgenizdeki yeni bir talep size SMS ve panel bildirimi olarak
+              açıldığında 1 bildirim kredisi kullanılır. Teklif verirken ek
+              kredi düşmez. Paket satın almak zorunlu değildir.
+            </p>
+            <p className="text-xs text-slate-800 font-medium leading-relaxed pt-1 border-t border-emerald-100/80">
+              Müşteriden komisyon kesmeyiz. Ödemeyi müşteriyle doğrudan kendi
+              aranızda yaparsınız.
+            </p>
+          </Card>
         </section>
 
-        <section className="space-y-2">
-          <h2 className="text-lg font-bold text-slate-900">Sık sorulan sorular</h2>
-          <div className="divide-y divide-slate-100 rounded-xl border border-slate-100">
+        <section aria-labelledby="sss-baslik">
+          <h2
+            id="sss-baslik"
+            className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2 px-0.5"
+          >
+            Sık sorulan sorular
+          </h2>
+          <div className="space-y-2">
             {SSS.map((s) => (
-              <details key={s.q} className="px-3 py-2.5 group">
-                <summary className="cursor-pointer font-medium text-slate-900 text-[16px]">
-                  {s.q}
+              <details
+                key={s.q}
+                className="rounded-xl border border-slate-100 bg-white px-3.5 py-3 group"
+              >
+                <summary className="cursor-pointer text-sm font-semibold text-slate-900 list-none flex items-center justify-between gap-2">
+                  <span>{s.q}</span>
+                  <span
+                    className="text-slate-400 text-xs shrink-0 group-open:rotate-180 transition"
+                    aria-hidden
+                  >
+                    ▼
+                  </span>
                 </summary>
-                <p className="mt-2 text-[15px] text-slate-600 leading-relaxed">
+                <p className="mt-2 text-xs text-slate-600 leading-relaxed">
                   {s.a}
                 </p>
               </details>
@@ -396,7 +417,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
           </div>
         </section>
 
-        <p className="text-center text-sm text-slate-500">
+        <p className="text-center text-sm text-slate-500 px-0.5">
           Zaten üye misiniz?{" "}
           <Link href="/cekici/giris" className="text-amber-800 font-medium">
             Giriş yapın

@@ -165,6 +165,8 @@ export async function olusturTopluSmsIsi(opts: {
   oncekiAtlandi?: number;
   tempo: TopluSmsTempo;
   kisiBazliTakip?: boolean;
+  /** ISO — gelecekteyse ilk parti o ana kadar bekler */
+  baslangicAt?: string | null;
   alicilar: Array<{ telefon: string; ad?: string | null }>;
 }): Promise<TopluSmsIsOzet> {
   const kisiBazliTakip = Boolean(
@@ -187,6 +189,14 @@ export async function olusturTopluSmsIsi(opts: {
     alicilar,
     tempo.partiBoyutu
   ).length;
+
+  let sonrakiPartiAt: string | null = null;
+  if (opts.baslangicAt) {
+    const t = new Date(opts.baslangicAt).getTime();
+    if (Number.isFinite(t) && t > Date.now() + 30_000) {
+      sonrakiPartiAt = new Date(t).toISOString();
+    }
+  }
 
   let listeId: string | null = null;
   try {
@@ -223,7 +233,7 @@ export async function olusturTopluSmsIsi(opts: {
       basarili: 0,
       basarisiz: 0,
       onceki_atlandi: opts.oncekiAtlandi ?? 0,
-      sonraki_parti_at: null,
+      sonraki_parti_at: sonrakiPartiAt,
       liste_id: listeId,
       kisi_bazli_takip: kisiBazliTakip,
     })

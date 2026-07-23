@@ -95,6 +95,7 @@ export async function POST(request: Request) {
     kampanyaKodu?: string;
     varyant?: string;
     kisiBazliTakip?: boolean;
+    baslangicAt?: string | null;
     tempo?: {
       partiBoyutu?: number;
       beklemeSn?: number;
@@ -191,6 +192,32 @@ export async function POST(request: Request) {
       ? { ...(body.tempo ?? {}), partiBoyutu: 1 }
       : (body.tempo ?? {})
   );
+
+  let baslangicAt: string | null = null;
+  if (typeof body.baslangicAt === "string" && body.baslangicAt.trim()) {
+    const t = new Date(body.baslangicAt.trim()).getTime();
+    if (!Number.isFinite(t)) {
+      return NextResponse.json(
+        { error: "Geçersiz başlangıç zamanı." },
+        { status: 400 }
+      );
+    }
+    if (t <= Date.now() + 30_000) {
+      return NextResponse.json(
+        { error: "Zamanlanmış başlangıç en az ~1 dakika sonra olmalı." },
+        { status: 400 }
+      );
+    }
+    const maxMs = 30 * 24 * 60 * 60 * 1000;
+    if (t - Date.now() > maxMs) {
+      return NextResponse.json(
+        { error: "Başlangıç en fazla 30 gün sonrası olabilir." },
+        { status: 400 }
+      );
+    }
+    baslangicAt = new Date(t).toISOString();
+  }
+
   const adlar = body.adlar ?? {};
   const is = await olusturTopluSmsIsi({
     gonderenEposta: user.email,
@@ -202,6 +229,7 @@ export async function POST(request: Request) {
     oncekiAtlandi,
     tempo,
     kisiBazliTakip,
+    baslangicAt,
     alicilar: benzersiz.map((telefon) => ({
       telefon,
       ad: adlar[telefon] ?? null,
