@@ -6,8 +6,10 @@ import Link from "next/link";
 import { Card } from "@/components/ui";
 import { PanelGirisForm } from "@/components/panel/PanelGirisForm";
 import { HizmetVerenSayimPanel } from "@/components/panel/HizmetVerenSayimPanel";
+import { KullaniciSayisiGrafik } from "@/components/panel/KullaniciSayisiGrafik";
 import { supabaseYapilandirmaHataMesaji } from "@/lib/supabase/env";
 import type { HizmetVerenSayimOzet } from "@/lib/hizmet-veren-sayim";
+import type { CekiciKayitGunNokta } from "@/lib/cekici-kayit-serisi";
 
 interface Ozet {
   cekiciSayisi: number;
@@ -32,6 +34,7 @@ interface Ozet {
     toplam: number;
   };
   hizmetVerenler?: HizmetVerenSayimOzet;
+  kullaniciSerisi?: CekiciKayitGunNokta[];
 }
 
 function hataMesajiFromParam(hata: string | null): string {
@@ -190,6 +193,10 @@ function PanelIcerik() {
           </Link>
         ))}
       </div>
+
+      {ozet.kullaniciSerisi && ozet.kullaniciSerisi.length > 0 && (
+        <KullaniciSayisiGrafik seri={ozet.kullaniciSerisi} />
+      )}
 
       {ozet.huni && (
         <Card>

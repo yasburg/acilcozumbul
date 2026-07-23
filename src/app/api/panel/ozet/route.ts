@@ -11,6 +11,7 @@ import { funnelOzetHesapla } from "@/lib/funnel";
 import { smsDurumu } from "@/lib/sms-provider";
 import { smsSaglikOzet } from "@/lib/sms-saglik";
 import { hizmetVerenSayimHesapla } from "@/lib/hizmet-veren-sayim";
+import { cekiciKayitGunSerisi } from "@/lib/cekici-kayit-serisi";
 
 export async function GET() {
   await ensureSeedData();
@@ -32,6 +33,9 @@ export async function GET() {
   const gercekCekiciler = cekiciler.filter((c) => !c.testerHesap);
   const hizmetVerenler = hizmetVerenSayimHesapla(gercekCekiciler);
   const sms24 = sms7.filter((s) => s.gonderim >= since24);
+  const kullaniciSerisi = cekiciKayitGunSerisi(
+    gercekCekiciler.map((c) => c.kayitTarihi)
+  );
 
   return NextResponse.json({
     cekiciSayisi: gercekCekiciler.length,
@@ -42,5 +46,6 @@ export async function GET() {
     huni,
     smsSaglik: smsSaglikOzet(sms24.length ? sms24 : sms7, 24),
     hizmetVerenler,
+    kullaniciSerisi,
   });
 }
