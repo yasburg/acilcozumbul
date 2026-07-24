@@ -50,7 +50,31 @@ type KuyrukIs = {
   hata: string | null;
   listeId: string | null;
   mesajParca: number | null;
+  mesaj?: string;
+  aliciSayisi?: number;
 };
+
+function kuyrukIsAktifMi(is: KuyrukIs) {
+  return is.durum === "beklemede" || is.durum === "suruyor";
+}
+
+function kuyrukIsBaslik(is: KuyrukIs) {
+  if (
+    is.durum === "beklemede" &&
+    is.partiIndex === 0 &&
+    is.sonrakiPartiAt &&
+    (is.kalanSn ?? 0) > 30
+  ) {
+    return `Zamanlandı · başlangıç ${tarihKisa(is.sonrakiPartiAt)}${
+      is.kalanSn != null ? ` · ~${topluSmsSureMetni(is.kalanSn)} kaldı` : ""
+    }`;
+  }
+  if (is.durum === "beklemede") return "Kuyruk başlıyor…";
+  if (is.kalanSn != null && is.kalanSn > 0) {
+    return `Parti ${is.partiIndex}/${is.partiToplam} bitti · sonraki için ~${is.kalanSn} sn`;
+  }
+  return `Parti ${Math.min(is.partiIndex + 1, is.partiToplam)}/${is.partiToplam} gönderiliyor…`;
+}
 
 type Sekme = "gonder" | "testler" | "listeler" | "genel";
 type OncekiMod = "atla" | "yine";
@@ -141,7 +165,7 @@ export default function PanelTopluSmsPage() {
   const [excelOzet, setExcelOzet] = useState<ExcelYukleOzet | null>(null);
   const [elleHata, setElleHata] = useState("");
   const [gonderiyor, setGonderiyor] = useState(false);
-  const [aktifIs, setAktifIs] = useState<KuyrukIs | null>(null);
+  const [aktifIsler, setAktifIsler] = useState<KuyrukIs[]>([]);
   const [tempo, setTempo] = useState<TopluSmsTempo>(TOPLU_SMS_TEMPO_VARSAYILAN);
   const [tempoPreset, setTempoPreset] =
     useState<TopluSmsTempoPresetId | "ozel">("dengeli");
@@ -449,10 +473,21 @@ export default function PanelTopluSmsPage() {
     }
   }
 
-  function isDurumunaIsle(is: KuyrukIs) {
-    setAktifIs(is);
-    const aktif = is.durum === "beklemede" || is.durum === "suruyor";
-    setGonderiyor(aktif);
+  function aktifIslereEkleVeyaGuncelle(is: KuyrukIs) {
+    setAktifIsler((onceki) => {
+      const i = onceki.findIndex((x) => x.id === is.id);
+      if (!kuyrukIsAktifMi(is)) {
+        return onceki.filter((x) => x.id !== is.id);
+      }
+      if (i < 0) return [is, ...onceki];
+      const kopya = [...onceki];
+      kopya[i] = is;
+      return kopya;
+    });
+  }
+
+  function isBittiIsle(is: KuyrukIs) {
+    setAktifIsler((onceki) => onceki.filter((x) => x.id !== is.id));
     if (is.durum === "bitti") {
       setSonuc({
         basarili: is.basarili,
@@ -462,7 +497,6 @@ export default function PanelTopluSmsPage() {
         partiSayisi: is.partiToplam,
       });
       setHata("");
-      pollDurdur();
       void oncekileriKontrolEt(alicilar);
     } else if (is.durum === "iptal") {
       setSonuc({
@@ -473,9 +507,8 @@ export default function PanelTopluSmsPage() {
         partiSayisi: is.partiToplam,
       });
       setHata(
-        `Kuyruk durduruldu. Şimdiye kadar ${is.basarili} başarılı / ${is.basarisiz} başarısız.`
+        `Plan durduruldu. Şimdiye kadar ${is.basarili} başarılı / ${is.basarisiz} başarısız.`
       );
-      pollDurdur();
       void oncekileriKontrolEt(alicilar);
     } else if (is.durum === "hata") {
       setSonuc({
@@ -486,26 +519,48 @@ export default function PanelTopluSmsPage() {
         partiSayisi: is.partiToplam,
       });
       setHata(is.hata ?? "Gönderim hatası.");
-      pollDurdur();
     }
   }
 
-  function kuyrukPollBaslat(isId: string) {
-    pollDurdur();
-    pollRef.current = setInterval(() => {
-      void (async () => {
-        try {
-          const res = await fetch(
-            `/api/panel/sms/toplu/kuyruk?id=${encodeURIComponent(isId)}`,
-            { credentials: "include" }
-          );
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok || !data.is) return;
-          isDurumunaIsle(data.is as KuyrukIs);
-        } catch {
-          /* poll hatası yutulur; sonraki tur dener */
+  async function aktifIsleriYenile() {
+    try {
+      const res = await fetch("/api/panel/sms/toplu/kuyruk", {
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !Array.isArray(data.aktif)) return;
+      const liste = (data.aktif as KuyrukIs[]).filter(kuyrukIsAktifMi);
+      setAktifIsler((onceki) => {
+        const yeniIds = new Set(liste.map((x) => x.id));
+        for (const eski of onceki) {
+          if (!yeniIds.has(eski.id)) {
+            void (async () => {
+              try {
+                const r = await fetch(
+                  `/api/panel/sms/toplu/kuyruk?id=${encodeURIComponent(eski.id)}`,
+                  { credentials: "include" }
+                );
+                const d = await r.json().catch(() => ({}));
+                if (r.ok && d.is) isBittiIsle(d.is as KuyrukIs);
+              } catch {
+                /* ignore */
+              }
+            })();
+          }
         }
-      })();
+        return liste;
+      });
+      if (liste.length === 0) pollDurdur();
+      else kuyrukPollBaslat();
+    } catch {
+      /* yok say */
+    }
+  }
+
+  function kuyrukPollBaslat() {
+    if (pollRef.current) return;
+    pollRef.current = setInterval(() => {
+      void aktifIsleriYenile();
     }, 2000);
   }
 
@@ -514,31 +569,13 @@ export default function PanelTopluSmsPage() {
   }, []);
 
   useEffect(() => {
-    void (async () => {
-      try {
-        const res = await fetch("/api/panel/sms/toplu/kuyruk", {
-          credentials: "include",
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !Array.isArray(data.aktif) || data.aktif.length === 0) {
-          return;
-        }
-        const is = data.aktif[0] as KuyrukIs;
-        isDurumunaIsle(is);
-        if (is.durum === "beklemede" || is.durum === "suruyor") {
-          kuyrukPollBaslat(is.id);
-        }
-      } catch {
-        /* yok say */
-      }
-    })();
+    void aktifIsleriYenile();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca mount
   }, []);
 
   async function gonder() {
     setHata("");
     setSonuc(null);
-    setAktifIs(null);
     if (!mesajDurum.gecerli) {
       setHata(mesajDurum.hata ?? "Mesaj geçersiz.");
       return;
@@ -587,7 +624,7 @@ export default function PanelTopluSmsPage() {
     }
 
     const onay = window.confirm(
-      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${takipMetin}${atlaMetin}${zamanMetin}.\n\nGönderim sunucuda arka planda devam eder; ekranı kapatabilirsiniz. Devam?`
+      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${takipMetin}${atlaMetin}${zamanMetin}.\n\nDiğer planlardan bağımsız çalışır; ekranı kapatabilirsiniz. Devam?`
     );
     if (!onay) return;
 
@@ -649,24 +686,25 @@ export default function PanelTopluSmsPage() {
       if (data.gecmisUyari) setGecmisUyari(String(data.gecmisUyari));
 
       const is = data.is as KuyrukIs;
-      isDurumunaIsle(is);
-      kuyrukPollBaslat(is.id);
+      aktifIslereEkleVeyaGuncelle(is);
+      kuyrukPollBaslat();
+      void aktifIsleriYenile();
     } catch (e) {
       setHata(e instanceof Error ? e.message : "Gönderim başarısız.");
+    } finally {
       setGonderiyor(false);
     }
   }
 
-  async function kuyrukIptal() {
-    if (!aktifIs?.id) return;
+  async function kuyrukIptal(isId: string) {
     try {
       const res = await fetch(
-        `/api/panel/sms/toplu/kuyruk/${encodeURIComponent(aktifIs.id)}/iptal`,
+        `/api/panel/sms/toplu/kuyruk/${encodeURIComponent(isId)}/iptal`,
         { method: "POST", credentials: "include" }
       );
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.is) {
-        isDurumunaIsle(data.is as KuyrukIs);
+        isBittiIsle(data.is as KuyrukIs);
       }
     } catch {
       /* ignore */
@@ -1158,8 +1196,9 @@ export default function PanelTopluSmsPage() {
             <h3 className="font-semibold text-slate-800">Gönderim temposu</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
               Liste küçük partilere bölünür; partiler arasında sunucu bekler.
-              Gönderim arka planda sürer — ekranı kapatabilirsiniz; sayfaya
-              dönünce ilerlemeyi görürsünüz.
+              Birden fazla plan ekleyebilirsiniz — her biri kendi başlangıç
+              saatinde bağımsız (paralel) çalışır. Ekranı kapatabilirsiniz;
+              sayfaya dönünce planlar listelenir.
             </p>
             <label className="block space-y-1.5">
               <span className="text-sm font-medium text-slate-700">
@@ -1304,55 +1343,57 @@ export default function PanelTopluSmsPage() {
             </div>
           </Card>
 
-          {aktifIs &&
-            (aktifIs.durum === "beklemede" ||
-              aktifIs.durum === "suruyor" ||
-              gonderiyor) && (
-            <Card className="border-amber-200 bg-amber-50 space-y-2">
-              <p className="text-sm font-medium text-amber-950">
-                {aktifIs.durum === "beklemede" &&
-                aktifIs.partiIndex === 0 &&
-                aktifIs.sonrakiPartiAt &&
-                (aktifIs.kalanSn ?? 0) > 30
-                  ? `Zamanlandı · başlangıç ${tarihKisa(aktifIs.sonrakiPartiAt)}${
-                      aktifIs.kalanSn != null
-                        ? ` · ~${topluSmsSureMetni(aktifIs.kalanSn)} kaldı`
-                        : ""
-                    }`
-                  : aktifIs.durum === "beklemede"
-                    ? "Kuyruk başlıyor…"
-                    : aktifIs.kalanSn != null && aktifIs.kalanSn > 0
-                      ? `Parti ${aktifIs.partiIndex}/${aktifIs.partiToplam} bitti · sonraki için ~${aktifIs.kalanSn} sn`
-                      : `Parti ${Math.min(aktifIs.partiIndex + 1, aktifIs.partiToplam)}/${aktifIs.partiToplam} gönderiliyor…`}
+          {aktifIsler.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-slate-600">
+                Aktif / zamanlanmış planlar ({aktifIsler.length}) — her biri kendi
+                saatinde, birbirinden bağımsız çalışır. Yeni plan ekleyebilirsiniz.
               </p>
-              <p className="text-xs text-amber-900">
-                Şimdiye kadar {aktifIs.basarili} başarılı
-                {aktifIs.basarisiz > 0
-                  ? ` · ${aktifIs.basarisiz} başarısız`
-                  : ""}
-                {" · "}
-                ekranı kapatabilirsiniz
-              </p>
-              <div className="h-2 rounded-full bg-amber-100 overflow-hidden">
-                <div
-                  className="h-full bg-amber-500 transition-all"
-                  style={{
-                    width: `${
-                      (aktifIs.partiIndex /
-                        Math.max(1, aktifIs.partiToplam)) *
-                      100
-                    }%`,
-                  }}
-                />
-              </div>
-              <button
-                type="button"
-                className="text-xs font-medium text-red-700"
-                onClick={() => void kuyrukIptal()}
-              >
-                Kuyruğu durdur
-              </button>
-            </Card>
+              {aktifIsler.map((is) => (
+                <Card
+                  key={is.id}
+                  className="border-amber-200 bg-amber-50 space-y-2"
+                >
+                  <p className="text-sm font-medium text-amber-950">
+                    {kuyrukIsBaslik(is)}
+                  </p>
+                  {(is.mesaj || is.aliciSayisi != null) && (
+                    <p className="text-xs text-amber-900/80 line-clamp-2">
+                      {is.aliciSayisi != null ? `${is.aliciSayisi} alıcı` : ""}
+                      {is.aliciSayisi != null && is.mesaj ? " · " : ""}
+                      {is.mesaj
+                        ? is.mesaj.length > 80
+                          ? `${is.mesaj.slice(0, 80)}…`
+                          : is.mesaj
+                        : ""}
+                    </p>
+                  )}
+                  <p className="text-xs text-amber-900">
+                    Şimdiye kadar {is.basarili} başarılı
+                    {is.basarisiz > 0 ? ` · ${is.basarisiz} başarısız` : ""}
+                    {" · "}
+                    ekranı kapatabilirsiniz
+                  </p>
+                  <div className="h-2 rounded-full bg-amber-100 overflow-hidden">
+                    <div
+                      className="h-full bg-amber-500 transition-all"
+                      style={{
+                        width: `${
+                          (is.partiIndex / Math.max(1, is.partiToplam)) * 100
+                        }%`,
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="text-xs font-medium text-red-700"
+                    onClick={() => void kuyrukIptal(is.id)}
+                  >
+                    Bu planı durdur
+                  </button>
+                </Card>
+              ))}
+            </div>
           )}
 
           <Btn
@@ -1365,13 +1406,9 @@ export default function PanelTopluSmsPage() {
             onClick={() => void gonder()}
           >
             {gonderiyor
-              ? zamanlamaMod === "zamanli" &&
-                aktifIs?.partiIndex === 0 &&
-                (aktifIs.kalanSn ?? 0) > 30
-                ? "Zamanlandı, bekleniyor…"
-                : "Arka planda gönderiliyor…"
+              ? "Plan ekleniyor…"
               : zamanlamaMod === "zamanli"
-                ? `${gonderilecekAdet} kişiye zamanla`
+                ? `${gonderilecekAdet} kişilik plan zamanla`
                 : `${gonderilecekAdet} kişiye arka planda gönder`}
           </Btn>
         </>

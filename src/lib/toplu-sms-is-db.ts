@@ -614,7 +614,7 @@ export function ensureTopluSmsScheduler(): void {
   g.__topluSmsScheduler = setInterval(() => {
     if (g.__topluSmsSchedulerBusy) return;
     g.__topluSmsSchedulerBusy = true;
-    void isleBekleyenTopluSmsIsleri(5)
+    void isleBekleyenTopluSmsIsleri(10)
       .catch((e) => console.error("[toplu-sms-is] scheduler", e))
       .finally(() => {
         g.__topluSmsSchedulerBusy = false;
@@ -628,7 +628,7 @@ export async function tetikleTopluSmsKuyruk(): Promise<{
   isIds: string[];
 }> {
   ensureTopluSmsScheduler();
-  return isleBekleyenTopluSmsIsleri(5);
+  return isleBekleyenTopluSmsIsleri(10);
 }
 
 /** @deprecated Uzun uyku güvenilir değil; tetikleTopluSmsKuyruk kullan */
@@ -688,22 +688,25 @@ export async function isleBekleyenTopluSmsIsleri(
     })
     .slice(0, limit);
 
-  const isIds: string[] = [];
-  for (const row of adaylar) {
-    const id = String(row.id);
-    if (calisanIsler.has(id)) continue;
-    calisanIsler.add(id);
-    try {
-      let dokunuldu = false;
-      while (true) {
-        const r = await isleTopluSmsSiradakiParti(id);
-        dokunuldu = true;
-        if (!r.devam || r.bekleMs > 0) break;
+  const sonuclar = await Promise.all(
+    adaylar.map(async (row) => {
+      const id = String(row.id);
+      if (calisanIsler.has(id)) return null;
+      calisanIsler.add(id);
+      try {
+        let dokunuldu = false;
+        while (true) {
+          const r = await isleTopluSmsSiradakiParti(id);
+          dokunuldu = true;
+          if (!r.devam || r.bekleMs > 0) break;
+        }
+        return dokunuldu ? id : null;
+      } finally {
+        calisanIsler.delete(id);
       }
-      if (dokunuldu) isIds.push(id);
-    } finally {
-      calisanIsler.delete(id);
-    }
-  }
+    })
+  );
+
+  const isIds = sonuclar.filter((id): id is string => Boolean(id));
   return { islenen: isIds.length, isIds };
 }
