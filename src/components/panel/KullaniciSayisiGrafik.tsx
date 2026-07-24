@@ -23,10 +23,10 @@ function KullaniciSayisiSvg({
   mod: Mod;
 }) {
   const W = 640;
-  const H = 220;
+  const H = 240;
   const padL = 40;
-  const padR = 12;
-  const padT = 16;
+  const padR = 16;
+  const padT = 28;
   const padB = 36;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
@@ -41,7 +41,11 @@ function KullaniciSayisiSvg({
     padL + (noktalar.length <= 1 ? plotW / 2 : (i / n) * plotW);
   const yAt = (v: number) => padT + plotH - (v / maxY) * plotH;
 
+  /** Az günde hepsi; çok günde ~8 etiket + nokta */
   const etiketAdim = Math.max(1, Math.ceil(noktalar.length / 8));
+  const etiketGoster = (i: number) =>
+    i % etiketAdim === 0 || i === noktalar.length - 1;
+
   const yTickler = [0, Math.round(maxY / 2), maxY].filter(
     (v, i, a) => a.indexOf(v) === i
   );
@@ -83,6 +87,7 @@ function KullaniciSayisiSvg({
           const h = Math.max(0, (p.gunluk / maxY) * plotH);
           const x = xAt(i) - barW / 2;
           const y = padT + plotH - h;
+          const cx = xAt(i);
           return (
             <g key={p.gun}>
               <rect
@@ -97,16 +102,35 @@ function KullaniciSayisiSvg({
                   {p.gun}: {p.gunluk} kayıt
                 </title>
               </rect>
-              {i % etiketAdim === 0 || i === noktalar.length - 1 ? (
-                <text
-                  x={xAt(i)}
-                  y={H - 10}
-                  textAnchor="middle"
-                  className="fill-slate-400"
-                  fontSize={9}
-                >
-                  {gunEtiket(p.gun)}
-                </text>
+              {etiketGoster(i) ? (
+                <>
+                  <circle
+                    cx={cx}
+                    cy={y}
+                    r={3.5}
+                    className="fill-amber-700 stroke-white"
+                    strokeWidth={1.5}
+                  />
+                  <text
+                    x={cx}
+                    y={Math.max(12, y - 8)}
+                    textAnchor="middle"
+                    className="fill-slate-800"
+                    fontSize={10}
+                    fontWeight={600}
+                  >
+                    {p.gunluk}
+                  </text>
+                  <text
+                    x={cx}
+                    y={H - 10}
+                    textAnchor="middle"
+                    className="fill-slate-400"
+                    fontSize={9}
+                  >
+                    {gunEtiket(p.gun)}
+                  </text>
+                </>
               ) : null}
             </g>
           );
@@ -162,33 +186,45 @@ function KullaniciSayisiSvg({
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      {noktalar.map((p, i) =>
-        i % etiketAdim === 0 || i === noktalar.length - 1 ? (
-          <text
-            key={p.gun}
-            x={xAt(i)}
-            y={H - 10}
-            textAnchor="middle"
-            className="fill-slate-400"
-            fontSize={9}
-          >
-            {gunEtiket(p.gun)}
-          </text>
-        ) : null
-      )}
-      {noktalar.length > 0 && (
-        <circle
-          cx={xAt(noktalar.length - 1)}
-          cy={yAt(noktalar[noktalar.length - 1]!.kumulatif)}
-          r={3.5}
-          className="fill-amber-700"
-        >
-          <title>
-            {noktalar[noktalar.length - 1]!.gun}:{" "}
-            {noktalar[noktalar.length - 1]!.kumulatif} kullanıcı
-          </title>
-        </circle>
-      )}
+      {noktalar.map((p, i) => {
+        if (!etiketGoster(i)) return null;
+        const cx = xAt(i);
+        const cy = yAt(p.kumulatif);
+        return (
+          <g key={p.gun}>
+            <circle
+              cx={cx}
+              cy={cy}
+              r={3.5}
+              className="fill-amber-700 stroke-white"
+              strokeWidth={1.5}
+            >
+              <title>
+                {p.gun}: {p.kumulatif} kullanıcı
+              </title>
+            </circle>
+            <text
+              x={cx}
+              y={Math.max(12, cy - 8)}
+              textAnchor="middle"
+              className="fill-slate-800"
+              fontSize={10}
+              fontWeight={600}
+            >
+              {p.kumulatif}
+            </text>
+            <text
+              x={cx}
+              y={H - 10}
+              textAnchor="middle"
+              className="fill-slate-400"
+              fontSize={9}
+            >
+              {gunEtiket(p.gun)}
+            </text>
+          </g>
+        );
+      })}
     </svg>
   );
 }
