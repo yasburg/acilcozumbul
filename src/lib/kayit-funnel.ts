@@ -54,8 +54,6 @@ export const KAYIT_FUNNELS: Record<KayitFunnelId, KayitFunnelTanim> = {
     baslik: "Bölgenizde yeni çekici işi açıldığında telefonunuza gelsin.",
     altMetin:
       "Müşteri talep oluşturur. Fiyatınızı ve kaç dakikada varacağınızı yazarsınız. Müşteri sizi seçerse telefon ve konum açılır.",
-    tesvikBaslik: "İstanbul erken kayıt avantajı",
-    tesvikMetin: "İlk 20 talep bildirimi ücretsiz",
   },
   c: {
     id: "c",
