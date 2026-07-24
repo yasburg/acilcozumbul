@@ -1,7 +1,7 @@
 # Graph Report - acilcozumbul  (2026-07-24)
 
 ## Corpus Check
-- 427 files · ~407,387 words
+- 427 files · ~407,434 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0ca3e947`
+- Built from commit: `49bf10f6`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -180,16 +180,16 @@ Cohesion: 0.10
 Nodes (42): GET(), GET(), GET(), PATCH(), POST(), belgeBase64Ayikla(), cekiciBelgeYukle(), IZINLI_MIME (+34 more)
 
 ### Community 15 - "db.ts"
-Cohesion: 0.15
-Nodes (38): GET(), rotaKoordinatlari(), POST(), listeDurumuBelirle(), toOzet(), OnayIcerik(), TalepOzet, cekiciTalepBolgesineUygunMu() (+30 more)
+Cohesion: 0.16
+Nodes (37): GET(), rotaKoordinatlari(), POST(), listeDurumuBelirle(), toOzet(), OnayIcerik(), TalepOzet, cekiciTalepBolgesineUygunMu() (+29 more)
 
 ### Community 16 - "hizmet-veren-sayim.ts"
 Cohesion: 0.12
 Nodes (19): AlanHatalari, BOS_ALAN_HATALARI, KayitAlan, KayitIcerik(), KayitKontenjanBilgi(), Props, Props, YasalOnayKutusu() (+11 more)
 
 ### Community 17 - "route.ts"
-Cohesion: 0.12
-Nodes (18): filtreleCekicilerBolge(), konumCekici(), SMS_BILDIRIM_KREDI, IL_ILCELER, asyaSet, ISTANBUL_ASYA_ILCELER, ISTANBUL_AVRUPA_ILCELER, getCekiciById (+10 more)
+Cohesion: 0.11
+Nodes (19): filtreleCekicilerBolge(), konumCekici(), filtreleCekicilerSorun(), SMS_BILDIRIM_KREDI, IL_ILCELER, asyaSet, ISTANBUL_ASYA_ILCELER, ISTANBUL_AVRUPA_ILCELER (+11 more)
 
 ### Community 18 - "MusteriAnaSayfa.tsx"
 Cohesion: 0.11
@@ -300,8 +300,8 @@ Cohesion: 0.14
 Nodes (32): POST(), POST(), beniAnimsaOku(), bekleyenCekiciGirisOtp(), cekiciGirisOtpDogrula(), cekiciGirisOtpGonder(), CekiciGirisOtpKayit, CekiciGirisOtpRow (+24 more)
 
 ### Community 56 - "cekici-puan.ts"
-Cohesion: 0.12
-Nodes (26): anlasilanIsSay(), cekiciPuanOzeti, computePuanFromTables(), fiyatGarantiPuaniHesapla(), normalizeTeklif(), ozetFromCounts(), tercihPuaniHesapla(), kaybedenTeklifleriIsaretle() (+18 more)
+Cohesion: 0.14
+Nodes (26): POST(), GET(), BekleIcerik(), anlasilanIsSay(), cekiciPuanOzeti, cekiciPuanOzetleri(), computePuanFromTables(), fiyatGarantiPuaniHesapla() (+18 more)
 
 ### Community 57 - "NasilCalisirSerit.tsx"
 Cohesion: 0.23
@@ -336,8 +336,8 @@ Cohesion: 0.21
 Nodes (6): gonderimZamani(), onaylanmisSira(), RozetPanelOzet, RozetPanelSatir, rozetPanelVerisi, satirFromCekici()
 
 ### Community 65 - "route.ts"
-Cohesion: 0.31
-Nodes (11): POST(), GET(), BekleIcerik(), cekiciPuanOzetleri(), teklifFiyatDegistiMi(), isDemoTalepId(), demoTalepGetir(), demoMusteriTekliflerJson() (+3 more)
+Cohesion: 0.24
+Nodes (11): kaybedenTeklifleriIsaretle(), listTekliflerByCekici(), listTekliflerByTalep(), listTekliflerByTalepIds(), setKaybedenTeklifler(), teklifFromRow(), TeklifRow, teklifToRow() (+3 more)
 
 ### Community 66 - "page.tsx"
 Cohesion: 0.14
@@ -387,7 +387,7 @@ Nodes (23): PATCH(), GET(), POST(), sonKullanmaAyir(), GET(), GET(), tcKimlikGec
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `getSupabaseAdmin()` connect `memnuniyet.ts` to `demo-oturum.ts`, `telefonNormalize`, `cekici-email-otp.ts`, `seo.ts`, `mappers.ts`, `ui.tsx`, `CekiciAyarlarPanel.tsx`, `db.ts`, `page.tsx`, `route.ts`, `cekici-email-otp.ts`, `demo-responses.ts`, `kayit-kodu.ts`, `NasilCalisirSerit.tsx`, `route.ts`, `CerezOnayBanner.tsx`, `KayitKontenjanBilgi.tsx`, `seo.ts`, `page.tsx`, `cekici-puan.ts`, `getSupabaseAdmin`, `davet-panel.ts`, `page.tsx`, `SorunAkisOzeti.tsx`, `toplu-sms-gecmis-db.ts`, `cekici-sifre-otp.ts`, `page.tsx`, `page.tsx`, `kredi-fiyat.ts`?**
+- **Why does `getSupabaseAdmin()` connect `memnuniyet.ts` to `demo-oturum.ts`, `telefonNormalize`, `cekici-email-otp.ts`, `seo.ts`, `mappers.ts`, `ui.tsx`, `CekiciAyarlarPanel.tsx`, `db.ts`, `page.tsx`, `route.ts`, `cekici-email-otp.ts`, `demo-responses.ts`, `kayit-kodu.ts`, `NasilCalisirSerit.tsx`, `route.ts`, `CerezOnayBanner.tsx`, `KayitKontenjanBilgi.tsx`, `seo.ts`, `page.tsx`, `cekici-puan.ts`, `getSupabaseAdmin`, `davet-panel.ts`, `route.ts`, `page.tsx`, `SorunAkisOzeti.tsx`, `toplu-sms-gecmis-db.ts`, `cekici-sifre-otp.ts`, `page.tsx`, `page.tsx`, `kredi-fiyat.ts`?**
   _High betweenness centrality (0.095) - this node is a cross-community bridge._
 - **Why does `Card()` connect `ensureSeedData` to `layout.tsx`, `mappers.ts`, `ensureSeedData`, `route.ts`, `route.ts`, `google-maps.ts`, `CekiciPanelTabs.tsx`, `hizmet-veren-sayim.ts`, `MusteriAnaSayfa.tsx`, `page.tsx`, `davet-panel.ts`, `route.ts`, `page.tsx`, `page.tsx`, `route.ts`, `kredi-odeme.ts`, `davet-panel.ts`?**
   _High betweenness centrality (0.043) - this node is a cross-community bridge._

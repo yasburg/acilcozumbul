@@ -1128,14 +1128,28 @@ function MusteriAnaSayfaIcerik() {
         teklif alın
       </h1>
 
-      <p className="text-center text-xs text-slate-500 mb-4 -mt-1">
-        <Link
-          href="/cekici/giris"
-          className="text-amber-600 underline font-medium"
-        >
-          Çekici / lastikçi / anahtarcı girişi
-        </Link>
-      </p>
+      <div className="mb-5 -mt-1 space-y-1.5">
+        <div className="flex flex-wrap items-center justify-center gap-2.5">
+          <p className="text-sm font-medium text-slate-700">
+            Hizmet mi veriyorsunuz?
+          </p>
+          <Link
+            href="/kayit/b"
+            className="inline-flex h-8 items-center justify-center rounded-lg bg-amber-500 px-3.5 text-sm font-semibold text-white shadow-sm shadow-amber-500/20 transition touch-manipulation hover:bg-amber-600 active:scale-[0.98]"
+          >
+            Kayıt ol
+          </Link>
+        </div>
+        <p className="text-center text-xs text-slate-500">
+          Hesabınız var mı?{" "}
+          <Link
+            href="/cekici/giris"
+            className="font-medium text-amber-700 underline underline-offset-2"
+          >
+            Giriş yap
+          </Link>
+        </p>
+      </div>
 
       <div className="flex gap-1.5 mb-6">
         {steps.map((s) => (
