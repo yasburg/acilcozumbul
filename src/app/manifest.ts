@@ -13,8 +13,8 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "tr",
     icons: [
       {
-        src: "/acilcozumbul-logo-transparan.png",
-        sizes: "512x512",
+        src: "/acilcozumbul-logo-icon-192.png",
+        sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },

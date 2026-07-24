@@ -1,4 +1,5 @@
 import posthog from "posthog-js";
+import { idleSonra } from "@/lib/idle-sonra";
 
 const key =
   process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN?.trim() ||
@@ -7,7 +8,8 @@ const host =
   process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim() ||
   "https://eu.i.posthog.com";
 
-if (typeof window !== "undefined" && key && host) {
+function posthogInit() {
+  if (typeof window === "undefined" || !key || !host) return;
   posthog.init(key, {
     api_host: "/ingest",
     ui_host: host,
@@ -18,4 +20,9 @@ if (typeof window !== "undefined" && key && host) {
     opt_out_capturing_by_default: true,
     persistence: "localStorage+cookie",
   });
+}
+
+/** LCP sonrası idle’da init */
+if (typeof window !== "undefined" && key && host) {
+  idleSonra(posthogInit);
 }

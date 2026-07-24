@@ -9,6 +9,37 @@ const nextConfig: NextConfig = {
     "127.0.0.1",
   ],
   skipTrailingSlashRedirect: true,
+  async headers() {
+    return [
+      {
+        source: "/acilcozumbul-logo-yazili-header.webp",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/acilcozumbul-logo-icon-192.png",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/acilcozumbul-logo-icon-192.webp",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       {

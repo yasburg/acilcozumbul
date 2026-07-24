@@ -23,6 +23,7 @@ import "./globals.css";
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -75,9 +76,9 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: [{ url: "/acilcozumbul-logo-transparan.png", type: "image/png" }],
-    apple: "/acilcozumbul-logo-transparan.png",
-    shortcut: "/acilcozumbul-logo-transparan.png",
+    icon: [{ url: "/acilcozumbul-logo-icon-192.png", type: "image/png", sizes: "192x192" }],
+    apple: "/acilcozumbul-logo-icon-192.png",
+    shortcut: "/acilcozumbul-logo-icon-192.png",
   },
   appleWebApp: {
     capable: true,

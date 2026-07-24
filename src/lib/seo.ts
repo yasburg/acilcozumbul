@@ -115,7 +115,7 @@ export function organizationJsonLd() {
     name: SITE_ADI,
     alternateName: ["acilcozumbul", "AcilCozumBul"],
     url: SITE_URL,
-    logo: sayfaUrl("/acilcozumbul-logo-transparan.png"),
+    logo: sayfaUrl("/acilcozumbul-logo-icon-192.png"),
     email: YASAL_SIRKET.eposta,
     foundingLocation: {
       "@type": "Place",

@@ -1,47 +1,28 @@
 # Acil Çözüm Bul
-> Türkiye'de yolda kalan sürücüleri çekici, lastikçi, anahtarcı ve yol yardım hizmet verenleriyle buluşturan platform.
 
-Site: https://www.acilcozumbul.com
-Şirket: YSN LABS Yazılım Hizmetleri ve Bilişim Teknolojileri Sanayi Ticaret Limited Şirketi
-İletişim: destek@acilcozumbul.com
+> Türkiye'de yolda kalan sürücüleri çekici, lastikçi, anahtarcı ve yol yardım hizmet verenleriyle buluşturan platform. Müşteri talep açar; yakındaki onaylı hizmet verenler fiyat ve süre teklifi gönderir; müşteri birini seçince telefon ve konum paylaşılır.
 
-## Ne işe yarar?
+Şirket: YSN LABS Yazılım Hizmetleri ve Bilişim Teknolojileri Sanayi Ticaret Limited Şirketi. İletişim: destek@acilcozumbul.com. Müşteri talep oluşturma ve hizmet veren kaydı ücretsizdir; teklif vermek ücretsizdir. Hizmet verenler SMS/panel bildirimi için kredi kullanır. Hizmet bedeli müşteri ile hizmet veren arasında anlaştıkları tutardır. Hizmet türleri: çekici, lastik, akü, yakıt, kaza, kilit/anahtarcı ve diğer yol yardım.
 
-Acil Çözüm Bul, acil yol yardım ihtiyacı olan müşterilerin yakındaki onaylı hizmet verenlerden fiyat ve süre teklifi almasını sağlar. Müşteri bir teklifi seçtikten sonra telefon ve konum bilgisi hizmet verenle paylaşılır.
+## Ana sayfalar
 
-## Ana kullanıcı yolları
+- [Ana sayfa — müşteri talep](https://www.acilcozumbul.com/): Yolda kalan sürücü sorun tipini seçer, telefon doğrular, konum paylaşır ve yakındaki tekliflerden birini seçer.
+- [Hizmet veren kaydı](https://www.acilcozumbul.com/cekici/kayit): Çekici, lastikçi veya anahtarcı ücretsiz kayıt olur ve bölge taleplerine teklif verir.
+- [Hizmet veren kaydı (SMS A)](https://www.acilcozumbul.com/kayit/a): Alternatif kayıt hunisi.
+- [Hizmet veren kaydı (SMS B)](https://www.acilcozumbul.com/kayit/b): Alternatif kayıt hunisi.
+- [Hizmet veren girişi](https://www.acilcozumbul.com/cekici/giris): Onaylı hizmet veren paneline giriş.
+- [Sitemap](https://www.acilcozumbul.com/sitemap.xml): Genel erişime açık sayfaların XML listesi.
 
-- Müşteri talep: https://www.acilcozumbul.com/
-- Hizmet veren kaydı (çekici / lastikçi / anahtarcı): https://www.acilcozumbul.com/cekici/kayit
-- Hizmet veren girişi: https://www.acilcozumbul.com/cekici/giris
+## Yasal
 
-## Ücret modeli (özet)
+- [Kullanım Koşulları](https://www.acilcozumbul.com/kullanim-kosullari): Platform kullanım şartları.
+- [Gizlilik Politikası (KVKK)](https://www.acilcozumbul.com/gizlilik-politikasi): Kişisel veri işleme ve KVKK bilgilendirmesi.
+- [Çerez Politikası](https://www.acilcozumbul.com/cerez-politikasi): Zorunlu ve isteğe bağlı çerezler.
+- [İptal ve İade](https://www.acilcozumbul.com/iptal-ve-iade): İptal ve iade koşulları.
+- [Mesafeli Hizmet Sözleşmesi](https://www.acilcozumbul.com/mesafeli-hizmet-sozlesmesi): Mesafeli satış / hizmet sözleşmesi.
 
-- Müşteri talep oluşturma: ücretsiz
-- Hizmet veren kaydı: ücretsiz
-- Teklif vermek: ücretsiz
-- Hizmet verenler taleplerden SMS/panel bildirimi almak için kredi kullanır
-- Hizmet bedeli müşteri ile hizmet veren arasında anlaştıkları teklif tutarıdır
+## Optional
 
-## Hizmet türleri
-
-çekici, lastik, akü, yakıt, kaza, kilit / anahtarcı, diğer yol yardım
-
-## Güven
-
-- Telefon (SMS) doğrulama
-- Belge inceleme
-- Onaylı çekici rozeti (doğrulanan hesaplar müşteri listesinde öne çıkar)
-- KVKK ve yasal metinler sitede yayınlanır
-
-## Yasal sayfalar
-
-- Kullanım Koşulları: https://www.acilcozumbul.com/kullanim-kosullari
-- Gizlilik Politikası (KVKK): https://www.acilcozumbul.com/gizlilik-politikasi
-- Çerez Politikası: https://www.acilcozumbul.com/cerez-politikasi
-- İptal ve İade: https://www.acilcozumbul.com/iptal-ve-iade
-- Mesafeli Hizmet Sözleşmesi: https://www.acilcozumbul.com/mesafeli-hizmet-sozlesmesi
-
-## Sitemap
-
-https://www.acilcozumbul.com/sitemap.xml
+- [Hizmet veren kaydı (varyant C)](https://www.acilcozumbul.com/kayit/c): Alternatif kayıt hunisi.
+- [Hizmet veren kaydı (varyant D)](https://www.acilcozumbul.com/kayit/d): Alternatif kayıt hunisi.
+- [Şifremi unuttum](https://www.acilcozumbul.com/cekici/sifremi-unuttum): Hizmet veren şifre sıfırlama.

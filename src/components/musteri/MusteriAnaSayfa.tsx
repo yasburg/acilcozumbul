@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState, Suspense } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { SorunSecimi } from "@/components/SorunSecimi";
-import { ArizaFotografAlani } from "@/components/ArizaFotografAlani";
 import { Btn, Field, Card, Spinner, TextArea } from "@/components/ui";
 import {
   hizmetQuerydenSorunTipi,
@@ -17,14 +17,10 @@ import {
   sorunMetniOlustur,
   sorunTipiBul,
 } from "@/lib/sorun-tipleri";
-import { KonumIzniYardim } from "@/components/KonumIzniYardim";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
-import { NasilCalisirSerit } from "@/components/NasilCalisirSerit";
-import { HizmetVerenSayimGostergesi } from "@/components/HizmetVerenSayimGostergesi";
 import { useHizmetVerenSayim } from "@/hooks/useHizmetVerenSayim";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
-import { SssBolumu } from "@/components/seo/SssBolumu";
 import {
   geocodeAdres,
   cihazPlatformu,
@@ -55,6 +51,46 @@ import {
   musteriProfilKaydet,
   musteriProfilOku,
 } from "@/lib/musteri-profil";
+
+const NasilCalisirSerit = dynamic(
+  () =>
+    import("@/components/NasilCalisirSerit").then((m) => ({
+      default: m.NasilCalisirSerit,
+    })),
+  { ssr: false, loading: () => <div className="h-10 mb-2" aria-hidden /> }
+);
+
+const HizmetVerenSayimGostergesi = dynamic(
+  () =>
+    import("@/components/HizmetVerenSayimGostergesi").then((m) => ({
+      default: m.HizmetVerenSayimGostergesi,
+    })),
+  { ssr: false, loading: () => null }
+);
+
+const SssBolumu = dynamic(
+  () =>
+    import("@/components/seo/SssBolumu").then((m) => ({
+      default: m.SssBolumu,
+    })),
+  { ssr: true }
+);
+
+const ArizaFotografAlani = dynamic(
+  () =>
+    import("@/components/ArizaFotografAlani").then((m) => ({
+      default: m.ArizaFotografAlani,
+    })),
+  { ssr: false, loading: () => null }
+);
+
+const KonumIzniYardim = dynamic(
+  () =>
+    import("@/components/KonumIzniYardim").then((m) => ({
+      default: m.KonumIzniYardim,
+    })),
+  { ssr: false, loading: () => null }
+);
 
 type Step = "bilgi" | "konum" | "sorun" | "detay" | "hedef";
 

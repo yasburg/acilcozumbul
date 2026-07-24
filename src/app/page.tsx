@@ -1,7 +1,6 @@
-import { redirect } from "next/navigation";
 import MusteriAnaSayfa from "@/components/musteri/MusteriAnaSayfa";
+import { CekiciOturumYonlendir } from "@/components/musteri/CekiciOturumYonlendir";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { getCurrentCekici } from "@/lib/auth";
 import {
   faqJsonLd,
   organizationJsonLd,
@@ -12,6 +11,9 @@ import {
   webSiteJsonLd,
 } from "@/lib/seo";
 
+/** Anonim HTML cache’lenebilir; oturum yönlendirmesi client’ta */
+export const dynamic = "force-static";
+
 export const metadata = sayfaMetadata({
   title: SEO_BASLIK,
   description: SEO_ACIKLAMA,
@@ -19,12 +21,7 @@ export const metadata = sayfaMetadata({
   absoluteTitle: true,
 });
 
-export default async function HomePage() {
-  const cekici = await getCurrentCekici();
-  if (cekici) {
-    redirect("/cekici/panel");
-  }
-
+export default function HomePage() {
   return (
     <>
       <JsonLd
@@ -35,6 +32,7 @@ export default async function HomePage() {
           faqJsonLd(),
         ]}
       />
+      <CekiciOturumYonlendir />
       <MusteriAnaSayfa />
     </>
   );

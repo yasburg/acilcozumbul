@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
 import { getCekiciByToken } from "./db";
 import type { Cekici } from "./types";
+import { CEKICI_COOKIE } from "./auth-cookie";
 
-export const CEKICI_COOKIE = "cekici_token";
+export { CEKICI_COOKIE } from "./auth-cookie";
 
 /**
  * Kalıcı oturum süresi. Chrome/Chromium kalıcı çerezleri ~400 gün ile sınırlar;

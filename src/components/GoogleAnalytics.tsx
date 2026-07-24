@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Script from "next/script";
 import {
   GA_MEASUREMENT_ID,
@@ -8,17 +8,21 @@ import {
   gtagCerezSenkronize,
   gtagYapilandirildi,
 } from "@/lib/gtag";
+import { idleSonra } from "@/lib/idle-sonra";
 
 /**
- * gtag.js + GA4 / Google Ads config (consent default root layout’ta beforeInteractive).
- * @see https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced
+ * gtag.js — LCP sonrası (lazyOnload + idle).
+ * Consent default root layout’ta beforeInteractive kalır.
  */
 export function GoogleAnalytics() {
+  const [yukle, setYukle] = useState(false);
+
   useEffect(() => {
     gtagCerezSenkronize();
+    return idleSonra(() => setYukle(true));
   }, []);
 
-  if (!gtagYapilandirildi()) return null;
+  if (!gtagYapilandirildi() || !yukle) return null;
 
   const scriptId = GA_MEASUREMENT_ID || GOOGLE_ADS_ID;
 
@@ -26,10 +30,10 @@ export function GoogleAnalytics() {
     <>
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${scriptId}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
         onLoad={() => gtagCerezSenkronize()}
       />
-      <Script id="google-gtag-config" strategy="afterInteractive">
+      <Script id="google-gtag-config" strategy="lazyOnload">
         {`
 gtag('js', new Date());
 ${GA_MEASUREMENT_ID ? `gtag('config', '${GA_MEASUREMENT_ID}');` : ""}

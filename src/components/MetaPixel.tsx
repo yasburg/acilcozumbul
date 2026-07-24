@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 import {
@@ -10,28 +10,31 @@ import {
   metaPixelPageView,
   metaPixelYapilandirildi,
 } from "@/lib/meta-pixel";
+import { idleSonra } from "@/lib/idle-sonra";
 
 /**
- * Meta Pixel — Consent Mode (revoke varsayılan; «Tümünü kabul et» ile grant).
- * SPA gezinmede PageView yenilenir.
+ * Meta Pixel — LCP sonrası lazyOnload; Consent Mode revoke varsayılan.
  */
 export function MetaPixel() {
   const pathname = usePathname();
+  const [yukle, setYukle] = useState(false);
 
   useEffect(() => {
     metaPixelCerezSenkronize();
+    return idleSonra(() => setYukle(true));
   }, []);
 
   useEffect(() => {
+    if (!yukle) return;
     metaPixelPageView();
-  }, [pathname]);
+  }, [pathname, yukle]);
 
-  if (!metaPixelYapilandirildi() || !META_PIXEL_ID) return null;
+  if (!metaPixelYapilandirildi() || !META_PIXEL_ID || !yukle) return null;
 
   return (
     <Script
       id="meta-pixel"
-      strategy="afterInteractive"
+      strategy="lazyOnload"
       dangerouslySetInnerHTML={{
         __html: metaPixelBootstrapInline(META_PIXEL_ID),
       }}
