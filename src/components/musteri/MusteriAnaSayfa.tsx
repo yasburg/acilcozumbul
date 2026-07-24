@@ -19,7 +19,6 @@ import {
 } from "@/lib/sorun-tipleri";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
-import { useHizmetVerenSayim } from "@/hooks/useHizmetVerenSayim";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import {
   geocodeAdres,
@@ -57,15 +56,28 @@ const NasilCalisirSerit = dynamic(
     import("@/components/NasilCalisirSerit").then((m) => ({
       default: m.NasilCalisirSerit,
     })),
-  { ssr: false, loading: () => <div className="h-10 mb-2" aria-hidden /> }
+  {
+    ssr: true,
+    loading: () => (
+      <div className="mb-4 min-h-[9.5rem] rounded-xl border border-amber-100 bg-amber-50/40" aria-hidden />
+    ),
+  }
 );
 
-const HizmetVerenSayimGostergesi = dynamic(
+const HizmetVerenSayimAlani = dynamic(
   () =>
-    import("@/components/HizmetVerenSayimGostergesi").then((m) => ({
-      default: m.HizmetVerenSayimGostergesi,
+    import("@/components/HizmetVerenSayimAlani").then((m) => ({
+      default: m.HizmetVerenSayimAlani,
     })),
-  { ssr: false, loading: () => null }
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="mb-0 min-h-[2.75rem] rounded-xl border border-emerald-100 bg-emerald-50/40"
+        aria-hidden
+      />
+    ),
+  }
 );
 
 const SssBolumu = dynamic(
@@ -81,7 +93,12 @@ const ArizaFotografAlani = dynamic(
     import("@/components/ArizaFotografAlani").then((m) => ({
       default: m.ArizaFotografAlani,
     })),
-  { ssr: false, loading: () => null }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-[8rem] rounded-xl border border-slate-100 bg-slate-50" aria-hidden />
+    ),
+  }
 );
 
 const KonumIzniYardim = dynamic(
@@ -89,7 +106,10 @@ const KonumIzniYardim = dynamic(
     import("@/components/KonumIzniYardim").then((m) => ({
       default: m.KonumIzniYardim,
     })),
-  { ssr: false, loading: () => null }
+  {
+    ssr: false,
+    loading: () => <div className="min-h-[3rem]" aria-hidden />,
+  }
 );
 
 type Step = "bilgi" | "konum" | "sorun" | "detay" | "hedef";
@@ -149,8 +169,6 @@ export default function MusteriAnaSayfa() {
 
 function MusteriAnaSayfaIcerik() {
   const searchParams = useSearchParams();
-  const { ozet: hizmetVerenSayim, yukleniyor: hizmetVerenYukleniyor } =
-    useHizmetVerenSayim();
   const [step, setStep] = useState<Step>("sorun");
   const hizmetUygulandi = useRef(false);
   const hizmetKaydirTip = useRef<string | null>(null);
@@ -253,6 +271,13 @@ function MusteriAnaSayfaIcerik() {
     posthogOlayYakala(olay, sorunProps(form.sorunTipi));
     // yalnızca adım değişince; sorunTipi o anki değeri taşır
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  /** Adım 2+ parçalarını sorun seçiminden sonra ısıt (foto / konum yardım) */
+  useEffect(() => {
+    if (step === "sorun") return;
+    void import("@/components/ArizaFotografAlani");
+    void import("@/components/KonumIzniYardim");
   }, [step]);
 
   stepRef.current = step;
@@ -1198,11 +1223,7 @@ function MusteriAnaSayfaIcerik() {
       <NasilCalisirSerit aktifFormAdimi={step} />
 
       <div className="mb-4">
-        <HizmetVerenSayimGostergesi
-          sorunTipi={form.sorunTipi || null}
-          ozet={hizmetVerenSayim}
-          yukleniyor={hizmetVerenYukleniyor}
-        />
+        <HizmetVerenSayimAlani sorunTipi={form.sorunTipi || null} />
       </div>
 
       {error && (

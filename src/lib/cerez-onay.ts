@@ -14,6 +14,9 @@ export function cerezOnayOku(): CerezOnayTercihi {
 export function cerezOnayKaydet(tercih: "tumu" | "zorunlu"): void {
   localStorage.setItem(CEREZ_ONAY_STORAGE_KEY, tercih);
   sessionStorage.removeItem(BANNER_KAPALI_KEY);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("acil-cerez-banner"));
+  }
 }
 
 export function cerezBannerKapaliMi(): boolean {
@@ -24,6 +27,9 @@ export function cerezBannerKapaliMi(): boolean {
 /** Banner’ı kapatır; tercih kaydedilmez, sonraki oturumda tekrar gösterilebilir */
 export function cerezBannerKapat(): void {
   sessionStorage.setItem(BANNER_KAPALI_KEY, "1");
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("acil-cerez-banner"));
+  }
 }
 
 export function cerezBannerGosterilmeli(): boolean {

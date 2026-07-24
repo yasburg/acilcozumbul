@@ -16,6 +16,8 @@ function posthogInit() {
     defaults: "2026-05-30",
     person_profiles: "identified_only",
     capture_pageview: true,
+    /** Projede surveys kapalı; client’ta da yükleme — surveys.js indirme */
+    disable_surveys: true,
     /** Çerez banner’ı “Tümünü kabul et” diyene kadar kapalı */
     opt_out_capturing_by_default: true,
     persistence: "localStorage+cookie",
