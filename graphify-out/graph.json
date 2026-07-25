@@ -30,7 +30,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "instrumentation_client",
-      "community": 68,
+      "community": 58,
       "norm_label": "instrumentation-client.ts"
     },
     {
@@ -40,7 +40,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "instrumentation_client_posthoginit",
-      "community": 68,
+      "community": 58,
       "norm_label": "posthoginit()"
     },
     {
@@ -730,7 +730,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_belge_route",
-      "community": 7,
+      "community": 4,
       "norm_label": "route.ts"
     },
     {
@@ -740,7 +740,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_app_api_cekici_belge_route_get",
-      "community": 7,
+      "community": 4,
       "norm_label": "get()"
     },
     {
@@ -750,7 +750,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_app_api_cekici_belge_route_post",
-      "community": 7,
+      "community": 4,
       "norm_label": "post()"
     },
     {
@@ -760,7 +760,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_bolgeler_route",
-      "community": 4,
+      "community": 18,
       "norm_label": "route.ts"
     },
     {
@@ -770,7 +770,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_app_api_cekici_bolgeler_route_bolgeozet",
-      "community": 4,
+      "community": 18,
       "norm_label": "bolgeozet()"
     },
     {
@@ -780,7 +780,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_app_api_cekici_bolgeler_route_get",
-      "community": 4,
+      "community": 18,
       "norm_label": "get()"
     },
     {
@@ -790,7 +790,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "src_app_api_cekici_bolgeler_route_put",
-      "community": 4,
+      "community": 18,
       "norm_label": "put()"
     },
     {
@@ -800,7 +800,7 @@
       "source_location": "L140",
       "_origin": "ast",
       "id": "src_app_api_cekici_bolgeler_route_post",
-      "community": 4,
+      "community": 18,
       "norm_label": "post()"
     },
     {
@@ -810,7 +810,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_cikis_route",
-      "community": 7,
+      "community": 95,
       "norm_label": "route.ts"
     },
     {
@@ -820,7 +820,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_app_api_cekici_cikis_route_post",
-      "community": 7,
+      "community": 95,
       "norm_label": "post()"
     },
     {
@@ -850,7 +850,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_davet_kodu_route",
-      "community": 56,
+      "community": 65,
       "norm_label": "route.ts"
     },
     {
@@ -860,7 +860,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_app_api_cekici_davet_kodu_route_get",
-      "community": 56,
+      "community": 65,
       "norm_label": "get()"
     },
     {
@@ -870,7 +870,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "src_app_api_cekici_davet_kodu_route_put",
-      "community": 56,
+      "community": 65,
       "norm_label": "put()"
     },
     {
@@ -1000,7 +1000,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_istatistik_route",
-      "community": 13,
+      "community": 25,
       "norm_label": "route.ts"
     },
     {
@@ -1010,7 +1010,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_app_api_cekici_istatistik_route_haftabaslangici",
-      "community": 13,
+      "community": 25,
       "norm_label": "haftabaslangici()"
     },
     {
@@ -1020,7 +1020,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_app_api_cekici_istatistik_route_istanbulayanahtari",
-      "community": 13,
+      "community": 25,
       "norm_label": "istanbulayanahtari()"
     },
     {
@@ -1030,7 +1030,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_app_api_cekici_istatistik_route_kazanantekliffiyati",
-      "community": 13,
+      "community": 25,
       "norm_label": "kazanantekliffiyati()"
     },
     {
@@ -1040,7 +1040,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_app_api_cekici_istatistik_route_get",
-      "community": 13,
+      "community": 25,
       "norm_label": "get()"
     },
     {
@@ -1150,7 +1150,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_konum_route",
-      "community": 4,
+      "community": 7,
       "norm_label": "route.ts"
     },
     {
@@ -1160,7 +1160,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_app_api_cekici_konum_route_post",
-      "community": 4,
+      "community": 7,
       "norm_label": "post()"
     },
     {
@@ -1190,27 +1190,37 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_kurulum_route",
-      "community": 61,
+      "community": 18,
       "norm_label": "route.ts"
+    },
+    {
+      "label": "kurulumSifreUygula()",
+      "file_type": "code",
+      "source_file": "src/app/api/cekici/kurulum/route.ts",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "src_app_api_cekici_kurulum_route_kurulumsifreuygula",
+      "community": 18,
+      "norm_label": "kurulumsifreuygula()"
     },
     {
       "label": "GET()",
       "file_type": "code",
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L12",
+      "source_location": "L38",
       "_origin": "ast",
       "id": "src_app_api_cekici_kurulum_route_get",
-      "community": 25,
+      "community": 18,
       "norm_label": "get()"
     },
     {
       "label": "POST()",
       "file_type": "code",
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L36",
+      "source_location": "L62",
       "_origin": "ast",
       "id": "src_app_api_cekici_kurulum_route_post",
-      "community": 61,
+      "community": 18,
       "norm_label": "post()"
     },
     {
@@ -1220,7 +1230,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_me_route",
-      "community": 7,
+      "community": 18,
       "norm_label": "route.ts"
     },
     {
@@ -1230,7 +1240,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_app_api_cekici_me_route_get",
-      "community": 7,
+      "community": 18,
       "norm_label": "get()"
     },
     {
@@ -1240,7 +1250,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_musaitlik_route",
-      "community": 7,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -1250,7 +1260,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_app_api_cekici_musaitlik_route_saatgecerlimi",
-      "community": 7,
+      "community": 0,
       "norm_label": "saatgecerlimi()"
     },
     {
@@ -1260,7 +1270,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_app_api_cekici_musaitlik_route_get",
-      "community": 7,
+      "community": 0,
       "norm_label": "get()"
     },
     {
@@ -1270,7 +1280,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_app_api_cekici_musaitlik_route_put",
-      "community": 7,
+      "community": 0,
       "norm_label": "put()"
     },
     {
@@ -1280,7 +1290,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_odeme_id_fatura_route",
-      "community": 89,
+      "community": 64,
       "norm_label": "route.ts"
     },
     {
@@ -1290,7 +1300,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_app_api_cekici_odeme_id_fatura_route_patch",
-      "community": 89,
+      "community": 64,
       "norm_label": "patch()"
     },
     {
@@ -1300,7 +1310,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_odeme_id_route",
-      "community": 7,
+      "community": 2,
       "norm_label": "route.ts"
     },
     {
@@ -1310,7 +1320,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_app_api_cekici_odeme_id_route_get",
-      "community": 7,
+      "community": 2,
       "norm_label": "get()"
     },
     {
@@ -1370,7 +1380,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_odeme_baslat_route",
-      "community": 89,
+      "community": 30,
       "norm_label": "route.ts"
     },
     {
@@ -1380,7 +1390,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_app_api_cekici_odeme_baslat_route_post",
-      "community": 89,
+      "community": 30,
       "norm_label": "post()"
     },
     {
@@ -1410,7 +1420,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_odeme_eposta_durum_route",
-      "community": 89,
+      "community": 30,
       "norm_label": "route.ts"
     },
     {
@@ -1420,7 +1430,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_app_api_cekici_odeme_eposta_durum_route_get",
-      "community": 89,
+      "community": 30,
       "norm_label": "get()"
     },
     {
@@ -1450,7 +1460,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_premium_sms_route",
-      "community": 55,
+      "community": 67,
       "norm_label": "route.ts"
     },
     {
@@ -1470,7 +1480,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_app_api_cekici_premium_sms_route_put",
-      "community": 55,
+      "community": 67,
       "norm_label": "put()"
     },
     {
@@ -1480,7 +1490,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_rota_suresi_route",
-      "community": 85,
+      "community": 21,
       "norm_label": "route.ts"
     },
     {
@@ -1490,7 +1500,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_app_api_cekici_rota_suresi_route_noktaoku",
-      "community": 85,
+      "community": 21,
       "norm_label": "noktaoku()"
     },
     {
@@ -1500,7 +1510,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_app_api_cekici_rota_suresi_route_post",
-      "community": 85,
+      "community": 21,
       "norm_label": "post()"
     },
     {
@@ -1510,7 +1520,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_rozet_odeme_baslat_route",
-      "community": 64,
+      "community": 40,
       "norm_label": "route.ts"
     },
     {
@@ -1520,7 +1530,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_app_api_cekici_rozet_odeme_baslat_route_post",
-      "community": 64,
+      "community": 40,
       "norm_label": "post()"
     },
     {
@@ -1570,7 +1580,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_sorun_tipleri_route",
-      "community": 7,
+      "community": 0,
       "norm_label": "route.ts"
     },
     {
@@ -1580,7 +1590,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_app_api_cekici_sorun_tipleri_route_get",
-      "community": 7,
+      "community": 0,
       "norm_label": "get()"
     },
     {
@@ -1590,7 +1600,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_app_api_cekici_sorun_tipleri_route_put",
-      "community": 7,
+      "community": 0,
       "norm_label": "put()"
     },
     {
@@ -1690,7 +1700,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_talepler_route",
-      "community": 15,
+      "community": 1,
       "norm_label": "route.ts"
     },
     {
@@ -1770,7 +1780,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_demo_netgsm_baslik_route",
-      "community": 62,
+      "community": 67,
       "norm_label": "route.ts"
     },
     {
@@ -1780,7 +1790,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_app_api_demo_netgsm_baslik_route_get",
-      "community": 62,
+      "community": 67,
       "norm_label": "get()"
     },
     {
@@ -1810,7 +1820,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_demo_sms_durum_route",
-      "community": 66,
+      "community": 67,
       "norm_label": "route.ts"
     },
     {
@@ -1820,7 +1830,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_app_api_demo_sms_durum_route_get",
-      "community": 66,
+      "community": 67,
       "norm_label": "get()"
     },
     {
@@ -1830,7 +1840,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_demo_sms_route",
-      "community": 7,
+      "community": 66,
       "norm_label": "route.ts"
     },
     {
@@ -1840,7 +1850,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_app_api_demo_sms_route_get",
-      "community": 7,
+      "community": 66,
       "norm_label": "get()"
     },
     {
@@ -1850,7 +1860,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_health_route",
-      "community": 7,
+      "community": 95,
       "norm_label": "route.ts"
     },
     {
@@ -1860,7 +1870,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_app_api_health_route_get",
-      "community": 7,
+      "community": 95,
       "norm_label": "get()"
     },
     {
@@ -1950,7 +1960,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_konum_oneri_route",
-      "community": 70,
+      "community": 21,
       "norm_label": "route.ts"
     },
     {
@@ -1960,7 +1970,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_app_api_konum_oneri_route_get",
-      "community": 70,
+      "community": 21,
       "norm_label": "get()"
     },
     {
@@ -1970,7 +1980,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_musteri_funnel_route",
-      "community": 69,
+      "community": 11,
       "norm_label": "route.ts"
     },
     {
@@ -1980,7 +1990,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_app_api_musteri_funnel_route_izinli",
-      "community": 69,
+      "community": 11,
       "norm_label": "izinli"
     },
     {
@@ -1990,7 +2000,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_app_api_musteri_funnel_route_post",
-      "community": 69,
+      "community": 11,
       "norm_label": "post()"
     },
     {
@@ -2080,7 +2090,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_musteri_otp_sifirla_route",
-      "community": 76,
+      "community": 28,
       "norm_label": "route.ts"
     },
     {
@@ -2090,7 +2100,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_app_api_musteri_otp_sifirla_route_post",
-      "community": 76,
+      "community": 28,
       "norm_label": "post()"
     },
     {
@@ -2100,7 +2110,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_cekici_id_oturum_route",
-      "community": 7,
+      "community": 95,
       "norm_label": "route.ts"
     },
     {
@@ -2110,7 +2120,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_app_api_panel_cekici_id_oturum_route_post",
-      "community": 7,
+      "community": 95,
       "norm_label": "post()"
     },
     {
@@ -2140,7 +2150,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_cekiciler_id_route",
-      "community": 57,
+      "community": 74,
       "norm_label": "route.ts"
     },
     {
@@ -2160,7 +2170,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_app_api_panel_cekiciler_id_route_delete",
-      "community": 57,
+      "community": 74,
       "norm_label": "delete()"
     },
     {
@@ -2190,7 +2200,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_cikis_route",
-      "community": 26,
+      "community": 71,
       "norm_label": "route.ts"
     },
     {
@@ -2200,7 +2210,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_app_api_panel_cikis_route_post",
-      "community": 26,
+      "community": 71,
       "norm_label": "post()"
     },
     {
@@ -2210,7 +2220,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_davet_kullanimlari_route",
-      "community": 75,
+      "community": 65,
       "norm_label": "route.ts"
     },
     {
@@ -2220,7 +2230,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_app_api_panel_davet_kullanimlari_route_get",
-      "community": 75,
+      "community": 65,
       "norm_label": "get()"
     },
     {
@@ -2340,7 +2350,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_giris_route",
-      "community": 53,
+      "community": 95,
       "norm_label": "route.ts"
     },
     {
@@ -2350,7 +2360,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_app_api_panel_giris_route_post",
-      "community": 53,
+      "community": 95,
       "norm_label": "post()"
     },
     {
@@ -2670,7 +2680,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_toplu_kampanya_route",
-      "community": 26,
+      "community": 63,
       "norm_label": "route.ts"
     },
     {
@@ -2680,7 +2690,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_toplu_kampanya_route_get",
-      "community": 26,
+      "community": 63,
       "norm_label": "get()"
     },
     {
@@ -2690,7 +2700,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_toplu_kontrol_route",
-      "community": 28,
+      "community": 71,
       "norm_label": "route.ts"
     },
     {
@@ -2700,7 +2710,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_toplu_kontrol_route_post",
-      "community": 26,
+      "community": 71,
       "norm_label": "post()"
     },
     {
@@ -2830,7 +2840,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_talepler_route",
-      "community": 13,
+      "community": 7,
       "norm_label": "route.ts"
     },
     {
@@ -2840,7 +2850,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_app_api_panel_talepler_route_get",
-      "community": 13,
+      "community": 7,
       "norm_label": "get()"
     },
     {
@@ -2870,7 +2880,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_talep_id_cekici_konum_route",
-      "community": 7,
+      "community": 15,
       "norm_label": "route.ts"
     },
     {
@@ -2880,7 +2890,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_app_api_talep_id_cekici_konum_route_get",
-      "community": 7,
+      "community": 15,
       "norm_label": "get()"
     },
     {
@@ -2930,7 +2940,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_talep_id_route",
-      "community": 24,
+      "community": 41,
       "norm_label": "route.ts"
     },
     {
@@ -2940,7 +2950,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_app_api_talep_id_route_get",
-      "community": 24,
+      "community": 41,
       "norm_label": "get()"
     },
     {
@@ -3250,7 +3260,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_cekici_kayit_onay_page",
-      "community": 88,
+      "community": 23,
       "norm_label": "page.tsx"
     },
     {
@@ -3260,7 +3270,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_app_cekici_kayit_onay_page_onayicerik",
-      "community": 88,
+      "community": 23,
       "norm_label": "onayicerik()"
     },
     {
@@ -3270,7 +3280,7 @@
       "source_location": "L147",
       "_origin": "ast",
       "id": "src_app_cekici_kayit_onay_page_kayitonaypage",
-      "community": 88,
+      "community": 23,
       "norm_label": "kayitonaypage()"
     },
     {
@@ -3300,7 +3310,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_cekici_kredi_page",
-      "community": 80,
+      "community": 32,
       "norm_label": "page.tsx"
     },
     {
@@ -3697,7 +3707,7 @@
       "label": "KayitKurulumPage()",
       "file_type": "code",
       "source_file": "src/app/kayit/kurulum/page.tsx",
-      "source_location": "L29",
+      "source_location": "L31",
       "_origin": "ast",
       "id": "src_app_kayit_kurulum_page_kayitkurulumpage",
       "community": 32,
@@ -3770,7 +3780,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_layout",
-      "community": 68,
+      "community": 58,
       "norm_label": "layout.tsx"
     },
     {
@@ -3780,7 +3790,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_app_layout_geist",
-      "community": 68,
+      "community": 58,
       "norm_label": "geist"
     },
     {
@@ -3790,7 +3800,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_app_layout_metadata",
-      "community": 68,
+      "community": 58,
       "norm_label": "metadata"
     },
     {
@@ -3800,7 +3810,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "src_app_layout_viewport",
-      "community": 68,
+      "community": 58,
       "norm_label": "viewport"
     },
     {
@@ -3810,7 +3820,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "src_app_layout_rootlayout",
-      "community": 68,
+      "community": 58,
       "norm_label": "rootlayout()"
     },
     {
@@ -3900,7 +3910,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_panel_cekiciler_id_page",
-      "community": 80,
+      "community": 60,
       "norm_label": "page.tsx"
     },
     {
@@ -3910,7 +3920,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_app_panel_cekiciler_id_page_cekicidetay",
-      "community": 80,
+      "community": 60,
       "norm_label": "cekicidetay"
     },
     {
@@ -3920,7 +3930,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_app_panel_cekiciler_id_page_panelcekicidetaypage",
-      "community": 80,
+      "community": 60,
       "norm_label": "panelcekicidetaypage()"
     },
     {
@@ -3930,7 +3940,7 @@
       "source_location": "L314",
       "_origin": "ast",
       "id": "src_app_panel_cekiciler_id_page_belgedurumetiket",
-      "community": 80,
+      "community": 60,
       "norm_label": "belgedurumetiket()"
     },
     {
@@ -3940,7 +3950,7 @@
       "source_location": "L327",
       "_origin": "ast",
       "id": "src_app_panel_cekiciler_id_page_belgelink",
-      "community": 80,
+      "community": 60,
       "norm_label": "belgelink()"
     },
     {
@@ -3950,7 +3960,7 @@
       "source_location": "L340",
       "_origin": "ast",
       "id": "src_app_panel_cekiciler_id_page_row",
-      "community": 80,
+      "community": 60,
       "norm_label": "row()"
     },
     {
@@ -3960,7 +3970,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_panel_cekiciler_page",
-      "community": 27,
+      "community": 57,
       "norm_label": "page.tsx"
     },
     {
@@ -3970,7 +3980,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_app_panel_cekiciler_page_sehirsiralama",
-      "community": 27,
+      "community": 57,
       "norm_label": "sehirsiralama"
     },
     {
@@ -3980,7 +3990,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_app_panel_cekiciler_page_gorunum",
-      "community": 27,
+      "community": 57,
       "norm_label": "gorunum"
     },
     {
@@ -3990,7 +4000,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_app_panel_cekiciler_page_sehiretiketi",
-      "community": 27,
+      "community": 57,
       "norm_label": "sehiretiketi()"
     },
     {
@@ -4000,7 +4010,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_app_panel_cekiciler_page_sehirkarsilastir",
-      "community": 27,
+      "community": 57,
       "norm_label": "sehirkarsilastir()"
     },
     {
@@ -4020,7 +4030,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "src_app_panel_cekiciler_page_panelcekicilerpage",
-      "community": 27,
+      "community": 57,
       "norm_label": "panelcekicilerpage()"
     },
     {
@@ -4030,7 +4040,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_panel_davetler_page",
-      "community": 75,
+      "community": 65,
       "norm_label": "page.tsx"
     },
     {
@@ -4040,7 +4050,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_app_panel_davetler_page_cekicilink",
-      "community": 75,
+      "community": 65,
       "norm_label": "cekicilink()"
     },
     {
@@ -4050,7 +4060,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_app_panel_davetler_page_paneldavetlerpage",
-      "community": 75,
+      "community": 65,
       "norm_label": "paneldavetlerpage()"
     },
     {
@@ -4180,7 +4190,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_panel_kampanyalar_page",
-      "community": 60,
+      "community": 19,
       "norm_label": "page.tsx"
     },
     {
@@ -4190,7 +4200,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_app_panel_kampanyalar_page_kampanyasatir",
-      "community": 60,
+      "community": 19,
       "norm_label": "kampanyasatir"
     },
     {
@@ -4200,7 +4210,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_app_panel_kampanyalar_page_kullanimsatir",
-      "community": 60,
+      "community": 19,
       "norm_label": "kullanimsatir"
     },
     {
@@ -4210,7 +4220,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_app_panel_kampanyalar_page_ozet",
-      "community": 60,
+      "community": 19,
       "norm_label": "ozet"
     },
     {
@@ -4220,7 +4230,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_app_panel_kampanyalar_page_bos_form",
-      "community": 60,
+      "community": 19,
       "norm_label": "bos_form"
     },
     {
@@ -4230,7 +4240,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_app_panel_kampanyalar_page_panelkampanyalarpage",
-      "community": 60,
+      "community": 19,
       "norm_label": "panelkampanyalarpage()"
     },
     {
@@ -4280,7 +4290,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_panel_kredi_odemeler_id_page",
-      "community": 25,
+      "community": 5,
       "norm_label": "page.tsx"
     },
     {
@@ -4290,7 +4300,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_app_panel_kredi_odemeler_id_page_satir",
-      "community": 25,
+      "community": 5,
       "norm_label": "satir()"
     },
     {
@@ -4300,7 +4310,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_app_panel_kredi_odemeler_id_page_panelkrediodemedetaypage",
-      "community": 25,
+      "community": 5,
       "norm_label": "panelkrediodemedetaypage()"
     },
     {
@@ -4490,7 +4500,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_panel_sms_page",
-      "community": 19,
+      "community": 66,
       "norm_label": "page.tsx"
     },
     {
@@ -4500,7 +4510,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_app_panel_sms_page_saglik",
-      "community": 19,
+      "community": 66,
       "norm_label": "saglik"
     },
     {
@@ -4510,7 +4520,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_app_panel_sms_page_panelsmspage",
-      "community": 19,
+      "community": 66,
       "norm_label": "panelsmspage()"
     },
     {
@@ -4520,7 +4530,7 @@
       "source_location": "L205",
       "_origin": "ast",
       "id": "src_app_panel_sms_page_saglikkart",
-      "community": 19,
+      "community": 66,
       "norm_label": "saglikkart()"
     },
     {
@@ -4530,7 +4540,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_panel_sms_sablonlar_page",
-      "community": 0,
+      "community": 63,
       "norm_label": "page.tsx"
     },
     {
@@ -4540,7 +4550,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_app_panel_sms_sablonlar_page_sablon",
-      "community": 0,
+      "community": 63,
       "norm_label": "sablon"
     },
     {
@@ -4550,7 +4560,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_app_panel_sms_sablonlar_page_bos_form",
-      "community": 0,
+      "community": 63,
       "norm_label": "bos_form"
     },
     {
@@ -4560,7 +4570,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_app_panel_sms_sablonlar_page_panelsmssablonlarpage",
-      "community": 0,
+      "community": 63,
       "norm_label": "panelsmssablonlarpage()"
     },
     {
@@ -4900,7 +4910,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_bolgeayarlari_bolgeapidata",
-      "community": 32,
+      "community": 18,
       "norm_label": "bolgeapidata"
     },
     {
@@ -4990,7 +5000,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_components_cekicipaneltabs_talepozet",
-      "community": 25,
+      "community": 27,
       "norm_label": "talepozet"
     },
     {
@@ -5050,7 +5060,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_cekicirotapanel",
-      "community": 21,
+      "community": 38,
       "norm_label": "cekicirotapanel.tsx"
     },
     {
@@ -5060,7 +5070,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_cekicirotapanel_rotasureleri",
-      "community": 21,
+      "community": 38,
       "norm_label": "rotasureleri"
     },
     {
@@ -5080,7 +5090,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_components_cekicirotapanel_embeddirectionsurl",
-      "community": 21,
+      "community": 38,
       "norm_label": "embeddirectionsurl()"
     },
     {
@@ -5090,7 +5100,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "src_components_cekicirotapanel_cekicirotapanel",
-      "community": 21,
+      "community": 38,
       "norm_label": "cekicirotapanel()"
     },
     {
@@ -5100,7 +5110,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_cerezonaybanner",
-      "community": 91,
+      "community": 58,
       "norm_label": "cerezonaybanner.tsx"
     },
     {
@@ -5110,7 +5120,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_components_cerezonaybanner_gorunum",
-      "community": 91,
+      "community": 58,
       "norm_label": "gorunum"
     },
     {
@@ -5120,7 +5130,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_components_cerezonaybanner_tercihkaydet",
-      "community": 88,
+      "community": 58,
       "norm_label": "tercihkaydet()"
     },
     {
@@ -5130,7 +5140,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_components_cerezonaybanner_bannersubscribe",
-      "community": 91,
+      "community": 58,
       "norm_label": "bannersubscribe()"
     },
     {
@@ -5140,7 +5150,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "src_components_cerezonaybanner_bannersnapshot",
-      "community": 91,
+      "community": 58,
       "norm_label": "bannersnapshot()"
     },
     {
@@ -5150,7 +5160,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_components_cerezonaybanner_bannerserversnapshot",
-      "community": 91,
+      "community": 58,
       "norm_label": "bannerserversnapshot()"
     },
     {
@@ -5160,7 +5170,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "src_components_cerezonaybanner_bannerdegisti",
-      "community": 91,
+      "community": 58,
       "norm_label": "bannerdegisti()"
     },
     {
@@ -5170,7 +5180,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "src_components_cerezonaybanner_toggle",
-      "community": 91,
+      "community": 58,
       "norm_label": "toggle()"
     },
     {
@@ -5180,7 +5190,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "src_components_cerezonaybanner_cerezonaybanner",
-      "community": 91,
+      "community": 58,
       "norm_label": "cerezonaybanner()"
     },
     {
@@ -5210,7 +5220,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_googleanalytics",
-      "community": 68,
+      "community": 58,
       "norm_label": "googleanalytics.tsx"
     },
     {
@@ -5220,7 +5230,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_googleanalytics_googleanalytics",
-      "community": 68,
+      "community": 58,
       "norm_label": "googleanalytics()"
     },
     {
@@ -5230,7 +5240,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_gpshttpsbanner",
-      "community": 60,
+      "community": 38,
       "norm_label": "gpshttpsbanner.tsx"
     },
     {
@@ -5240,7 +5250,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_gpshttpsbanner_gpshttpsbannerprops",
-      "community": 60,
+      "community": 38,
       "norm_label": "gpshttpsbannerprops"
     },
     {
@@ -5410,7 +5420,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_kayitkontenjanbilgi",
-      "community": 94,
+      "community": 16,
       "norm_label": "kayitkontenjanbilgi.tsx"
     },
     {
@@ -5420,7 +5430,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_kayitkontenjanbilgi_props",
-      "community": 94,
+      "community": 16,
       "norm_label": "props"
     },
     {
@@ -5430,7 +5440,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_components_kayitkontenjanbilgi_kayitkontenjanbilgi",
-      "community": 94,
+      "community": 16,
       "norm_label": "kayitkontenjanbilgi()"
     },
     {
@@ -5600,7 +5610,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_metapixel",
-      "community": 88,
+      "community": 58,
       "norm_label": "metapixel.tsx"
     },
     {
@@ -5610,7 +5620,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_metapixel_metapixel",
-      "community": 88,
+      "community": 58,
       "norm_label": "metapixel()"
     },
     {
@@ -5870,7 +5880,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_posthogprovider",
-      "community": 68,
+      "community": 58,
       "norm_label": "posthogprovider.tsx"
     },
     {
@@ -5880,7 +5890,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_posthogprovider_posthogprovider",
-      "community": 68,
+      "community": 58,
       "norm_label": "posthogprovider()"
     },
     {
@@ -5930,7 +5940,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_sorunakisozeti",
-      "community": 40,
+      "community": 17,
       "norm_label": "sorunakisozeti.tsx"
     },
     {
@@ -5940,7 +5950,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_sorunakisozeti_props",
-      "community": 40,
+      "community": 17,
       "norm_label": "props"
     },
     {
@@ -5950,7 +5960,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_sorunakisozeti_adimaciklamametni",
-      "community": 40,
+      "community": 17,
       "norm_label": "adimaciklamametni()"
     },
     {
@@ -5960,7 +5970,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "src_components_sorunakisozeti_sorunakisozetiicerik",
-      "community": 40,
+      "community": 17,
       "norm_label": "sorunakisozetiicerik()"
     },
     {
@@ -5970,7 +5980,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "src_components_sorunakisozeti_sorunakisozeti",
-      "community": 40,
+      "community": 17,
       "norm_label": "sorunakisozeti()"
     },
     {
@@ -5980,7 +5990,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_sorunsecimi",
-      "community": 40,
+      "community": 19,
       "norm_label": "sorunsecimi.tsx"
     },
     {
@@ -5990,7 +6000,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_sorunsecimi_sorunsecimiprops",
-      "community": 40,
+      "community": 19,
       "norm_label": "sorunsecimiprops"
     },
     {
@@ -6000,7 +6010,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_sorunsecimi_sorunsecimi",
-      "community": 40,
+      "community": 38,
       "norm_label": "sorunsecimi()"
     },
     {
@@ -6090,7 +6100,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_cekici_belgeyuklemealani",
-      "community": 60,
+      "community": 19,
       "norm_label": "belgeyuklemealani.tsx"
     },
     {
@@ -6100,7 +6110,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_cekici_belgeyuklemealani_props",
-      "community": 60,
+      "community": 19,
       "norm_label": "props"
     },
     {
@@ -6110,7 +6120,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_cekici_belgeyuklemealani_belgeyuklemealani",
-      "community": 60,
+      "community": 19,
       "norm_label": "belgeyuklemealani()"
     },
     {
@@ -6130,7 +6140,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_cekici_cekiciayarlarpanel_bolgeapidata",
-      "community": 32,
+      "community": 18,
       "norm_label": "bolgeapidata"
     },
     {
@@ -6140,7 +6150,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_components_cekici_cekiciayarlarpanel_cekiciayarlarpanel",
-      "community": 27,
+      "community": 32,
       "norm_label": "cekiciayarlarpanel()"
     },
     {
@@ -6340,7 +6350,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_cekici_davetkoduayarlari_davetkoduayarlari",
-      "community": 27,
+      "community": 32,
       "norm_label": "davetkoduayarlari()"
     },
     {
@@ -6400,7 +6410,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_cekici_onaylicekicihesap",
-      "community": 60,
+      "community": 19,
       "norm_label": "onaylicekicihesap.tsx"
     },
     {
@@ -6410,7 +6420,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_components_cekici_onaylicekicihesap_belgedurumresponse",
-      "community": 60,
+      "community": 19,
       "norm_label": "belgedurumresponse"
     },
     {
@@ -6420,7 +6430,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_components_cekici_onaylicekicihesap_durumetiket",
-      "community": 60,
+      "community": 40,
       "norm_label": "durumetiket()"
     },
     {
@@ -6430,7 +6440,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_components_cekici_onaylicekicihesap_onaylicekicihesap",
-      "community": 60,
+      "community": 40,
       "norm_label": "onaylicekicihesap()"
     },
     {
@@ -6470,7 +6480,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_kayit_kayitphonefirstsayfa",
-      "community": 23,
+      "community": 80,
       "norm_label": "kayitphonefirstsayfa.tsx"
     },
     {
@@ -6480,7 +6490,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_components_kayit_kayitphonefirstsayfa_guven",
-      "community": 23,
+      "community": 80,
       "norm_label": "guven"
     },
     {
@@ -6490,7 +6500,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_components_kayit_kayitphonefirstsayfa_adimlar",
-      "community": 23,
+      "community": 80,
       "norm_label": "adimlar"
     },
     {
@@ -6500,7 +6510,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_components_kayit_kayitphonefirstsayfa_sss",
-      "community": 23,
+      "community": 80,
       "norm_label": "sss"
     },
     {
@@ -6510,14 +6520,14 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_components_kayit_kayitphonefirstsayfa_phonefirsticerik",
-      "community": 23,
+      "community": 80,
       "norm_label": "phonefirsticerik()"
     },
     {
       "label": "KayitPhoneFirstSayfa()",
       "file_type": "code",
       "source_file": "src/components/kayit/KayitPhoneFirstSayfa.tsx",
-      "source_location": "L467",
+      "source_location": "L465",
       "_origin": "ast",
       "id": "src_components_kayit_kayitphonefirstsayfa_kayitphonefirstsayfa",
       "community": 18,
@@ -6810,7 +6820,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_components_panel_panelcekiciharita_panelcekiciharita",
-      "community": 27,
+      "community": 82,
       "norm_label": "panelcekiciharita()"
     },
     {
@@ -6970,7 +6980,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_components_ui_btn",
-      "community": 60,
+      "community": 32,
       "norm_label": "btn()"
     },
     {
@@ -7030,7 +7040,7 @@
       "source_location": "L197",
       "_origin": "ast",
       "id": "src_components_ui_textarea",
-      "community": 40,
+      "community": 19,
       "norm_label": "textarea()"
     },
     {
@@ -7060,7 +7070,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_yasal_yasalonaykutusu",
-      "community": 12,
+      "community": 16,
       "norm_label": "yasalonaykutusu.tsx"
     },
     {
@@ -7070,7 +7080,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_components_yasal_yasalonaykutusu_props",
-      "community": 12,
+      "community": 16,
       "norm_label": "props"
     },
     {
@@ -7080,7 +7090,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_components_yasal_yasalonaykutusu_yasalonaykutusu",
-      "community": 12,
+      "community": 16,
       "norm_label": "yasalonaykutusu()"
     },
     {
@@ -7130,7 +7140,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_yasal_yasalsitefooter",
-      "community": 38,
+      "community": 16,
       "norm_label": "yasalsitefooter.tsx"
     },
     {
@@ -7140,7 +7150,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_components_yasal_yasalsitefooter_yasalsitefooter",
-      "community": 38,
+      "community": 16,
       "norm_label": "yasalsitefooter()"
     },
     {
@@ -7210,7 +7220,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_hooks_usekazanankonumpaylas",
-      "community": 32,
+      "community": 27,
       "norm_label": "usekazanankonumpaylas.ts"
     },
     {
@@ -7340,7 +7350,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_auth_cookie",
-      "community": 7,
+      "community": 0,
       "norm_label": "auth-cookie.ts"
     },
     {
@@ -7350,7 +7360,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_auth",
-      "community": 7,
+      "community": 0,
       "norm_label": "auth.ts"
     },
     {
@@ -7360,7 +7370,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_auth_cekicioturumcookieayarlari",
-      "community": 51,
+      "community": 28,
       "norm_label": "cekicioturumcookieayarlari()"
     },
     {
@@ -7380,7 +7390,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_lib_auth_getcurrentcekici",
-      "community": 7,
+      "community": 0,
       "norm_label": "getcurrentcekici()"
     },
     {
@@ -7460,7 +7470,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_lib_cekici_auth_cekiciauthsifreguncelle",
-      "community": 67,
+      "community": 77,
       "norm_label": "cekiciauthsifreguncelle()"
     },
     {
@@ -7510,7 +7520,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_belge",
-      "community": 7,
+      "community": 4,
       "norm_label": "cekici-belge.ts"
     },
     {
@@ -7520,7 +7530,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_cekici_belge_izinli_mime",
-      "community": 7,
+      "community": 4,
       "norm_label": "izinli_mime"
     },
     {
@@ -7530,7 +7540,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_cekici_belge_belgebase64ayikla",
-      "community": 7,
+      "community": 4,
       "norm_label": "belgebase64ayikla()"
     },
     {
@@ -7540,7 +7550,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_lib_cekici_belge_uzanti",
-      "community": 7,
+      "community": 4,
       "norm_label": "uzanti()"
     },
     {
@@ -7550,7 +7560,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_lib_cekici_belge_cekicibelgeyukle",
-      "community": 7,
+      "community": 4,
       "norm_label": "cekicibelgeyukle()"
     },
     {
@@ -7580,7 +7590,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_bolge",
-      "community": 83,
+      "community": 18,
       "norm_label": "cekici-bolge.ts"
     },
     {
@@ -7590,7 +7600,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_lib_cekici_bolge_normalize",
-      "community": 83,
+      "community": 18,
       "norm_label": "normalize()"
     },
     {
@@ -7600,7 +7610,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_cekici_bolge_ilceeslesir",
-      "community": 83,
+      "community": 18,
       "norm_label": "ilceeslesir()"
     },
     {
@@ -7610,7 +7620,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_lib_cekici_bolge_talepkonumbolge",
-      "community": 83,
+      "community": 18,
       "norm_label": "talepkonumbolge()"
     },
     {
@@ -7620,7 +7630,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_lib_cekici_bolge_cekicitalepililceyeuygunmu",
-      "community": 83,
+      "community": 18,
       "norm_label": "cekicitalepililceyeuygunmu()"
     },
     {
@@ -7630,7 +7640,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_lib_cekici_bolge_cekicitalepmenzileuygunmu",
-      "community": 83,
+      "community": 18,
       "norm_label": "cekicitalepmenzileuygunmu()"
     },
     {
@@ -7640,7 +7650,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "src_lib_cekici_bolge_cekicitalepbolgesineuygunmu",
-      "community": 83,
+      "community": 1,
       "norm_label": "cekicitalepbolgesineuygunmu()"
     },
     {
@@ -7740,7 +7750,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "src_lib_cekici_email_otp_cekiciepostadogrulandimi",
-      "community": 89,
+      "community": 30,
       "norm_label": "cekiciepostadogrulandimi()"
     },
     {
@@ -7750,7 +7760,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "src_lib_cekici_email_otp_bekleyencekiciepostaotp",
-      "community": 89,
+      "community": 30,
       "norm_label": "bekleyencekiciepostaotp()"
     },
     {
@@ -8060,7 +8070,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_hizmet_bolge_test",
-      "community": 61,
+      "community": 18,
       "norm_label": "cekici-hizmet-bolge.test.ts"
     },
     {
@@ -8070,7 +8080,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_hizmet_bolge",
-      "community": 61,
+      "community": 18,
       "norm_label": "cekici-hizmet-bolge.ts"
     },
     {
@@ -8080,7 +8090,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_lib_cekici_hizmet_bolge_kayitvarsayilanhizmetbolgeleri",
-      "community": 61,
+      "community": 18,
       "norm_label": "kayitvarsayilanhizmetbolgeleri()"
     },
     {
@@ -8090,7 +8100,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_lib_cekici_hizmet_bolge_normalizehizmetbolgeleri",
-      "community": 61,
+      "community": 18,
       "norm_label": "normalizehizmetbolgeleri()"
     },
     {
@@ -8100,7 +8110,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_lib_cekici_hizmet_bolge_cekicihizmetbolgeleri",
-      "community": 4,
+      "community": 18,
       "norm_label": "cekicihizmetbolgeleri()"
     },
     {
@@ -8110,7 +8120,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_lib_cekici_hizmet_bolge_hizmetbolgeleriilcesayisi",
-      "community": 4,
+      "community": 18,
       "norm_label": "hizmetbolgeleriilcesayisi()"
     },
     {
@@ -8130,7 +8140,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "src_lib_cekici_hizmet_bolge_cekicihizmetmodu",
-      "community": 4,
+      "community": 18,
       "norm_label": "cekicihizmetmodu()"
     },
     {
@@ -8140,7 +8150,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "src_lib_cekici_hizmet_bolge_menzilkmsinirla",
-      "community": 4,
+      "community": 18,
       "norm_label": "menzilkmsinirla()"
     },
     {
@@ -8150,7 +8160,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "src_lib_cekici_hizmet_bolge_cekicikonumguncelmi",
-      "community": 4,
+      "community": 18,
       "norm_label": "cekicikonumguncelmi()"
     },
     {
@@ -8160,7 +8170,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_kayit_kontenjan_test",
-      "community": 94,
+      "community": 16,
       "norm_label": "cekici-kayit-kontenjan.test.ts"
     },
     {
@@ -8170,7 +8180,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_kayit_kontenjan",
-      "community": 94,
+      "community": 16,
       "norm_label": "cekici-kayit-kontenjan.ts"
     },
     {
@@ -8180,7 +8190,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_lib_cekici_kayit_kontenjan_kayitkontenjandurum",
-      "community": 94,
+      "community": 16,
       "norm_label": "kayitkontenjandurum"
     },
     {
@@ -8190,7 +8200,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_lib_cekici_kayit_kontenjan_kayitkontenjanhesapla",
-      "community": 94,
+      "community": 16,
       "norm_label": "kayitkontenjanhesapla()"
     },
     {
@@ -8430,7 +8440,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "src_lib_cekici_musaitlik_musaitlikozeti",
-      "community": 7,
+      "community": 0,
       "norm_label": "musaitlikozeti()"
     },
     {
@@ -8440,7 +8450,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_profil_hazir_test",
-      "community": 25,
+      "community": 18,
       "norm_label": "cekici-profil-hazir.test.ts"
     },
     {
@@ -8450,7 +8460,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_profil_hazir",
-      "community": 25,
+      "community": 18,
       "norm_label": "cekici-profil-hazir.ts"
     },
     {
@@ -8460,7 +8470,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_lib_cekici_profil_hazir_cekiciprofilhazirmi",
-      "community": 25,
+      "community": 18,
       "norm_label": "cekiciprofilhazirmi()"
     },
     {
@@ -8470,7 +8480,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_cekici_profil_hazir_alanlarhazir",
-      "community": 25,
+      "community": 18,
       "norm_label": "alanlarhazir()"
     },
     {
@@ -8480,7 +8490,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_lib_cekici_profil_hazir_cekicikurulumilerleme",
-      "community": 4,
+      "community": 18,
       "norm_label": "cekicikurulumilerleme()"
     },
     {
@@ -8590,7 +8600,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_sehir_acilis_test",
-      "community": 15,
+      "community": 55,
       "norm_label": "cekici-sehir-acilis.test.ts"
     },
     {
@@ -8600,7 +8610,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_sehir_acilis",
-      "community": 15,
+      "community": 55,
       "norm_label": "cekici-sehir-acilis.ts"
     },
     {
@@ -8610,7 +8620,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_cekici_sehir_acilis_kullanima_acik_iller",
-      "community": 15,
+      "community": 55,
       "norm_label": "kullanima_acik_iller"
     },
     {
@@ -8620,7 +8630,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_lib_cekici_sehir_acilis_sehirkullanimacikmi",
-      "community": 15,
+      "community": 55,
       "norm_label": "sehirkullanimacikmi()"
     },
     {
@@ -8630,7 +8640,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_lib_cekici_sehir_acilis_sehirbeklememesaji",
-      "community": 15,
+      "community": 55,
       "norm_label": "sehirbeklememesaji()"
     },
     {
@@ -8770,7 +8780,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_sil_test",
-      "community": 57,
+      "community": 74,
       "norm_label": "cekici-sil.test.ts"
     },
     {
@@ -8780,7 +8790,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_cekici_sil_test_mockfrom",
-      "community": 57,
+      "community": 74,
       "norm_label": "mockfrom"
     },
     {
@@ -8790,7 +8800,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_lib_cekici_sil_test_mockstoragefrom",
-      "community": 57,
+      "community": 74,
       "norm_label": "mockstoragefrom"
     },
     {
@@ -8800,7 +8810,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_cekici_sil_test_chainable",
-      "community": 57,
+      "community": 74,
       "norm_label": "chainable()"
     },
     {
@@ -8810,7 +8820,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_sil",
-      "community": 57,
+      "community": 74,
       "norm_label": "cekici-sil.ts"
     },
     {
@@ -8820,7 +8830,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_cekici_sil_cekicibelgelerinisil",
-      "community": 57,
+      "community": 74,
       "norm_label": "cekicibelgelerinisil()"
     },
     {
@@ -8830,7 +8840,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_lib_cekici_sil_silcekicicascade",
-      "community": 57,
+      "community": 74,
       "norm_label": "silcekicicascade()"
     },
     {
@@ -8860,7 +8870,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_lib_cekici_sorun_normalizehizmetsoruntipleri",
-      "community": 7,
+      "community": 0,
       "norm_label": "normalizehizmetsoruntipleri()"
     },
     {
@@ -8890,7 +8900,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cerez_onay",
-      "community": 91,
+      "community": 58,
       "norm_label": "cerez-onay.ts"
     },
     {
@@ -8900,7 +8910,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cerez_onay_cerezonaytercihi",
-      "community": 91,
+      "community": 58,
       "norm_label": "cerezonaytercihi"
     },
     {
@@ -8910,7 +8920,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_cerez_onay_cerezonayoku",
-      "community": 93,
+      "community": 58,
       "norm_label": "cerezonayoku()"
     },
     {
@@ -8920,7 +8930,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_cerez_onay_cerezonaykaydet",
-      "community": 91,
+      "community": 58,
       "norm_label": "cerezonaykaydet()"
     },
     {
@@ -8930,7 +8940,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_lib_cerez_onay_cerezbannerkapalimi",
-      "community": 91,
+      "community": 58,
       "norm_label": "cerezbannerkapalimi()"
     },
     {
@@ -8940,7 +8950,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_lib_cerez_onay_cerezbannerkapat",
-      "community": 91,
+      "community": 58,
       "norm_label": "cerezbannerkapat()"
     },
     {
@@ -8950,7 +8960,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "src_lib_cerez_onay_cerezbannergosterilmeli",
-      "community": 91,
+      "community": 58,
       "norm_label": "cerezbannergosterilmeli()"
     },
     {
@@ -8960,7 +8970,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_lib_cerez_onay_cerezanalitikaktif",
-      "community": 93,
+      "community": 58,
       "norm_label": "cerezanalitikaktif()"
     },
     {
@@ -8970,7 +8980,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_davet_kayit_test",
-      "community": 1,
+      "community": 65,
       "norm_label": "davet-kayit.test.ts"
     },
     {
@@ -8980,7 +8990,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_davet_kayit",
-      "community": 56,
+      "community": 65,
       "norm_label": "davet-kayit.ts"
     },
     {
@@ -8990,7 +9000,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_lib_davet_kayit_davetkayitsonuc",
-      "community": 56,
+      "community": 65,
       "norm_label": "davetkayitsonuc"
     },
     {
@@ -9010,7 +9020,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "src_lib_davet_kayit_davetkayitbaslangickredisifromsonuc",
-      "community": 56,
+      "community": 65,
       "norm_label": "davetkayitbaslangickredisifromsonuc()"
     },
     {
@@ -9020,7 +9030,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "src_lib_davet_kayit_davetkayitbonustamamla",
-      "community": 56,
+      "community": 65,
       "norm_label": "davetkayitbonustamamla()"
     },
     {
@@ -9030,7 +9040,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_davet_kodu_test",
-      "community": 56,
+      "community": 65,
       "norm_label": "davet-kodu.test.ts"
     },
     {
@@ -9040,7 +9050,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_davet_kodu",
-      "community": 56,
+      "community": 65,
       "norm_label": "davet-kodu.ts"
     },
     {
@@ -9050,7 +9060,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_lib_davet_kodu_yasakli_kodlar",
-      "community": 56,
+      "community": 65,
       "norm_label": "yasakli_kodlar"
     },
     {
@@ -9060,7 +9070,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_lib_davet_kodu_davetkodunormalize",
-      "community": 56,
+      "community": 65,
       "norm_label": "davetkodunormalize()"
     },
     {
@@ -9070,7 +9080,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_lib_davet_kodu_davetkodugecerlimi",
-      "community": 56,
+      "community": 65,
       "norm_label": "davetkodugecerlimi()"
     },
     {
@@ -9080,7 +9090,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "src_lib_davet_kodu_davetkoduoner",
-      "community": 56,
+      "community": 65,
       "norm_label": "davetkoduoner()"
     },
     {
@@ -9090,7 +9100,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "src_lib_davet_kodu_davetkayitbaslangickredisi",
-      "community": 56,
+      "community": 65,
       "norm_label": "davetkayitbaslangickredisi()"
     },
     {
@@ -9100,7 +9110,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_davet_panel",
-      "community": 75,
+      "community": 65,
       "norm_label": "davet-panel.ts"
     },
     {
@@ -9110,7 +9120,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_davet_panel_davetkullanimsatir",
-      "community": 75,
+      "community": 65,
       "norm_label": "davetkullanimsatir"
     },
     {
@@ -9120,7 +9130,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_lib_davet_panel_davetlidersatir",
-      "community": 75,
+      "community": 65,
       "norm_label": "davetlidersatir"
     },
     {
@@ -9130,7 +9140,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_lib_davet_panel_davetpanelozet",
-      "community": 75,
+      "community": 65,
       "norm_label": "davetpanelozet"
     },
     {
@@ -9140,7 +9150,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_lib_davet_panel_davetkullanimrow",
-      "community": 75,
+      "community": 65,
       "norm_label": "davetkullanimrow"
     },
     {
@@ -9150,7 +9160,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_lib_davet_panel_rowtosatir",
-      "community": 75,
+      "community": 65,
       "norm_label": "rowtosatir()"
     },
     {
@@ -9160,7 +9170,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "src_lib_davet_panel_getdavetpanelverisi",
-      "community": 75,
+      "community": 65,
       "norm_label": "getdavetpanelverisi()"
     },
     {
@@ -9270,7 +9280,7 @@
       "source_location": "L155",
       "_origin": "ast",
       "id": "src_lib_db_getcekicibyid",
-      "community": 7,
+      "community": 54,
       "norm_label": "getcekicibyid()"
     },
     {
@@ -9300,7 +9310,7 @@
       "source_location": "L188",
       "_origin": "ast",
       "id": "src_lib_db_getcekicibydogrulanmisfaturaeposta",
-      "community": 13,
+      "community": 28,
       "norm_label": "getcekicibydogrulanmisfaturaeposta()"
     },
     {
@@ -9320,7 +9330,7 @@
       "source_location": "L224",
       "_origin": "ast",
       "id": "src_lib_db_setcekicidavetkodu",
-      "community": 56,
+      "community": 65,
       "norm_label": "setcekicidavetkodu()"
     },
     {
@@ -9330,7 +9340,7 @@
       "source_location": "L235",
       "_origin": "ast",
       "id": "src_lib_db_kaydetdavetkullanim",
-      "community": 56,
+      "community": 65,
       "norm_label": "kaydetdavetkullanim()"
     },
     {
@@ -9350,7 +9360,7 @@
       "source_location": "L259",
       "_origin": "ast",
       "id": "src_lib_db_updatecekici",
-      "community": 4,
+      "community": 67,
       "norm_label": "updatecekici()"
     },
     {
@@ -9390,7 +9400,7 @@
       "source_location": "L308",
       "_origin": "ast",
       "id": "src_lib_db_gettaleplersince",
-      "community": 66,
+      "community": 13,
       "norm_label": "gettaleplersince()"
     },
     {
@@ -9410,7 +9420,7 @@
       "source_location": "L323",
       "_origin": "ast",
       "id": "src_lib_db_gettaleplerbykazanancekici",
-      "community": 13,
+      "community": 25,
       "norm_label": "gettaleplerbykazanancekici()"
     },
     {
@@ -9440,7 +9450,7 @@
       "source_location": "L356",
       "_origin": "ast",
       "id": "src_lib_db_gettaleplersayfali",
-      "community": 13,
+      "community": 7,
       "norm_label": "gettaleplersayfali()"
     },
     {
@@ -9450,7 +9460,7 @@
       "source_location": "L373",
       "_origin": "ast",
       "id": "src_lib_db_gettalepbyid",
-      "community": 24,
+      "community": 41,
       "norm_label": "gettalepbyid()"
     },
     {
@@ -9460,7 +9470,7 @@
       "source_location": "L385",
       "_origin": "ast",
       "id": "src_lib_db_addtalep",
-      "community": 11,
+      "community": 13,
       "norm_label": "addtalep()"
     },
     {
@@ -9500,7 +9510,7 @@
       "source_location": "L433",
       "_origin": "ast",
       "id": "src_lib_db_addsmskaydi",
-      "community": 62,
+      "community": 67,
       "norm_label": "addsmskaydi()"
     },
     {
@@ -9840,7 +9850,7 @@
       "source_location": "L290",
       "_origin": "ast",
       "id": "src_lib_demo_oturum_demotalepbul",
-      "community": 54,
+      "community": 41,
       "norm_label": "demotalepbul()"
     },
     {
@@ -9850,7 +9860,7 @@
       "source_location": "L297",
       "_origin": "ast",
       "id": "src_lib_demo_oturum_demotalepgetir",
-      "community": 54,
+      "community": 41,
       "norm_label": "demotalepgetir()"
     },
     {
@@ -9950,7 +9960,7 @@
       "source_location": "L659",
       "_origin": "ast",
       "id": "src_lib_demo_oturum_demopanelverisi",
-      "community": 54,
+      "community": 1,
       "norm_label": "demopanelverisi()"
     },
     {
@@ -10010,7 +10020,7 @@
       "source_location": "L201",
       "_origin": "ast",
       "id": "src_lib_demo_responses_demomusteritalepdurumjson",
-      "community": 24,
+      "community": 41,
       "norm_label": "demomusteritalepdurumjson()"
     },
     {
@@ -10170,7 +10180,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_eposta",
-      "community": 89,
+      "community": 30,
       "norm_label": "eposta.ts"
     },
     {
@@ -10180,7 +10190,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "src_lib_eposta_epostanormalize",
-      "community": 89,
+      "community": 30,
       "norm_label": "epostanormalize()"
     },
     {
@@ -10190,7 +10200,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_lib_eposta_epostagecerlimi",
-      "community": 89,
+      "community": 30,
       "norm_label": "epostagecerlimi()"
     },
     {
@@ -10210,7 +10220,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_lib_eposta_tckimlikgecerlimi",
-      "community": 89,
+      "community": 64,
       "norm_label": "tckimlikgecerlimi()"
     },
     {
@@ -10220,7 +10230,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_lib_eposta_verginogecerlimi",
-      "community": 89,
+      "community": 64,
       "norm_label": "verginogecerlimi()"
     },
     {
@@ -10250,7 +10260,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_funnel",
-      "community": 66,
+      "community": 11,
       "norm_label": "funnel.ts"
     },
     {
@@ -10260,7 +10270,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_funnel_funnelolay",
-      "community": 66,
+      "community": 11,
       "norm_label": "funnelolay"
     },
     {
@@ -10270,7 +10280,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_lib_funnel_funnelozet",
-      "community": 66,
+      "community": 11,
       "norm_label": "funnelozet"
     },
     {
@@ -10280,7 +10290,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_lib_funnel_funnelolaykaydet",
-      "community": 69,
+      "community": 11,
       "norm_label": "funnelolaykaydet()"
     },
     {
@@ -10290,7 +10300,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_lib_funnel_funnelolaysay",
-      "community": 66,
+      "community": 11,
       "norm_label": "funnelolaysay()"
     },
     {
@@ -10300,7 +10310,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_lib_funnel_talepteklifvar",
-      "community": 66,
+      "community": 11,
       "norm_label": "talepteklifvar()"
     },
     {
@@ -10310,7 +10320,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "src_lib_funnel_funnelozethesapla",
-      "community": 66,
+      "community": 11,
       "norm_label": "funnelozethesapla()"
     },
     {
@@ -10750,7 +10760,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_geo",
-      "community": 70,
+      "community": 21,
       "norm_label": "geo.ts"
     },
     {
@@ -10760,7 +10770,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "src_lib_geo_mesafekmhaversine",
-      "community": 70,
+      "community": 21,
       "norm_label": "mesafekmhaversine()"
     },
     {
@@ -10770,7 +10780,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_google_maps",
-      "community": 85,
+      "community": 21,
       "norm_label": "google-maps.ts"
     },
     {
@@ -10780,7 +10790,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_lib_google_maps_rotasurekaynagi",
-      "community": 85,
+      "community": 21,
       "norm_label": "rotasurekaynagi"
     },
     {
@@ -10790,7 +10800,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_lib_google_maps_googlemapsapikey",
-      "community": 85,
+      "community": 21,
       "norm_label": "googlemapsapikey()"
     },
     {
@@ -10800,7 +10810,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_lib_google_maps_googlemapsyapilandirildi",
-      "community": 85,
+      "community": 21,
       "norm_label": "googlemapsyapilandirildi()"
     },
     {
@@ -10810,7 +10820,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_lib_google_maps_durationsaniyedendk",
-      "community": 85,
+      "community": 21,
       "norm_label": "durationsaniyedendk()"
     },
     {
@@ -10820,7 +10830,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_lib_google_maps_surussuresiosrm",
-      "community": 85,
+      "community": 21,
       "norm_label": "surussuresiosrm()"
     },
     {
@@ -10830,7 +10840,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "src_lib_google_maps_surussuresiroutesapi",
-      "community": 85,
+      "community": 21,
       "norm_label": "surussuresiroutesapi()"
     },
     {
@@ -10840,7 +10850,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "src_lib_google_maps_surussuresilegacymatrix",
-      "community": 85,
+      "community": 21,
       "norm_label": "surussuresilegacymatrix()"
     },
     {
@@ -10850,7 +10860,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "src_lib_google_maps_surussuresisonuc",
-      "community": 85,
+      "community": 21,
       "norm_label": "surussuresisonuc"
     },
     {
@@ -10860,7 +10870,7 @@
       "source_location": "L146",
       "_origin": "ast",
       "id": "src_lib_google_maps_surussuresidk",
-      "community": 85,
+      "community": 21,
       "norm_label": "surussuresidk()"
     },
     {
@@ -10870,7 +10880,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_google_places",
-      "community": 70,
+      "community": 21,
       "norm_label": "google-places.ts"
     },
     {
@@ -10880,7 +10890,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_lib_google_places_googleplacerow",
-      "community": 70,
+      "community": 21,
       "norm_label": "googleplacerow"
     },
     {
@@ -10890,7 +10900,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_lib_google_places_googleacikhedefonerileri",
-      "community": 70,
+      "community": 21,
       "norm_label": "googleacikhedefonerileri()"
     },
     {
@@ -10900,7 +10910,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "src_lib_google_places_placestextsearch",
-      "community": 70,
+      "community": 21,
       "norm_label": "placestextsearch()"
     },
     {
@@ -10910,7 +10920,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_gtag_test",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtag.test.ts"
     },
     {
@@ -10920,7 +10930,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_gtag",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtag.ts"
     },
     {
@@ -10930,7 +10940,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_lib_gtag_gtagyapilandirildi",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtagyapilandirildi()"
     },
     {
@@ -10940,7 +10950,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_lib_gtag_gtagconsentstate",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtagconsentstate"
     },
     {
@@ -10950,7 +10960,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_lib_gtag_gtagconsentparams",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtagconsentparams"
     },
     {
@@ -10960,7 +10970,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "src_lib_gtag_window",
-      "community": 68,
+      "community": 58,
       "norm_label": "window"
     },
     {
@@ -10970,7 +10980,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_lib_gtag_gtag_consent_denied",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtag_consent_denied"
     },
     {
@@ -10980,7 +10990,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "src_lib_gtag_gtag_consent_granted",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtag_consent_granted"
     },
     {
@@ -10990,7 +11000,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "src_lib_gtag_gtagconsentbootstrapinline",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtagconsentbootstrapinline()"
     },
     {
@@ -11000,7 +11010,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "src_lib_gtag_gtagcagir",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtagcagir()"
     },
     {
@@ -11010,7 +11020,7 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "src_lib_gtag_gtagcerezsenkronize",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtagcerezsenkronize()"
     },
     {
@@ -11020,7 +11030,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "src_lib_gtag_gtagolay",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtagolay()"
     },
     {
@@ -11030,7 +11040,7 @@
       "source_location": "L141",
       "_origin": "ast",
       "id": "src_lib_gtag_gtagadsfiyatteklifidonusumu",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtagadsfiyatteklifidonusumu()"
     },
     {
@@ -11040,7 +11050,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "src_lib_gtag_gtagadskaydolmadonusumu",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtagadskaydolmadonusumu()"
     },
     {
@@ -11050,7 +11060,7 @@
       "source_location": "L170",
       "_origin": "ast",
       "id": "src_lib_gtag_gtagcekicikayitonaygoruntule",
-      "community": 68,
+      "community": 58,
       "norm_label": "gtagcekicikayitonaygoruntule()"
     },
     {
@@ -11170,7 +11180,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_hedef_oneri_data",
-      "community": 70,
+      "community": 21,
       "norm_label": "hedef-oneri-data.ts"
     },
     {
@@ -11180,7 +11190,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_hedef_oneri_data_konumoneri",
-      "community": 70,
+      "community": 21,
       "norm_label": "konumoneri"
     },
     {
@@ -11190,7 +11200,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_lib_hedef_oneri_data_hedefonerisecenekleri",
-      "community": 70,
+      "community": 21,
       "norm_label": "hedefonerisecenekleri"
     },
     {
@@ -11200,7 +11210,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_lib_hedef_oneri_data_sorun_aramalari",
-      "community": 70,
+      "community": 21,
       "norm_label": "sorun_aramalari"
     },
     {
@@ -11340,7 +11350,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_idle_sonra",
-      "community": 68,
+      "community": 58,
       "norm_label": "idle-sonra.ts"
     },
     {
@@ -11350,7 +11360,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "src_lib_idle_sonra_idlesonra",
-      "community": 68,
+      "community": 58,
       "norm_label": "idlesonra()"
     },
     {
@@ -11360,7 +11370,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_ihale_test",
-      "community": 25,
+      "community": 1,
       "norm_label": "ihale.test.ts"
     },
     {
@@ -11370,7 +11380,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_lib_ihale_test_teklif",
-      "community": 25,
+      "community": 1,
       "norm_label": "teklif()"
     },
     {
@@ -11380,7 +11390,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_ihale",
-      "community": 15,
+      "community": 1,
       "norm_label": "ihale.ts"
     },
     {
@@ -11430,7 +11440,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_lib_ihale_cekiciaciktalepuygunmu",
-      "community": 15,
+      "community": 1,
       "norm_label": "cekiciaciktalepuygunmu()"
     },
     {
@@ -11440,7 +11450,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "src_lib_ihale_cekicitalepsmsadayimi",
-      "community": 15,
+      "community": 1,
       "norm_label": "cekicitalepsmsadayimi()"
     },
     {
@@ -11490,7 +11500,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_lib_ihale_kaybedenteklifleriisaretle",
-      "community": 41,
+      "community": 55,
       "norm_label": "kaybedenteklifleriisaretle()"
     },
     {
@@ -11530,7 +11540,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_il_ilce",
-      "community": 61,
+      "community": 18,
       "norm_label": "il-ilce.ts"
     },
     {
@@ -11540,7 +11550,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_lib_il_ilce_desteklenen_iller",
-      "community": 61,
+      "community": 18,
       "norm_label": "desteklenen_iller"
     },
     {
@@ -11550,7 +11560,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_lib_il_ilce_desteklenenil",
-      "community": 61,
+      "community": 18,
       "norm_label": "desteklenenil"
     },
     {
@@ -11560,7 +11570,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_lib_il_ilce_ilgecerlimi",
-      "community": 61,
+      "community": 18,
       "norm_label": "ilgecerlimi()"
     },
     {
@@ -11570,7 +11580,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_lib_il_ilce_ilcelistesi",
-      "community": 61,
+      "community": 18,
       "norm_label": "ilcelistesi()"
     },
     {
@@ -11580,7 +11590,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_istanbul_ilceler_test",
-      "community": 83,
+      "community": 18,
       "norm_label": "istanbul-ilceler.test.ts"
     },
     {
@@ -11590,7 +11600,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_istanbul_ilceler",
-      "community": 83,
+      "community": 18,
       "norm_label": "istanbul-ilceler.ts"
     },
     {
@@ -11600,7 +11610,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_istanbul_ilceler_istanbul_asya_ilceler",
-      "community": 83,
+      "community": 18,
       "norm_label": "istanbul_asya_ilceler"
     },
     {
@@ -11610,7 +11620,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_istanbul_ilceler_asyaset",
-      "community": 83,
+      "community": 18,
       "norm_label": "asyaset"
     },
     {
@@ -11620,7 +11630,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_lib_istanbul_ilceler_istanbul_avrupa_ilceler",
-      "community": 83,
+      "community": 18,
       "norm_label": "istanbul_avrupa_ilceler"
     },
     {
@@ -11730,7 +11740,7 @@
       "source_location": "L115",
       "_origin": "ast",
       "id": "src_lib_kampanya_db_kaydetkampanyakullanim",
-      "community": 65,
+      "community": 51,
       "norm_label": "kaydetkampanyakullanim()"
     },
     {
@@ -11790,7 +11800,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_lib_kampanya_kodu_kampanyakodunormalize",
-      "community": 65,
+      "community": 51,
       "norm_label": "kampanyakodunormalize()"
     },
     {
@@ -11830,7 +11840,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_kayit_funnel_client",
-      "community": 23,
+      "community": 80,
       "norm_label": "kayit-funnel-client.ts"
     },
     {
@@ -11840,7 +11850,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_lib_kayit_funnel_client_kayitfunnelsessionid",
-      "community": 23,
+      "community": 80,
       "norm_label": "kayitfunnelsessionid()"
     },
     {
@@ -11850,7 +11860,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_kayit_funnel_client_kayitfunnelolaygonder",
-      "community": 23,
+      "community": 80,
       "norm_label": "kayitfunnelolaygonder()"
     },
     {
@@ -12130,7 +12140,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "src_lib_kayit_kodu_kayitkoduhazirla",
-      "community": 65,
+      "community": 51,
       "norm_label": "kayitkoduhazirla()"
     },
     {
@@ -12430,7 +12440,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "src_lib_konum_client_konumalesnek",
-      "community": 32,
+      "community": 38,
       "norm_label": "konumalesnek()"
     },
     {
@@ -12440,7 +12450,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_konum_oneri",
-      "community": 70,
+      "community": 21,
       "norm_label": "konum-oneri.ts"
     },
     {
@@ -12450,7 +12460,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_lib_konum_oneri_hedefonerikaynak",
-      "community": 38,
+      "community": 21,
       "norm_label": "hedefonerikaynak"
     },
     {
@@ -12460,7 +12470,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_konum_oneri_hedefonerisonuc",
-      "community": 70,
+      "community": 21,
       "norm_label": "hedefonerisonuc"
     },
     {
@@ -12470,7 +12480,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_lib_konum_oneri_nominatimhedefonerileri",
-      "community": 70,
+      "community": 21,
       "norm_label": "nominatimhedefonerileri()"
     },
     {
@@ -12480,7 +12490,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "src_lib_konum_oneri_hedefkonumonerileri",
-      "community": 70,
+      "community": 21,
       "norm_label": "hedefkonumonerileri()"
     },
     {
@@ -12490,7 +12500,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_konum_parse",
-      "community": 61,
+      "community": 18,
       "norm_label": "konum-parse.ts"
     },
     {
@@ -12500,7 +12510,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_lib_konum_parse_normalize",
-      "community": 61,
+      "community": 18,
       "norm_label": "normalize()"
     },
     {
@@ -12510,7 +12520,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_lib_konum_parse_ilceeslesir",
-      "community": 61,
+      "community": 18,
       "norm_label": "ilceeslesir()"
     },
     {
@@ -12520,7 +12530,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_lib_konum_parse_iladindanbul",
-      "community": 61,
+      "community": 18,
       "norm_label": "iladindanbul()"
     },
     {
@@ -12530,7 +12540,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_lib_konum_parse_parseililce",
-      "community": 61,
+      "community": 18,
       "norm_label": "parseililce()"
     },
     {
@@ -12540,7 +12550,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_koordinat",
-      "community": 21,
+      "community": 15,
       "norm_label": "koordinat.ts"
     },
     {
@@ -12900,7 +12910,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_meta_pixel_test",
-      "community": 88,
+      "community": 58,
       "norm_label": "meta-pixel.test.ts"
     },
     {
@@ -12910,7 +12920,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_meta_pixel",
-      "community": 88,
+      "community": 58,
       "norm_label": "meta-pixel.ts"
     },
     {
@@ -12920,7 +12930,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_lib_meta_pixel_metapixelyapilandirildi",
-      "community": 88,
+      "community": 58,
       "norm_label": "metapixelyapilandirildi()"
     },
     {
@@ -12930,7 +12940,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_lib_meta_pixel_window",
-      "community": 88,
+      "community": 58,
       "norm_label": "window"
     },
     {
@@ -12940,7 +12950,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_meta_pixel_fbqcagir",
-      "community": 88,
+      "community": 58,
       "norm_label": "fbqcagir()"
     },
     {
@@ -12950,7 +12960,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_lib_meta_pixel_metapixelcerezsenkronize",
-      "community": 88,
+      "community": 58,
       "norm_label": "metapixelcerezsenkronize()"
     },
     {
@@ -12960,7 +12970,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_lib_meta_pixel_metapixelpageview",
-      "community": 88,
+      "community": 58,
       "norm_label": "metapixelpageview()"
     },
     {
@@ -12970,7 +12980,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_lib_meta_pixel_metapixellead",
-      "community": 88,
+      "community": 58,
       "norm_label": "metapixellead()"
     },
     {
@@ -12980,7 +12990,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "src_lib_meta_pixel_metapixelcompleteregistration",
-      "community": 88,
+      "community": 58,
       "norm_label": "metapixelcompleteregistration()"
     },
     {
@@ -12990,7 +13000,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "src_lib_meta_pixel_metapixelbootstrapinline",
-      "community": 88,
+      "community": 58,
       "norm_label": "metapixelbootstrapinline()"
     },
     {
@@ -13240,7 +13250,7 @@
       "source_location": "L273",
       "_origin": "ast",
       "id": "src_lib_musteri_otp_otptemizle",
-      "community": 76,
+      "community": 28,
       "norm_label": "otptemizle()"
     },
     {
@@ -13350,7 +13360,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_odeme_fatura",
-      "community": 89,
+      "community": 64,
       "norm_label": "odeme-fatura.ts"
     },
     {
@@ -13360,7 +13370,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_odeme_fatura_faturaalanlarinidogrula",
-      "community": 89,
+      "community": 64,
       "norm_label": "faturaalanlarinidogrula()"
     },
     {
@@ -13420,7 +13430,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "src_lib_odeme_olusturbekleyenrozetodeme",
-      "community": 64,
+      "community": 40,
       "norm_label": "olusturbekleyenrozetodeme()"
     },
     {
@@ -13570,7 +13580,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_lib_panel_liste_test_teklifverilebilirmi",
-      "community": 83,
+      "community": 1,
       "norm_label": "teklifverilebilirmi()"
     },
     {
@@ -13630,7 +13640,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_posthog_client",
-      "community": 93,
+      "community": 80,
       "norm_label": "posthog-client.ts"
     },
     {
@@ -13640,7 +13650,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_posthog_client_utm_anahtarlari",
-      "community": 93,
+      "community": 80,
       "norm_label": "utm_anahtarlari"
     },
     {
@@ -13650,7 +13660,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_lib_posthog_client_posthogyapilandirildi",
-      "community": 93,
+      "community": 80,
       "norm_label": "posthogyapilandirildi()"
     },
     {
@@ -13660,7 +13670,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_lib_posthog_client_posthogutmozellikleri",
-      "community": 93,
+      "community": 80,
       "norm_label": "posthogutmozellikleri()"
     },
     {
@@ -13670,7 +13680,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "src_lib_posthog_client_posthogkampanyakaydet",
-      "community": 93,
+      "community": 80,
       "norm_label": "posthogkampanyakaydet()"
     },
     {
@@ -13680,7 +13690,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_lib_posthog_client_posthogcerezsenkronize",
-      "community": 93,
+      "community": 80,
       "norm_label": "posthogcerezsenkronize()"
     },
     {
@@ -13690,7 +13700,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "src_lib_posthog_client_posthogolayyakala",
-      "community": 20,
+      "community": 80,
       "norm_label": "posthogolayyakala()"
     },
     {
@@ -13700,7 +13710,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "src_lib_posthog_client_posthogolaybirkez",
-      "community": 93,
+      "community": 80,
       "norm_label": "posthogolaybirkez()"
     },
     {
@@ -13800,7 +13810,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_test",
-      "community": 25,
+      "community": 7,
       "norm_label": "rozet-panel.test.ts"
     },
     {
@@ -13810,7 +13820,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_test_cekici",
-      "community": 25,
+      "community": 7,
       "norm_label": "cekici()"
     },
     {
@@ -13820,7 +13830,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_rozet_panel",
-      "community": 25,
+      "community": 7,
       "norm_label": "rozet-panel.ts"
     },
     {
@@ -13840,7 +13850,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_rozetpanelozet",
-      "community": 25,
+      "community": 7,
       "norm_label": "rozetpanelozet"
     },
     {
@@ -13850,7 +13860,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_rozetpanelverisi",
-      "community": 25,
+      "community": 7,
       "norm_label": "rozetpanelverisi"
     },
     {
@@ -13860,7 +13870,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_satirfromcekici",
-      "community": 25,
+      "community": 7,
       "norm_label": "satirfromcekici()"
     },
     {
@@ -13870,7 +13880,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_gonderimzamani",
-      "community": 25,
+      "community": 7,
       "norm_label": "gonderimzamani()"
     },
     {
@@ -13880,7 +13890,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_onaylanmissira",
-      "community": 25,
+      "community": 7,
       "norm_label": "onaylanmissira()"
     },
     {
@@ -13890,7 +13900,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_rozet",
-      "community": 64,
+      "community": 40,
       "norm_label": "rozet.ts"
     },
     {
@@ -13900,7 +13910,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_lib_rozet_rozetindirimyuzde",
-      "community": 64,
+      "community": 40,
       "norm_label": "rozetindirimyuzde()"
     },
     {
@@ -13960,7 +13970,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_lib_seo_seo_anahtarlar",
-      "community": 12,
+      "community": 58,
       "norm_label": "seo_anahtarlar"
     },
     {
@@ -14120,7 +14130,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_sms_karakter_test",
-      "community": 0,
+      "community": 35,
       "norm_label": "sms-karakter.test.ts"
     },
     {
@@ -14130,7 +14140,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_sms_karakter",
-      "community": 0,
+      "community": 35,
       "norm_label": "sms-karakter.ts"
     },
     {
@@ -14140,7 +14150,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_lib_sms_karakter_netgsm_tr_cifte",
-      "community": 0,
+      "community": 35,
       "norm_label": "netgsm_tr_cifte"
     },
     {
@@ -14150,7 +14160,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_lib_sms_karakter_netgsmsmsbirimhesapla",
-      "community": 0,
+      "community": 35,
       "norm_label": "netgsmsmsbirimhesapla()"
     },
     {
@@ -14160,7 +14170,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_lib_sms_karakter_netgsmsmsparcasayisi",
-      "community": 0,
+      "community": 35,
       "norm_label": "netgsmsmsparcasayisi()"
     },
     {
@@ -14170,7 +14180,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_lib_sms_karakter_netgsmsmsmesajgecerlimi",
-      "community": 0,
+      "community": 35,
       "norm_label": "netgsmsmsmesajgecerlimi()"
     },
     {
@@ -14190,7 +14200,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_sms_provider",
-      "community": 62,
+      "community": 67,
       "norm_label": "sms-provider.ts"
     },
     {
@@ -14200,7 +14210,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_lib_sms_provider_smsalicitipi",
-      "community": 62,
+      "community": 67,
       "norm_label": "smsalicitipi"
     },
     {
@@ -14210,7 +14220,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_lib_sms_provider_smssaglayici",
-      "community": 62,
+      "community": 67,
       "norm_label": "smssaglayici"
     },
     {
@@ -14230,7 +14240,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_lib_sms_provider_smsgonderimsonuc",
-      "community": 62,
+      "community": 67,
       "norm_label": "smsgonderimsonuc"
     },
     {
@@ -14240,7 +14250,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_lib_sms_provider_turkce_ascii",
-      "community": 62,
+      "community": 67,
       "norm_label": "turkce_ascii"
     },
     {
@@ -14250,7 +14260,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_lib_sms_provider_turkceyiascii",
-      "community": 62,
+      "community": 67,
       "norm_label": "turkceyiascii()"
     },
     {
@@ -14260,7 +14270,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_lib_sms_provider_otpmesajascii",
-      "community": 62,
+      "community": 67,
       "norm_label": "otpmesajascii()"
     },
     {
@@ -14270,7 +14280,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_lib_sms_provider_telefonotpformat",
-      "community": 62,
+      "community": 67,
       "norm_label": "telefonotpformat()"
     },
     {
@@ -14290,7 +14300,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "src_lib_sms_provider_telefonxmlformat",
-      "community": 62,
+      "community": 67,
       "norm_label": "telefonxmlformat()"
     },
     {
@@ -14300,7 +14310,7 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "src_lib_sms_provider_escapexml",
-      "community": 62,
+      "community": 67,
       "norm_label": "escapexml()"
     },
     {
@@ -14310,7 +14320,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "src_lib_sms_provider_netgsmyapilandirildi",
-      "community": 62,
+      "community": 67,
       "norm_label": "netgsmyapilandirildi()"
     },
     {
@@ -14320,7 +14330,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "src_lib_sms_provider_netgsmkimlik",
-      "community": 62,
+      "community": 67,
       "norm_label": "netgsmkimlik()"
     },
     {
@@ -14330,7 +14340,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "src_lib_sms_provider_netgsmotpsmsgonder",
-      "community": 62,
+      "community": 67,
       "norm_label": "netgsmotpsmsgonder()"
     },
     {
@@ -14340,7 +14350,7 @@
       "source_location": "L217",
       "_origin": "ast",
       "id": "src_lib_sms_provider_netgsmxmlgonder",
-      "community": 62,
+      "community": 67,
       "norm_label": "netgsmxmlgonder()"
     },
     {
@@ -14350,7 +14360,7 @@
       "source_location": "L308",
       "_origin": "ast",
       "id": "src_lib_sms_provider_sendpaneltoplusms",
-      "community": 62,
+      "community": 67,
       "norm_label": "sendpaneltoplusms()"
     },
     {
@@ -14360,7 +14370,7 @@
       "source_location": "L357",
       "_origin": "ast",
       "id": "src_lib_sms_provider_sendsms",
-      "community": 62,
+      "community": 67,
       "norm_label": "sendsms()"
     },
     {
@@ -14370,7 +14380,7 @@
       "source_location": "L437",
       "_origin": "ast",
       "id": "src_lib_sms_provider_logsmskaydi",
-      "community": 62,
+      "community": 67,
       "norm_label": "logsmskaydi()"
     },
     {
@@ -14380,7 +14390,7 @@
       "source_location": "L463",
       "_origin": "ast",
       "id": "src_lib_sms_provider_smsdurumu",
-      "community": 66,
+      "community": 67,
       "norm_label": "smsdurumu()"
     },
     {
@@ -14390,7 +14400,7 @@
       "source_location": "L473",
       "_origin": "ast",
       "id": "src_lib_sms_provider_gondericiadisorgusonuc",
-      "community": 62,
+      "community": 67,
       "norm_label": "gondericiadisorgusonuc"
     },
     {
@@ -14400,7 +14410,7 @@
       "source_location": "L485",
       "_origin": "ast",
       "id": "src_lib_sms_provider_netgsmgondericiadlarisorgula",
-      "community": 62,
+      "community": 67,
       "norm_label": "netgsmgondericiadlarisorgula()"
     },
     {
@@ -14460,7 +14470,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_lib_sms_sablon_db_listeaktifsmssablonozetleri",
-      "community": 26,
+      "community": 63,
       "norm_label": "listeaktifsmssablonozetleri()"
     },
     {
@@ -14710,7 +14720,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_lib_sms50_kampanya_sms50_varyantlar",
-      "community": 0,
+      "community": 63,
       "norm_label": "sms50_varyantlar"
     },
     {
@@ -14720,7 +14730,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_lib_sms50_kampanya_sms50varyant",
-      "community": 0,
+      "community": 63,
       "norm_label": "sms50varyant"
     },
     {
@@ -14820,7 +14830,7 @@
       "source_location": "L134",
       "_origin": "ast",
       "id": "src_lib_sms50_kampanya_sms50footersatirlari",
-      "community": 26,
+      "community": 63,
       "norm_label": "sms50footersatirlari()"
     },
     {
@@ -14970,7 +14980,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_sorun_akis_aciklama",
-      "community": 11,
+      "community": 17,
       "norm_label": "sorun-akis-aciklama.ts"
     },
     {
@@ -14980,7 +14990,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_sorun_akis_aciklama_sorunakisadim",
-      "community": 40,
+      "community": 17,
       "norm_label": "sorunakisadim"
     },
     {
@@ -14990,7 +15000,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "src_lib_sorun_akis_aciklama_sorunakisaciklama",
-      "community": 11,
+      "community": 17,
       "norm_label": "sorunakisaciklama"
     },
     {
@@ -15000,7 +15010,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_lib_sorun_akis_aciklama_yerinde_adimlar",
-      "community": 11,
+      "community": 17,
       "norm_label": "yerinde_adimlar"
     },
     {
@@ -15010,7 +15020,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_lib_sorun_akis_aciklama_cekici_adimlar",
-      "community": 11,
+      "community": 17,
       "norm_label": "cekici_adimlar"
     },
     {
@@ -15020,7 +15030,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_lib_sorun_akis_aciklama_sorun_akis_aciklama",
-      "community": 11,
+      "community": 17,
       "norm_label": "sorun_akis_aciklama"
     },
     {
@@ -15030,7 +15040,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "src_lib_sorun_akis_aciklama_sorunakisadimsayisi",
-      "community": 11,
+      "community": 17,
       "norm_label": "sorunakisadimsayisi()"
     },
     {
@@ -15040,7 +15050,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri_test",
-      "community": 11,
+      "community": 17,
       "norm_label": "sorun-tipleri.test.ts"
     },
     {
@@ -15050,7 +15060,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri",
-      "community": 11,
+      "community": 17,
       "norm_label": "sorun-tipleri.ts"
     },
     {
@@ -15080,7 +15090,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri_soruntipiid",
-      "community": 11,
+      "community": 17,
       "norm_label": "soruntipiid"
     },
     {
@@ -15090,7 +15100,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri_sorun_tipleri",
-      "community": 40,
+      "community": 32,
       "norm_label": "sorun_tipleri"
     },
     {
@@ -15120,7 +15130,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri_hizmet_query_haritasi",
-      "community": 11,
+      "community": 17,
       "norm_label": "hizmet_query_haritasi"
     },
     {
@@ -15130,7 +15140,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri_hizmetquerydensoruntipi",
-      "community": 11,
+      "community": 17,
       "norm_label": "hizmetquerydensoruntipi()"
     },
     {
@@ -15150,7 +15160,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri_talepsoruntipi",
-      "community": 11,
+      "community": 17,
       "norm_label": "talepsoruntipi()"
     },
     {
@@ -15160,7 +15170,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri_sorun_cagri_buton",
-      "community": 11,
+      "community": 17,
       "norm_label": "sorun_cagri_buton"
     },
     {
@@ -15180,7 +15190,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri_sorun_fotograf_tipleri",
-      "community": 11,
+      "community": 17,
       "norm_label": "sorun_fotograf_tipleri"
     },
     {
@@ -15190,7 +15200,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri_sorun_arac_modeli_tipleri",
-      "community": 11,
+      "community": 17,
       "norm_label": "sorun_arac_modeli_tipleri"
     },
     {
@@ -15200,7 +15210,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri_sorun_hedef_konum_atlanir",
-      "community": 11,
+      "community": 17,
       "norm_label": "sorun_hedef_konum_atlanir"
     },
     {
@@ -15210,7 +15220,7 @@
       "source_location": "L109",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri_sorunhedefkonumgereklimi",
-      "community": 11,
+      "community": 17,
       "norm_label": "sorunhedefkonumgereklimi()"
     },
     {
@@ -15220,7 +15230,7 @@
       "source_location": "L115",
       "_origin": "ast",
       "id": "src_lib_sorun_tipleri_sorunfotografalanigoster",
-      "community": 11,
+      "community": 17,
       "norm_label": "sorunfotografalanigoster()"
     },
     {
@@ -15260,7 +15270,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_supabase_admin",
-      "community": 71,
+      "community": 74,
       "norm_label": "admin.ts"
     },
     {
@@ -15270,7 +15280,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_lib_supabase_admin_supabasedbaktif",
-      "community": 71,
+      "community": 18,
       "norm_label": "supabasedbaktif()"
     },
     {
@@ -15280,7 +15290,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_lib_supabase_admin_getsupabaseadmin",
-      "community": 71,
+      "community": 74,
       "norm_label": "getsupabaseadmin()"
     },
     {
@@ -15290,7 +15300,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_supabase_bolge_schema",
-      "community": 4,
+      "community": 7,
       "norm_label": "bolge-schema.ts"
     },
     {
@@ -15300,7 +15310,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_lib_supabase_bolge_schema_hizmetbolgesutunlarivar",
-      "community": 4,
+      "community": 7,
       "norm_label": "hizmetbolgesutunlarivar()"
     },
     {
@@ -15330,7 +15340,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_supabase_davet_schema",
-      "community": 71,
+      "community": 65,
       "norm_label": "davet-schema.ts"
     },
     {
@@ -15340,7 +15350,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_lib_supabase_davet_schema_davetkodusutunuvar",
-      "community": 56,
+      "community": 65,
       "norm_label": "davetkodusutunuvar()"
     },
     {
@@ -15530,7 +15540,7 @@
       "source_location": "L295",
       "_origin": "ast",
       "id": "src_lib_supabase_mappers_odemerow",
-      "community": 64,
+      "community": 13,
       "norm_label": "odemerow"
     },
     {
@@ -15550,7 +15560,7 @@
       "source_location": "L338",
       "_origin": "ast",
       "id": "src_lib_supabase_mappers_odemetorow",
-      "community": 64,
+      "community": 6,
       "norm_label": "odemetorow()"
     },
     {
@@ -15590,7 +15600,7 @@
       "source_location": "L425",
       "_origin": "ast",
       "id": "src_lib_supabase_mappers_otprow",
-      "community": 76,
+      "community": 13,
       "norm_label": "otprow"
     },
     {
@@ -15630,7 +15640,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_supabase_route_handler",
-      "community": 53,
+      "community": 95,
       "norm_label": "route-handler.ts"
     },
     {
@@ -15640,7 +15650,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_supabase_route_handler_cookietoset",
-      "community": 53,
+      "community": 95,
       "norm_label": "cookietoset"
     },
     {
@@ -15650,7 +15660,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_lib_supabase_route_handler_createsupabaseroutehandlerclient",
-      "community": 53,
+      "community": 95,
       "norm_label": "createsupabaseroutehandlerclient()"
     },
     {
@@ -15660,7 +15670,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_supabase_server",
-      "community": 7,
+      "community": 95,
       "norm_label": "server.ts"
     },
     {
@@ -15670,7 +15680,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_supabase_server_createclient",
-      "community": 26,
+      "community": 71,
       "norm_label": "createclient()"
     },
     {
@@ -15680,7 +15690,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_supabase_toplu_sms_schema",
-      "community": 71,
+      "community": 35,
       "norm_label": "toplu-sms-schema.ts"
     },
     {
@@ -15710,7 +15720,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_talep_fotograf",
-      "community": 81,
+      "community": 74,
       "norm_label": "talep-fotograf.ts"
     },
     {
@@ -15720,7 +15730,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_lib_talep_fotograf_fotografbase64ayikla",
-      "community": 81,
+      "community": 74,
       "norm_label": "fotografbase64ayikla()"
     },
     {
@@ -15730,7 +15740,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_lib_talep_fotograf_uzanti",
-      "community": 81,
+      "community": 74,
       "norm_label": "uzanti()"
     },
     {
@@ -15740,7 +15750,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_lib_talep_fotograf_talepfotografyukle",
-      "community": 81,
+      "community": 74,
       "norm_label": "talepfotografyukle()"
     },
     {
@@ -15960,7 +15970,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "src_lib_talep_iliski_db_countharicbycekici",
-      "community": 13,
+      "community": 25,
       "norm_label": "countharicbycekici()"
     },
     {
@@ -15980,7 +15990,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_lib_talep_utils_isbugun",
-      "community": 15,
+      "community": 1,
       "norm_label": "isbugun()"
     },
     {
@@ -16020,7 +16030,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_teklif_db",
-      "community": 79,
+      "community": 74,
       "norm_label": "teklif-db.ts"
     },
     {
@@ -16030,7 +16040,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_teklif_db_teklifrow",
-      "community": 79,
+      "community": 74,
       "norm_label": "teklifrow"
     },
     {
@@ -16040,7 +16050,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_lib_teklif_db_tekliffromrow",
-      "community": 79,
+      "community": 74,
       "norm_label": "tekliffromrow()"
     },
     {
@@ -16050,7 +16060,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "src_lib_teklif_db_tekliftorow",
-      "community": 79,
+      "community": 74,
       "norm_label": "tekliftorow()"
     },
     {
@@ -16060,7 +16070,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_lib_teklif_db_listtekliflerbytalep",
-      "community": 79,
+      "community": 74,
       "norm_label": "listtekliflerbytalep()"
     },
     {
@@ -16070,7 +16080,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "src_lib_teklif_db_listtekliflerbycekici",
-      "community": 79,
+      "community": 74,
       "norm_label": "listtekliflerbycekici()"
     },
     {
@@ -16080,7 +16090,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "src_lib_teklif_db_listtekliflerbytalepids",
-      "community": 79,
+      "community": 74,
       "norm_label": "listtekliflerbytalepids()"
     },
     {
@@ -16090,7 +16100,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "src_lib_teklif_db_insertteklif",
-      "community": 15,
+      "community": 74,
       "norm_label": "insertteklif()"
     },
     {
@@ -16100,7 +16110,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "src_lib_teklif_db_upsertteklif",
-      "community": 79,
+      "community": 74,
       "norm_label": "upsertteklif()"
     },
     {
@@ -16120,7 +16130,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "src_lib_teklif_db_updateteklifdurum",
-      "community": 41,
+      "community": 74,
       "norm_label": "updateteklifdurum()"
     },
     {
@@ -16130,7 +16140,7 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "src_lib_teklif_db_setkaybedenteklifler",
-      "community": 41,
+      "community": 74,
       "norm_label": "setkaybedenteklifler()"
     },
     {
@@ -16170,7 +16180,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_telefon_sabit_hat_test",
-      "community": 28,
+      "community": 10,
       "norm_label": "telefon-sabit-hat.test.ts"
     },
     {
@@ -16190,7 +16200,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "src_lib_telefon_telefon_ornek_girisleri",
-      "community": 23,
+      "community": 80,
       "norm_label": "telefon_ornek_girisleri"
     },
     {
@@ -16200,7 +16210,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_lib_telefon_telefonnormalize",
-      "community": 76,
+      "community": 28,
       "norm_label": "telefonnormalize()"
     },
     {
@@ -16220,7 +16230,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_lib_telefon_telefonsabithatmi",
-      "community": 28,
+      "community": 10,
       "norm_label": "telefonsabithatmi()"
     },
     {
@@ -16680,7 +16690,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel",
-      "community": 28,
+      "community": 10,
       "norm_label": "toplu-sms-excel.ts"
     },
     {
@@ -16690,7 +16700,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_toplusmsalici",
-      "community": 28,
+      "community": 10,
       "norm_label": "toplusmsalici"
     },
     {
@@ -16700,7 +16710,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_excelyukleozet",
-      "community": 28,
+      "community": 10,
       "norm_label": "excelyukleozet"
     },
     {
@@ -16710,7 +16720,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_telefon_basliklar",
-      "community": 28,
+      "community": 10,
       "norm_label": "telefon_basliklar"
     },
     {
@@ -16720,7 +16730,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_ad_basliklar",
-      "community": 28,
+      "community": 10,
       "norm_label": "ad_basliklar"
     },
     {
@@ -16730,7 +16740,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_baslikesle",
-      "community": 28,
+      "community": 10,
       "norm_label": "baslikesle()"
     },
     {
@@ -16740,7 +16750,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_toplusmsexcelsablonblob",
-      "community": 28,
+      "community": 10,
       "norm_label": "toplusmsexcelsablonblob()"
     },
     {
@@ -16750,7 +16760,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_toplusmsexcelsablonindir",
-      "community": 28,
+      "community": 10,
       "norm_label": "toplusmsexcelsablonindir()"
     },
     {
@@ -16760,7 +16770,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_exceldentoplusmsalicioku",
-      "community": 28,
+      "community": 10,
       "norm_label": "exceldentoplusmsalicioku()"
     },
     {
@@ -16770,7 +16780,7 @@
       "source_location": "L184",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_excelalicilarilisteyeekle",
-      "community": 28,
+      "community": 10,
       "norm_label": "excelalicilarilisteyeekle()"
     },
     {
@@ -16780,7 +16790,7 @@
       "source_location": "L219",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_elletelefonekle",
-      "community": 28,
+      "community": 10,
       "norm_label": "elletelefonekle()"
     },
     {
@@ -16860,7 +16870,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_gecmis_db_baslattoplusmsgecmisliste",
-      "community": 71,
+      "community": 35,
       "norm_label": "baslattoplusmsgecmisliste()"
     },
     {
@@ -17310,7 +17320,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_types",
-      "community": 25,
+      "community": 1,
       "norm_label": "types.ts"
     },
     {
@@ -17320,7 +17330,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_types_talepdurumu",
-      "community": 25,
+      "community": 1,
       "norm_label": "talepdurumu"
     },
     {
@@ -17330,7 +17340,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_lib_types_anlasmadurumu",
-      "community": 25,
+      "community": 1,
       "norm_label": "anlasmadurumu"
     },
     {
@@ -17340,7 +17350,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_lib_types_teklifdurumu",
-      "community": 79,
+      "community": 74,
       "norm_label": "teklifdurumu"
     },
     {
@@ -17350,7 +17360,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_lib_types_listedurumu",
-      "community": 25,
+      "community": 1,
       "norm_label": "listedurumu"
     },
     {
@@ -17370,7 +17380,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_lib_types_teklif",
-      "community": 25,
+      "community": 1,
       "norm_label": "teklif"
     },
     {
@@ -17380,7 +17390,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_lib_types_hizmetbolgemodu",
-      "community": 32,
+      "community": 18,
       "norm_label": "hizmetbolgemodu"
     },
     {
@@ -17390,7 +17400,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_lib_types_belgedurum",
-      "community": 7,
+      "community": 60,
       "norm_label": "belgedurum"
     },
     {
@@ -17400,7 +17410,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "src_lib_types_odemetipi",
-      "community": 25,
+      "community": 1,
       "norm_label": "odemetipi"
     },
     {
@@ -17410,7 +17420,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "src_lib_types_hizmetbolgeleri",
-      "community": 32,
+      "community": 18,
       "norm_label": "hizmetbolgeleri"
     },
     {
@@ -17420,7 +17430,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_lib_types_cekici",
-      "community": 25,
+      "community": 1,
       "norm_label": "cekici"
     },
     {
@@ -17460,7 +17470,7 @@
       "source_location": "L169",
       "_origin": "ast",
       "id": "src_lib_types_smskaydi",
-      "community": 13,
+      "community": 66,
       "norm_label": "smskaydi"
     },
     {
@@ -17470,7 +17480,7 @@
       "source_location": "L183",
       "_origin": "ast",
       "id": "src_lib_types_bekleyenodeme",
-      "community": 64,
+      "community": 13,
       "norm_label": "bekleyenodeme"
     },
     {
@@ -17480,7 +17490,7 @@
       "source_location": "L201",
       "_origin": "ast",
       "id": "src_lib_types_krediodeme",
-      "community": 25,
+      "community": 5,
       "norm_label": "krediodeme"
     },
     {
@@ -17490,7 +17500,7 @@
       "source_location": "L222",
       "_origin": "ast",
       "id": "src_lib_types_talepozet",
-      "community": 54,
+      "community": 1,
       "norm_label": "talepozet"
     },
     {
@@ -17530,7 +17540,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_yerel_ortam",
-      "community": 85,
+      "community": 21,
       "norm_label": "yerel-ortam.ts"
     },
     {
@@ -17540,7 +17550,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "src_lib_yerel_ortam_yerelortammi",
-      "community": 85,
+      "community": 21,
       "norm_label": "yerelortammi()"
     },
     {
@@ -17550,7 +17560,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_lib_yerel_ortam_istemciyerelmi",
-      "community": 85,
+      "community": 21,
       "norm_label": "istemciyerelmi()"
     },
     {
@@ -18590,7 +18600,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_ihale_sms_bildirim_kredi",
-      "community": 13,
+      "community": 1,
       "norm_label": "sms_bildirim_kredi"
     },
     {
@@ -18600,7 +18610,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_il_ilce_il_ilceler",
-      "community": 83,
+      "community": 18,
       "norm_label": "il_ilceler"
     },
     {
@@ -24978,7 +24988,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L12",
+      "source_location": "L38",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route",
       "target": "src_app_api_cekici_kurulum_route_get",
@@ -24988,7 +24998,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L36",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "src_app_api_cekici_kurulum_route",
+      "target": "src_app_api_cekici_kurulum_route_kurulumsifreuygula",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/api/cekici/kurulum/route.ts",
+      "source_location": "L62",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route",
       "target": "src_app_api_cekici_kurulum_route_post",
@@ -25014,6 +25034,28 @@
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route",
       "target": "src_lib_auth_getcurrentcekici",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/api/cekici/kurulum/route.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "src_app_api_cekici_kurulum_route",
+      "target": "src_lib_cekici_auth",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/api/cekici/kurulum/route.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "src_app_api_cekici_kurulum_route",
+      "target": "src_lib_cekici_auth_cekicisifreyiauthatasi",
       "confidence_score": 1.0
     },
     {
@@ -25200,7 +25242,40 @@
       "source_location": "L6",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route",
+      "target": "src_lib_types_cekici",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/api/cekici/kurulum/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_app_api_cekici_kurulum_route",
       "target": "src_lib_types_hizmetbolgeleri",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/api/cekici/kurulum/route.ts",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_app_api_cekici_kurulum_route_kurulumsifreuygula",
+      "target": "src_lib_cekici_auth_cekicisifreyiauthatasi",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/api/cekici/kurulum/route.ts",
+      "source_location": "L110",
+      "weight": 1.0,
+      "source": "src_app_api_cekici_kurulum_route_post",
+      "target": "src_app_api_cekici_kurulum_route_kurulumsifreuygula",
       "confidence_score": 1.0
     },
     {
@@ -25209,7 +25284,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L13",
+      "source_location": "L39",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route_get",
       "target": "src_lib_auth_getcurrentcekici"
@@ -25220,7 +25295,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L31",
+      "source_location": "L57",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route_get",
       "target": "src_lib_cekici_profil_hazir_cekiciprofilhazirmi"
@@ -25231,7 +25306,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L37",
+      "source_location": "L63",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route_post",
       "target": "src_lib_auth_getcurrentcekici"
@@ -25242,7 +25317,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L105",
+      "source_location": "L137",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route_post",
       "target": "src_lib_cekici_hizmet_bolge_normalizehizmetbolgeleri"
@@ -25253,7 +25328,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L87",
+      "source_location": "L119",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route_post",
       "target": "src_lib_db_updatecekici"
@@ -25264,7 +25339,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L103",
+      "source_location": "L135",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route_post",
       "target": "src_lib_il_ilce_ilcelistesi"
@@ -25275,7 +25350,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L67",
+      "source_location": "L93",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route_post",
       "target": "src_lib_il_ilce_ilgecerlimi"
@@ -25286,7 +25361,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L47",
+      "source_location": "L73",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route_post",
       "target": "src_lib_kayit_funnel_kayitfunnelmi"
@@ -25297,7 +25372,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L88",
+      "source_location": "L120",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route_post",
       "target": "src_lib_kayit_funnel_olay_kaydetkayitfunnelolay"
@@ -25308,7 +25383,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/api/cekici/kurulum/route.ts",
-      "source_location": "L75",
+      "source_location": "L101",
       "weight": 1.0,
       "source": "src_app_api_cekici_kurulum_route_post",
       "target": "src_lib_sorun_tipleri_gecerlisoruntipi"
@@ -43065,7 +43140,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/app/kayit/kurulum/page.tsx",
-      "source_location": "L29",
+      "source_location": "L31",
       "weight": 1.0,
       "source": "src_app_kayit_kurulum_page",
       "target": "src_app_kayit_kurulum_page_kayitkurulumpage",
@@ -43190,6 +43265,17 @@
       "weight": 1.0,
       "source": "src_app_kayit_kurulum_page",
       "target": "src_components_ui_selectfield",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/app/kayit/kurulum/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_app_kayit_kurulum_page",
+      "target": "src_components_ui_sifrealani",
       "confidence_score": 1.0
     },
     {
@@ -52117,7 +52203,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/kayit/KayitPhoneFirstSayfa.tsx",
-      "source_location": "L467",
+      "source_location": "L465",
       "weight": 1.0,
       "source": "src_components_kayit_kayitphonefirstsayfa",
       "target": "src_components_kayit_kayitphonefirstsayfa_kayitphonefirstsayfa",
@@ -82236,5 +82322,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "ac263a9e24d38753b816bc0e1c82591636b421e3"
+  "built_at_commit": "c6f912221bb40adf70f5e2d389916250c9c425c8"
 }

@@ -90,5 +90,9 @@
   "88": "cekiciHizmetBolgeleri",
   "89": "kredi-fiyat.ts",
   "90": "ArizaFotografAlani.tsx",
-  "91": "page.tsx"
+  "91": "page.tsx",
+  "92": "talep-fraud.ts",
+  "93": "posthog-client.ts",
+  "94": "KayitKontenjanBilgi.tsx",
+  "95": "route.ts"
 }

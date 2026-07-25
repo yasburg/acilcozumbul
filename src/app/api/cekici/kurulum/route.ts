@@ -3,11 +3,37 @@ import { getCurrentCekici } from "@/lib/auth";
 import { updateCekici } from "@/lib/db";
 import { ilGecerliMi, ilceListesi } from "@/lib/il-ilce";
 import { normalizeHizmetBolgeleri } from "@/lib/cekici-hizmet-bolge";
-import type { HizmetBolgeleri } from "@/lib/types";
+import type { Cekici, HizmetBolgeleri } from "@/lib/types";
 import { gecerliSorunTipi } from "@/lib/sorun-tipleri";
 import { kayitFunnelMi } from "@/lib/kayit-funnel";
 import { kaydetKayitFunnelOlay } from "@/lib/kayit-funnel-olay";
 import { cekiciProfilHazirMi } from "@/lib/cekici-profil-hazir";
+import { cekiciSifreyiAuthaTasi } from "@/lib/cekici-auth";
+
+const MIN_SIFRE_UZUNLUK = 6;
+
+async function kurulumSifreUygula(
+  cekici: Cekici,
+  sifreHam: unknown
+): Promise<{ ok: true; cekici: Cekici } | { ok: false; error: string }> {
+  const sifre = typeof sifreHam === "string" ? sifreHam : "";
+  if (sifre.length < MIN_SIFRE_UZUNLUK) {
+    return {
+      ok: false,
+      error: `Şifre en az ${MIN_SIFRE_UZUNLUK} karakter olmalıdır.`,
+    };
+  }
+  try {
+    const guncel = await cekiciSifreyiAuthaTasi(cekici, sifre);
+    return { ok: true, cekici: guncel };
+  } catch (e) {
+    console.error("[kurulum] sifre:", e);
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Şifre kaydedilemedi.",
+    };
+  }
+}
 
 export async function GET() {
   const cekici = await getCurrentCekici();
@@ -81,15 +107,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    cekici.ad = `${isim} ${soyad}`.trim();
-    cekici.sehir = sehir;
-    cekici.hizmetSorunTipleri = secili;
-    await updateCekici(cekici);
+    const sifreSonuc = await kurulumSifreUygula(cekici, body.sifre);
+    if (!sifreSonuc.ok) {
+      return NextResponse.json({ error: sifreSonuc.error }, { status: 400 });
+    }
+
+    const guncel = sifreSonuc.cekici;
+    guncel.ad = `${isim} ${soyad}`.trim();
+    guncel.sehir = sehir;
+    guncel.hizmetSorunTipleri = secili;
+    await updateCekici(guncel);
     await kaydetKayitFunnelOlay({
       funnel,
       olay: "kurulum_1",
       sessionId,
-      cekiciId: cekici.id,
+      cekiciId: guncel.id,
     });
     return NextResponse.json({ ok: true, sonraki: 2 });
   }
@@ -110,29 +142,39 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    cekici.hizmetBolgeleri = bolgeler;
-    cekici.hizmetIlceleri = Object.values(bolgeler).flat();
-    cekici.hizmetModu = "il_ilce";
+
+    let guncel = cekici;
+    if (body.sifre != null && String(body.sifre).length > 0) {
+      const sifreSonuc = await kurulumSifreUygula(cekici, body.sifre);
+      if (!sifreSonuc.ok) {
+        return NextResponse.json({ error: sifreSonuc.error }, { status: 400 });
+      }
+      guncel = sifreSonuc.cekici;
+    }
+
+    guncel.hizmetBolgeleri = bolgeler;
+    guncel.hizmetIlceleri = Object.values(bolgeler).flat();
+    guncel.hizmetModu = "il_ilce";
     /* Menzil kurulumda yok — varsayılan kalsın; ayarlardan değişir */
-    cekici.kurulumTamam = true;
-    await updateCekici(cekici);
+    guncel.kurulumTamam = true;
+    await updateCekici(guncel);
     await kaydetKayitFunnelOlay({
       funnel,
       olay: "kurulum_2",
       sessionId,
-      cekiciId: cekici.id,
+      cekiciId: guncel.id,
     });
     await kaydetKayitFunnelOlay({
       funnel,
       olay: "panel_hazir",
       sessionId,
-      cekiciId: cekici.id,
+      cekiciId: guncel.id,
     });
     return NextResponse.json({
       ok: true,
       sonraki: null,
       yonlendir: "/cekici/panel",
-      cekiciId: cekici.id,
+      cekiciId: guncel.id,
     });
   }
 

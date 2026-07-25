@@ -44,7 +44,7 @@ function GirisIcerik() {
   useEffect(() => {
     const tel = searchParams.get("telefon")?.trim();
     if (tel) setTelefon(tel);
-    if (searchParams.get("otp") === "1") setOtpMod(true);
+    /* otp=1 eski linkler için; varsayılan sekme her zaman şifre ile giriş */
     if (searchParams.get("mesaj") === "zaten-kayitli") {
       setBilgiBanner(
         "Telefonunuz zaten kayıtlı, giriş yapabilirsiniz."

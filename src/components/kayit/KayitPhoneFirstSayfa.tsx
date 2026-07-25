@@ -127,7 +127,6 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
         const q = new URLSearchParams({
           telefon: telefon.trim(),
           mesaj: "zaten-kayitli",
-          otp: "1",
         });
         router.push(`/cekici/giris?${q.toString()}`);
         return;
@@ -178,7 +177,6 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
         const q = new URLSearchParams({
           telefon: telefon.trim(),
           mesaj: "zaten-kayitli",
-          otp: "1",
         });
         router.push(`/cekici/giris?${q.toString()}`);
         return;

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
-import { Btn, Field, SelectField, Card } from "@/components/ui";
+import { Btn, Field, SelectField, SifreAlani, Card } from "@/components/ui";
 import { SorunTipiSecimi } from "@/components/SorunTipiSecimi";
 import { IlceSecimi } from "@/components/IlceSecimi";
 import { DESTEKLENEN_ILLER, ilceListesi } from "@/lib/il-ilce";
@@ -26,6 +26,8 @@ import {
   tiktokPixelViewContent,
 } from "@/lib/tiktok-pixel";
 
+const MIN_SIFRE_UZUNLUK = 6;
+
 export default function KayitKurulumPage() {
   const router = useRouter();
   const [adim, setAdim] = useState(1);
@@ -39,6 +41,10 @@ export default function KayitKurulumPage() {
   const [ilceler, setIlceler] = useState<string[]>([]);
   const [sorunTipleri, setSorunTipleri] = useState<string[]>([]);
   const [tumSorunTipleri] = useState<SorunTipi[]>(SORUN_TIPLERI);
+  const [sifre, setSifre] = useState("");
+  const [sifreTekrar, setSifreTekrar] = useState("");
+  /** Adım 1’de şifre kaydedildiyse adım 2’de tekrar isteme */
+  const [sifreKaydedildi, setSifreKaydedildi] = useState(false);
 
   const sehirIlceler = useMemo(() => ilceListesi(sehir), [sehir]);
   const istanbulMu = sehir === ISTANBUL_IL;
@@ -104,6 +110,16 @@ export default function KayitKurulumPage() {
     })();
   }, [router]);
 
+  function sifreDogrula(): string | null {
+    if (sifre.length < MIN_SIFRE_UZUNLUK) {
+      return `Şifre en az ${MIN_SIFRE_UZUNLUK} karakter olmalıdır.`;
+    }
+    if (sifre !== sifreTekrar) {
+      return "Şifreler eşleşmiyor.";
+    }
+    return null;
+  }
+
   async function kaydet(body: Record<string, unknown>) {
     setSaving(true);
     setError("");
@@ -120,6 +136,7 @@ export default function KayitKurulumPage() {
       if (!res.ok) {
         throw new Error(typeof d.error === "string" ? d.error : "Kayıt başarısız.");
       }
+      if (body.sifre) setSifreKaydedildi(true);
       if (d.yonlendir) {
         /* Funnel B+: kurulum bitti → hesap oluştur dönüşümü */
         await tiktokPixelHesapOlustur({
@@ -240,23 +257,55 @@ export default function KayitKurulumPage() {
               />
             </div>
 
+            <div className="space-y-3 border-t border-slate-100 pt-4">
+              <p className="text-sm font-medium text-slate-700">
+                Giriş şifrenizi belirleyin
+              </p>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Sonraki girişlerde telefon + şifre ile girebilirsiniz. En az{" "}
+                {MIN_SIFRE_UZUNLUK} karakter.
+              </p>
+              <SifreAlani
+                label="Şifre"
+                autoComplete="new-password"
+                value={sifre}
+                onChange={(e) => setSifre(e.target.value)}
+                className="text-lg min-h-[52px]"
+              />
+              <SifreAlani
+                label="Şifre tekrar"
+                autoComplete="new-password"
+                value={sifreTekrar}
+                onChange={(e) => setSifreTekrar(e.target.value)}
+                className="text-lg min-h-[52px]"
+              />
+            </div>
+
             <Btn
               className="w-full min-h-[52px]"
               disabled={
                 saving ||
                 isim.trim().length < 2 ||
                 soyad.trim().length < 2 ||
-                sorunTipleri.length === 0
+                sorunTipleri.length === 0 ||
+                sifre.length < MIN_SIFRE_UZUNLUK ||
+                sifre !== sifreTekrar
               }
-              onClick={() =>
+              onClick={() => {
+                const hata = sifreDogrula();
+                if (hata) {
+                  setError(hata);
+                  return;
+                }
                 void kaydet({
                   adim: 1,
                   isim: isim.trim(),
                   soyad: soyad.trim(),
                   sehir,
                   sorunTipleri,
-                })
-              }
+                  sifre,
+                });
+              }}
             >
               {saving ? "Kaydediliyor…" : "Devam et"}
             </Btn>
@@ -316,10 +365,48 @@ export default function KayitKurulumPage() {
               onTemizle={() => setIlceler([])}
             />
 
+            {!sifreKaydedildi && (
+              <Card className="space-y-3">
+                <p className="text-sm font-medium text-slate-700">
+                  Giriş şifrenizi belirleyin
+                </p>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Telefon + şifre ile giriş için. En az {MIN_SIFRE_UZUNLUK}{" "}
+                  karakter.
+                </p>
+                <SifreAlani
+                  label="Şifre"
+                  autoComplete="new-password"
+                  value={sifre}
+                  onChange={(e) => setSifre(e.target.value)}
+                  className="text-lg min-h-[52px]"
+                />
+                <SifreAlani
+                  label="Şifre tekrar"
+                  autoComplete="new-password"
+                  value={sifreTekrar}
+                  onChange={(e) => setSifreTekrar(e.target.value)}
+                  className="text-lg min-h-[52px]"
+                />
+              </Card>
+            )}
+
             <Btn
               className="w-full min-h-[52px] bg-amber-600 hover:bg-amber-700"
-              disabled={saving || ilceler.length === 0}
+              disabled={
+                saving ||
+                ilceler.length === 0 ||
+                (!sifreKaydedildi &&
+                  (sifre.length < MIN_SIFRE_UZUNLUK || sifre !== sifreTekrar))
+              }
               onClick={() => {
+                if (!sifreKaydedildi) {
+                  const hata = sifreDogrula();
+                  if (hata) {
+                    setError(hata);
+                    return;
+                  }
+                }
                 tiktokPixelClickButton({
                   content_id: "kayit_kurulum_bitir",
                   content_name: "isleri_gormeye_basla",
@@ -327,6 +414,7 @@ export default function KayitKurulumPage() {
                 void kaydet({
                   adim: 2,
                   bolgeler: { [sehir]: ilceler },
+                  ...(!sifreKaydedildi ? { sifre } : {}),
                 });
               }}
             >
