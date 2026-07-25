@@ -7,6 +7,7 @@ import {
   type Sms50Varyant,
   sms50KisaUrl,
 } from "./sms50-kampanya";
+import { smsKampanyaTokenTablosuVar } from "./sms50-token";
 
 let tiklamaTabloVar: boolean | null = null;
 
@@ -53,8 +54,19 @@ export type Sms50VaryantOzet = {
   gonderilen: number;
   tiklama: number;
   ctr: number | null;
+  /** SMS50’ye bağlanan kayıt (token kayit_at veya gönderilen∩çekici) */
+  kayit: number;
+  /** kayıt ÷ gönderilen */
+  kayitOranGonderim: number | null;
+  /** kayıt ÷ tıklama */
+  kayitOranTiklama: number | null;
   sonTiklama: string | null;
 };
+
+export function sms50Oran(pay: number, payda: number): number | null {
+  if (!(payda > 0)) return null;
+  return pay / payda;
+}
 
 /** 0=Pazar … 6=Cumartesi (Europe/Istanbul) */
 export function sms50TiklamaGunSaat(iso: string): {
@@ -142,15 +154,16 @@ export async function getSms50VaryantOzetleri(
 ): Promise<Sms50VaryantOzet[]> {
   const sb = getSupabaseAdmin();
 
-  const [tiklamaRes, gonderimRes] = await Promise.all([
+  const [tiklamaRes, gonderimRes, tokenTablo] = await Promise.all([
     sb
       .from("sms_kampanya_tiklama")
       .select("varyant, olusturulma")
       .eq("kampanya_kodu", kampanyaKodu),
     sb
       .from("panel_toplu_sms_listeler")
-      .select("varyant, basarili, olusturulma")
+      .select("id, varyant, basarili, olusturulma")
       .eq("kampanya_kodu", kampanyaKodu),
+    smsKampanyaTokenTablosuVar(),
   ]);
 
   if (tiklamaRes.error) throw tiklamaRes.error;
@@ -169,21 +182,105 @@ export async function getSms50VaryantOzetleri(
   }
 
   const gonderilen = new Map<string, number>();
+  const listeIdsByVaryant = new Map<string, string[]>();
   for (const row of gonderimRows) {
     const v = String(row.varyant ?? "");
     if (!v) continue;
     gonderilen.set(v, (gonderilen.get(v) ?? 0) + (Number(row.basarili) || 0));
+    const id = String(row.id ?? "");
+    if (!id) continue;
+    const arr = listeIdsByVaryant.get(v) ?? [];
+    arr.push(id);
+    listeIdsByVaryant.set(v, arr);
+  }
+
+  /** varyant → kayıtlı telefon seti */
+  const kayitTelefonlar = new Map<string, Set<string>>();
+  function kayitEkle(varyant: string, telefon: string) {
+    const t = telefon.trim();
+    if (!t || !varyant) return;
+    let set = kayitTelefonlar.get(varyant);
+    if (!set) {
+      set = new Set();
+      kayitTelefonlar.set(varyant, set);
+    }
+    set.add(t);
+  }
+
+  if (tokenTablo) {
+    const { data: tokenRows, error: tokenErr } = await sb
+      .from("sms_kampanya_link_token")
+      .select("varyant, telefon, kayit_at")
+      .eq("kampanya_kodu", kampanyaKodu)
+      .not("kayit_at", "is", null);
+    if (!tokenErr) {
+      for (const row of tokenRows ?? []) {
+        kayitEkle(String(row.varyant ?? ""), String(row.telefon ?? ""));
+      }
+    }
+  }
+
+  /* Ortak (token’sız) link: o harfle gönderilmiş telefonlar ∩ çekiciler */
+  const tumListeIdleri = [...new Set([...listeIdsByVaryant.values()].flat())];
+  if (tumListeIdleri.length > 0) {
+    const telefonByListe = new Map<string, string[]>();
+    const CHUNK = 100;
+    for (let i = 0; i < tumListeIdleri.length; i += CHUNK) {
+      const parti = tumListeIdleri.slice(i, i + CHUNK);
+      const { data: aliciRows, error: aliciErr } = await sb
+        .from("panel_toplu_sms_liste_alicilar")
+        .select("liste_id, telefon, basarili")
+        .in("liste_id", parti)
+        .eq("basarili", true);
+      if (aliciErr) break;
+      for (const row of aliciRows ?? []) {
+        const lid = String(row.liste_id ?? "");
+        const tel = String(row.telefon ?? "").trim();
+        if (!lid || !tel) continue;
+        const arr = telefonByListe.get(lid) ?? [];
+        arr.push(tel);
+        telefonByListe.set(lid, arr);
+      }
+    }
+
+    const adayTelefonlar = [
+      ...new Set([...telefonByListe.values()].flat()),
+    ];
+    const kayitliSet = new Set<string>();
+    const TEL_CHUNK = 200;
+    for (let i = 0; i < adayTelefonlar.length; i += TEL_CHUNK) {
+      const parti = adayTelefonlar.slice(i, i + TEL_CHUNK);
+      const { data: cekiciler } = await sb
+        .from("cekiciler")
+        .select("telefon")
+        .in("telefon", parti);
+      for (const c of cekiciler ?? []) {
+        if (c.telefon) kayitliSet.add(String(c.telefon));
+      }
+    }
+
+    for (const [varyant, listeIds] of listeIdsByVaryant) {
+      for (const lid of listeIds) {
+        for (const tel of telefonByListe.get(lid) ?? []) {
+          if (kayitliSet.has(tel)) kayitEkle(varyant, tel);
+        }
+      }
+    }
   }
 
   return SMS50_VARYANTLAR.map((varyant) => {
     const g = gonderilen.get(varyant) ?? 0;
     const t = tiklamaSay.get(varyant) ?? 0;
+    const k = kayitTelefonlar.get(varyant)?.size ?? 0;
     return {
       varyant,
       kisaUrl: sms50KisaUrl(varyant),
       gonderilen: g,
       tiklama: t,
-      ctr: g > 0 ? t / g : null,
+      ctr: sms50Oran(t, g),
+      kayit: k,
+      kayitOranGonderim: sms50Oran(k, g),
+      kayitOranTiklama: sms50Oran(k, t),
       sonTiklama: sonTiklama.get(varyant) ?? null,
     };
   });

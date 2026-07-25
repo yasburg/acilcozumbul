@@ -119,8 +119,16 @@ type TestLinkOzet = {
   gonderilen: number;
   tiklama: number;
   ctr: number | null;
+  kayit: number;
+  kayitOranGonderim: number | null;
+  kayitOranTiklama: number | null;
   sonTiklama: string | null;
 };
+
+function yuzdeOran(v: number | null | undefined) {
+  if (v == null) return "—";
+  return `${(v * 100).toFixed(1)}%`;
+}
 
 type SaatIzgarasi = {
   grid: number[][];
@@ -1530,7 +1538,8 @@ export default function PanelTopluSmsPage() {
             </button>
           </div>
           <p className="text-xs text-slate-500 leading-relaxed">
-            Her harf ayrı yuva. CTR = tıklama ÷ başarılı gönderim.{" "}
+            Her harf ayrı yuva. CTR = tıklama ÷ gönderim. Kayıt/gönderim =
+            kayıt ÷ gönderim; Kayıt/tık = kayıt ÷ tıklama.{" "}
             <code className="bg-slate-100 px-1 rounded">
               /sms50{SMS50_TEST_VARYANT}
             </code>{" "}
@@ -1559,6 +1568,18 @@ export default function PanelTopluSmsPage() {
                     <th className="px-3 py-2 font-semibold tabular-nums">
                       CTR
                     </th>
+                    <th
+                      className="px-3 py-2 font-semibold tabular-nums"
+                      title="Kayıt ÷ gönderim"
+                    >
+                      Kayıt/gönderim
+                    </th>
+                    <th
+                      className="px-3 py-2 font-semibold tabular-nums"
+                      title="Kayıt ÷ tıklama"
+                    >
+                      Kayıt/tık
+                    </th>
                     <th className="px-3 py-2 font-semibold">Son tık</th>
                     <th className="px-3 py-2 font-semibold" />
                   </tr>
@@ -1584,9 +1605,18 @@ export default function PanelTopluSmsPage() {
                         {row.tiklama}
                       </td>
                       <td className="px-3 py-2 tabular-nums text-slate-800">
-                        {row.ctr == null
-                          ? "—"
-                          : `${(row.ctr * 100).toFixed(1)}%`}
+                        {yuzdeOran(row.ctr)}
+                      </td>
+                      <td className="px-3 py-2 tabular-nums text-slate-800">
+                        {yuzdeOran(row.kayitOranGonderim)}
+                        {row.kayit > 0 ? (
+                          <span className="block text-[10px] text-slate-400">
+                            {row.kayit} kayıt
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="px-3 py-2 tabular-nums text-slate-800">
+                        {yuzdeOran(row.kayitOranTiklama)}
                       </td>
                       <td className="px-3 py-2 text-xs text-slate-500 whitespace-nowrap">
                         {row.sonTiklama ? tarihKisa(row.sonTiklama) : "—"}

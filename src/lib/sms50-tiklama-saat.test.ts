@@ -1,9 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { SMS50_TEST_VARYANT } from "./sms50-kampanya";
 import {
+  sms50Oran,
   sms50TiklamaGunSaat,
   sms50TiklamaSatirlarindanIzgara,
 } from "./sms50-tiklama-db";
+
+describe("sms50Oran", () => {
+  it("payda 0 ise null", () => {
+    expect(sms50Oran(5, 0)).toBeNull();
+  });
+
+  it("oran hesaplar", () => {
+    expect(sms50Oran(1, 4)).toBe(0.25);
+  });
+});
 
 describe("sms50TiklamaGunSaat", () => {
   it("Istanbul saat diliminde gün/saat üretir", () => {
