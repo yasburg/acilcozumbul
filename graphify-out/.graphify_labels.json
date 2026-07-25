@@ -81,8 +81,14 @@
   "79": "teklif-db.ts",
   "80": "KonumIzniYardim.tsx",
   "81": "talep-fotograf.ts",
+  "82": "PanelCekiciHarita.tsx",
+  "83": "cekici-bolge.ts",
+  "84": "sms50-tiklama-db.ts",
   "85": "page.tsx",
   "86": "layout.tsx",
   "87": "page.tsx",
-  "89": "kredi-fiyat.ts"
+  "88": "cekiciHizmetBolgeleri",
+  "89": "kredi-fiyat.ts",
+  "90": "ArizaFotografAlani.tsx",
+  "91": "page.tsx"
 }

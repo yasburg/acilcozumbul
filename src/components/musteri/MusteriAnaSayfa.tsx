@@ -1127,7 +1127,11 @@ function MusteriAnaSayfaIcerik() {
         if (sessionStorage.getItem(`acil_meta_lead_${data.id}`) !== "1") {
           sessionStorage.setItem(`acil_meta_lead_${data.id}`, "1");
           metaPixelLead({ content_name: form.sorunTipi || "musteri_talep" });
-          tiktokPixelLead({ content_name: form.sorunTipi || "musteri_talep" });
+          void tiktokPixelLead({
+            content_name: form.sorunTipi || "musteri_talep",
+            phone: form.telefon,
+            externalId: typeof data.id === "string" ? data.id : String(data.id ?? ""),
+          });
         }
         sessionStorage.setItem(
           `acil_bekle_${data.id}`,
@@ -1138,7 +1142,10 @@ function MusteriAnaSayfaIcerik() {
         }
       } catch {
         metaPixelLead({ content_name: form.sorunTipi || "musteri_talep" });
-        tiktokPixelLead({ content_name: form.sorunTipi || "musteri_talep" });
+        void tiktokPixelLead({
+          content_name: form.sorunTipi || "musteri_talep",
+          phone: form.telefon,
+        });
       }
       /* Tam sayfa: Pixel Helper / PageView için soft navigate kullanma */
       window.location.assign(`/bekle/${data.id}`);

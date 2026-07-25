@@ -91,11 +91,10 @@ describe("tiktok kayit/hesap once", () => {
     vi.unstubAllGlobals();
   });
 
-  it("kayit ol CompleteRegistration, hesap Subscribe; ikinci çağrı atlanır", async () => {
+  it("kayit ol ve hesap CompleteRegistration; ikinci çağrı atlanır", async () => {
     vi.resetModules();
-    const { tiktokPixelKayitOl, tiktokPixelHesapOlustur } = await import(
-      "./tiktok-pixel"
-    );
+    const { tiktokPixelKayitOl, tiktokPixelHesapOlustur, tiktokPixelLead } =
+      await import("./tiktok-pixel");
 
     expect(
       await tiktokPixelKayitOl({ phone: "05323233232", externalId: "c1" })
@@ -107,9 +106,14 @@ describe("tiktok kayit/hesap once", () => {
     expect(await tiktokPixelHesapOlustur({})).toBe(false);
     expect(sessionStorage.getItem(TT_HESAP_OLUSTUR_KEY)).toBe("1");
 
+    await tiktokPixelLead({
+      content_name: "musteri_talep",
+      phone: "05323233232",
+    });
+
     const events = track.mock.calls.map((c) => c[0]);
-    expect(events).toContain("CompleteRegistration");
-    expect(events).toContain("Subscribe");
+    expect(events.filter((e) => e === "CompleteRegistration")).toHaveLength(2);
+    expect(events).toContain("Lead");
     expect(identify).toHaveBeenCalled();
   });
 });

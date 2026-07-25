@@ -248,22 +248,33 @@ export function tiktokPixelClickButton(params: {
 }
 
 /**
- * Müşteri talep formu tamamlandı → SubmitForm (Lead eşleniği).
+ * Müşteri talep formu tamamlandı → TikTok standart olay «Lead».
+ * PII varsa önce identify (SHA-256).
  */
-export function tiktokPixelLead(params?: {
+export async function tiktokPixelLead(params?: {
   content_name?: string;
+  phone?: string | null;
+  externalId?: string | null;
+  email?: string | null;
   value?: number;
   currency?: string;
   event_id?: string;
-}): void {
+}): Promise<void> {
+  if (!analitikHazir()) return;
+
+  await tiktokPixelIdentify({
+    email: params?.email,
+    phone: params?.phone,
+    externalId: params?.externalId,
+  });
+
   const name = params?.content_name ?? "musteri_talep";
   trackEvent(
-    "SubmitForm",
+    "Lead",
     {
       contents: [icerik(name, name)],
       value: params?.value ?? 1,
       currency: params?.currency ?? "TRY",
-      content_name: name,
     },
     params?.event_id
   );
@@ -303,8 +314,9 @@ export async function tiktokPixelKayitOl(params?: {
 }
 
 /**
- * Hesap oluştur — Subscribe (profil/kurulum tamam).
+ * Hesap oluştur — ikinci CompleteRegistration (profil/kurulum tamam).
  * Funnel A: kayıt onayı ile birlikte; Funnel B: /kayit/kurulum bitince.
+ * (Events Manager’da Lead / ViewContent / CompleteRegistration setine uyumlu)
  */
 export async function tiktokPixelHesapOlustur(params?: {
   content_name?: string;
@@ -327,7 +339,7 @@ export async function tiktokPixelHesapOlustur(params?: {
   });
 
   const name = params?.content_name ?? "hesap_olustur";
-  trackEvent("Subscribe", {
+  trackEvent("CompleteRegistration", {
     contents: [icerik("hesap_olustur", name)],
     value: params?.value ?? 1,
     currency: params?.currency ?? "TRY",
