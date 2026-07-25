@@ -84,7 +84,13 @@ describe("tiktok kayit/hesap once", () => {
       ttq,
       localStorage: storage,
       sessionStorage: storage,
+      location: { href: "https://example.test/kayit", search: "" },
     });
+    vi.stubGlobal("document", { cookie: "", referrer: "" });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) })
+    );
   });
 
   afterEach(() => {

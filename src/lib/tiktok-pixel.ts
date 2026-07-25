@@ -106,15 +106,93 @@ function sessionIsaretle(key: string): boolean {
   }
 }
 
+function cookieOku(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(
+    new RegExp(`(?:^|; )${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]*)`)
+  );
+  return m?.[1] ? decodeURIComponent(m[1]) : null;
+}
+
+function ttclidOku(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const q = new URLSearchParams(window.location.search).get("ttclid");
+    if (q?.trim()) return q.trim();
+  } catch {
+    /* ignore */
+  }
+  return cookieOku("ttclid");
+}
+
+/** Pixel ile aynı event_id → Events API (dedup) */
+function eventsApiBridge(opts: {
+  event: string;
+  eventId: string;
+  payload: TikTokTrackPayload;
+  phone?: string | null;
+  email?: string | null;
+  externalId?: string | null;
+}): void {
+  if (typeof window === "undefined") return;
+  const body: Record<string, unknown> = {
+    event: opts.event,
+    event_id: opts.eventId,
+    contents: opts.payload.contents,
+    value: opts.payload.value ?? 1,
+    currency: opts.payload.currency ?? "TRY",
+    url:
+      typeof window.location?.href === "string"
+        ? window.location.href
+        : undefined,
+    referrer:
+      typeof document !== "undefined" && document.referrer
+        ? document.referrer
+        : undefined,
+    ttclid: ttclidOku() || undefined,
+    ttp: cookieOku("_ttp") || undefined,
+  };
+  if (opts.payload.search_string) {
+    body.search_string = opts.payload.search_string;
+  }
+  if (opts.phone) body.phone = opts.phone;
+  if (opts.email) body.email = opts.email;
+  if (opts.externalId) body.external_id = opts.externalId;
+
+  void fetch("/api/tiktok/event", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    keepalive: true,
+  }).catch(() => {});
+}
+
 function trackEvent(
   event: string,
   payload: TikTokTrackPayload,
-  eventId?: string
-): void {
-  if (!analitikHazir()) return;
-  ttqCagir("track", event, payload, {
-    event_id: eventId ?? tiktokEventId(event),
-  });
+  opts?: {
+    eventId?: string;
+    phone?: string | null;
+    email?: string | null;
+    externalId?: string | null;
+    /** Events API köprüsü (varsayılan: açık) */
+    server?: boolean;
+  }
+): string {
+  const eventId = opts?.eventId ?? tiktokEventId(event);
+  if (!analitikHazir()) return eventId;
+  ttqCagir("track", event, payload, { event_id: eventId });
+  if (opts?.server !== false) {
+    eventsApiBridge({
+      event,
+      eventId,
+      payload,
+      phone: opts?.phone,
+      email: opts?.email,
+      externalId: opts?.externalId,
+    });
+  }
+  return eventId;
 }
 
 function icerik(
@@ -201,7 +279,7 @@ export function tiktokPixelViewContent(params: {
       value: params.value ?? 1,
       currency: params.currency ?? "TRY",
     },
-    params.event_id
+    { eventId: params.event_id }
   );
 }
 
@@ -224,7 +302,7 @@ export function tiktokPixelSearch(params: {
       currency: params.currency ?? "TRY",
       search_string: params.search_string,
     },
-    params.event_id
+    { eventId: params.event_id }
   );
 }
 
@@ -243,13 +321,13 @@ export function tiktokPixelClickButton(params: {
       value: params.value ?? 1,
       currency: params.currency ?? "TRY",
     },
-    params.event_id
+    { eventId: params.event_id }
   );
 }
 
 /**
  * Müşteri talep formu tamamlandı → TikTok standart olay «Lead».
- * PII varsa önce identify (SHA-256).
+ * PII varsa önce identify (SHA-256); Events API ile aynı event_id.
  */
 export async function tiktokPixelLead(params?: {
   content_name?: string;
@@ -276,7 +354,12 @@ export async function tiktokPixelLead(params?: {
       value: params?.value ?? 1,
       currency: params?.currency ?? "TRY",
     },
-    params?.event_id
+    {
+      eventId: params?.event_id,
+      phone: params?.phone,
+      email: params?.email,
+      externalId: params?.externalId,
+    }
   );
 }
 
@@ -305,18 +388,25 @@ export async function tiktokPixelKayitOl(params?: {
   });
 
   const name = params?.content_name ?? "kayit_ol";
-  trackEvent("CompleteRegistration", {
-    contents: [icerik("kayit_ol", name)],
-    value: params?.value ?? 1,
-    currency: params?.currency ?? "TRY",
-  });
+  trackEvent(
+    "CompleteRegistration",
+    {
+      contents: [icerik("kayit_ol", name)],
+      value: params?.value ?? 1,
+      currency: params?.currency ?? "TRY",
+    },
+    {
+      phone: params?.phone,
+      email: params?.email,
+      externalId: params?.externalId,
+    }
+  );
   return true;
 }
 
 /**
  * Hesap oluştur — ikinci CompleteRegistration (profil/kurulum tamam).
  * Funnel A: kayıt onayı ile birlikte; Funnel B: /kayit/kurulum bitince.
- * (Events Manager’da Lead / ViewContent / CompleteRegistration setine uyumlu)
  */
 export async function tiktokPixelHesapOlustur(params?: {
   content_name?: string;
@@ -339,11 +429,19 @@ export async function tiktokPixelHesapOlustur(params?: {
   });
 
   const name = params?.content_name ?? "hesap_olustur";
-  trackEvent("CompleteRegistration", {
-    contents: [icerik("hesap_olustur", name)],
-    value: params?.value ?? 1,
-    currency: params?.currency ?? "TRY",
-  });
+  trackEvent(
+    "CompleteRegistration",
+    {
+      contents: [icerik("hesap_olustur", name)],
+      value: params?.value ?? 1,
+      currency: params?.currency ?? "TRY",
+    },
+    {
+      phone: params?.phone,
+      email: params?.email,
+      externalId: params?.externalId,
+    }
+  );
   return true;
 }
 
