@@ -7,7 +7,6 @@ import {
   type CekiciKayitGunNokta,
 } from "@/lib/cekici-kayit-serisi";
 
-type Mod = "kumulatif" | "gunluk";
 type Pencere = 30 | 90 | "hepsi";
 
 function gunEtiket(gun: string): string {
@@ -15,132 +14,47 @@ function gunEtiket(gun: string): string {
   return `${d}.${m}`;
 }
 
+/** Günlük çubuk + kümülatif çizgi; nokta üstünde toplam, altında +günlük */
 function KullaniciSayisiSvg({
   noktalar,
-  mod,
 }: {
   noktalar: CekiciKayitGunNokta[];
-  mod: Mod;
 }) {
   const W = 640;
-  const H = 240;
+  const H = 260;
   const padL = 40;
   const padR = 16;
-  const padT = 28;
-  const padB = 36;
+  const padT = 32;
+  const padB = 44;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
 
-  const degerler = noktalar.map((n) =>
-    mod === "kumulatif" ? n.kumulatif : n.gunluk
-  );
-  const maxY = Math.max(1, ...degerler);
+  const maxKum = Math.max(1, ...noktalar.map((n) => n.kumulatif));
+  const maxGun = Math.max(1, ...noktalar.map((n) => n.gunluk));
   const n = Math.max(1, noktalar.length - 1);
 
   const xAt = (i: number) =>
     padL + (noktalar.length <= 1 ? plotW / 2 : (i / n) * plotW);
-  const yAt = (v: number) => padT + plotH - (v / maxY) * plotH;
+  const yKum = (v: number) => padT + plotH - (v / maxKum) * plotH;
+  /** Çubuklar kümülatif ölçeğin ~%45’ini kullanır; çizgi baskın kalır */
+  const barMaxH = plotH * 0.45;
+  const yGunH = (v: number) => (v / maxGun) * barMaxH;
 
-  /** Az günde hepsi; çok günde ~8 etiket + nokta */
   const etiketAdim = Math.max(1, Math.ceil(noktalar.length / 8));
   const etiketGoster = (i: number) =>
     i % etiketAdim === 0 || i === noktalar.length - 1;
 
-  const yTickler = [0, Math.round(maxY / 2), maxY].filter(
+  const yTickler = [0, Math.round(maxKum / 2), maxKum].filter(
     (v, i, a) => a.indexOf(v) === i
   );
 
-  if (mod === "gunluk") {
-    const barW = Math.max(
-      2,
-      Math.min(18, (plotW / Math.max(1, noktalar.length)) * 0.7)
-    );
-    return (
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        className="w-full h-auto"
-        role="img"
-        aria-label="Günlük kullanıcı kaydı"
-      >
-        {yTickler.map((v) => (
-          <g key={v}>
-            <line
-              x1={padL}
-              x2={W - padR}
-              y1={yAt(v)}
-              y2={yAt(v)}
-              stroke="#e2e8f0"
-              strokeWidth={1}
-            />
-            <text
-              x={padL - 6}
-              y={yAt(v) + 3}
-              textAnchor="end"
-              className="fill-slate-400"
-              fontSize={10}
-            >
-              {v}
-            </text>
-          </g>
-        ))}
-        {noktalar.map((p, i) => {
-          const h = Math.max(0, (p.gunluk / maxY) * plotH);
-          const x = xAt(i) - barW / 2;
-          const y = padT + plotH - h;
-          const cx = xAt(i);
-          return (
-            <g key={p.gun}>
-              <rect
-                x={x}
-                y={y}
-                width={barW}
-                height={h}
-                rx={2}
-                className="fill-amber-500"
-              >
-                <title>
-                  {p.gun}: {p.gunluk} kayıt
-                </title>
-              </rect>
-              {etiketGoster(i) ? (
-                <>
-                  <circle
-                    cx={cx}
-                    cy={y}
-                    r={3.5}
-                    className="fill-amber-700 stroke-white"
-                    strokeWidth={1.5}
-                  />
-                  <text
-                    x={cx}
-                    y={Math.max(12, y - 8)}
-                    textAnchor="middle"
-                    className="fill-slate-800"
-                    fontSize={10}
-                    fontWeight={600}
-                  >
-                    {p.gunluk}
-                  </text>
-                  <text
-                    x={cx}
-                    y={H - 10}
-                    textAnchor="middle"
-                    className="fill-slate-400"
-                    fontSize={9}
-                  >
-                    {gunEtiket(p.gun)}
-                  </text>
-                </>
-              ) : null}
-            </g>
-          );
-        })}
-      </svg>
-    );
-  }
+  const barW = Math.max(
+    2,
+    Math.min(18, (plotW / Math.max(1, noktalar.length)) * 0.55)
+  );
 
   const pts = noktalar
-    .map((p, i) => `${xAt(i)},${yAt(p.kumulatif)}`)
+    .map((p, i) => `${xAt(i)},${yKum(p.kumulatif)}`)
     .join(" ");
   const area =
     noktalar.length > 0
@@ -152,21 +66,21 @@ function KullaniciSayisiSvg({
       viewBox={`0 0 ${W} ${H}`}
       className="w-full h-auto"
       role="img"
-      aria-label="Kümülatif kullanıcı sayısı"
+      aria-label="Günlük ve kümülatif kullanıcı sayısı"
     >
       {yTickler.map((v) => (
         <g key={v}>
           <line
             x1={padL}
             x2={W - padR}
-            y1={yAt(v)}
-            y2={yAt(v)}
+            y1={yKum(v)}
+            y2={yKum(v)}
             stroke="#e2e8f0"
             strokeWidth={1}
           />
           <text
             x={padL - 6}
-            y={yAt(v) + 3}
+            y={yKum(v) + 3}
             textAnchor="end"
             className="fill-slate-400"
             fontSize={10}
@@ -175,8 +89,31 @@ function KullaniciSayisiSvg({
           </text>
         </g>
       ))}
+
+      {/* Günlük çubuklar */}
+      {noktalar.map((p, i) => {
+        const h = Math.max(0, yGunH(p.gunluk));
+        const x = xAt(i) - barW / 2;
+        const y = padT + plotH - h;
+        return (
+          <rect
+            key={`bar-${p.gun}`}
+            x={x}
+            y={y}
+            width={barW}
+            height={h}
+            rx={2}
+            className="fill-amber-300/80"
+          >
+            <title>
+              {p.gun}: +{p.gunluk} kayıt (kümülatif {p.kumulatif})
+            </title>
+          </rect>
+        );
+      })}
+
       {area && (
-        <polygon points={area} className="fill-amber-100" opacity={0.9} />
+        <polygon points={area} className="fill-amber-100" opacity={0.55} />
       )}
       <polyline
         points={pts}
@@ -186,10 +123,12 @@ function KullaniciSayisiSvg({
         strokeLinejoin="round"
         strokeLinecap="round"
       />
+
       {noktalar.map((p, i) => {
         if (!etiketGoster(i)) return null;
         const cx = xAt(i);
-        const cy = yAt(p.kumulatif);
+        const cy = yKum(p.kumulatif);
+        const deltaY = Math.min(H - 22, cy + 14);
         return (
           <g key={p.gun}>
             <circle
@@ -200,7 +139,7 @@ function KullaniciSayisiSvg({
               strokeWidth={1.5}
             >
               <title>
-                {p.gun}: {p.kumulatif} kullanıcı
+                {p.gun}: {p.kumulatif} kullanıcı (+{p.gunluk})
               </title>
             </circle>
             <text
@@ -212,6 +151,16 @@ function KullaniciSayisiSvg({
               fontWeight={600}
             >
               {p.kumulatif}
+            </text>
+            <text
+              x={cx}
+              y={deltaY}
+              textAnchor="middle"
+              className="fill-amber-800"
+              fontSize={9}
+              fontWeight={600}
+            >
+              +{p.gunluk}
             </text>
             <text
               x={cx}
@@ -234,7 +183,6 @@ export function KullaniciSayisiGrafik({
 }: {
   seri: CekiciKayitGunNokta[];
 }) {
-  const [mod, setMod] = useState<Mod>("kumulatif");
   const [pencere, setPencere] = useState<Pencere>(90);
 
   const gorunen = useMemo(
@@ -253,60 +201,51 @@ export function KullaniciSayisiGrafik({
           <p className="text-xs text-slate-500 mt-0.5">
             Kayıtlı çekiciler (tester hariç) · Europe/Istanbul
             {son
-              ? mod === "kumulatif"
-                ? ` · son: ${son.kumulatif}`
-                : ` · pencerede ${toplamGunluk} kayıt`
+              ? ` · son: ${son.kumulatif} · pencerede +${toplamGunluk}`
               : ""}
           </p>
+          <p className="text-[11px] text-slate-400 mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+            <span className="inline-flex items-center gap-1.5">
+              <span
+                className="inline-block h-0.5 w-3 rounded bg-amber-600"
+                aria-hidden
+              />
+              Kümülatif
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-300"
+                aria-hidden
+              />
+              Günlük
+            </span>
+          </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <div className="flex rounded-xl border border-slate-200 p-0.5 bg-slate-50">
-            {(
-              [
-                ["kumulatif", "Kümülatif"],
-                ["gunluk", "Günlük"],
-              ] as const
-            ).map(([id, etiket]) => (
-              <button
-                key={id}
-                type="button"
-                className={`rounded-lg px-2.5 py-1.5 text-xs font-medium ${
-                  mod === id
-                    ? "bg-white shadow text-slate-900"
-                    : "text-slate-600"
-                }`}
-                onClick={() => setMod(id)}
-              >
-                {etiket}
-              </button>
-            ))}
-          </div>
-          <div className="flex rounded-xl border border-slate-200 p-0.5 bg-slate-50">
-            {(
-              [
-                [30, "30g"],
-                [90, "90g"],
-                ["hepsi", "Tümü"],
-              ] as const
-            ).map(([id, etiket]) => (
-              <button
-                key={String(id)}
-                type="button"
-                className={`rounded-lg px-2.5 py-1.5 text-xs font-medium ${
-                  pencere === id
-                    ? "bg-white shadow text-slate-900"
-                    : "text-slate-600"
-                }`}
-                onClick={() => setPencere(id)}
-              >
-                {etiket}
-              </button>
-            ))}
-          </div>
+        <div className="flex rounded-xl border border-slate-200 p-0.5 bg-slate-50">
+          {(
+            [
+              [30, "30g"],
+              [90, "90g"],
+              ["hepsi", "Tümü"],
+            ] as const
+          ).map(([id, etiket]) => (
+            <button
+              key={String(id)}
+              type="button"
+              className={`rounded-lg px-2.5 py-1.5 text-xs font-medium ${
+                pencere === id
+                  ? "bg-white shadow text-slate-900"
+                  : "text-slate-600"
+              }`}
+              onClick={() => setPencere(id)}
+            >
+              {etiket}
+            </button>
+          ))}
         </div>
       </div>
 
-      <KullaniciSayisiSvg noktalar={gorunen} mod={mod} />
+      <KullaniciSayisiSvg noktalar={gorunen} />
     </Card>
   );
 }
