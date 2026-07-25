@@ -13,6 +13,10 @@ import {
   metaPixelCerezSenkronize,
   metaPixelPageView,
 } from "@/lib/meta-pixel";
+import {
+  tiktokPixelCerezSenkronize,
+  tiktokPixelPageView,
+} from "@/lib/tiktok-pixel";
 
 type Gorunum = "ozet" | "ayarlar" | "onay";
 
@@ -21,8 +25,10 @@ function tercihKaydet(tercih: "tumu" | "zorunlu", kapat: () => void) {
   posthogCerezSenkronize();
   gtagCerezSenkronize();
   metaPixelCerezSenkronize();
+  tiktokPixelCerezSenkronize();
   if (tercih === "tumu") {
     metaPixelPageView();
+    tiktokPixelPageView();
   }
   kapat();
 }

@@ -4,6 +4,7 @@ import { Geist } from "next/font/google";
 import { CerezOnayBanner } from "@/components/CerezOnayBanner";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { MetaPixel } from "@/components/MetaPixel";
+import { TikTokPixel } from "@/components/TikTokPixel";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import {
   SEO_ACIKLAMA,
@@ -119,6 +120,7 @@ export default function RootLayout({
         ) : null}
         <GoogleAnalytics />
         <MetaPixel />
+        <TikTokPixel />
         <PostHogProvider>{children}</PostHogProvider>
         <CerezOnayBanner />
       </body>

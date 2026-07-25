@@ -19,6 +19,7 @@ import {
 import { adSoyadSatirGoster } from "@/lib/kisisel-veri-gizle";
 import { posthogOlayYakala } from "@/lib/posthog-client";
 import { metaPixelLead } from "@/lib/meta-pixel";
+import { tiktokPixelLead } from "@/lib/tiktok-pixel";
 
 type Durum =
   | "ihale_bekliyor"
@@ -197,6 +198,7 @@ function BekleIcerik() {
       /* private mode — yine de dene */
     }
     metaPixelLead({ content_name: sorun || "musteri_talep" });
+    tiktokPixelLead({ content_name: sorun || "musteri_talep" });
   }, [id, demoTalep, demoParam]);
 
   useEffect(() => {

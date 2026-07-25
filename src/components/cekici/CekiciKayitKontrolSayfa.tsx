@@ -17,6 +17,7 @@ import { telefonDogrulamaHatasi, telefonGecerliMi, telefonMaskele } from "@/lib/
 import { davetKoduNormalize } from "@/lib/davet-kodu";
 import { posthogKampanyaKaydet, posthogOlayYakala } from "@/lib/posthog-client";
 import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
+import { tiktokPixelCompleteRegistration } from "@/lib/tiktok-pixel";
 import {
   DOGUM_AYLARI,
   dogumAyGunSayisi,
@@ -415,14 +416,16 @@ function KayitIcerik() {
         sehir: form.sehir || undefined,
         davet_kodu: Boolean(form.davetKodu.trim()),
       });
-      /* Meta: onay URL’sine gitmeden önce tetikle (SPA / yönlendirme kaçaklarına karşı) */
+      /* Meta + TikTok: onay URL’sine gitmeden önce tetikle (SPA / yönlendirme kaçaklarına karşı) */
       try {
         if (sessionStorage.getItem(META_COMPLETE_REG_KEY) !== "1") {
           sessionStorage.setItem(META_COMPLETE_REG_KEY, "1");
           metaPixelCompleteRegistration({ content_name: "cekici_kayit" });
+          tiktokPixelCompleteRegistration({ content_name: "cekici_kayit" });
         }
       } catch {
         metaPixelCompleteRegistration({ content_name: "cekici_kayit" });
+        tiktokPixelCompleteRegistration({ content_name: "cekici_kayit" });
       }
       /* Tam sayfa yüklemesi: Google Ads / GA «sayfa yükleme» dönüşümü için soft navigate kullanma */
       const sehirQs = form.sehir.trim()

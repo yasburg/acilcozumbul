@@ -7,11 +7,12 @@ import { Btn, Card } from "@/components/ui";
 import { sehirKullanimAcikMi } from "@/lib/cekici-sehir-acilis";
 import { gtagCekiciKayitOnayGoruntule } from "@/lib/gtag";
 import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
+import { tiktokPixelCompleteRegistration } from "@/lib/tiktok-pixel";
 import { posthogOlayYakala } from "@/lib/posthog-client";
 
 const YONLENDIRME_SN = 5;
 const SIGN_UP_SESSION_KEY = "acil_ga_sign_up";
-/** Kayıt formunda da set edilir — Meta çift tetiklenmesin */
+/** Kayıt formunda da set edilir — Meta/TikTok çift tetiklenmesin */
 const META_COMPLETE_REG_KEY = "acil_meta_complete_reg";
 
 function OnayIcerik() {
@@ -46,6 +47,7 @@ function OnayIcerik() {
     }
     if (metaDonusum) {
       metaPixelCompleteRegistration({ content_name: "cekici_kayit" });
+      tiktokPixelCompleteRegistration({ content_name: "cekici_kayit" });
     }
     if (donusumOlayi) {
       posthogOlayYakala("cekici_kayit_onay", {
