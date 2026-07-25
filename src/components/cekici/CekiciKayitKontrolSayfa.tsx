@@ -17,7 +17,12 @@ import { telefonDogrulamaHatasi, telefonGecerliMi, telefonMaskele } from "@/lib/
 import { davetKoduNormalize } from "@/lib/davet-kodu";
 import { posthogKampanyaKaydet, posthogOlayYakala } from "@/lib/posthog-client";
 import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
-import { tiktokPixelCompleteRegistration } from "@/lib/tiktok-pixel";
+import {
+  tiktokPixelClickButton,
+  tiktokPixelHesapOlustur,
+  tiktokPixelKayitOl,
+  tiktokPixelViewContent,
+} from "@/lib/tiktok-pixel";
 import {
   DOGUM_AYLARI,
   dogumAyGunSayisi,
@@ -155,6 +160,10 @@ function KayitIcerik() {
   useEffect(() => {
     posthogKampanyaKaydet();
     posthogOlayYakala("cekici_kayit_goruldu", { rol: "cekici", funnel: "a" });
+    tiktokPixelViewContent({
+      content_id: "kayit_a",
+      content_name: "cekici_kayit_kontrol",
+    });
     void fetch("/api/kayit/funnel-olay", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -374,6 +383,10 @@ function KayitIcerik() {
   async function kayitOl(e: React.FormEvent) {
     e.preventDefault();
     if (!otpAsamasi) {
+      tiktokPixelClickButton({
+        content_id: "kayit_a_otp_gonder",
+        content_name: "ucretsiz_cekici_kaydi_olustur",
+      });
       await otpGonder();
       return;
     }
@@ -385,6 +398,11 @@ function KayitIcerik() {
       alanaKaydir(otpRef);
       return;
     }
+
+    tiktokPixelClickButton({
+      content_id: "kayit_a_kayit_ol",
+      content_name: "kayit_ol",
+    });
 
     setLoading(true);
     setError("");
@@ -416,17 +434,27 @@ function KayitIcerik() {
         sehir: form.sehir || undefined,
         davet_kodu: Boolean(form.davetKodu.trim()),
       });
-      /* Meta + TikTok: onay URL’sine gitmeden önce tetikle (SPA / yönlendirme kaçaklarına karşı) */
+      /* Funnel A: kayıt + hesap aynı anda — son onayda ikisi birden */
+      const cekiciId =
+        typeof data.id === "string" ? data.id : String(data.id ?? "");
       try {
         if (sessionStorage.getItem(META_COMPLETE_REG_KEY) !== "1") {
           sessionStorage.setItem(META_COMPLETE_REG_KEY, "1");
           metaPixelCompleteRegistration({ content_name: "cekici_kayit" });
-          tiktokPixelCompleteRegistration({ content_name: "cekici_kayit" });
         }
       } catch {
         metaPixelCompleteRegistration({ content_name: "cekici_kayit" });
-        tiktokPixelCompleteRegistration({ content_name: "cekici_kayit" });
       }
+      await tiktokPixelKayitOl({
+        content_name: "cekici_kayit_a",
+        phone: form.telefon,
+        externalId: cekiciId || null,
+      });
+      await tiktokPixelHesapOlustur({
+        content_name: "cekici_hesap_a",
+        phone: form.telefon,
+        externalId: cekiciId || null,
+      });
       /* Tam sayfa yüklemesi: Google Ads / GA «sayfa yükleme» dönüşümü için soft navigate kullanma */
       const sehirQs = form.sehir.trim()
         ? `?sehir=${encodeURIComponent(form.sehir.trim())}`

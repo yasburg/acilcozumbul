@@ -46,7 +46,11 @@ import {
 } from "@/lib/posthog-client";
 import { gtagAdsFiyatTeklifiDonusumu } from "@/lib/gtag";
 import { metaPixelLead } from "@/lib/meta-pixel";
-import { tiktokPixelLead } from "@/lib/tiktok-pixel";
+import {
+  tiktokPixelLead,
+  tiktokPixelSearch,
+  tiktokPixelViewContent,
+} from "@/lib/tiktok-pixel";
 import {
   musteriProfilKaydet,
   musteriProfilOku,
@@ -237,6 +241,10 @@ function MusteriAnaSayfaIcerik() {
     setGpsGuvenli(konumGuvenliMi());
     posthogKampanyaKaydet();
     funnelKaydet("form_basla");
+    tiktokPixelViewContent({
+      content_id: "musteri_talep",
+      content_name: "musteri_ana_sayfa",
+    });
   }, []);
 
   useEffect(() => {
@@ -1251,6 +1259,12 @@ function MusteriAnaSayfaIcerik() {
             onTipSec={(id) => {
               update("sorunTipi", id);
               posthogOlayYakala("sorun_secildi", { sorun_tipi: id });
+              const label = sorunTipiBul(id)?.label ?? id;
+              tiktokPixelSearch({
+                search_string: label,
+                content_id: id,
+                content_name: label,
+              });
             }}
             onDetayChange={(v) => update("sorunDetay", v)}
             sadeceTipSecimi

@@ -132,6 +132,7 @@ export async function POST(request: NextRequest) {
       ok: true,
       sonraki: null,
       yonlendir: "/cekici/panel",
+      cekiciId: cekici.id,
     });
   }
 

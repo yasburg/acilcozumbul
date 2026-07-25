@@ -12,6 +12,11 @@ import {
   kayitFunnelOlayGonder,
   kayitFunnelSessionId,
 } from "@/lib/kayit-funnel-client";
+import {
+  tiktokPixelClickButton,
+  tiktokPixelKayitOl,
+  tiktokPixelViewContent,
+} from "@/lib/tiktok-pixel";
 
 const GUVEN = [
   "Kayıt ücretsiz",
@@ -89,6 +94,10 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
       rol: "cekici",
       funnel: funnel.id,
     });
+    tiktokPixelViewContent({
+      content_id: `kayit_${funnel.id}`,
+      content_name: `cekici_kayit_${funnel.id}`,
+    });
     void kayitFunnelOlayGonder(funnel.id, "goruldu");
   }, [funnel.id, searchParams]);
 
@@ -103,6 +112,10 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     setError("");
     setMesaj("");
     try {
+      tiktokPixelClickButton({
+        content_id: `kayit_${funnel.id}_otp`,
+        content_name: "telefonuma_kod_gonder",
+      });
       void kayitFunnelOlayGonder(funnel.id, "otp_gonder");
       const res = await fetch("/api/cekici/kayit/otp/gonder", {
         method: "POST",
@@ -143,6 +156,10 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     setLoading(true);
     setError("");
     try {
+      tiktokPixelClickButton({
+        content_id: `kayit_${funnel.id}_dogrula`,
+        content_name: "dogrula_ve_kaydi_tamamla",
+      });
       const smsToken = searchParams.get("sms_token")?.trim() || undefined;
       const res = await fetch("/api/cekici/kayit/hizli", {
         method: "POST",
@@ -174,6 +191,14 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
         funnel: funnel.id,
         hizli: true,
       });
+      /* Funnel B+: telefon OTP sonrası → kayıt ol (hesap kurulumda) */
+      const cekiciId =
+        typeof d.id === "string" ? d.id : String(d.id ?? "");
+      await tiktokPixelKayitOl({
+        content_name: `cekici_kayit_${funnel.id}`,
+        phone: telefon,
+        externalId: cekiciId || null,
+      });
       setBasarili(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Kayıt başarısız.");
@@ -195,7 +220,13 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
           </p>
           <Btn
             className="w-full min-h-[52px] text-base"
-            onClick={() => router.push("/kayit/kurulum")}
+            onClick={() => {
+              tiktokPixelClickButton({
+                content_id: `kayit_${funnel.id}_kurulum`,
+                content_name: "hesabimi_hazirlamaya_basla",
+              });
+              router.push("/kayit/kurulum");
+            }}
           >
             Hesabımı hazırlamaya başla
           </Btn>

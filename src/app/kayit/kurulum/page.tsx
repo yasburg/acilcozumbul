@@ -20,6 +20,11 @@ import {
 } from "@/lib/kayit-funnel";
 import { kayitFunnelSessionId } from "@/lib/kayit-funnel-client";
 import { cekiciFetch } from "@/lib/cekici-fetch";
+import {
+  tiktokPixelClickButton,
+  tiktokPixelHesapOlustur,
+  tiktokPixelViewContent,
+} from "@/lib/tiktok-pixel";
 
 export default function KayitKurulumPage() {
   const router = useRouter();
@@ -39,6 +44,10 @@ export default function KayitKurulumPage() {
   const istanbulMu = sehir === ISTANBUL_IL;
 
   useEffect(() => {
+    tiktokPixelViewContent({
+      content_id: "kayit_kurulum",
+      content_name: "hesap_kurulumu",
+    });
     void (async () => {
       const res = await cekiciFetch("/api/cekici/kurulum");
       if (res.status === 401) {
@@ -112,6 +121,16 @@ export default function KayitKurulumPage() {
         throw new Error(typeof d.error === "string" ? d.error : "Kayıt başarısız.");
       }
       if (d.yonlendir) {
+        /* Funnel B+: kurulum bitti → hesap oluştur dönüşümü */
+        await tiktokPixelHesapOlustur({
+          content_name: "cekici_hesap_kurulum",
+          externalId:
+            typeof d.cekiciId === "string"
+              ? d.cekiciId
+              : typeof d.id === "string"
+                ? d.id
+                : null,
+        });
         router.push(String(d.yonlendir));
         return;
       }
@@ -300,12 +319,16 @@ export default function KayitKurulumPage() {
             <Btn
               className="w-full min-h-[52px] bg-amber-600 hover:bg-amber-700"
               disabled={saving || ilceler.length === 0}
-              onClick={() =>
+              onClick={() => {
+                tiktokPixelClickButton({
+                  content_id: "kayit_kurulum_bitir",
+                  content_name: "isleri_gormeye_basla",
+                });
                 void kaydet({
                   adim: 2,
                   bolgeler: { [sehir]: ilceler },
-                })
-              }
+                });
+              }}
             >
               {saving ? "Kaydediliyor…" : "İşleri görmeye başla"}
             </Btn>
