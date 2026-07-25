@@ -12,11 +12,15 @@ import {
   kayitFunnelOlayGonder,
   kayitFunnelSessionId,
 } from "@/lib/kayit-funnel-client";
+import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
 import {
   tiktokPixelClickButton,
   tiktokPixelKayitOl,
   tiktokPixelViewContent,
 } from "@/lib/tiktok-pixel";
+
+/** Meta CompleteRegistration bir kez (A formu / onay ile aynı anahtar) */
+const META_COMPLETE_REG_KEY = "acil_meta_complete_reg";
 
 const GUVEN = [
   "Kayıt ücretsiz",
@@ -189,9 +193,21 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
         funnel: funnel.id,
         hizli: true,
       });
-      /* Funnel B+: telefon OTP sonrası → kayıt ol (hesap kurulumda) */
+      /* Funnel B+: telefon OTP sonrası → Meta + TikTok kayıt dönüşümü */
       const cekiciId =
         typeof d.id === "string" ? d.id : String(d.id ?? "");
+      try {
+        if (sessionStorage.getItem(META_COMPLETE_REG_KEY) !== "1") {
+          sessionStorage.setItem(META_COMPLETE_REG_KEY, "1");
+          metaPixelCompleteRegistration({
+            content_name: `cekici_kayit_${funnel.id}`,
+          });
+        }
+      } catch {
+        metaPixelCompleteRegistration({
+          content_name: `cekici_kayit_${funnel.id}`,
+        });
+      }
       await tiktokPixelKayitOl({
         content_name: `cekici_kayit_${funnel.id}`,
         phone: telefon,
