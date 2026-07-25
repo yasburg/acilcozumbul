@@ -3,6 +3,7 @@ import {
   cerezAnalitikAktif,
   cerezOnayOku,
 } from "./cerez-onay";
+import { telefonNormalize } from "./telefon";
 
 /** Google Analytics 4 ölçüm kimliği */
 export const GA_MEASUREMENT_ID =
@@ -17,10 +18,13 @@ export const GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI =
   process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL?.trim() ||
   "AW-18328392362/Msc0CNjLnNMcEKql1KNE";
 
-/** «Kaydolma işlemi» — hizmet veren /cekici/kayit/onay sayfası */
+/** «Kaydolma işlemi» — hizmet veren kayıt */
 export const GOOGLE_ADS_DONUSUM_KAYDOLMA =
   process.env.NEXT_PUBLIC_GOOGLE_ADS_KAYDOLMA_LABEL?.trim() ||
   "AW-18328392362/Y9juCP_Rm9McEKql1KNE";
+
+/** GA sign_up / Ads kaydolma çift tetiklenmesin */
+export const GA_SIGN_UP_SESSION_KEY = "acil_ga_sign_up";
 
 export function gtagYapilandirildi(): boolean {
   return Boolean(GA_MEASUREMENT_ID || GOOGLE_ADS_ID);
@@ -33,6 +37,13 @@ export type GtagConsentParams = {
   ad_user_data: GtagConsentState;
   ad_personalization: GtagConsentState;
   analytics_storage: GtagConsentState;
+};
+
+export type GtagUserData = {
+  email?: string | null;
+  phone?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
 };
 
 declare global {
@@ -110,6 +121,44 @@ function gtagCagir(...args: unknown[]): void {
   window.dataLayer.push(args);
 }
 
+/** TR cep → E.164 (+90…) — gelişmiş dönüşümler için */
+export function gtagTelefonE164(tel: string): string | null {
+  const n = telefonNormalize(tel);
+  if (!/^05[0-9]{9}$/.test(n)) return null;
+  return `+90${n.slice(1)}`;
+}
+
+/**
+ * Enhanced conversions (in-page) — Google hash’ler; ham PII gönderilir.
+ * https://support.google.com/google-ads/answer/13258081
+ */
+export function gtagUserDataAyarla(data: GtagUserData): void {
+  if (typeof window === "undefined") return;
+  if (!cerezAnalitikAktif()) return;
+
+  const userData: Record<string, unknown> = {};
+  const email = data.email?.trim().toLowerCase();
+  if (email && email.includes("@")) userData.email = email;
+
+  if (data.phone) {
+    const e164 = gtagTelefonE164(data.phone);
+    if (e164) userData.phone_number = e164;
+  }
+
+  const first = data.firstName?.trim();
+  const last = data.lastName?.trim();
+  if (first || last) {
+    userData.address = {
+      ...(first ? { first_name: first } : {}),
+      ...(last ? { last_name: last } : {}),
+      country: "TR",
+    };
+  }
+
+  if (Object.keys(userData).length === 0) return;
+  gtagCagir("set", "user_data", userData);
+}
+
 /** Çerez tercihine göre Consent Mode update (sayfa geçişinden önce çağır) */
 export function gtagCerezSenkronize(): void {
   if (typeof window === "undefined" || !gtagYapilandirildi()) return;
@@ -136,12 +185,13 @@ export function gtagOlay(
 
 /**
  * Müşteri talep formu başarıyla gönderildiğinde Google Ads dönüşümü.
- * Google Ads «Fiyat teklifi isteyin ACB» (sayfa yükleme yerine SPA olay).
+ * Enhanced conversions: telefon / ad ile user_data.
  */
-export function gtagAdsFiyatTeklifiDonusumu(): void {
+export function gtagAdsFiyatTeklifiDonusumu(user?: GtagUserData): void {
   if (typeof window === "undefined") return;
   if (!GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI) return;
   if (!cerezAnalitikAktif()) return;
+  if (user) gtagUserDataAyarla(user);
   gtagCagir("event", "conversion", {
     send_to: GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI,
     value: 1.0,
@@ -150,13 +200,14 @@ export function gtagAdsFiyatTeklifiDonusumu(): void {
 }
 
 /**
- * Hizmet veren kayıt onayı — Google Ads «Kaydolma işlemi» dönüşümü.
- * Ads sayfa yükleme snippet’inin SPA eşdeğeri (/cekici/kayit/onay).
+ * Hizmet veren kayıt — Google Ads «Kaydolma işlemi».
+ * Funnel A: /cekici/kayit/onay; Funnel B+: phone-first OTP sonrası.
  */
-export function gtagAdsKaydolmaDonusumu(): void {
+export function gtagAdsKaydolmaDonusumu(user?: GtagUserData): void {
   if (typeof window === "undefined") return;
   if (!GOOGLE_ADS_DONUSUM_KAYDOLMA) return;
   if (!cerezAnalitikAktif()) return;
+  if (user) gtagUserDataAyarla(user);
   gtagCagir("event", "conversion", {
     send_to: GOOGLE_ADS_DONUSUM_KAYDOLMA,
     value: 1.0,
@@ -169,7 +220,7 @@ export function gtagAdsKaydolmaDonusumu(): void {
  */
 export function gtagCekiciKayitOnayGoruntule(
   sehir?: string,
-  opts?: { donusumOlayi?: boolean }
+  opts?: { donusumOlayi?: boolean; user?: GtagUserData }
 ): void {
   if (typeof window === "undefined") return;
   if (!cerezAnalitikAktif()) return;
@@ -180,7 +231,7 @@ export function gtagCekiciKayitOnayGoruntule(
     });
   }
   if (opts?.donusumOlayi === false) return;
-  gtagAdsKaydolmaDonusumu();
+  gtagAdsKaydolmaDonusumu(opts?.user);
   gtagCagir("event", "sign_up", {
     method: "cekici_kayit",
     ...(sehir ? { sehir } : {}),

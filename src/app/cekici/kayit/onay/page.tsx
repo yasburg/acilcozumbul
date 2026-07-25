@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
 import { sehirKullanimAcikMi } from "@/lib/cekici-sehir-acilis";
-import { gtagCekiciKayitOnayGoruntule } from "@/lib/gtag";
+import { GA_SIGN_UP_SESSION_KEY, gtagCekiciKayitOnayGoruntule } from "@/lib/gtag";
 import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
 import {
   tiktokPixelHesapOlustur,
@@ -14,7 +14,6 @@ import {
 import { posthogOlayYakala } from "@/lib/posthog-client";
 
 const YONLENDIRME_SN = 5;
-const SIGN_UP_SESSION_KEY = "acil_ga_sign_up";
 /** Kayıt formunda da set edilir — Meta çift tetiklenmesin */
 const META_COMPLETE_REG_KEY = "acil_meta_complete_reg";
 
@@ -28,10 +27,10 @@ function OnayIcerik() {
   useEffect(() => {
     let donusumOlayi = true;
     try {
-      if (sessionStorage.getItem(SIGN_UP_SESSION_KEY) === "1") {
+      if (sessionStorage.getItem(GA_SIGN_UP_SESSION_KEY) === "1") {
         donusumOlayi = false;
       } else {
-        sessionStorage.setItem(SIGN_UP_SESSION_KEY, "1");
+        sessionStorage.setItem(GA_SIGN_UP_SESSION_KEY, "1");
       }
     } catch {
       /* private mode */

@@ -39,7 +39,10 @@ describe("gtag consent mode (advanced)", () => {
   });
 
   it("Ads kaydolma dönüşüm send_to tanımlı", async () => {
-    const { GOOGLE_ADS_DONUSUM_KAYDOLMA } = await import("./gtag");
+    const { GOOGLE_ADS_DONUSUM_KAYDOLMA, gtagTelefonE164 } = await import(
+      "./gtag"
+    );
     expect(GOOGLE_ADS_DONUSUM_KAYDOLMA).toContain("Y9juCP_Rm9McEKql1KNE");
+    expect(gtagTelefonE164("0532 323 32 32")).toBe("+905323233232");
   });
 });

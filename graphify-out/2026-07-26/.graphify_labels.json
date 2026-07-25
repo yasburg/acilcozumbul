@@ -78,18 +78,10 @@
   "76": "cekici-sifre-otp.ts",
   "77": "cekici-sifre-otp.ts",
   "78": "musteri-profil.ts",
-  "79": "toplu-sms-gecmis-db.ts",
-  "80": "KonumIzniYardim.tsx",
-  "81": "cekici-bolge.ts",
-  "82": "PanelCekiciHarita.tsx",
   "83": "page.tsx",
-  "84": "sms50-tiklama-db.ts",
   "85": "getCurrentCekici",
   "86": "layout.tsx",
   "87": "page.tsx",
-  "88": "rozet-panel.ts",
-  "89": "ArizaFotografAlani.tsx",
   "90": "ArizaFotografAlani.tsx",
-  "91": "talep-fotograf.ts",
   "95": "route.ts"
 }

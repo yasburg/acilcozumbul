@@ -1121,7 +1121,11 @@ function MusteriAnaSayfaIcerik() {
         sorun_tipi: form.sorunTipi,
         bildirilen_sayisi: data.bildirilenSayisi ?? 0,
       });
-      gtagAdsFiyatTeklifiDonusumu();
+      gtagAdsFiyatTeklifiDonusumu({
+        phone: form.telefon,
+        firstName: form.ad,
+        lastName: form.soyad,
+      });
       /* Meta + TikTok Lead: bekle sayfasına gitmeden önce + bir kez (bekle yedek) */
       try {
         if (sessionStorage.getItem(`acil_meta_lead_${data.id}`) !== "1") {
