@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
+import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import type { KayitFunnelTanim } from "@/lib/kayit-funnel";
 import { TELEFON_ORNEK_GIRISLERI } from "@/lib/telefon";
 import { posthogKampanyaKaydet, posthogOlayYakala } from "@/lib/posthog-client";
@@ -82,6 +83,8 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   const [otp, setOtp] = useState("");
   const [otpAsama, setOtpAsama] = useState(false);
   const [davetKodu, setDavetKodu] = useState("");
+  const [yasalOnay, setYasalOnay] = useState(false);
+  const [yasalHata, setYasalHata] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [mesaj, setMesaj] = useState("");
@@ -116,9 +119,15 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   }, [yenidenSn]);
 
   async function kodGonder() {
+    if (!yasalOnay) {
+      setYasalHata(true);
+      setError("Yasal metinleri onaylamanız zorunludur.");
+      return;
+    }
     setLoading(true);
     setError("");
     setMesaj("");
+    setYasalHata(false);
     try {
       tiktokPixelClickButton({
         content_id: `kayit_${funnel.id}_otp`,
@@ -160,8 +169,14 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   }
 
   async function hesapOlustur() {
+    if (!yasalOnay) {
+      setYasalHata(true);
+      setError("Yasal metinleri onaylamanız zorunludur.");
+      return;
+    }
     setLoading(true);
     setError("");
+    setYasalHata(false);
     try {
       tiktokPixelClickButton({
         content_id: `kayit_${funnel.id}_dogrula`,
@@ -303,9 +318,21 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                   }}
                   className="text-lg min-h-[52px]"
                 />
+                <YasalOnayKutusu
+                  checked={yasalOnay}
+                  onChange={(v) => {
+                    setYasalOnay(v);
+                    if (v) {
+                      setYasalHata(false);
+                      setError("");
+                    }
+                  }}
+                  invalid={yasalHata}
+                  rol="hizmet-veren"
+                />
                 <Btn
                   className="w-full min-h-[52px] text-base bg-amber-600 hover:bg-amber-700"
-                  disabled={loading || telefon.trim().length < 10}
+                  disabled={loading || telefon.trim().length < 10 || !yasalOnay}
                   onClick={() => void kodGonder()}
                 >
                   {loading ? "Gönderiliyor…" : "Telefonuma kod gönder"}
