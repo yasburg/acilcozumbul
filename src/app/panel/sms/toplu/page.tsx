@@ -100,6 +100,7 @@ type GenelTelefon = {
   sonGonderim: string;
   gonderimSayisi: number;
   basariliSayisi: number;
+  varyant?: string | null;
   linkActi?: boolean | null;
   ilkTiklama?: string | null;
   kayitli?: boolean;
@@ -125,18 +126,15 @@ type TestLinkOzet = {
   sonTiklama: string | null;
 };
 
+type TiklamaSatir = {
+  olusturulma?: string | null;
+  varyant?: string | null;
+};
+
 function yuzdeOran(v: number | null | undefined) {
   if (v == null) return "—";
   return `${(v * 100).toFixed(1)}%`;
 }
-
-type SaatIzgarasi = {
-  grid: number[][];
-  gunToplam: number[];
-  saatToplam: number[];
-  toplam: number;
-  maxHucre: number;
-};
 
 type KampanyaSablon = { id: string; etiket: string; govde: string };
 
@@ -209,8 +207,7 @@ export default function PanelTopluSmsPage() {
   const [sms50Footer, setSms50Footer] = useState<string[]>([]);
   const [sms50FooterEkle, setSms50FooterEkle] = useState(true);
   const [testLinkler, setTestLinkler] = useState<TestLinkOzet[]>([]);
-  const [tiklamaSaatIzgarasi, setTiklamaSaatIzgarasi] =
-    useState<SaatIzgarasi | null>(null);
+  const [tiklamaSatirlari, setTiklamaSatirlari] = useState<TiklamaSatir[]>([]);
   const [testLinkHata, setTestLinkHata] = useState("");
   const [testLinkYukleniyor, setTestLinkYukleniyor] = useState(false);
 
@@ -350,12 +347,12 @@ export default function PanelTopluSmsPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Test linkleri yüklenemedi.");
       setTestLinkler(data.liste ?? []);
-      setTiklamaSaatIzgarasi(data.saatIzgarasi ?? null);
+      setTiklamaSatirlari(data.tiklamaSatirlari ?? []);
     } catch (e) {
       setTestLinkHata(
         e instanceof Error ? e.message : "Test linkleri yüklenemedi."
       );
-      setTiklamaSaatIzgarasi(null);
+      setTiklamaSatirlari([]);
     } finally {
       setTestLinkYukleniyor(false);
     }
@@ -1519,9 +1516,9 @@ export default function PanelTopluSmsPage() {
 
       {sekme === "testler" && (
         <div className="space-y-4">
-          {!testLinkYukleniyor && !testLinkHata && tiklamaSaatIzgarasi && (
+          {!testLinkYukleniyor && !testLinkHata && tiklamaSatirlari.length > 0 && (
             <Card className="space-y-2">
-              <Sms50TiklamaSaatTablosu data={tiklamaSaatIzgarasi} />
+              <Sms50TiklamaSaatTablosu satirlar={tiklamaSatirlari} />
             </Card>
           )}
           <Card className="space-y-3">
@@ -1538,8 +1535,9 @@ export default function PanelTopluSmsPage() {
             </button>
           </div>
           <p className="text-xs text-slate-500 leading-relaxed">
-            Her harf ayrı yuva. CTR = tıklama ÷ gönderim. Kayıt/gönderim =
-            kayıt ÷ gönderim; Kayıt/tık = kayıt ÷ tıklama.{" "}
+            Her harf ayrı yuva. Tıklama = benzersiz kişi (aynı telefon/IP tekrar
+            tıklasa 1). CTR = tıklama ÷ gönderim. Kayıt/gönderim = kayıt ÷
+            gönderim; Kayıt/tık = kayıt ÷ tıklama.{" "}
             <code className="bg-slate-100 px-1 rounded">
               /sms50{SMS50_TEST_VARYANT}
             </code>{" "}
@@ -1562,11 +1560,20 @@ export default function PanelTopluSmsPage() {
                     <th className="px-3 py-2 font-semibold tabular-nums">
                       Gönderilen
                     </th>
-                    <th className="px-3 py-2 font-semibold tabular-nums">
+                    <th
+                      className="px-3 py-2 font-semibold tabular-nums"
+                      title="Benzersiz kişi tıklaması"
+                    >
                       Tıklama
                     </th>
                     <th className="px-3 py-2 font-semibold tabular-nums">
                       CTR
+                    </th>
+                    <th
+                      className="px-3 py-2 font-semibold tabular-nums"
+                      title="SMS50’ye bağlanan kayıt adedi"
+                    >
+                      Kayıt
                     </th>
                     <th
                       className="px-3 py-2 font-semibold tabular-nums"
@@ -1608,12 +1615,10 @@ export default function PanelTopluSmsPage() {
                         {yuzdeOran(row.ctr)}
                       </td>
                       <td className="px-3 py-2 tabular-nums text-slate-800">
+                        {row.kayit}
+                      </td>
+                      <td className="px-3 py-2 tabular-nums text-slate-800">
                         {yuzdeOran(row.kayitOranGonderim)}
-                        {row.kayit > 0 ? (
-                          <span className="block text-[10px] text-slate-400">
-                            {row.kayit} kayıt
-                          </span>
-                        ) : null}
                       </td>
                       <td className="px-3 py-2 tabular-nums text-slate-800">
                         {yuzdeOran(row.kayitOranTiklama)}
@@ -1660,8 +1665,8 @@ export default function PanelTopluSmsPage() {
             </button>
           </div>
           <p className="text-xs text-slate-500">
-            Toplu SMS giden numaralar. Kişiye özel link kullanıldıysa tıklama ve
-            kayıt durumu görünür.
+            Toplu SMS giden numaralar. Kişiye özel link kullanıldıysa harf,
+            tıklama ve kayıt durumu görünür.
           </p>
           {gecmisYukleniyor && (
             <p className="text-sm text-slate-500">Yükleniyor…</p>
@@ -1683,6 +1688,12 @@ export default function PanelTopluSmsPage() {
                     <tr>
                       <th className="px-3 py-2 font-semibold">Telefon</th>
                       <th className="px-3 py-2 font-semibold">Ad</th>
+                      <th
+                        className="px-3 py-2 font-semibold"
+                        title="SMS50 test linki harfi"
+                      >
+                        Harf
+                      </th>
                       <th className="px-3 py-2 font-semibold tabular-nums">
                         Gönderim
                       </th>
@@ -1700,6 +1711,9 @@ export default function PanelTopluSmsPage() {
                         </td>
                         <td className="px-3 py-2 text-slate-600 max-w-[8rem] truncate">
                           {t.ad || "—"}
+                        </td>
+                        <td className="px-3 py-2 font-semibold text-slate-900">
+                          {t.varyant ? t.varyant.toUpperCase() : "—"}
                         </td>
                         <td className="px-3 py-2 tabular-nums text-slate-800 whitespace-nowrap">
                           {t.gonderimSayisi}

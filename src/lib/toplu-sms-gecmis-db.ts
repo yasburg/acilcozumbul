@@ -29,6 +29,8 @@ export type TopluSmsGenelTelefon = {
   sonGonderim: string;
   gonderimSayisi: number;
   basariliSayisi: number;
+  /** Token’lı gönderimde SMS50 harfi (a–z); yoksa null */
+  varyant: string | null;
   /** Token’lı gönderim varsa: link açıldı mı; yoksa null (—) */
   linkActi: boolean | null;
   ilkTiklama: string | null;
@@ -339,6 +341,7 @@ export async function getTopluSmsGenelTelefonlar(
       sonGonderim: String(r.son_gonderim),
       gonderimSayisi: Number(r.gonderim_sayisi) || 0,
       basariliSayisi: Number(r.basarili_sayisi) || 0,
+      varyant: token?.varyant ?? null,
       linkActi: token ? token.linkActi : null,
       ilkTiklama: token?.ilkTiklama ?? null,
       kayitli,

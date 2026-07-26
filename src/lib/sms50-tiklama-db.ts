@@ -52,6 +52,7 @@ export type Sms50VaryantOzet = {
   varyant: Sms50Varyant;
   kisaUrl: string;
   gonderilen: number;
+  /** Benzersiz tıklayan (token: telefon; değilse ip_hash) */
   tiklama: number;
   ctr: number | null;
   /** SMS50’ye bağlanan kayıt (token kayit_at veya gönderilen∩çekici) */
@@ -68,7 +69,37 @@ export function sms50Oran(pay: number, payda: number): number | null {
   return pay / payda;
 }
 
-/** 0=Pazar … 6=Cumartesi (Europe/Istanbul) */
+/**
+ * Aynı kişinin tekrar tıklamasını tek say — ip_hash; yoksa satır id.
+ * Token’lı gönderimde `getSms50VaryantOzetleri` telefon ile daha doğru sayar.
+ */
+export function sms50BenzersizTiklamaSay(
+  rows: {
+    id?: string | null;
+    varyant?: string | null;
+    ip_hash?: string | null;
+  }[]
+): Map<string, number> {
+  const anahtarlar = new Map<string, Set<string>>();
+  for (const row of rows) {
+    const v = String(row.varyant ?? "");
+    if (!v) continue;
+    const ip = row.ip_hash ? String(row.ip_hash) : "";
+    const key = ip ? `ip:${ip}` : `row:${String(row.id ?? "")}`;
+    if (key === "row:") continue;
+    let set = anahtarlar.get(v);
+    if (!set) {
+      set = new Set();
+      anahtarlar.set(v, set);
+    }
+    set.add(key);
+  }
+  const out = new Map<string, number>();
+  for (const [v, set] of anahtarlar) out.set(v, set.size);
+  return out;
+}
+
+/** 0=Pazartesi … 6=Pazar (Europe/Istanbul) */
 export function sms50TiklamaGunSaat(iso: string): {
   gun: number;
   saat: number;
@@ -84,13 +115,13 @@ export function sms50TiklamaGunSaat(iso: string): {
   const wd = parts.find((p) => p.type === "weekday")?.value ?? "";
   const hourRaw = parts.find((p) => p.type === "hour")?.value;
   const gunMap: Record<string, number> = {
-    Sun: 0,
-    Mon: 1,
-    Tue: 2,
-    Wed: 3,
-    Thu: 4,
-    Fri: 5,
-    Sat: 6,
+    Mon: 0,
+    Tue: 1,
+    Wed: 2,
+    Thu: 3,
+    Fri: 4,
+    Sat: 5,
+    Sun: 6,
   };
   const gun = gunMap[wd];
   const saat = hourRaw != null ? Number(hourRaw) : NaN;
@@ -109,9 +140,121 @@ export type Sms50TiklamaSaatIzgarasi = {
   maxHucre: number;
 };
 
+export const SMS50_HAFTA_TUMU = "tumu";
+
+export type Sms50TiklamaSatir = {
+  olusturulma?: string | null;
+  varyant?: string | null;
+};
+
+export type Sms50HaftaSecenegi = {
+  /** `tumu` veya Pazartesi YYYY-MM-DD (Europe/Istanbul) */
+  id: string;
+  /** Veri olan ilk hafta = 1; Tümü için null */
+  sira: number | null;
+  etiket: string;
+};
+
+/** Tıklamanın Istanbul takviminde düştüğü haftanın Pazartesi’si (YYYY-MM-DD) */
+export function sms50IstanbulPazartesiYmd(iso: string): string | null {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+  }).formatToParts(d);
+  const y = Number(parts.find((p) => p.type === "year")?.value);
+  const m = Number(parts.find((p) => p.type === "month")?.value);
+  const day = Number(parts.find((p) => p.type === "day")?.value);
+  const wd = parts.find((p) => p.type === "weekday")?.value ?? "";
+  const gunMap: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+  const gun = gunMap[wd];
+  if (!y || !m || !day || gun == null) return null;
+  const daysFromMonday = gun === 0 ? 6 : gun - 1;
+  /* Takvim günü aritmetiği (Istanbul Y-M-D) */
+  const utcMs = Date.UTC(y, m - 1, day) - daysFromMonday * 86_400_000;
+  const mon = new Date(utcMs);
+  const yy = mon.getUTCFullYear();
+  const mm = String(mon.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(mon.getUTCDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
+}
+
+function sms50YmdEkle(ymd: string, gun: number): string {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const utcMs = Date.UTC(y!, m! - 1, d!) + gun * 86_400_000;
+  const x = new Date(utcMs);
+  return `${x.getUTCFullYear()}-${String(x.getUTCMonth() + 1).padStart(2, "0")}-${String(x.getUTCDate()).padStart(2, "0")}`;
+}
+
+function sms50YmdKisaTr(ymd: string): string {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const dt = new Date(Date.UTC(y!, m! - 1, d!, 12));
+  return new Intl.DateTimeFormat("tr-TR", {
+    timeZone: "UTC",
+    day: "numeric",
+    month: "short",
+  }).format(dt);
+}
+
+export function sms50HaftaAralikEtiket(pazartesiYmd: string): string {
+  const pazar = sms50YmdEkle(pazartesiYmd, 6);
+  return `${sms50YmdKisaTr(pazartesiYmd)} – ${sms50YmdKisaTr(pazar)}`;
+}
+
+function sms50SatirGrafikte(row: Sms50TiklamaSatir): boolean {
+  return String(row.varyant ?? "").toLowerCase() !== SMS50_TEST_VARYANT;
+}
+
+/** Tümü + veri olan haftalar (yeniden eskiye); sıra = kampanyadaki 1. haftadan */
+export function sms50HaftaSecenekleri(
+  rows: Sms50TiklamaSatir[]
+): Sms50HaftaSecenegi[] {
+  const keys = new Set<string>();
+  for (const row of rows) {
+    if (!sms50SatirGrafikte(row)) continue;
+    const key = sms50IstanbulPazartesiYmd(String(row.olusturulma ?? ""));
+    if (key) keys.add(key);
+  }
+  const asc = [...keys].sort();
+  const haftalar: Sms50HaftaSecenegi[] = asc.map((id, i) => ({
+    id,
+    sira: i + 1,
+    etiket: `${i + 1}. hafta · ${sms50HaftaAralikEtiket(id)}`,
+  }));
+  return [
+    { id: SMS50_HAFTA_TUMU, sira: null, etiket: "Tümü" },
+    ...haftalar.reverse(),
+  ];
+}
+
+export function sms50SatirlariHaftaFiltrele(
+  rows: Sms50TiklamaSatir[],
+  haftaId: string
+): Sms50TiklamaSatir[] {
+  if (haftaId === SMS50_HAFTA_TUMU || !haftaId) return rows;
+  return rows.filter((row) => {
+    if (!sms50SatirGrafikte(row)) return true; /* z zaten izgarada atılır */
+    return (
+      sms50IstanbulPazartesiYmd(String(row.olusturulma ?? "")) === haftaId
+    );
+  });
+}
+
 /** Test varyantı (z) hariç gün×saat ızgarası */
 export function sms50TiklamaSatirlarindanIzgara(
-  rows: { olusturulma?: string | null; varyant?: string | null }[]
+  rows: Sms50TiklamaSatir[]
 ): Sms50TiklamaSaatIzgarasi {
   const grid = Array.from({ length: 7 }, () =>
     Array.from({ length: 24 }, () => 0)
@@ -122,9 +265,7 @@ export function sms50TiklamaSatirlarindanIzgara(
   let maxHucre = 0;
 
   for (const row of rows) {
-    if (String(row.varyant ?? "").toLowerCase() === SMS50_TEST_VARYANT) {
-      continue;
-    }
+    if (!sms50SatirGrafikte(row)) continue;
     const gs = sms50TiklamaGunSaat(String(row.olusturulma ?? ""));
     if (!gs) continue;
     grid[gs.gun]![gs.saat]! += 1;
@@ -137,16 +278,22 @@ export function sms50TiklamaSatirlarindanIzgara(
   return { grid, gunToplam, saatToplam, toplam, maxHucre };
 }
 
-export async function getSms50TiklamaSaatIzgarasi(
+export async function getSms50TiklamaSatirlari(
   kampanyaKodu = SMS50_KAMPANYA_KODU
-): Promise<Sms50TiklamaSaatIzgarasi> {
+): Promise<Sms50TiklamaSatir[]> {
   const { data, error } = await getSupabaseAdmin()
     .from("sms_kampanya_tiklama")
     .select("olusturulma, varyant")
     .eq("kampanya_kodu", kampanyaKodu);
   if (error) throw error;
+  return data ?? [];
+}
 
-  return sms50TiklamaSatirlarindanIzgara(data ?? []);
+export async function getSms50TiklamaSaatIzgarasi(
+  kampanyaKodu = SMS50_KAMPANYA_KODU
+): Promise<Sms50TiklamaSaatIzgarasi> {
+  const rows = await getSms50TiklamaSatirlari(kampanyaKodu);
+  return sms50TiklamaSatirlarindanIzgara(rows);
 }
 
 export async function getSms50VaryantOzetleri(
@@ -157,7 +304,7 @@ export async function getSms50VaryantOzetleri(
   const [tiklamaRes, gonderimRes, tokenTablo] = await Promise.all([
     sb
       .from("sms_kampanya_tiklama")
-      .select("varyant, olusturulma")
+      .select("id, varyant, olusturulma, ip_hash")
       .eq("kampanya_kodu", kampanyaKodu),
     sb
       .from("panel_toplu_sms_listeler")
@@ -171,15 +318,19 @@ export async function getSms50VaryantOzetleri(
   const gonderimRows = gonderimRes.error ? [] : (gonderimRes.data ?? []);
   const tiklamaRows = tiklamaRes.data ?? [];
 
-  const tiklamaSay = new Map<string, number>();
+  /** Ortak link / token’sız: IP ile benzersiz */
+  const tiklamaSayIp = sms50BenzersizTiklamaSay(tiklamaRows);
   const sonTiklama = new Map<string, string>();
   for (const row of tiklamaRows) {
     const v = String(row.varyant ?? "");
-    tiklamaSay.set(v, (tiklamaSay.get(v) ?? 0) + 1);
     const t = String(row.olusturulma ?? "");
     const onceki = sonTiklama.get(v);
     if (!onceki || t > onceki) sonTiklama.set(v, t);
   }
+
+  /** Kişiye özel link: aynı telefon tekrar tıklasa 1 */
+  const tiklamaSayToken = new Map<string, number>();
+  const tokenVaryantVar = new Set<string>();
 
   const gonderilen = new Map<string, number>();
   const listeIdsByVaryant = new Map<string, string[]>();
@@ -210,12 +361,27 @@ export async function getSms50VaryantOzetleri(
   if (tokenTablo) {
     const { data: tokenRows, error: tokenErr } = await sb
       .from("sms_kampanya_link_token")
-      .select("varyant, telefon, kayit_at")
-      .eq("kampanya_kodu", kampanyaKodu)
-      .not("kayit_at", "is", null);
+      .select("varyant, telefon, kayit_at, ilk_tiklama")
+      .eq("kampanya_kodu", kampanyaKodu);
     if (!tokenErr) {
+      const tiklayanTelefon = new Map<string, Set<string>>();
       for (const row of tokenRows ?? []) {
-        kayitEkle(String(row.varyant ?? ""), String(row.telefon ?? ""));
+        const v = String(row.varyant ?? "");
+        if (!v) continue;
+        tokenVaryantVar.add(v);
+        const tel = String(row.telefon ?? "").trim();
+        if (row.kayit_at) kayitEkle(v, tel);
+        if (row.ilk_tiklama && tel) {
+          let set = tiklayanTelefon.get(v);
+          if (!set) {
+            set = new Set();
+            tiklayanTelefon.set(v, set);
+          }
+          set.add(tel);
+        }
+      }
+      for (const [v, set] of tiklayanTelefon) {
+        tiklamaSayToken.set(v, set.size);
       }
     }
   }
@@ -270,7 +436,10 @@ export async function getSms50VaryantOzetleri(
 
   return SMS50_VARYANTLAR.map((varyant) => {
     const g = gonderilen.get(varyant) ?? 0;
-    const t = tiklamaSay.get(varyant) ?? 0;
+    /* Token’lı harfte telefon; değilse IP benzersiz tıklama */
+    const t = tokenVaryantVar.has(varyant)
+      ? (tiklamaSayToken.get(varyant) ?? 0)
+      : (tiklamaSayIp.get(varyant) ?? 0);
     const k = kayitTelefonlar.get(varyant)?.size ?? 0;
     return {
       varyant,
