@@ -12,9 +12,20 @@ import {
 import type { CekiciPanelOzet } from "@/lib/panel";
 import { cekiciPanelTesterAyir } from "@/lib/panel";
 import { PanelCekiciHarita } from "@/components/panel/PanelCekiciHarita";
+import { DESTEKLENEN_ILLER, IL_ILCELER } from "@/lib/il-ilce";
 
 const PANEL_GIZLE_KEY = "acil_panel_kisisel_veri_gizli";
 const SEHIR_YOK = "Belirtilmemiş";
+const TOPLAM_SEHIR = DESTEKLENEN_ILLER.length;
+const TOPLAM_ILCE = DESTEKLENEN_ILLER.reduce(
+  (n, il) => n + (IL_ILCELER[il]?.length ?? 0),
+  0
+);
+
+function kapsamaYuzde(parca: number, toplam: number): number {
+  if (toplam <= 0) return 0;
+  return Math.round((parca / toplam) * 1000) / 10;
+}
 
 type SehirSiralama = "adet" | "alfa";
 type Gorunum = "liste" | "ozet" | "harita";
@@ -177,9 +188,12 @@ export default function PanelCekicilerPage() {
     }
     const sehirSayisi = sehirler.size;
     const ilceSayisi = ilceler.size;
-    const oran =
-      sehirSayisi > 0 ? Math.round((ilceSayisi / sehirSayisi) * 10) / 10 : null;
-    return { sehirSayisi, ilceSayisi, oran };
+    return {
+      sehirSayisi,
+      ilceSayisi,
+      sehirYuzde: kapsamaYuzde(sehirSayisi, TOPLAM_SEHIR),
+      ilceYuzde: kapsamaYuzde(ilceSayisi, TOPLAM_ILCE),
+    };
   }, [cekiciler]);
 
   function gizlemeyiDegistir() {
@@ -211,10 +225,10 @@ export default function PanelCekicilerPage() {
           </p>
           {!loading && cekiciler.length > 0 && (
             <p className="mt-1 text-sm font-medium text-slate-700">
-              {kapsama.sehirSayisi} şehir · {kapsama.ilceSayisi} ilçe
-              {kapsama.oran != null
-                ? ` · oran ${kapsama.oran.toLocaleString("tr-TR")} ilçe/şehir`
-                : ""}
+              {kapsama.sehirSayisi}/{TOPLAM_SEHIR} şehir (%
+              {kapsama.sehirYuzde.toLocaleString("tr-TR")}) ·{" "}
+              {kapsama.ilceSayisi}/{TOPLAM_ILCE} ilçe (%
+              {kapsama.ilceYuzde.toLocaleString("tr-TR")})
             </p>
           )}
         </div>
