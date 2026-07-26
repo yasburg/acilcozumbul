@@ -34,6 +34,24 @@ function sehirKarsilastir(
   return a.sehir.localeCompare(b.sehir, "tr");
 }
 
+/** Benzersiz ilçe anahtarı — aynı ad farklı illerde çakışmasın */
+function cekiciIlceAnahtarlari(c: CekiciPanelOzet): string[] {
+  const bolgeler = c.hizmetBolgeleri;
+  if (bolgeler && Object.keys(bolgeler).length > 0) {
+    return Object.entries(bolgeler).flatMap(([il, ilceler]) =>
+      (ilceler ?? [])
+        .map((ilce) => ilce.trim())
+        .filter(Boolean)
+        .map((ilce) => `${il.trim()}|${ilce}`)
+    );
+  }
+  const sehir = sehirEtiketi(c.sehir);
+  return (c.hizmetIlceleri ?? [])
+    .map((ilce) => ilce.trim())
+    .filter(Boolean)
+    .map((ilce) => `${sehir}|${ilce}`);
+}
+
 function CekiciKart({
   c,
   seviye,
@@ -149,6 +167,21 @@ export default function PanelCekicilerPage() {
 
   const gosterilenAdet = ozetSatirlar.reduce((n, s) => n + s.adet, 0);
 
+  const kapsama = useMemo(() => {
+    const sehirler = new Set<string>();
+    const ilceler = new Set<string>();
+    for (const c of cekiciler) {
+      const sehir = sehirEtiketi(c.sehir);
+      if (sehir !== SEHIR_YOK) sehirler.add(sehir);
+      for (const anahtar of cekiciIlceAnahtarlari(c)) ilceler.add(anahtar);
+    }
+    const sehirSayisi = sehirler.size;
+    const ilceSayisi = ilceler.size;
+    const oran =
+      sehirSayisi > 0 ? Math.round((ilceSayisi / sehirSayisi) * 10) / 10 : null;
+    return { sehirSayisi, ilceSayisi, oran };
+  }, [cekiciler]);
+
   function gizlemeyiDegistir() {
     const sonraki = !gizli;
     setGizli(sonraki);
@@ -176,6 +209,14 @@ export default function PanelCekicilerPage() {
               ? ` · ${gosterilenAdet} gösteriliyor`
               : ""}
           </p>
+          {!loading && cekiciler.length > 0 && (
+            <p className="mt-1 text-sm font-medium text-slate-700">
+              {kapsama.sehirSayisi} şehir · {kapsama.ilceSayisi} ilçe
+              {kapsama.oran != null
+                ? ` · oran ${kapsama.oran.toLocaleString("tr-TR")} ilçe/şehir`
+                : ""}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
