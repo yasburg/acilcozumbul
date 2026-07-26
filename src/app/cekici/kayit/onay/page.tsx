@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
 import { sehirKullanimAcikMi } from "@/lib/cekici-sehir-acilis";
-import { GA_SIGN_UP_SESSION_KEY, gtagCekiciKayitOnayGoruntule } from "@/lib/gtag";
+import { gtagCekiciKayitOnayGoruntule } from "@/lib/gtag";
 import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
 import {
   tiktokPixelHesapOlustur,
@@ -25,18 +25,8 @@ function OnayIcerik() {
   const [kalanSn, setKalanSn] = useState(YONLENDIRME_SN);
 
   useEffect(() => {
-    let donusumOlayi = true;
-    try {
-      if (sessionStorage.getItem(GA_SIGN_UP_SESSION_KEY) === "1") {
-        donusumOlayi = false;
-      } else {
-        sessionStorage.setItem(GA_SIGN_UP_SESSION_KEY, "1");
-      }
-    } catch {
-      /* private mode */
-    }
-    /* Tam sayfa yüklemesinde GA page_view + (bir kez) dönüşüm olayları */
-    gtagCekiciKayitOnayGoruntule(sehir || undefined, { donusumOlayi });
+    /* BirKez: formda gtag hazır olmadan gidildiyse burada tamamlanır */
+    gtagCekiciKayitOnayGoruntule(sehir || undefined);
     let metaDonusum = true;
     try {
       if (sessionStorage.getItem(META_COMPLETE_REG_KEY) === "1") {
@@ -55,12 +45,10 @@ function OnayIcerik() {
       await tiktokPixelKayitOl({ content_name: "cekici_kayit_a" });
       await tiktokPixelHesapOlustur({ content_name: "cekici_hesap_a" });
     })();
-    if (donusumOlayi) {
-      posthogOlayYakala("cekici_kayit_onay", {
-        rol: "cekici",
-        ...(sehir ? { sehir } : {}),
-      });
-    }
+    posthogOlayYakala("cekici_kayit_onay", {
+      rol: "cekici",
+      ...(sehir ? { sehir } : {}),
+    });
   }, [sehir]);
 
   useEffect(() => {

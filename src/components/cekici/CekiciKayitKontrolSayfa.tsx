@@ -17,10 +17,7 @@ import { telefonDogrulamaHatasi, telefonGecerliMi, telefonMaskele } from "@/lib/
 import { davetKoduNormalize } from "@/lib/davet-kodu";
 import { posthogKampanyaKaydet, posthogOlayYakala } from "@/lib/posthog-client";
 import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
-import {
-  GA_SIGN_UP_SESSION_KEY,
-  gtagAdsKaydolmaDonusumu,
-} from "@/lib/gtag";
+import { gtagAdsKaydolmaDonusumuBirKez } from "@/lib/gtag";
 import {
   tiktokPixelClickButton,
   tiktokPixelHesapOlustur,
@@ -459,23 +456,12 @@ function KayitIcerik() {
         phone: form.telefon,
         externalId: cekiciId || null,
       });
-      /* Google Ads kaydolma — onay sayfasından önce + user_data (enhanced) */
-      try {
-        if (sessionStorage.getItem(GA_SIGN_UP_SESSION_KEY) !== "1") {
-          sessionStorage.setItem(GA_SIGN_UP_SESSION_KEY, "1");
-          gtagAdsKaydolmaDonusumu({
-            phone: form.telefon,
-            firstName: form.ad,
-            lastName: form.soyad,
-          });
-        }
-      } catch {
-        gtagAdsKaydolmaDonusumu({
-          phone: form.telefon,
-          firstName: form.ad,
-          lastName: form.soyad,
-        });
-      }
+      /* Google Ads kaydolma — gtag hazır olunca; tam sayfa onay’da yedek */
+      gtagAdsKaydolmaDonusumuBirKez({
+        phone: form.telefon,
+        firstName: form.ad,
+        lastName: form.soyad,
+      });
       /* Tam sayfa yüklemesi: Google Ads / GA «sayfa yükleme» dönüşümü için soft navigate kullanma */
       const sehirQs = form.sehir.trim()
         ? `?sehir=${encodeURIComponent(form.sehir.trim())}`

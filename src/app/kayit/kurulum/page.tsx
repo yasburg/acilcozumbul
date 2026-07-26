@@ -25,6 +25,7 @@ import {
   tiktokPixelHesapOlustur,
   tiktokPixelViewContent,
 } from "@/lib/tiktok-pixel";
+import { gtagAdsKaydolmaDonusumuBirKez } from "@/lib/gtag";
 
 const MIN_SIFRE_UZUNLUK = 6;
 
@@ -54,6 +55,8 @@ export default function KayitKurulumPage() {
       content_id: "kayit_kurulum",
       content_name: "hesap_kurulumu",
     });
+    /* OTP sonrası gtag henüz yüklenmediyse kaydolma burada tamamlanır */
+    gtagAdsKaydolmaDonusumuBirKez();
     void (async () => {
       const res = await cekiciFetch("/api/cekici/kurulum");
       if (res.status === 401) {

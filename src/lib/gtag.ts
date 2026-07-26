@@ -121,6 +121,50 @@ function gtagCagir(...args: unknown[]): void {
   window.dataLayer.push(args);
 }
 
+const GTAG_HAZIR_EVENT = "acil-gtag-hazir";
+const GTAG_HAZIR_FLAG = "__acil_gtag_hazir";
+
+type GtagHazirFn = () => void;
+const gtagHazirKuyruk: GtagHazirFn[] = [];
+
+/** gtag.js + AW/GA config yüklendi (idle + lazyOnload sonrası) */
+export function gtagHazirMi(): boolean {
+  if (typeof window === "undefined") return false;
+  return Boolean(
+    (window as Window & { [GTAG_HAZIR_FLAG]?: boolean })[GTAG_HAZIR_FLAG]
+  );
+}
+
+/** GoogleAnalytics Script onLoad — bekleyen conversion’ları çalıştır */
+export function gtagHazirIsaretle(): void {
+  if (typeof window === "undefined") return;
+  const w = window as Window & { [GTAG_HAZIR_FLAG]?: boolean };
+  if (w[GTAG_HAZIR_FLAG]) return;
+  w[GTAG_HAZIR_FLAG] = true;
+  const bekleyen = gtagHazirKuyruk.splice(0, gtagHazirKuyruk.length);
+  for (const fn of bekleyen) {
+    try {
+      fn();
+    } catch (e) {
+      console.error("[gtag] bekleyen olay:", e);
+    }
+  }
+  window.dispatchEvent(new Event(GTAG_HAZIR_EVENT));
+}
+
+/**
+ * Conversion’ı config’ten önce dataLayer’a basmamak için.
+ * gtag.js henüz yoksa kuyruğa alır (OTP hızlı tamamlanınca kaçmasın).
+ */
+export function gtagHazirOlunca(fn: GtagHazirFn): void {
+  if (typeof window === "undefined") return;
+  if (gtagHazirMi()) {
+    fn();
+    return;
+  }
+  gtagHazirKuyruk.push(fn);
+}
+
 /** TR cep → E.164 (+90…) — gelişmiş dönüşümler için */
 export function gtagTelefonE164(tel: string): string | null {
   const n = telefonNormalize(tel);
@@ -186,32 +230,89 @@ export function gtagOlay(
 /**
  * Müşteri talep formu başarıyla gönderildiğinde Google Ads dönüşümü.
  * Enhanced conversions: telefon / ad ile user_data.
+ * gtag config hazır olana kadar bekler (lazy yükleme).
  */
 export function gtagAdsFiyatTeklifiDonusumu(user?: GtagUserData): void {
   if (typeof window === "undefined") return;
   if (!GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI) return;
   if (!cerezAnalitikAktif()) return;
-  if (user) gtagUserDataAyarla(user);
-  gtagCagir("event", "conversion", {
-    send_to: GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI,
-    value: 1.0,
-    currency: "TRY",
+  gtagHazirOlunca(() => {
+    if (user) gtagUserDataAyarla(user);
+    gtagCagir("event", "conversion", {
+      send_to: GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI,
+      value: 1.0,
+      currency: "TRY",
+    });
   });
 }
 
 /**
  * Hizmet veren kayıt — Google Ads «Kaydolma işlemi».
- * Funnel A: /cekici/kayit/onay; Funnel B+: phone-first OTP sonrası.
+ * Funnel A: form/onay; Funnel B+: phone-first OTP sonrası.
+ * gtag config hazır olana kadar bekler (lazy yükleme).
  */
 export function gtagAdsKaydolmaDonusumu(user?: GtagUserData): void {
   if (typeof window === "undefined") return;
   if (!GOOGLE_ADS_DONUSUM_KAYDOLMA) return;
   if (!cerezAnalitikAktif()) return;
-  if (user) gtagUserDataAyarla(user);
-  gtagCagir("event", "conversion", {
-    send_to: GOOGLE_ADS_DONUSUM_KAYDOLMA,
-    value: 1.0,
-    currency: "TRY",
+  gtagHazirOlunca(() => {
+    if (user) gtagUserDataAyarla(user);
+    gtagCagir("event", "conversion", {
+      send_to: GOOGLE_ADS_DONUSUM_KAYDOLMA,
+      value: 1.0,
+      currency: "TRY",
+    });
+    /* Tag Assistant / GA4’te görünür isim */
+    gtagCagir("event", "sign_up", { method: "cekici_kayit" });
+  });
+}
+
+const GA_KAYDOLMA_USER_KEY = "acil_ga_kaydolma_user";
+
+/**
+ * Session ile bir kez — işaret, gtag hazır olunca gönderildikten sonra konur.
+ * OTP → kurulum soft navigate sırasında kuyruk yaşar; user_data session’da saklanır.
+ */
+export function gtagAdsKaydolmaDonusumuBirKez(user?: GtagUserData): void {
+  if (typeof window === "undefined") return;
+  if (!GOOGLE_ADS_DONUSUM_KAYDOLMA) return;
+  if (!cerezAnalitikAktif()) return;
+  try {
+    if (sessionStorage.getItem(GA_SIGN_UP_SESSION_KEY) === "1") return;
+    if (user) {
+      sessionStorage.setItem(GA_KAYDOLMA_USER_KEY, JSON.stringify(user));
+    }
+  } catch {
+    /* private mode */
+  }
+  gtagHazirOlunca(() => {
+    try {
+      if (sessionStorage.getItem(GA_SIGN_UP_SESSION_KEY) === "1") return;
+      sessionStorage.setItem(GA_SIGN_UP_SESSION_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+    let u = user;
+    if (!u) {
+      try {
+        const raw = sessionStorage.getItem(GA_KAYDOLMA_USER_KEY);
+        if (raw) u = JSON.parse(raw) as GtagUserData;
+      } catch {
+        /* ignore */
+      }
+    }
+    try {
+      sessionStorage.removeItem(GA_KAYDOLMA_USER_KEY);
+    } catch {
+      /* ignore */
+    }
+    if (u) gtagUserDataAyarla(u);
+    gtagCagir("event", "conversion", {
+      send_to: GOOGLE_ADS_DONUSUM_KAYDOLMA,
+      value: 1.0,
+      currency: "TRY",
+    });
+    gtagCagir("event", "sign_up", { method: "cekici_kayit" });
   });
 }
 
@@ -224,19 +325,17 @@ export function gtagCekiciKayitOnayGoruntule(
 ): void {
   if (typeof window === "undefined") return;
   if (!cerezAnalitikAktif()) return;
-  if (GA_MEASUREMENT_ID) {
-    gtagCagir("config", GA_MEASUREMENT_ID, {
-      page_path: "/cekici/kayit/onay",
-      page_title: "Kayıt Onayı",
+  gtagHazirOlunca(() => {
+    if (GA_MEASUREMENT_ID) {
+      gtagCagir("config", GA_MEASUREMENT_ID, {
+        page_path: "/cekici/kayit/onay",
+        page_title: "Kayıt Onayı",
+      });
+    }
+    gtagCagir("event", "cekici_kayit_onay", {
+      ...(sehir ? { sehir } : {}),
     });
-  }
+  });
   if (opts?.donusumOlayi === false) return;
-  gtagAdsKaydolmaDonusumu(opts?.user);
-  gtagCagir("event", "sign_up", {
-    method: "cekici_kayit",
-    ...(sehir ? { sehir } : {}),
-  });
-  gtagCagir("event", "cekici_kayit_onay", {
-    ...(sehir ? { sehir } : {}),
-  });
+  gtagAdsKaydolmaDonusumuBirKez(opts?.user);
 }

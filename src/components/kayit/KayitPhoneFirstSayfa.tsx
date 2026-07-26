@@ -14,10 +14,7 @@ import {
   kayitFunnelSessionId,
 } from "@/lib/kayit-funnel-client";
 import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
-import {
-  GA_SIGN_UP_SESSION_KEY,
-  gtagAdsKaydolmaDonusumu,
-} from "@/lib/gtag";
+import { gtagAdsKaydolmaDonusumuBirKez } from "@/lib/gtag";
 import {
   tiktokPixelClickButton,
   tiktokPixelKayitOl,
@@ -227,14 +224,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
           content_name: `cekici_kayit_${funnel.id}`,
         });
       }
-      try {
-        if (sessionStorage.getItem(GA_SIGN_UP_SESSION_KEY) !== "1") {
-          sessionStorage.setItem(GA_SIGN_UP_SESSION_KEY, "1");
-          gtagAdsKaydolmaDonusumu({ phone: telefon });
-        }
-      } catch {
-        gtagAdsKaydolmaDonusumu({ phone: telefon });
-      }
+      gtagAdsKaydolmaDonusumuBirKez({ phone: telefon });
       await tiktokPixelKayitOl({
         content_name: `cekici_kayit_${funnel.id}`,
         phone: telefon,
