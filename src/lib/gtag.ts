@@ -23,8 +23,26 @@ export const GOOGLE_ADS_DONUSUM_KAYDOLMA =
   process.env.NEXT_PUBLIC_GOOGLE_ADS_KAYDOLMA_LABEL?.trim() ||
   "AW-18328392362/Y9juCP_Rm9McEKql1KNE";
 
+/** «Kaydolma işlemi Satis icin» — satış kampanyası hedefi */
+export const GOOGLE_ADS_DONUSUM_KAYDOLMA_SATIS =
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_KAYDOLMA_SATIS_LABEL?.trim() ||
+  "AW-18328392362/7LrICKm8w9ccEKql1KNE";
+
+/** «Kredi sepetine ekleme» — paket seçilip ödeme sayfasına gidilince */
+export const GOOGLE_ADS_DONUSUM_KREDI_SEPET =
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_KREDI_SEPET_LABEL?.trim() ||
+  "AW-18328392362/AezgCJW_q9ccEKql1KNE";
+
+/** «Satın alma işlemi» — kredi ödemesi başarıyla tamamlanınca */
+export const GOOGLE_ADS_DONUSUM_KREDI_SATIN_ALMA =
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_KREDI_SATIN_ALMA_LABEL?.trim() ||
+  "AW-18328392362/zm-FCJSzw9ccEKql1KNE";
+
 /** GA sign_up / Ads kaydolma çift tetiklenmesin */
 export const GA_SIGN_UP_SESSION_KEY = "acil_ga_sign_up";
+
+/** Aynı ödeme için satın alma dönüşümü bir kez */
+export const GA_KREDI_SATIN_ALMA_PREFIX = "acil_ga_kredi_satin_alma:";
 
 export function gtagYapilandirildi(): boolean {
   return Boolean(GA_MEASUREMENT_ID || GOOGLE_ADS_ID);
@@ -247,23 +265,105 @@ export function gtagAdsFiyatTeklifiDonusumu(user?: GtagUserData): void {
 }
 
 /**
- * Hizmet veren kayıt — Google Ads «Kaydolma işlemi».
- * Funnel A: form/onay; Funnel B+: phone-first OTP sonrası.
- * gtag config hazır olana kadar bekler (lazy yükleme).
+ * Hizmet veren kayıt — Ads «Kaydolma» + «Kaydolma Satis icin» (+ GA sign_up).
  */
-export function gtagAdsKaydolmaDonusumu(user?: GtagUserData): void {
-  if (typeof window === "undefined") return;
-  if (!GOOGLE_ADS_DONUSUM_KAYDOLMA) return;
-  if (!cerezAnalitikAktif()) return;
-  gtagHazirOlunca(() => {
-    if (user) gtagUserDataAyarla(user);
+function gtagAdsKaydolmaDonusumleriniGonder(user?: GtagUserData): void {
+  if (user) gtagUserDataAyarla(user);
+  if (GOOGLE_ADS_DONUSUM_KAYDOLMA) {
     gtagCagir("event", "conversion", {
       send_to: GOOGLE_ADS_DONUSUM_KAYDOLMA,
       value: 1.0,
       currency: "TRY",
     });
-    /* Tag Assistant / GA4’te görünür isim */
-    gtagCagir("event", "sign_up", { method: "cekici_kayit" });
+  }
+  if (GOOGLE_ADS_DONUSUM_KAYDOLMA_SATIS) {
+    gtagCagir("event", "conversion", {
+      send_to: GOOGLE_ADS_DONUSUM_KAYDOLMA_SATIS,
+      value: 1.0,
+      currency: "TRY",
+    });
+  }
+  /* Tag Assistant / GA4’te görünür isim */
+  gtagCagir("event", "sign_up", { method: "cekici_kayit" });
+}
+
+/**
+ * Hizmet veren kayıt — Google Ads «Kaydolma işlemi» (+ satış hedefi).
+ * Funnel A: form/onay; Funnel B+: phone-first OTP sonrası.
+ * gtag config hazır olana kadar bekler (lazy yükleme).
+ */
+export function gtagAdsKaydolmaDonusumu(user?: GtagUserData): void {
+  if (typeof window === "undefined") return;
+  if (!GOOGLE_ADS_DONUSUM_KAYDOLMA && !GOOGLE_ADS_DONUSUM_KAYDOLMA_SATIS) {
+    return;
+  }
+  if (!cerezAnalitikAktif()) return;
+  gtagHazirOlunca(() => gtagAdsKaydolmaDonusumleriniGonder(user));
+}
+
+/**
+ * Kredi paket seçilip ödeme sayfasına gidilince — «Kredi sepetine ekleme».
+ * value: ödenecek tutar (TRY).
+ */
+export function gtagAdsKrediSepeteEklemeDonusumu(opts?: {
+  value?: number;
+  user?: GtagUserData;
+}): void {
+  if (typeof window === "undefined") return;
+  if (!GOOGLE_ADS_DONUSUM_KREDI_SEPET) return;
+  if (!cerezAnalitikAktif()) return;
+  const value =
+    typeof opts?.value === "number" && Number.isFinite(opts.value) && opts.value > 0
+      ? opts.value
+      : 1.0;
+  gtagHazirOlunca(() => {
+    if (opts?.user) gtagUserDataAyarla(opts.user);
+    gtagCagir("event", "conversion", {
+      send_to: GOOGLE_ADS_DONUSUM_KREDI_SEPET,
+      value,
+      currency: "TRY",
+    });
+  });
+}
+
+/**
+ * Kredi ödemesi başarılı — Google Ads «Satın alma işlemi».
+ * transaction_id ile mükerrer sayımı önler.
+ */
+export function gtagAdsKrediSatinAlmaDonusumu(opts: {
+  transactionId: string;
+  value?: number;
+  user?: GtagUserData;
+}): void {
+  if (typeof window === "undefined") return;
+  if (!GOOGLE_ADS_DONUSUM_KREDI_SATIN_ALMA) return;
+  if (!cerezAnalitikAktif()) return;
+  const tx = opts.transactionId.trim();
+  if (!tx) return;
+  const key = `${GA_KREDI_SATIN_ALMA_PREFIX}${tx}`;
+  try {
+    if (sessionStorage.getItem(key) === "1") return;
+  } catch {
+    /* private mode */
+  }
+  const value =
+    typeof opts.value === "number" && Number.isFinite(opts.value) && opts.value > 0
+      ? opts.value
+      : 1.0;
+  gtagHazirOlunca(() => {
+    try {
+      if (sessionStorage.getItem(key) === "1") return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      /* ignore */
+    }
+    if (opts.user) gtagUserDataAyarla(opts.user);
+    gtagCagir("event", "conversion", {
+      send_to: GOOGLE_ADS_DONUSUM_KREDI_SATIN_ALMA,
+      value,
+      currency: "TRY",
+      transaction_id: tx,
+    });
   });
 }
 
@@ -275,7 +375,9 @@ const GA_KAYDOLMA_USER_KEY = "acil_ga_kaydolma_user";
  */
 export function gtagAdsKaydolmaDonusumuBirKez(user?: GtagUserData): void {
   if (typeof window === "undefined") return;
-  if (!GOOGLE_ADS_DONUSUM_KAYDOLMA) return;
+  if (!GOOGLE_ADS_DONUSUM_KAYDOLMA && !GOOGLE_ADS_DONUSUM_KAYDOLMA_SATIS) {
+    return;
+  }
   if (!cerezAnalitikAktif()) return;
   try {
     if (sessionStorage.getItem(GA_SIGN_UP_SESSION_KEY) === "1") return;
@@ -306,13 +408,7 @@ export function gtagAdsKaydolmaDonusumuBirKez(user?: GtagUserData): void {
     } catch {
       /* ignore */
     }
-    if (u) gtagUserDataAyarla(u);
-    gtagCagir("event", "conversion", {
-      send_to: GOOGLE_ADS_DONUSUM_KAYDOLMA,
-      value: 1.0,
-      currency: "TRY",
-    });
-    gtagCagir("event", "sign_up", { method: "cekici_kayit" });
+    gtagAdsKaydolmaDonusumleriniGonder(u);
   });
 }
 

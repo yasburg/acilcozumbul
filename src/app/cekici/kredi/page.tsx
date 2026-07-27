@@ -12,6 +12,7 @@ import {
 import { formatKredi } from "@/lib/talep-utils";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { posthogOlayYakala } from "@/lib/posthog-client";
+import { gtagAdsKrediSepeteEklemeDonusumu } from "@/lib/gtag";
 
 export default function KrediPage() {
   const router = useRouter();
@@ -144,6 +145,10 @@ export default function KrediPage() {
         odeme_tipi: "kredi",
         paket_tl: seciliPaket,
         odeme_id: data.odemeId,
+      });
+      gtagAdsKrediSepeteEklemeDonusumu({
+        value: Number(data.tutar) || odenecek,
+        user: { email: eposta },
       });
       sessionStorage.setItem(
         `odeme-${data.odemeId}`,

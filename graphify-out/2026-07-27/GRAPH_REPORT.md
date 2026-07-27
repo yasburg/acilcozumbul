@@ -1,11 +1,11 @@
 # Graph Report - acilcozumbul  (2026-07-27)
 
 ## Corpus Check
-- 437 files · ~415,460 words
+- 437 files · ~415,433 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1887 nodes · 6009 edges · 90 communities (80 shown, 10 thin omitted)
+- 1887 nodes · 6009 edges · 91 communities (81 shown, 10 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 27 edges (avg confidence: 0.64)
 - Token cost: 0 input · 0 output
 
@@ -95,6 +95,7 @@
 - [[_COMMUNITY_kredi-odeme.ts|kredi-odeme.ts]]
 - [[_COMMUNITY_PanelCekiciHarita.tsx|PanelCekiciHarita.tsx]]
 - [[_COMMUNITY_meta-pixel.ts|meta-pixel.ts]]
+- [[_COMMUNITY_toplu-sms-excel.ts|toplu-sms-excel.ts]]
 - [[_COMMUNITY_musteri-auth.ts|musteri-auth.ts]]
 - [[_COMMUNITY_layout.tsx|layout.tsx]]
 - [[_COMMUNITY_cekici-profil-hazir.ts|cekici-profil-hazir.ts]]
@@ -128,7 +129,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (90 total, 10 thin omitted)
+## Communities (91 total, 10 thin omitted)
 
 ### Community 0 - "demo-oturum.ts"
 Cohesion: 0.17
@@ -175,8 +176,8 @@ Cohesion: 0.11
 Nodes (24): GenelTelefon, KampanyaSablon, KuyrukIs, kuyrukIsBaslik(), ListeAlici, ListeOzet, OncekiMod, PanelTopluSmsPage() (+16 more)
 
 ### Community 11 - "CekiciPanelTabs.tsx"
-Cohesion: 0.16
-Nodes (18): POST(), POST(), DELETE(), hesapSilOnayMetniGecerliMi(), cekiciHesapSilOtpDogrula(), CekiciHesapSilOtpKayit, cekiciHesapSilOtpOlustur(), cekiciHesapSilOtpSil() (+10 more)
+Cohesion: 0.13
+Nodes (25): POST(), POST(), DELETE(), authAnonClient(), authSignIn(), cekiciAuthEmail(), cekiciAuthSifreDogrula(), cekiciAuthSifreGuncelle() (+17 more)
 
 ### Community 12 - "sms-provider.ts"
 Cohesion: 0.07
@@ -244,7 +245,7 @@ Nodes (34): BekleIcerik(), KrediPage(), CekiciTalepClient(), TalepDurum, CekiciK
 
 ### Community 28 - "cekici-email-otp.ts"
 Cohesion: 0.22
-Nodes (22): POST(), POST(), cekiciOturumCookieAyarlari(), cekiciAuthKullaniciOlustur(), cekiciAuthKullaniciSil(), cekiciAuthRastgeleSifre(), bekleyenCekiciKayitOtp(), cekiciKayitOtpDogrula() (+14 more)
+Nodes (21): POST(), POST(), cekiciOturumCookieAyarlari(), cekiciAuthKullaniciOlustur(), cekiciAuthKullaniciSil(), cekiciAuthRastgeleSifre(), bekleyenCekiciKayitOtp(), cekiciKayitOtpDogrula() (+13 more)
 
 ### Community 29 - "cekici-puan.ts"
 Cohesion: 0.15
@@ -279,16 +280,16 @@ Cohesion: 0.33
 Nodes (5): Akış, API, Teknik notlar, Video demo modu, Önkoşullar
 
 ### Community 38 - "route.ts"
-Cohesion: 0.14
-Nodes (31): ADIMLAR, GUVEN, PhoneFirstIcerik(), SSS, kayitFunnelOlayGonder(), kayitFunnelSessionId(), TELEFON_ORNEK_GIRISLERI, analitikHazir() (+23 more)
+Cohesion: 0.17
+Nodes (24): TikTokPixel(), analitikHazir(), cookieOku(), eventsApiBridge(), sessionIsaretle(), TikTokContent, tiktokEventId(), tiktokPixelBootstrapInline() (+16 more)
 
 ### Community 39 - "README.md"
 Cohesion: 0.50
 Nodes (3): Deploy on Vercel, Getting Started, Learn More
 
 ### Community 40 - "route.ts"
-Cohesion: 0.14
-Nodes (30): POST(), POST(), bekleyenCekiciSifreOtp(), cekiciSifreOtpDogrula(), cekiciSifreOtpGonder(), CekiciSifreOtpKayit, CekiciSifreOtpRow, cekiciSifreOtpTemizle() (+22 more)
+Cohesion: 0.30
+Nodes (14): POST(), bekleyenCekiciSifreOtp(), cekiciSifreOtpDogrula(), cekiciSifreOtpGonder(), CekiciSifreOtpKayit, CekiciSifreOtpRow, cekiciSifreOtpTemizle(), fromRow() (+6 more)
 
 ### Community 41 - "updateCekici"
 Cohesion: 0.33
@@ -359,16 +360,16 @@ Cohesion: 0.33
 Nodes (9): GET(), GET(), GET(), countSmsLog(), getSmsLog(), getTaleplerSince(), smsDurumu(), envInt() (+1 more)
 
 ### Community 67 - "route.ts"
-Cohesion: 0.33
-Nodes (10): POST(), beniAnimsaOku(), authAnonClient(), authSignIn(), cekiciAuthEmail(), cekiciAuthSifreDogrula(), cekiciAuthSifreGuncelle(), cekiciGirisSifreKontrol() (+2 more)
+Cohesion: 0.28
+Nodes (11): ADIMLAR, GUVEN, PhoneFirstIcerik(), SSS, kayitFunnelOlayGonder(), kayitFunnelSessionId(), TELEFON_ORNEK_GIRISLERI, icerik() (+3 more)
 
 ### Community 69 - "route.ts"
 Cohesion: 0.18
 Nodes (11): hataMesajiFromParam(), Ozet, PanelIcerik(), HizmetVerenSayimPanel(), KullaniciSayisiGrafik(), Pencere, PanelGirisForm(), CekiciKayitGunNokta (+3 more)
 
 ### Community 70 - "page.tsx"
-Cohesion: 0.28
-Nodes (13): POST(), bekleyenCekiciGirisOtp(), cekiciGirisOtpDogrula(), cekiciGirisOtpGonder(), CekiciGirisOtpKayit, CekiciGirisOtpRow, cekiciGirisOtpTemizle(), fromRow() (+5 more)
+Cohesion: 0.19
+Nodes (22): POST(), POST(), POST(), beniAnimsaOku(), bekleyenCekiciGirisOtp(), cekiciGirisOtpDogrula(), cekiciGirisOtpGonder(), CekiciGirisOtpKayit (+14 more)
 
 ### Community 71 - "toplu-sms-gecmis-db.ts"
 Cohesion: 0.21
@@ -387,8 +388,8 @@ Cohesion: 0.15
 Nodes (24): POST(), GET(), GET(), GET(), POST(), panelKullanici(), POST(), panelKullanici() (+16 more)
 
 ### Community 77 - "layout.tsx"
-Cohesion: 0.16
-Nodes (13): geist, metadata, RootLayout(), viewport, PostHogProvider(), TikTokPixel(), gtagConsentBootstrapInline(), idleSonra() (+5 more)
+Cohesion: 0.19
+Nodes (9): geist, metadata, RootLayout(), viewport, PostHogProvider(), gtagConsentBootstrapInline(), idleSonra(), posthogCerezSenkronize() (+1 more)
 
 ### Community 78 - "musteri-profil.ts"
 Cohesion: 0.11
@@ -414,6 +415,10 @@ Nodes (19): OnayIcerik(), OdemeOnayPage(), KREDI_ODEME_ADIMLARI, ROZET_ODEME_ADI
 Cohesion: 0.41
 Nodes (9): MetaPixel(), fbqCagir(), metaPixelBootstrapInline(), metaPixelCerezSenkronize(), metaPixelCompleteRegistration(), metaPixelLead(), metaPixelPageView(), metaPixelYapilandirildi() (+1 more)
 
+### Community 84 - "toplu-sms-excel.ts"
+Cohesion: 0.23
+Nodes (11): telefonSabitHatMi(), AD_BASLIKLAR, baslikEsle(), elleTelefonEkle(), excelAlicilariListeyeEkle(), exceldenTopluSmsAliciOku(), ExcelYukleOzet, TELEFON_BASLIKLAR (+3 more)
+
 ### Community 85 - "musteri-auth.ts"
 Cohesion: 0.52
 Nodes (5): GET(), getDogrulanmisTelefon(), musteriTelCookieAyarla(), musteriTelCookieDegeri(), musteriTelCookieTemizle()
@@ -438,11 +443,11 @@ Nodes (3): GET(), istemciIp(), ozelIp()
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `getSupabaseAdmin()` connect `NasilCalisirSerit.tsx` to `demo-oturum.ts`, `mappers.ts`, `ensureSeedData`, `ui.tsx`, `CekiciPanelTabs.tsx`, `CekiciAyarlarPanel.tsx`, `memnuniyet.ts`, `MusteriAnaSayfa.tsx`, `MusteriCekiciTakipHarita.tsx`, `route.ts`, `page.tsx`, `kredi-odeme.ts`, `route.ts`, `cekici-email-otp.ts`, `demo-responses.ts`, `route.ts`, `updateCekici`, `seo.ts`, `CerezOnayBanner.tsx`, `sorun-tipleri.ts`, `PanelCekiciHarita.tsx`, `cerez-onay.ts`, `fixtures.ts`, `davet-panel.ts`, `layout.tsx`, `kampanya-db.ts`, `page.tsx`, `route.ts`, `page.tsx`, `cekici-puan.ts`, `cekici-sifre-otp.ts`, `talep-fraud.ts`, `mappers.ts`, `kredi-odeme.ts`?**
+- **Why does `getSupabaseAdmin()` connect `NasilCalisirSerit.tsx` to `demo-oturum.ts`, `mappers.ts`, `ensureSeedData`, `ui.tsx`, `CekiciPanelTabs.tsx`, `CekiciAyarlarPanel.tsx`, `memnuniyet.ts`, `MusteriAnaSayfa.tsx`, `MusteriCekiciTakipHarita.tsx`, `route.ts`, `page.tsx`, `kredi-odeme.ts`, `route.ts`, `cekici-email-otp.ts`, `demo-responses.ts`, `route.ts`, `updateCekici`, `seo.ts`, `CerezOnayBanner.tsx`, `sorun-tipleri.ts`, `PanelCekiciHarita.tsx`, `cerez-onay.ts`, `fixtures.ts`, `davet-panel.ts`, `layout.tsx`, `kampanya-db.ts`, `page.tsx`, `page.tsx`, `cekici-puan.ts`, `cekici-sifre-otp.ts`, `talep-fraud.ts`, `mappers.ts`, `kredi-odeme.ts`?**
   _High betweenness centrality (0.095) - this node is a cross-community bridge._
-- **Why does `telefonNormalize()` connect `route.ts` to `route.ts`, `NasilCalisirSerit.tsx`, `seo.ts`, `page.tsx`, `route.ts`, `CekiciPanelTabs.tsx`, `cekici-sifre-otp.ts`, `memnuniyet.ts`, `talep-fraud.ts`, `cerezAnalitikAktif`, `musteri-auth.ts`, `MusteriCekiciTakipHarita.tsx`, `kredi-odeme.ts`, `ArizaFotografAlani.tsx`, `page.tsx`, `cekici-email-otp.ts`?**
+- **Why does `telefonNormalize()` connect `route.ts` to `NasilCalisirSerit.tsx`, `seo.ts`, `page.tsx`, `route.ts`, `CekiciPanelTabs.tsx`, `cekici-sifre-otp.ts`, `memnuniyet.ts`, `talep-fraud.ts`, `cerezAnalitikAktif`, `toplu-sms-excel.ts`, `musteri-auth.ts`, `MusteriCekiciTakipHarita.tsx`, `kredi-odeme.ts`, `ArizaFotografAlani.tsx`, `page.tsx`, `cekici-email-otp.ts`?**
   _High betweenness centrality (0.059) - this node is a cross-community bridge._
-- **Why does `Card()` connect `ensureSeedData` to `google-maps.ts`, `hizmet-veren-sayim.ts`, `hizmet-veren-sayim.ts`, `page.tsx`, `page.tsx`, `kayit-kodu.ts`, `route.ts`, `cerezAnalitikAktif`, `CerezOnayBanner.tsx`, `cerez-onay.ts`, `route.ts`, `layout.tsx`, `davet-panel.ts`, `gtag.ts`, `route.ts`, `admin.ts`, `mappers.ts`, `kredi-odeme.ts`, `PanelCekiciHarita.tsx`?**
+- **Why does `Card()` connect `ensureSeedData` to `google-maps.ts`, `hizmet-veren-sayim.ts`, `hizmet-veren-sayim.ts`, `page.tsx`, `page.tsx`, `kayit-kodu.ts`, `cerezAnalitikAktif`, `CerezOnayBanner.tsx`, `cerez-onay.ts`, `route.ts`, `layout.tsx`, `davet-panel.ts`, `route.ts`, `gtag.ts`, `route.ts`, `admin.ts`, `mappers.ts`, `kredi-odeme.ts`, `PanelCekiciHarita.tsx`?**
   _High betweenness centrality (0.052) - this node is a cross-community bridge._
 - **What connects `eslintConfig`, `config`, `nextConfig` to the rest of the system?**
   _363 weakly-connected nodes found - possible documentation gaps or missing edges._

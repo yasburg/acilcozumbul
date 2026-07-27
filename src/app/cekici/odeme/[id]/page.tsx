@@ -7,6 +7,7 @@ import { Btn, Field, Card } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { odemeOnaySessionKey, type OdemeOnayKayit } from "@/lib/odeme-onay";
 import { posthogOlayYakala } from "@/lib/posthog-client";
+import { gtagAdsKrediSatinAlmaDonusumu } from "@/lib/gtag";
 
 const KREDI_ODEME_ADIMLARI = [
   "Kart doğrulanıyor",
@@ -244,6 +245,14 @@ export default function OdemePage() {
         odeme_durumu: "basarili",
         eklenen_kredi: data.eklenenKredi,
       });
+
+      if (tip === "kredi") {
+        gtagAdsKrediSatinAlmaDonusumu({
+          transactionId: odemeId,
+          value: Number(tutar) || Number(data.tutar) || undefined,
+          user: { email: eposta, phone: telefon },
+        });
+      }
 
       sessionStorage.removeItem(`odeme-${odemeId}`);
 

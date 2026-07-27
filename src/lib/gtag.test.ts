@@ -45,4 +45,25 @@ describe("gtag consent mode (advanced)", () => {
     expect(GOOGLE_ADS_DONUSUM_KAYDOLMA).toContain("Y9juCP_Rm9McEKql1KNE");
     expect(gtagTelefonE164("0532 323 32 32")).toBe("+905323233232");
   });
+
+  it("Ads kaydolma satış hedefi send_to tanımlı", async () => {
+    const { GOOGLE_ADS_DONUSUM_KAYDOLMA_SATIS } = await import("./gtag");
+    expect(GOOGLE_ADS_DONUSUM_KAYDOLMA_SATIS).toBe(
+      "AW-18328392362/7LrICKm8w9ccEKql1KNE"
+    );
+  });
+
+  it("Ads kredi sepet dönüşüm send_to tanımlı", async () => {
+    const { GOOGLE_ADS_DONUSUM_KREDI_SEPET } = await import("./gtag");
+    expect(GOOGLE_ADS_DONUSUM_KREDI_SEPET).toBe(
+      "AW-18328392362/AezgCJW_q9ccEKql1KNE"
+    );
+  });
+
+  it("Ads kredi satın alma dönüşüm send_to tanımlı", async () => {
+    const { GOOGLE_ADS_DONUSUM_KREDI_SATIN_ALMA } = await import("./gtag");
+    expect(GOOGLE_ADS_DONUSUM_KREDI_SATIN_ALMA).toBe(
+      "AW-18328392362/zm-FCJSzw9ccEKql1KNE"
+    );
+  });
 });

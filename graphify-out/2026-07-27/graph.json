@@ -940,7 +940,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_giris_route",
-      "community": 67,
+      "community": 70,
       "norm_label": "route.ts"
     },
     {
@@ -950,7 +950,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_app_api_cekici_giris_route_post",
-      "community": 67,
+      "community": 70,
       "norm_label": "post()"
     },
     {
@@ -2090,7 +2090,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_musteri_otp_sifirla_route",
-      "community": 40,
+      "community": 70,
       "norm_label": "route.ts"
     },
     {
@@ -2100,7 +2100,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_app_api_musteri_otp_sifirla_route_post",
-      "community": 40,
+      "community": 70,
       "norm_label": "post()"
     },
     {
@@ -5257,7 +5257,7 @@
       "label": "GoogleAnalytics()",
       "file_type": "code",
       "source_file": "src/components/GoogleAnalytics.tsx",
-      "source_location": "L18",
+      "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_googleanalytics_googleanalytics",
       "community": 4,
@@ -6080,7 +6080,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_tiktokpixel",
-      "community": 77,
+      "community": 38,
       "norm_label": "tiktokpixel.tsx"
     },
     {
@@ -6090,7 +6090,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_tiktokpixel_tiktokpixel",
-      "community": 77,
+      "community": 38,
       "norm_label": "tiktokpixel()"
     },
     {
@@ -6510,7 +6510,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_kayit_kayitphonefirstsayfa",
-      "community": 38,
+      "community": 67,
       "norm_label": "kayitphonefirstsayfa.tsx"
     },
     {
@@ -6520,7 +6520,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_components_kayit_kayitphonefirstsayfa_guven",
-      "community": 38,
+      "community": 67,
       "norm_label": "guven"
     },
     {
@@ -6530,7 +6530,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_components_kayit_kayitphonefirstsayfa_adimlar",
-      "community": 38,
+      "community": 67,
       "norm_label": "adimlar"
     },
     {
@@ -6540,7 +6540,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_components_kayit_kayitphonefirstsayfa_sss",
-      "community": 38,
+      "community": 67,
       "norm_label": "sss"
     },
     {
@@ -6550,7 +6550,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "src_components_kayit_kayitphonefirstsayfa_phonefirsticerik",
-      "community": 38,
+      "community": 67,
       "norm_label": "phonefirsticerik()"
     },
     {
@@ -7400,7 +7400,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_lib_auth_benianimsaoku",
-      "community": 67,
+      "community": 70,
       "norm_label": "benianimsaoku()"
     },
     {
@@ -7420,7 +7420,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_auth_test",
-      "community": 67,
+      "community": 11,
       "norm_label": "cekici-auth.test.ts"
     },
     {
@@ -7430,7 +7430,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_auth",
-      "community": 67,
+      "community": 11,
       "norm_label": "cekici-auth.ts"
     },
     {
@@ -7440,7 +7440,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_lib_cekici_auth_cekiciauthemail",
-      "community": 67,
+      "community": 11,
       "norm_label": "cekiciauthemail()"
     },
     {
@@ -7460,7 +7460,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_lib_cekici_auth_authanonclient",
-      "community": 67,
+      "community": 11,
       "norm_label": "authanonclient()"
     },
     {
@@ -7470,7 +7470,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_lib_cekici_auth_authsignin",
-      "community": 67,
+      "community": 11,
       "norm_label": "authsignin()"
     },
     {
@@ -7490,7 +7490,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_lib_cekici_auth_cekiciauthsifreguncelle",
-      "community": 67,
+      "community": 11,
       "norm_label": "cekiciauthsifreguncelle()"
     },
     {
@@ -7510,7 +7510,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "src_lib_cekici_auth_cekiciauthsifredogrula",
-      "community": 67,
+      "community": 11,
       "norm_label": "cekiciauthsifredogrula()"
     },
     {
@@ -7520,7 +7520,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "src_lib_cekici_auth_cekicisifreyiauthatasi",
-      "community": 67,
+      "community": 11,
       "norm_label": "cekicisifreyiauthatasi()"
     },
     {
@@ -7530,7 +7530,7 @@
       "source_location": "L162",
       "_origin": "ast",
       "id": "src_lib_cekici_auth_cekicigirissifrekontrol",
-      "community": 67,
+      "community": 11,
       "norm_label": "cekicigirissifrekontrol()"
     },
     {
@@ -9330,7 +9330,7 @@
       "source_location": "L188",
       "_origin": "ast",
       "id": "src_lib_db_getcekicibydogrulanmisfaturaeposta",
-      "community": 67,
+      "community": 70,
       "norm_label": "getcekicibydogrulanmisfaturaeposta()"
     },
     {
@@ -11980,7 +11980,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_kayit_funnel_client",
-      "community": 38,
+      "community": 67,
       "norm_label": "kayit-funnel-client.ts"
     },
     {
@@ -11990,7 +11990,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_lib_kayit_funnel_client_kayitfunnelsessionid",
-      "community": 38,
+      "community": 67,
       "norm_label": "kayitfunnelsessionid()"
     },
     {
@@ -12000,7 +12000,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_kayit_funnel_client_kayitfunnelolaygonder",
-      "community": 38,
+      "community": 67,
       "norm_label": "kayitfunnelolaygonder()"
     },
     {
@@ -13390,7 +13390,7 @@
       "source_location": "L273",
       "_origin": "ast",
       "id": "src_lib_musteri_otp_otptemizle",
-      "community": 40,
+      "community": 70,
       "norm_label": "otptemizle()"
     },
     {
@@ -16430,7 +16430,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_telefon_sabit_hat_test",
-      "community": 40,
+      "community": 70,
       "norm_label": "telefon-sabit-hat.test.ts"
     },
     {
@@ -16440,7 +16440,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_telefon",
-      "community": 40,
+      "community": 70,
       "norm_label": "telefon.ts"
     },
     {
@@ -16450,7 +16450,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "src_lib_telefon_telefon_ornek_girisleri",
-      "community": 38,
+      "community": 67,
       "norm_label": "telefon_ornek_girisleri"
     },
     {
@@ -16470,7 +16470,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_lib_telefon_telefongecerlimi",
-      "community": 40,
+      "community": 70,
       "norm_label": "telefongecerlimi()"
     },
     {
@@ -16480,7 +16480,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_lib_telefon_telefonsabithatmi",
-      "community": 40,
+      "community": 84,
       "norm_label": "telefonsabithatmi()"
     },
     {
@@ -16490,7 +16490,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "src_lib_telefon_telefonyabancigorunuyormu",
-      "community": 40,
+      "community": 70,
       "norm_label": "telefonyabancigorunuyormu()"
     },
     {
@@ -16500,7 +16500,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "src_lib_telefon_telefondogrulamahatasi",
-      "community": 28,
+      "community": 70,
       "norm_label": "telefondogrulamahatasi()"
     },
     {
@@ -16520,7 +16520,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "src_lib_telefon_telefone164",
-      "community": 40,
+      "community": 70,
       "norm_label": "telefone164()"
     },
     {
@@ -16670,7 +16670,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_lib_tiktok_pixel_tiktokpixelyapilandirildi",
-      "community": 77,
+      "community": 38,
       "norm_label": "tiktokpixelyapilandirildi()"
     },
     {
@@ -16820,7 +16820,7 @@
       "source_location": "L198",
       "_origin": "ast",
       "id": "src_lib_tiktok_pixel_icerik",
-      "community": 38,
+      "community": 67,
       "norm_label": "icerik()"
     },
     {
@@ -16830,7 +16830,7 @@
       "source_location": "L207",
       "_origin": "ast",
       "id": "src_lib_tiktok_pixel_tiktokpixelcerezsenkronize",
-      "community": 77,
+      "community": 38,
       "norm_label": "tiktokpixelcerezsenkronize()"
     },
     {
@@ -16860,7 +16860,7 @@
       "source_location": "L261",
       "_origin": "ast",
       "id": "src_lib_tiktok_pixel_tiktokpixelviewcontent",
-      "community": 38,
+      "community": 67,
       "norm_label": "tiktokpixelviewcontent()"
     },
     {
@@ -16880,7 +16880,7 @@
       "source_location": "L310",
       "_origin": "ast",
       "id": "src_lib_tiktok_pixel_tiktokpixelclickbutton",
-      "community": 38,
+      "community": 67,
       "norm_label": "tiktokpixelclickbutton()"
     },
     {
@@ -16900,7 +16900,7 @@
       "source_location": "L370",
       "_origin": "ast",
       "id": "src_lib_tiktok_pixel_tiktokpixelkayitol",
-      "community": 38,
+      "community": 67,
       "norm_label": "tiktokpixelkayitol()"
     },
     {
@@ -16930,7 +16930,7 @@
       "source_location": "L464",
       "_origin": "ast",
       "id": "src_lib_tiktok_pixel_tiktokpixelbootstrapinline",
-      "community": 77,
+      "community": 38,
       "norm_label": "tiktokpixelbootstrapinline()"
     },
     {
@@ -16940,7 +16940,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel",
-      "community": 40,
+      "community": 84,
       "norm_label": "toplu-sms-excel.ts"
     },
     {
@@ -16950,7 +16950,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_toplusmsalici",
-      "community": 40,
+      "community": 84,
       "norm_label": "toplusmsalici"
     },
     {
@@ -16960,7 +16960,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_excelyukleozet",
-      "community": 40,
+      "community": 84,
       "norm_label": "excelyukleozet"
     },
     {
@@ -16970,7 +16970,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_telefon_basliklar",
-      "community": 40,
+      "community": 84,
       "norm_label": "telefon_basliklar"
     },
     {
@@ -16980,7 +16980,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_ad_basliklar",
-      "community": 40,
+      "community": 84,
       "norm_label": "ad_basliklar"
     },
     {
@@ -16990,7 +16990,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_baslikesle",
-      "community": 40,
+      "community": 84,
       "norm_label": "baslikesle()"
     },
     {
@@ -17000,7 +17000,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_toplusmsexcelsablonblob",
-      "community": 40,
+      "community": 84,
       "norm_label": "toplusmsexcelsablonblob()"
     },
     {
@@ -17010,7 +17010,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_toplusmsexcelsablonindir",
-      "community": 40,
+      "community": 84,
       "norm_label": "toplusmsexcelsablonindir()"
     },
     {
@@ -17020,7 +17020,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_exceldentoplusmsalicioku",
-      "community": 40,
+      "community": 84,
       "norm_label": "exceldentoplusmsalicioku()"
     },
     {
@@ -17030,7 +17030,7 @@
       "source_location": "L184",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_excelalicilarilisteyeekle",
-      "community": 40,
+      "community": 84,
       "norm_label": "excelalicilarilisteyeekle()"
     },
     {
@@ -17040,7 +17040,7 @@
       "source_location": "L219",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_elletelefonekle",
-      "community": 40,
+      "community": 84,
       "norm_label": "elletelefonekle()"
     },
     {
@@ -49013,7 +49013,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/GoogleAnalytics.tsx",
-      "source_location": "L18",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "src_components_googleanalytics",
       "target": "src_components_googleanalytics_googleanalytics",
@@ -49080,7 +49080,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/GoogleAnalytics.tsx",
-      "source_location": "L34",
+      "source_location": "L33",
       "weight": 1.0,
       "source": "src_components_googleanalytics_googleanalytics",
       "target": "src_lib_gtag_gtagyapilandirildi"

@@ -13,6 +13,7 @@ import { idleSonra } from "@/lib/idle-sonra";
 /**
  * gtag.js — LCP sonrası (lazyOnload + idle).
  * Consent default root layout’ta beforeInteractive kalır.
+ * Ads dönüşümleri için script AW- ile yüklenir; GA4 ayrıca config edilir.
  */
 export function GoogleAnalytics() {
   const [yukle, setYukle] = useState(false);
@@ -32,7 +33,8 @@ export function GoogleAnalytics() {
 
   if (!gtagYapilandirildi() || !yukle) return null;
 
-  const scriptId = GA_MEASUREMENT_ID || GOOGLE_ADS_ID;
+  /* Ads kurulum / Tag Assistant AW’yi görsün — GA config ile de ölçülür */
+  const scriptId = GOOGLE_ADS_ID || GA_MEASUREMENT_ID;
 
   return (
     <>
@@ -54,8 +56,8 @@ export function GoogleAnalytics() {
       >
         {`
 gtag('js', new Date());
-${GA_MEASUREMENT_ID ? `gtag('config', '${GA_MEASUREMENT_ID}');` : ""}
 ${GOOGLE_ADS_ID ? `gtag('config', '${GOOGLE_ADS_ID}', { allow_enhanced_conversions: true });` : ""}
+${GA_MEASUREMENT_ID ? `gtag('config', '${GA_MEASUREMENT_ID}');` : ""}
 try { window.dispatchEvent(new Event('acil-gtag-config')); } catch (e) {}
 `}
       </Script>
