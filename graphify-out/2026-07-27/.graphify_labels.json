@@ -83,11 +83,12 @@
   "81": "kredi-odeme.ts",
   "82": "PanelCekiciHarita.tsx",
   "83": "meta-pixel.ts",
-  "84": "toplu-sms-excel.ts",
+  "84": "KayitPhoneFirstSayfa.tsx",
   "85": "musteri-auth.ts",
   "86": "layout.tsx",
   "87": "page.tsx",
   "88": "cekici-profil-hazir.ts",
+  "89": "NasilCalisirSerit.tsx",
   "90": "ArizaFotografAlani.tsx",
   "95": "route.ts"
 }

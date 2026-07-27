@@ -3,6 +3,11 @@ import Script from "next/script";
 import { Geist } from "next/font/google";
 import { CerezOnayBanner } from "@/components/CerezOnayBanner";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import {
+  GoogleTagManager,
+  GoogleTagManagerNoscript,
+  GTM_ID,
+} from "@/components/GoogleTagManager";
 import { MetaPixel } from "@/components/MetaPixel";
 import { TikTokPixel } from "@/components/TikTokPixel";
 import { PostHogProvider } from "@/components/PostHogProvider";
@@ -109,7 +114,8 @@ export default function RootLayout({
   return (
     <html lang="tr" className={`${geist.variable} h-full`}>
       <body className="min-h-dvh font-sans antialiased">
-        {GA_MEASUREMENT_ID || GOOGLE_ADS_ID ? (
+        <GoogleTagManagerNoscript />
+        {GA_MEASUREMENT_ID || GOOGLE_ADS_ID || GTM_ID ? (
           <Script
             id="google-consent-default"
             strategy="beforeInteractive"
@@ -118,6 +124,7 @@ export default function RootLayout({
             }}
           />
         ) : null}
+        <GoogleTagManager />
         <GoogleAnalytics />
         <MetaPixel />
         <TikTokPixel />

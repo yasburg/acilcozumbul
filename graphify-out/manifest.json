@@ -510,8 +510,8 @@
     "semantic_hash": ""
   },
   "src/app/layout.tsx": {
-    "mtime": 1784982107.7365403,
-    "ast_hash": "89ec56ec74b624d268686bc32411605f",
+    "mtime": 1785172203.9128697,
+    "ast_hash": "d41c0809a3de54134373dd64d0bcb5b2",
     "semantic_hash": ""
   },
   "src/app/manifest.ts": {
@@ -1660,8 +1660,8 @@
     "semantic_hash": ""
   },
   "src/lib/gtag.ts": {
-    "mtime": 1785169317.9157968,
-    "ast_hash": "546b261e05e59dd04b43381264420f70",
+    "mtime": 1785172117.8908513,
+    "ast_hash": "3b77c9e4693d95a8b638d1e278975d32",
     "semantic_hash": ""
   },
   "src/lib/gtag.test.ts": {
@@ -2267,6 +2267,11 @@
   "src/lib/tiktok-events-api.ts": {
     "mtime": 1784982834.7390099,
     "ast_hash": "2393833b0f2fba156acb0aae0dde21e8",
+    "semantic_hash": ""
+  },
+  "src/components/GoogleTagManager.tsx": {
+    "mtime": 1785172190.174447,
+    "ast_hash": "df853d1d38c4199b100a709788267511",
     "semantic_hash": ""
   }
 }

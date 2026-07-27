@@ -370,8 +370,8 @@ export function gtagAdsKrediSatinAlmaDonusumu(opts: {
 const GA_KAYDOLMA_USER_KEY = "acil_ga_kaydolma_user";
 
 /**
- * Session ile bir kez — işaret, gtag hazır olunca gönderildikten sonra konur.
- * OTP → kurulum soft navigate sırasında kuyruk yaşar; user_data session’da saklanır.
+ * Session ile bir kez — kilidi hemen alır (çift kuyruk / Strict Mode kaçmasın).
+ * OTP → kurulum soft navigate sırasında user_data session’da saklanır.
  */
 export function gtagAdsKaydolmaDonusumuBirKez(user?: GtagUserData): void {
   if (typeof window === "undefined") return;
@@ -381,19 +381,15 @@ export function gtagAdsKaydolmaDonusumuBirKez(user?: GtagUserData): void {
   if (!cerezAnalitikAktif()) return;
   try {
     if (sessionStorage.getItem(GA_SIGN_UP_SESSION_KEY) === "1") return;
+    /* Gönderimden önce kilitle — ikinci çağrı kuyruğa bile girmez */
+    sessionStorage.setItem(GA_SIGN_UP_SESSION_KEY, "1");
     if (user) {
       sessionStorage.setItem(GA_KAYDOLMA_USER_KEY, JSON.stringify(user));
     }
   } catch {
-    /* private mode */
+    /* private mode — kilitsiz devam */
   }
   gtagHazirOlunca(() => {
-    try {
-      if (sessionStorage.getItem(GA_SIGN_UP_SESSION_KEY) === "1") return;
-      sessionStorage.setItem(GA_SIGN_UP_SESSION_KEY, "1");
-    } catch {
-      /* ignore */
-    }
     let u = user;
     if (!u) {
       try {
