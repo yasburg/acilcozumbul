@@ -74,11 +74,11 @@
   "72": "Ölçeklenebilirlik regression smoke checklist",
   "73": "verify-teklif-backfill.mjs",
   "74": "cekici-puan.ts",
-  "75": "admin.ts",
+  "75": "route.ts",
   "76": "cekici-sifre-otp.ts",
   "77": "layout.tsx",
   "78": "musteri-profil.ts",
-  "79": "talep-fraud.ts",
+  "79": "page.tsx",
   "80": "mappers.ts",
   "81": "kredi-odeme.ts",
   "82": "PanelCekiciHarita.tsx",
@@ -91,12 +91,7 @@
   "89": "NasilCalisirSerit.tsx",
   "90": "ArizaFotografAlani.tsx",
   "91": "MemnuniyetBekle.tsx",
-  "92": "cekici-hizmet-bolge.ts",
-  "93": "cekiciHizmetBolgeleri",
-  "94": "rozet-panel.ts",
-  "95": "route.ts",
+  "92": "MemnuniyetBekle.tsx",
   "96": "route.ts",
-  "97": "istanbul-ilceler.ts",
-  "98": "netgsmSmsMesajGecerliMi",
-  "99": "funnel.ts"
+  "98": "netgsmSmsMesajGecerliMi"
 }
