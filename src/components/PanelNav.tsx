@@ -20,6 +20,7 @@ const LINKS: {
   { href: "/panel/sms", label: "SMS Sağlık", exact: true },
   { href: "/panel/sms/toplu", label: "Toplu SMS" },
   { href: "/panel/sms/sablonlar", label: "SMS şablonları" },
+  { href: "/panel/kredi-takip", label: "Kredi takip" },
   { href: "/panel/kredi-odemeler", label: "Kredi ödemeleri" },
   { href: "/panel/degerlendirmeler", label: "Değerlendirmeler" },
   { href: "/panel/davetler", label: "Davet kodları" },

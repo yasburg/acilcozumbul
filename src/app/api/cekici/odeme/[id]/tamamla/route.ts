@@ -5,6 +5,7 @@ import { getCekiciById, updateCekici } from "@/lib/db";
 import { garantiYapilandirildi } from "@/lib/garanti/config";
 import { garantiKrediOdemesiYap } from "@/lib/garanti/payment";
 import { istemciIpAl } from "@/lib/istemci-ip";
+import { baglaKrediHatirlatmaYukleme } from "@/lib/kredi-hatirlatma-db";
 import { kaydetKrediOdeme } from "@/lib/kredi-odeme";
 import { tlTutarKurus } from "@/lib/kredi-fiyat";
 import { faturaAlanlariniDogrula } from "@/lib/odeme-fatura";
@@ -168,6 +169,12 @@ export async function POST(
     demoOdeme: demo,
     olusturulma: new Date().toISOString(),
   });
+
+  try {
+    await baglaKrediHatirlatmaYukleme(cekici.id);
+  } catch (e) {
+    console.error("[kredi-hatirlatma] yukleme bagla", e);
+  }
 
   return NextResponse.json({
     success: true,

@@ -2050,7 +2050,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_musteri_otp_durum_route",
-      "community": 100,
+      "community": 21,
       "norm_label": "route.ts"
     },
     {
@@ -2060,7 +2060,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_app_api_musteri_otp_durum_route_get",
-      "community": 100,
+      "community": 21,
       "norm_label": "get()"
     },
     {
@@ -2090,7 +2090,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_musteri_otp_sifirla_route",
-      "community": 100,
+      "community": 21,
       "norm_label": "route.ts"
     },
     {
@@ -2100,7 +2100,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_app_api_musteri_otp_sifirla_route_post",
-      "community": 100,
+      "community": 21,
       "norm_label": "post()"
     },
     {
@@ -2740,7 +2740,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_toplu_kontrol_route",
-      "community": 100,
+      "community": 70,
       "norm_label": "route.ts"
     },
     {
@@ -9470,7 +9470,7 @@
       "source_location": "L175",
       "_origin": "ast",
       "id": "src_lib_db_getcekicibytelefon",
-      "community": 70,
+      "community": 25,
       "norm_label": "getcekicibytelefon()"
     },
     {
@@ -13267,7 +13267,7 @@
       "label": "krediHatirlatmaCooldownAktifMi()",
       "file_type": "code",
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L74",
+      "source_location": "L75",
       "_origin": "ast",
       "id": "src_lib_kredi_hatirlatma_kredihatirlatmacooldownaktifmi",
       "community": 1,
@@ -13277,7 +13277,7 @@
       "label": "cekiciKrediHatirlatmaAdayiMi()",
       "file_type": "code",
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L88",
+      "source_location": "L89",
       "_origin": "ast",
       "id": "src_lib_kredi_hatirlatma_cekicikredihatirlatmaadayimi",
       "community": 1,
@@ -13287,7 +13287,7 @@
       "label": "cekiciKrediHatirlatmaManuelAdayiMi()",
       "file_type": "code",
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L118",
+      "source_location": "L119",
       "_origin": "ast",
       "id": "src_lib_kredi_hatirlatma_cekicikredihatirlatmamanueladayimi",
       "community": 1,
@@ -13610,7 +13610,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_musteri_auth",
-      "community": 100,
+      "community": 21,
       "norm_label": "musteri-auth.ts"
     },
     {
@@ -13620,7 +13620,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_lib_musteri_auth_getdogrulanmistelefon",
-      "community": 100,
+      "community": 21,
       "norm_label": "getdogrulanmistelefon()"
     },
     {
@@ -13630,7 +13630,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_lib_musteri_auth_musteritelcookietemizle",
-      "community": 100,
+      "community": 21,
       "norm_label": "musteritelcookietemizle()"
     },
     {
@@ -13640,7 +13640,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_lib_musteri_auth_musteritelcookiedegeri",
-      "community": 100,
+      "community": 21,
       "norm_label": "musteritelcookiedegeri()"
     },
     {
@@ -13850,7 +13850,7 @@
       "source_location": "L273",
       "_origin": "ast",
       "id": "src_lib_musteri_otp_otptemizle",
-      "community": 100,
+      "community": 21,
       "norm_label": "otptemizle()"
     },
     {
@@ -16590,7 +16590,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_lib_talep_fraud_otpfraudkontrol",
-      "community": 25,
+      "community": 79,
       "norm_label": "otpfraudkontrol()"
     },
     {
@@ -16890,7 +16890,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_telefon_sabit_hat_test",
-      "community": 100,
+      "community": 70,
       "norm_label": "telefon-sabit-hat.test.ts"
     },
     {
@@ -16900,7 +16900,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_telefon",
-      "community": 100,
+      "community": 70,
       "norm_label": "telefon.ts"
     },
     {
@@ -16920,7 +16920,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_lib_telefon_telefonnormalize",
-      "community": 100,
+      "community": 21,
       "norm_label": "telefonnormalize()"
     },
     {
@@ -16930,7 +16930,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_lib_telefon_telefongecerlimi",
-      "community": 100,
+      "community": 70,
       "norm_label": "telefongecerlimi()"
     },
     {
@@ -16940,7 +16940,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_lib_telefon_telefonsabithatmi",
-      "community": 100,
+      "community": 70,
       "norm_label": "telefonsabithatmi()"
     },
     {
@@ -16950,7 +16950,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "src_lib_telefon_telefonyabancigorunuyormu",
-      "community": 100,
+      "community": 70,
       "norm_label": "telefonyabancigorunuyormu()"
     },
     {
@@ -16980,7 +16980,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "src_lib_telefon_telefone164",
-      "community": 100,
+      "community": 70,
       "norm_label": "telefone164()"
     },
     {
@@ -17400,7 +17400,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel",
-      "community": 100,
+      "community": 70,
       "norm_label": "toplu-sms-excel.ts"
     },
     {
@@ -17430,7 +17430,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_telefon_basliklar",
-      "community": 100,
+      "community": 70,
       "norm_label": "telefon_basliklar"
     },
     {
@@ -17440,7 +17440,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_ad_basliklar",
-      "community": 100,
+      "community": 70,
       "norm_label": "ad_basliklar"
     },
     {
@@ -17450,7 +17450,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_baslikesle",
-      "community": 100,
+      "community": 70,
       "norm_label": "baslikesle()"
     },
     {
@@ -17460,7 +17460,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_toplusmsexcelsablonblob",
-      "community": 100,
+      "community": 70,
       "norm_label": "toplusmsexcelsablonblob()"
     },
     {
@@ -17470,7 +17470,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_toplusmsexcelsablonindir",
-      "community": 100,
+      "community": 70,
       "norm_label": "toplusmsexcelsablonindir()"
     },
     {
@@ -17480,7 +17480,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_exceldentoplusmsalicioku",
-      "community": 100,
+      "community": 70,
       "norm_label": "exceldentoplusmsalicioku()"
     },
     {
@@ -17500,7 +17500,7 @@
       "source_location": "L219",
       "_origin": "ast",
       "id": "src_lib_toplu_sms_excel_elletelefonekle",
-      "community": 100,
+      "community": 70,
       "norm_label": "elletelefonekle()"
     },
     {
@@ -69943,7 +69943,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L96",
+      "source_location": "L97",
       "weight": 1.0,
       "source": "src_lib_kredi_hatirlatma_cekicikredihatirlatmaadayimi",
       "target": "src_lib_ihale_cekicibildirimkreditutari"
@@ -69954,7 +69954,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L123",
+      "source_location": "L124",
       "weight": 1.0,
       "source": "src_lib_kredi_hatirlatma_cekicikredihatirlatmamanueladayimi",
       "target": "src_lib_ihale_cekicibildirimkreditutari"
@@ -69998,7 +69998,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L97",
+      "source_location": "L98",
       "weight": 1.0,
       "source": "src_lib_kredi_hatirlatma_cekicikredihatirlatmaadayimi",
       "target": "src_lib_ihale_cekiciyeterlibildirimkredisi"
@@ -70009,7 +70009,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L124",
+      "source_location": "L125",
       "weight": 1.0,
       "source": "src_lib_kredi_hatirlatma_cekicikredihatirlatmamanueladayimi",
       "target": "src_lib_ihale_cekiciyeterlibildirimkredisi"
@@ -70108,7 +70108,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L95",
+      "source_location": "L96",
       "weight": 1.0,
       "source": "src_lib_kredi_hatirlatma_cekicikredihatirlatmaadayimi",
       "target": "src_lib_ihale_cekiciaciktalepuygunmu"
@@ -73658,7 +73658,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L88",
+      "source_location": "L89",
       "weight": 1.0,
       "source": "src_lib_kredi_hatirlatma",
       "target": "src_lib_kredi_hatirlatma_cekicikredihatirlatmaadayimi",
@@ -73668,7 +73668,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L118",
+      "source_location": "L119",
       "weight": 1.0,
       "source": "src_lib_kredi_hatirlatma",
       "target": "src_lib_kredi_hatirlatma_cekicikredihatirlatmamanueladayimi",
@@ -73688,7 +73688,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L74",
+      "source_location": "L75",
       "weight": 1.0,
       "source": "src_lib_kredi_hatirlatma",
       "target": "src_lib_kredi_hatirlatma_kredihatirlatmacooldownaktifmi",
@@ -73846,7 +73846,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L107",
+      "source_location": "L108",
       "weight": 1.0,
       "source": "src_lib_kredi_hatirlatma_cekicikredihatirlatmaadayimi",
       "target": "src_lib_kredi_hatirlatma_kredihatirlatmadurduruldumu",
@@ -73857,7 +73857,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L133",
+      "source_location": "L134",
       "weight": 1.0,
       "source": "src_lib_kredi_hatirlatma_cekicikredihatirlatmamanueladayimi",
       "target": "src_lib_kredi_hatirlatma_kredihatirlatmadurduruldumu",
@@ -73868,7 +73868,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/kredi-hatirlatma.ts",
-      "source_location": "L110",
+      "source_location": "L111",
       "weight": 1.0,
       "source": "src_lib_kredi_hatirlatma_cekicikredihatirlatmaadayimi",
       "target": "src_lib_kredi_hatirlatma_kredihatirlatmacooldownaktifmi",

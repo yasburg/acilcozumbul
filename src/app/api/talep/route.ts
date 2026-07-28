@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { addTalep } from "@/lib/db";
 import { getDogrulanmisTelefon } from "@/lib/musteri-auth";
 import { ensureSeedData } from "@/lib/seed";
+import { notifyKrediHatirlatma } from "@/lib/kredi-hatirlatma-db";
 import { notifyCekiciler, notifyMusteri } from "@/lib/sms";
 import { funnelOlayKaydet } from "@/lib/funnel";
 import {
@@ -166,6 +167,12 @@ export async function POST(request: NextRequest) {
 
   await addTalep(talep);
   await notifyMusteri(talep, "talep_alindi", baseUrl);
+
+  try {
+    await notifyKrediHatirlatma(talep, baseUrl, bildirilenIds);
+  } catch (e) {
+    console.error("[kredi-hatirlatma] otomatik", e);
+  }
 
   await guvenlikOlayiKaydet({
     anahtar: hash ? `ip:${hash}` : `tel:${telNorm}`,
