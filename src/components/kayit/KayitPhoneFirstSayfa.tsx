@@ -8,18 +8,34 @@ import { Btn, Field, Card } from "@/components/ui";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import type { KayitFunnelTanim } from "@/lib/kayit-funnel";
 import { TELEFON_ORNEK_GIRISLERI } from "@/lib/telefon";
-import { posthogKampanyaKaydet, posthogOlayYakala } from "@/lib/posthog-client";
 import {
   kayitFunnelOlayGonder,
   kayitFunnelSessionId,
 } from "@/lib/kayit-funnel-client";
-import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
-import { gtagAdsKaydolmaDonusumuBirKez } from "@/lib/gtag";
-import {
-  tiktokPixelClickButton,
-  tiktokPixelKayitOl,
-  tiktokPixelViewContent,
-} from "@/lib/tiktok-pixel";
+import { idleSonra } from "@/lib/idle-sonra";
+
+/** Analitik — dinamik import; posthog/gtag/pixel kayıt bundle’ına girmesin */
+function posthogYakala(
+  olay: string,
+  props?: Record<string, unknown>
+): void {
+  void import("@/lib/posthog-client").then((m) => {
+    m.posthogKampanyaKaydet();
+    m.posthogOlayYakala(olay, props);
+  });
+}
+
+function tiktokView(content_id: string, content_name: string): void {
+  void import("@/lib/tiktok-pixel").then((m) =>
+    m.tiktokPixelViewContent({ content_id, content_name })
+  );
+}
+
+function tiktokClick(content_id: string, content_name: string): void {
+  void import("@/lib/tiktok-pixel").then((m) =>
+    m.tiktokPixelClickButton({ content_id, content_name })
+  );
+}
 
 /** Meta CompleteRegistration bir kez (A formu / onay ile aynı anahtar) */
 const META_COMPLETE_REG_KEY = "acil_meta_complete_reg";
@@ -79,7 +95,15 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   const [telefon, setTelefon] = useState("");
   const [otp, setOtp] = useState("");
   const [otpAsama, setOtpAsama] = useState(false);
-  const [davetKodu, setDavetKodu] = useState("");
+  const urlDavet = (
+    searchParams.get("kampanya") ||
+    searchParams.get("davet") ||
+    searchParams.get("kod") ||
+    ""
+  ).trim();
+  const [davetDuzenleme, setDavetDuzenleme] = useState<string | null>(null);
+  const davetKodu = davetDuzenleme ?? urlDavet;
+  const setDavetKodu = setDavetDuzenleme;
   const [yasalOnay, setYasalOnay] = useState(false);
   const [yasalHata, setYasalHata] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -89,25 +113,15 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   const [basarili, setBasarili] = useState(false);
 
   useEffect(() => {
-    posthogKampanyaKaydet();
-    const kod =
-      searchParams.get("kampanya") ||
-      searchParams.get("davet") ||
-      searchParams.get("kod") ||
-      "";
-    if (kod.trim()) {
-      setDavetKodu(kod.trim());
-    }
-    posthogOlayYakala("cekici_kayit_goruldu", {
-      rol: "cekici",
-      funnel: funnel.id,
-    });
-    tiktokPixelViewContent({
-      content_id: `kayit_${funnel.id}`,
-      content_name: `cekici_kayit_${funnel.id}`,
-    });
     void kayitFunnelOlayGonder(funnel.id, "goruldu");
-  }, [funnel.id, searchParams]);
+    return idleSonra(() => {
+      posthogYakala("cekici_kayit_goruldu", {
+        rol: "cekici",
+        funnel: funnel.id,
+      });
+      tiktokView(`kayit_${funnel.id}`, `cekici_kayit_${funnel.id}`);
+    });
+  }, [funnel.id]);
 
   useEffect(() => {
     if (yenidenSn <= 0) return;
@@ -126,10 +140,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     setMesaj("");
     setYasalHata(false);
     try {
-      tiktokPixelClickButton({
-        content_id: `kayit_${funnel.id}_otp`,
-        content_name: "telefonuma_kod_gonder",
-      });
+      tiktokClick(`kayit_${funnel.id}_otp`, "telefonuma_kod_gonder");
       void kayitFunnelOlayGonder(funnel.id, "otp_gonder");
       const res = await fetch("/api/cekici/kayit/otp/gonder", {
         method: "POST",
@@ -154,7 +165,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
       if (d.gelistirmeKodu) {
         setMesaj((m) => `${m} (geliştirme kodu: ${d.gelistirmeKodu})`);
       }
-      posthogOlayYakala("cekici_otp_gonder", {
+      posthogYakala("cekici_otp_gonder", {
         rol: "cekici",
         funnel: funnel.id,
       });
@@ -175,10 +186,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     setError("");
     setYasalHata(false);
     try {
-      tiktokPixelClickButton({
-        content_id: `kayit_${funnel.id}_dogrula`,
-        content_name: "dogrula_ve_kaydi_tamamla",
-      });
+      tiktokClick(`kayit_${funnel.id}_dogrula`, "dogrula_ve_kaydi_tamamla");
       const smsToken = searchParams.get("sms_token")?.trim() || undefined;
       const res = await fetch("/api/cekici/kayit/hizli", {
         method: "POST",
@@ -204,7 +212,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
       if (!res.ok) {
         throw new Error(typeof d.error === "string" ? d.error : "Kayıt başarısız.");
       }
-      posthogOlayYakala("cekici_kayit_tamamlandi", {
+      posthogYakala("cekici_kayit_tamamlandi", {
         rol: "cekici",
         funnel: funnel.id,
         hizli: true,
@@ -212,24 +220,33 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
       /* Funnel B+: telefon OTP sonrası → Meta + TikTok kayıt dönüşümü */
       const cekiciId =
         typeof d.id === "string" ? d.id : String(d.id ?? "");
+      const telefonTrim = telefon.trim();
       try {
         if (sessionStorage.getItem(META_COMPLETE_REG_KEY) !== "1") {
           sessionStorage.setItem(META_COMPLETE_REG_KEY, "1");
-          metaPixelCompleteRegistration({
-            content_name: `cekici_kayit_${funnel.id}`,
-          });
+          void import("@/lib/meta-pixel").then((m) =>
+            m.metaPixelCompleteRegistration({
+              content_name: `cekici_kayit_${funnel.id}`,
+            })
+          );
         }
       } catch {
-        metaPixelCompleteRegistration({
-          content_name: `cekici_kayit_${funnel.id}`,
-        });
+        void import("@/lib/meta-pixel").then((m) =>
+          m.metaPixelCompleteRegistration({
+            content_name: `cekici_kayit_${funnel.id}`,
+          })
+        );
       }
-      gtagAdsKaydolmaDonusumuBirKez({ phone: telefon });
-      await tiktokPixelKayitOl({
-        content_name: `cekici_kayit_${funnel.id}`,
-        phone: telefon,
-        externalId: cekiciId || null,
-      });
+      void import("@/lib/gtag").then((m) =>
+        m.gtagAdsKaydolmaDonusumuBirKez({ phone: telefonTrim })
+      );
+      void import("@/lib/tiktok-pixel").then((m) =>
+        m.tiktokPixelKayitOl({
+          content_name: `cekici_kayit_${funnel.id}`,
+          phone: telefonTrim,
+          externalId: cekiciId || null,
+        })
+      );
       setBasarili(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Kayıt başarısız.");
@@ -252,10 +269,10 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
           <Btn
             className="w-full min-h-[52px] text-base"
             onClick={() => {
-              tiktokPixelClickButton({
-                content_id: `kayit_${funnel.id}_kurulum`,
-                content_name: "hesabimi_hazirlamaya_basla",
-              });
+              tiktokClick(
+                `kayit_${funnel.id}_kurulum`,
+                "hesabimi_hazirlamaya_basla"
+              );
               router.push("/kayit/kurulum");
             }}
           >

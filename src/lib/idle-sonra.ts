@@ -1,20 +1,35 @@
-/** LCP sonrası idle / kısa gecikme — third-party init için */
+/**
+ * Third-party init: ilk etkileşimde veya kısa gecikmeyle.
+ * requestIdleCallback(timeout:4s) Lighthouse’ta hâlâ erken tetikleniyordu;
+ * etkileşim önceliği TBT / unused JS’i düşürür, gerçek kullanıcıda hemen yükler.
+ */
 export function idleSonra(fn: () => void): () => void {
   if (typeof window === "undefined") return () => {};
 
-  const w = window as Window & {
-    requestIdleCallback?: (
-      cb: IdleRequestCallback,
-      opts?: IdleRequestOptions
-    ) => number;
-    cancelIdleCallback?: (id: number) => void;
+  let done = false;
+  const events = ["pointerdown", "keydown", "touchstart", "scroll"] as const;
+
+  const run = () => {
+    if (done) return;
+    done = true;
+    for (const e of events) {
+      window.removeEventListener(e, run);
+    }
+    clearTimeout(fallbackId);
+    fn();
   };
 
-  if (typeof w.requestIdleCallback === "function") {
-    const id = w.requestIdleCallback(() => fn(), { timeout: 4000 });
-    return () => w.cancelIdleCallback?.(id);
+  for (const e of events) {
+    window.addEventListener(e, run, { once: true, passive: true });
   }
 
-  const t = setTimeout(fn, 2000);
-  return () => clearTimeout(t);
+  const fallbackId = window.setTimeout(run, 5500);
+  return () => {
+    if (done) return;
+    done = true;
+    for (const e of events) {
+      window.removeEventListener(e, run);
+    }
+    clearTimeout(fallbackId);
+  };
 }

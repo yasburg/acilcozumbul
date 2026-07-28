@@ -1,4 +1,3 @@
-import posthog from "posthog-js";
 import { cerezAnalitikAktif, cerezOnayOku } from "./cerez-onay";
 
 const UTM_ANAHTARLARI = [
@@ -12,6 +11,15 @@ const UTM_ANAHTARLARI = [
 ] as const;
 
 const UTM_STORAGE_KEY = "acilcozum_utm";
+
+type Posthog = typeof import("posthog-js").default;
+
+function posthogAl(): Promise<Posthog | null> {
+  if (typeof window === "undefined" || !posthogYapilandirildi()) {
+    return Promise.resolve(null);
+  }
+  return import("posthog-js").then((m) => m.default);
+}
 
 export function posthogYapilandirildi(): boolean {
   return Boolean(
@@ -61,22 +69,26 @@ export function posthogKampanyaKaydet(): void {
 
   const props = posthogUtmOzellikleri();
   if (Object.keys(props).length === 0) return;
-  posthog.register(props);
+  void posthogAl().then((ph) => {
+    ph?.register(props);
+  });
 }
 
 /** Çerez tercihine göre PostHog yakalamayı aç/kapat */
 export function posthogCerezSenkronize(): void {
   if (typeof window === "undefined" || !posthogYapilandirildi()) return;
 
-  if (cerezAnalitikAktif()) {
-    posthog.opt_in_capturing();
-    posthogKampanyaKaydet();
-    return;
-  }
-
-  if (cerezOnayOku() === "zorunlu") {
-    posthog.opt_out_capturing();
-  }
+  void posthogAl().then((ph) => {
+    if (!ph) return;
+    if (cerezAnalitikAktif()) {
+      ph.opt_in_capturing();
+      posthogKampanyaKaydet();
+      return;
+    }
+    if (cerezOnayOku() === "zorunlu") {
+      ph.opt_out_capturing();
+    }
+  });
 }
 
 export function posthogOlayYakala(
@@ -85,16 +97,18 @@ export function posthogOlayYakala(
 ): void {
   if (!cerezAnalitikAktif() || !posthogYapilandirildi()) return;
   const utm = posthogUtmOzellikleri();
-  posthog.capture(olay, {
-    ...utm,
-    ...properties,
+  void posthogAl().then((ph) => {
+    ph?.capture(olay, {
+      ...utm,
+      ...properties,
+    });
   });
 }
 
 /**
  * Aynı anahtar için bir kez yakala. Analitik kapalıysa localStorage’a yazmaz
  * (çerez sonra açılınca event kaçmasın).
- * @returns true ise bu çağrıda capture yapıldı
+ * @returns true ise bu çağrıda capture yapıldı (veya kuyruğa alındı)
  */
 export function posthogOlayBirKez(
   anahtar: string,

@@ -30,6 +30,8 @@ const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
   display: "swap",
+  adjustFontFallback: true,
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -101,8 +103,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  /* maximumScale/userScalable=false mobilde ~300ms dokunma gecikmesi + PSI INP cezası */
   themeColor: "#ffffff",
 };
 

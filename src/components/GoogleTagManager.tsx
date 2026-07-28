@@ -1,4 +1,8 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Script from "next/script";
+import { idleSonra } from "@/lib/idle-sonra";
 
 /** Google Tag Manager kapsayıcı */
 export const GTM_ID =
@@ -9,16 +13,23 @@ export function gtmYapilandirildi(): boolean {
 }
 
 /**
- * Head — consent default’tan sonra, mümkün olduğunca erken.
- * dataLayer gtag bootstrap ile paylaşılır (Consent Mode).
+ * GTM — LCP sonrası (idle + lazyOnload).
+ * afterInteractive Lighthouse TBT/unused JS’i şişiriyordu; gtag zaten
+ * GoogleAnalytics ile yükleniyor, dönüşümler oradan gidiyor.
  */
 export function GoogleTagManager() {
-  if (!gtmYapilandirildi()) return null;
+  const [yukle, setYukle] = useState(false);
+
+  useEffect(() => {
+    return idleSonra(() => setYukle(true));
+  }, []);
+
+  if (!gtmYapilandirildi() || !yukle) return null;
 
   return (
     <Script
       id="google-tag-manager"
-      strategy="afterInteractive"
+      strategy="lazyOnload"
       dangerouslySetInnerHTML={{
         __html: `
 (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
