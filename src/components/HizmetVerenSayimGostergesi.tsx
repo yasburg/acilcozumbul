@@ -67,7 +67,6 @@ export function HizmetVerenSayimGostergesi({
     ? (satir?.aktif ?? 0)
     : (ozet?.benzersizAktif ?? 0);
   const animCevrimici = useAnimatedNumber(cevrimici);
-  const animAktif = useAnimatedNumber(aktif);
 
   if (yukleniyor && !ozet) {
     return (
@@ -97,9 +96,6 @@ export function HizmetVerenSayimGostergesi({
           {animCevrimici}
         </span>{" "}
         online
-        <span className="text-slate-400 mx-1.5">/</span>
-        <span className="tabular-nums font-medium text-slate-800">{animAktif}</span>{" "}
-        hizmet veren
       </p>
     </div>
   );

@@ -23,7 +23,6 @@ export type HizmetVerenSayimOzet = {
 
 /** Müşteri ana sayfasında gösterilen ek offset (gerçek sayı + offset) */
 export const HIZMET_VEREN_MUSTERI_AKTIF_EK = 20;
-export const HIZMET_VEREN_MUSTERI_CEVRIMICI_EK = 10;
 
 /** Müşteriye gösterilen kısa meslek adı */
 const HIZMET_ETIKET: Record<SorunTipiId, string> = {
@@ -80,55 +79,6 @@ export function hizmetVerenSayimHesapla(
   };
 }
 
-/** Müşteri ekranında çevrimiçi sayının kullanıcıya göre sapma aralığı (±) */
-export const HIZMET_VEREN_CEVRIMICI_JITTER = 0.2;
-
-/**
- * 0–1 seed → [1−jitter, 1+jitter] çarpanı.
- * Aynı seed aynı kullanıcıda sabit kalır.
- */
-export function cevrimiciJitterFaktor(
-  seed: number,
-  jitter = HIZMET_VEREN_CEVRIMICI_JITTER
-): number {
-  const s = Number.isFinite(seed) ? Math.min(1, Math.max(0, seed)) : 0.5;
-  const j = Math.min(1, Math.max(0, jitter));
-  return 1 - j + s * (2 * j);
-}
-
-/** Çevrimiçi sayıyı sapma ile yuvarla; asla aktif (hizmet veren) üstünü geçme */
-export function cevrimiciJitterUygula(
-  cevrimici: number,
-  aktif: number,
-  seed: number,
-  jitter = HIZMET_VEREN_CEVRIMICI_JITTER
-): number {
-  const a = Math.max(0, Math.floor(aktif));
-  const c = Math.max(0, Math.floor(cevrimici));
-  if (a === 0) return 0;
-  const j = Math.round(c * cevrimiciJitterFaktor(seed, jitter));
-  return Math.max(0, Math.min(a, j));
-}
-
-/** Müşteri özetindeki tüm çevrimiçi alanlara kullanıcı jitter’ı uygula */
-export function hizmetVerenSayimCevrimiciJitter(
-  ozet: HizmetVerenSayimOzet,
-  seed: number
-): HizmetVerenSayimOzet {
-  return {
-    ...ozet,
-    benzersizCevrimici: cevrimiciJitterUygula(
-      ozet.benzersizCevrimici,
-      ozet.benzersizAktif,
-      seed
-    ),
-    satirlar: ozet.satirlar.map((s) => ({
-      ...s,
-      cevrimici: cevrimiciJitterUygula(s.cevrimici, s.aktif, seed),
-    })),
-  };
-}
-
 /** Panel dışı müşteri ekranları için gösterim sayıları */
 export function hizmetVerenSayimMusteriGoster(
   ozet: HizmetVerenSayimOzet
@@ -136,15 +86,14 @@ export function hizmetVerenSayimMusteriGoster(
   const goster: HizmetVerenSayimOzet = {
     ...ozet,
     benzersizAktif: ozet.benzersizAktif + HIZMET_VEREN_MUSTERI_AKTIF_EK,
-    benzersizCevrimici:
-      ozet.benzersizCevrimici + HIZMET_VEREN_MUSTERI_CEVRIMICI_EK,
+    benzersizCevrimici: ozet.benzersizCevrimici,
     satirlar: ozet.satirlar.map((s) => ({
       ...s,
       aktif: s.aktif + HIZMET_VEREN_MUSTERI_AKTIF_EK,
-      cevrimici: s.cevrimici + HIZMET_VEREN_MUSTERI_CEVRIMICI_EK,
+      cevrimici: s.cevrimici,
     })),
   };
-  // Offset sonrası da online ≤ hizmet veren
+  // online ≤ hizmet veren
   return {
     ...goster,
     benzersizCevrimici: Math.min(

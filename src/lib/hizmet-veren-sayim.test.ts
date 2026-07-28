@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  cevrimiciJitterFaktor,
-  cevrimiciJitterUygula,
   hizmetVerenKisaMetin,
-  hizmetVerenSayimCevrimiciJitter,
   hizmetVerenSayimHesapla,
   hizmetVerenSayimMusteriGoster,
 } from "./hizmet-veren-sayim";
@@ -58,7 +55,7 @@ describe("hizmetVerenSayimHesapla", () => {
     );
   });
 
-  it("müşteri gösterimine sabit offset ekler ve online ≤ aktif", () => {
+  it("müşteri gösteriminde aktif offset var, çevrimiçi ham kalır", () => {
     const simdi = new Date("2026-06-03T14:00:00+03:00");
     const ozet = hizmetVerenSayimHesapla(
       [
@@ -74,42 +71,13 @@ describe("hizmetVerenSayimHesapla", () => {
     const goster = hizmetVerenSayimMusteriGoster(ozet);
 
     expect(goster.benzersizAktif).toBe(ozet.benzersizAktif + 20);
-    expect(goster.benzersizCevrimici).toBe(ozet.benzersizCevrimici + 10);
+    expect(goster.benzersizCevrimici).toBe(ozet.benzersizCevrimici);
     expect(goster.benzersizCevrimici).toBeLessThanOrEqual(goster.benzersizAktif);
     expect(goster.satirlar.find((s) => s.sorunTipi === "lastik")!.aktif).toBe(
       21
     );
-  });
-});
-
-describe("cevrimiciJitter", () => {
-  it("seed 0 → −20%, seed 1 → +20%", () => {
-    expect(cevrimiciJitterFaktor(0)).toBeCloseTo(0.8);
-    expect(cevrimiciJitterFaktor(1)).toBeCloseTo(1.2);
-    expect(cevrimiciJitterFaktor(0.5)).toBeCloseTo(1);
-  });
-
-  it("aktif üstünü geçmez", () => {
-    expect(cevrimiciJitterUygula(12, 23, 1)).toBeLessThanOrEqual(23);
-    expect(cevrimiciJitterUygula(20, 20, 1)).toBe(20);
-    expect(cevrimiciJitterUygula(10, 10, 0)).toBe(8);
-  });
-
-  it("özette tüm çevrimiçi alanlar aktifi geçmez", () => {
-    const ozet = hizmetVerenSayimMusteriGoster(
-      hizmetVerenSayimHesapla([
-        cekiciFixture({
-          id: "c1",
-          aktif: true,
-          hizmetSorunTipleri: ["lastik"],
-          musaitlikAktif: false,
-        }),
-      ])
-    );
-    const j = hizmetVerenSayimCevrimiciJitter(ozet, 1);
-    expect(j.benzersizCevrimici).toBeLessThanOrEqual(j.benzersizAktif);
-    for (const s of j.satirlar) {
-      expect(s.cevrimici).toBeLessThanOrEqual(s.aktif);
-    }
+    expect(
+      goster.satirlar.find((s) => s.sorunTipi === "lastik")!.cevrimici
+    ).toBe(1);
   });
 });
