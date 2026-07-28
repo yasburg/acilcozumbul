@@ -44,7 +44,7 @@ import {
   posthogKampanyaKaydet,
   posthogOlayYakala,
 } from "@/lib/posthog-client";
-import { gtagAdsFiyatTeklifiDonusumu } from "@/lib/gtag";
+import { gtagAdsAnaSayfaGoruntulemeDonusumu, gtagAdsFiyatTeklifiDonusumu } from "@/lib/gtag";
 import { metaPixelLead } from "@/lib/meta-pixel";
 import {
   tiktokPixelLead,
@@ -245,6 +245,10 @@ function MusteriAnaSayfaIcerik() {
       content_id: "musteri_talep",
       content_name: "musteri_ana_sayfa",
     });
+    gtagAdsAnaSayfaGoruntulemeDonusumu();
+    const onCerez = () => gtagAdsAnaSayfaGoruntulemeDonusumu();
+    window.addEventListener("acil-cerez-banner", onCerez);
+    return () => window.removeEventListener("acil-cerez-banner", onCerez);
   }, []);
 
   useEffect(() => {

@@ -69,4 +69,13 @@ describe("gtag consent mode (advanced)", () => {
       "AW-18328392362/zm-FCJSzw9ccEKql1KNE"
     );
   });
+
+  it("Ads ana sayfa görüntüleme dönüşüm send_to tanımlı", async () => {
+    const { GOOGLE_ADS_DONUSUM_ANA_SAYFA, GA_ANA_SAYFA_SESSION_KEY } =
+      await import("./gtag");
+    expect(GOOGLE_ADS_DONUSUM_ANA_SAYFA).toBe(
+      "AW-18328392362/MlL8CJCV6dccEKql1KNE"
+    );
+    expect(GA_ANA_SAYFA_SESSION_KEY).toBe("acil_ga_ana_sayfa");
+  });
 });

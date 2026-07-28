@@ -38,6 +38,11 @@ export const GOOGLE_ADS_DONUSUM_KREDI_SATIN_ALMA =
   process.env.NEXT_PUBLIC_GOOGLE_ADS_KREDI_SATIN_ALMA_LABEL?.trim() ||
   "AW-18328392362/zm-FCJSzw9ccEKql1KNE";
 
+/** «Sayfa görüntüleme» — müşteri ana sayfa */
+export const GOOGLE_ADS_DONUSUM_ANA_SAYFA =
+  process.env.NEXT_PUBLIC_GOOGLE_ADS_ANA_SAYFA_LABEL?.trim() ||
+  "AW-18328392362/MlL8CJCV6dccEKql1KNE";
+
 /** GA sign_up / Ads kaydolma çift tetiklenmesin */
 export const GA_SIGN_UP_SESSION_KEY = "acil_ga_sign_up";
 
@@ -46,6 +51,9 @@ export const GA_KREDI_SATIN_ALMA_PREFIX = "acil_ga_kredi_satin_alma:";
 
 /** Aynı talep için fiyat teklifi dönüşümü bir kez */
 export const GA_FIYAT_TEKLIFI_PREFIX = "acil_ga_fiyat_teklifi:";
+
+/** Ana sayfa görüntüleme dönüşümü oturumda bir kez */
+export const GA_ANA_SAYFA_SESSION_KEY = "acil_ga_ana_sayfa";
 
 export function gtagYapilandirildi(): boolean {
   return Boolean(GA_MEASUREMENT_ID || GOOGLE_ADS_ID);
@@ -246,6 +254,34 @@ export function gtagOlay(
   if (typeof window === "undefined" || !gtagYapilandirildi()) return;
   if (!cerezAnalitikAktif()) return;
   gtagCagir("event", olay, params ?? {});
+}
+
+/**
+ * Müşteri ana sayfa görüntüleme — Google Ads «Sayfa görüntüleme».
+ * Oturumda bir kez; çerez onayı «tümü» ve gtag hazır olunca.
+ */
+export function gtagAdsAnaSayfaGoruntulemeDonusumu(): void {
+  if (typeof window === "undefined") return;
+  if (!GOOGLE_ADS_DONUSUM_ANA_SAYFA) return;
+  if (!cerezAnalitikAktif()) return;
+  try {
+    if (sessionStorage.getItem(GA_ANA_SAYFA_SESSION_KEY) === "1") return;
+  } catch {
+    /* private mode */
+  }
+  gtagHazirOlunca(() => {
+    try {
+      if (sessionStorage.getItem(GA_ANA_SAYFA_SESSION_KEY) === "1") return;
+      sessionStorage.setItem(GA_ANA_SAYFA_SESSION_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+    gtagCagir("event", "conversion", {
+      send_to: GOOGLE_ADS_DONUSUM_ANA_SAYFA,
+      value: 1.0,
+      currency: "TRY",
+    });
+  });
 }
 
 /**
