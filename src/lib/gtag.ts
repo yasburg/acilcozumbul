@@ -44,6 +44,9 @@ export const GA_SIGN_UP_SESSION_KEY = "acil_ga_sign_up";
 /** Aynı ödeme için satın alma dönüşümü bir kez */
 export const GA_KREDI_SATIN_ALMA_PREFIX = "acil_ga_kredi_satin_alma:";
 
+/** Aynı talep için fiyat teklifi dönüşümü bir kez */
+export const GA_FIYAT_TEKLIFI_PREFIX = "acil_ga_fiyat_teklifi:";
+
 export function gtagYapilandirildi(): boolean {
   return Boolean(GA_MEASUREMENT_ID || GOOGLE_ADS_ID);
 }
@@ -247,19 +250,38 @@ export function gtagOlay(
 
 /**
  * Müşteri talep formu başarıyla gönderildiğinde Google Ads dönüşümü.
+ * transaction_id: talep id — yenileme / geri dönüşte mükerrer sayımı önler.
  * Enhanced conversions: telefon / ad ile user_data.
  * gtag config hazır olana kadar bekler (lazy yükleme).
  */
-export function gtagAdsFiyatTeklifiDonusumu(user?: GtagUserData): void {
+export function gtagAdsFiyatTeklifiDonusumu(opts: {
+  transactionId: string;
+  user?: GtagUserData;
+}): void {
   if (typeof window === "undefined") return;
   if (!GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI) return;
   if (!cerezAnalitikAktif()) return;
+  const tx = opts.transactionId.trim();
+  if (!tx) return;
+  const key = `${GA_FIYAT_TEKLIFI_PREFIX}${tx}`;
+  try {
+    if (sessionStorage.getItem(key) === "1") return;
+  } catch {
+    /* private mode */
+  }
   gtagHazirOlunca(() => {
-    if (user) gtagUserDataAyarla(user);
+    try {
+      if (sessionStorage.getItem(key) === "1") return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      /* ignore */
+    }
+    if (opts.user) gtagUserDataAyarla(opts.user);
     gtagCagir("event", "conversion", {
       send_to: GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI,
       value: 1.0,
       currency: "TRY",
+      transaction_id: tx,
     });
   });
 }

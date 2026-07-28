@@ -1122,9 +1122,12 @@ function MusteriAnaSayfaIcerik() {
         bildirilen_sayisi: data.bildirilenSayisi ?? 0,
       });
       gtagAdsFiyatTeklifiDonusumu({
-        phone: form.telefon,
-        firstName: form.ad,
-        lastName: form.soyad,
+        transactionId: typeof data.id === "string" ? data.id : String(data.id ?? ""),
+        user: {
+          phone: form.telefon,
+          firstName: form.ad,
+          lastName: form.soyad,
+        },
       });
       /* Meta + TikTok Lead: bekle sayfasına gitmeden önce + bir kez (bekle yedek) */
       try {

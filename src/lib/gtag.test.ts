@@ -31,11 +31,14 @@ describe("gtag consent mode (advanced)", () => {
   });
 
   it("Ads fiyat teklifi dönüşüm send_to tanımlı", async () => {
-    const { GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI, GOOGLE_ADS_ID } = await import(
-      "./gtag"
-    );
+    const {
+      GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI,
+      GOOGLE_ADS_ID,
+      GA_FIYAT_TEKLIFI_PREFIX,
+    } = await import("./gtag");
     expect(GOOGLE_ADS_ID).toBe("AW-18328392362");
     expect(GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI).toContain("Msc0CNjLnNMcEKql1KNE");
+    expect(GA_FIYAT_TEKLIFI_PREFIX).toBe("acil_ga_fiyat_teklifi:");
   });
 
   it("Ads kaydolma dönüşüm send_to tanımlı", async () => {
