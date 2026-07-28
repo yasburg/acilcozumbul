@@ -81,20 +81,19 @@ export async function ekleKampanya(
   if (error) throw error;
 }
 
+export type KampanyaGuncellePatch = {
+  yeniUyeKredi?: number;
+  kanal?: string | null;
+  aciklama?: string | null;
+  baslangic?: string | null;
+  bitis?: string | null;
+  maxKullanim?: number | null;
+  aktif?: boolean;
+};
+
 export async function guncelleKampanya(
   kod: string,
-  patch: Partial<
-    Pick<
-      KampanyaKodu,
-      | "yeniUyeKredi"
-      | "kanal"
-      | "aciklama"
-      | "baslangic"
-      | "bitis"
-      | "maxKullanim"
-      | "aktif"
-    >
-  >
+  patch: KampanyaGuncellePatch
 ): Promise<void> {
   const row: Record<string, unknown> = {};
   if (patch.yeniUyeKredi != null) row.yeni_uye_kredi = patch.yeniUyeKredi;
@@ -102,8 +101,10 @@ export async function guncelleKampanya(
   if (patch.aciklama !== undefined) row.aciklama = patch.aciklama ?? null;
   if (patch.baslangic !== undefined) row.baslangic = patch.baslangic ?? null;
   if (patch.bitis !== undefined) row.bitis = patch.bitis ?? null;
-  if (patch.maxKullanim !== undefined) row.max_kullanim = patch.maxKullanim ?? null;
+  if (patch.maxKullanim !== undefined) row.max_kullanim = patch.maxKullanim;
   if (patch.aktif !== undefined) row.aktif = patch.aktif;
+
+  if (Object.keys(row).length === 0) return;
 
   const { error } = await getSupabaseAdmin()
     .from("kampanya_kodlari")

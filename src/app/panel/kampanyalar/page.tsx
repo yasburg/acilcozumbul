@@ -23,19 +23,45 @@ type Ozet = {
   toplamVerilenKredi: number;
 };
 
+type KampanyaTaslak = {
+  maxKullanim: string;
+  bitis: string;
+};
+
 const BOS_FORM = {
   kod: "",
   yeniUyeKredi: "100",
   kanal: "",
   aciklama: "",
   maxKullanim: "",
+  bitis: "",
 };
+
+/** ISO → datetime-local (yerel) */
+function isoToYerelDatetime(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function taslakVarsayilan(k: KampanyaSatir): KampanyaTaslak {
+  return {
+    maxKullanim: k.maxKullanim != null ? String(k.maxKullanim) : "",
+    bitis: isoToYerelDatetime(k.bitis),
+  };
+}
 
 export default function PanelKampanyalarPage() {
   const [liste, setListe] = useState<KampanyaSatir[]>([]);
   const [kullanimlar, setKullanimlar] = useState<KullanimSatir[]>([]);
   const [ozet, setOzet] = useState<Ozet | null>(null);
   const [form, setForm] = useState(BOS_FORM);
+  const [taslaklar, setTaslaklar] = useState<Record<string, KampanyaTaslak>>(
+    {}
+  );
+  const [kaydedilenKod, setKaydedilenKod] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [kaydediyor, setKaydediyor] = useState(false);
   const [hata, setHata] = useState("");
@@ -56,6 +82,7 @@ export default function PanelKampanyalarPage() {
         setListe(d.liste ?? []);
         setKullanimlar(d.kullanimlar ?? []);
         setOzet(d.ozet ?? null);
+        setTaslaklar({});
         setHata("");
       })
       .catch((e) => {
@@ -67,6 +94,22 @@ export default function PanelKampanyalarPage() {
   useEffect(() => {
     void yukle();
   }, [yukle]);
+
+  function taslakAl(k: KampanyaSatir): KampanyaTaslak {
+    return taslaklar[k.kod] ?? taslakVarsayilan(k);
+  }
+
+  function taslakGuncelle(kod: string, patch: Partial<KampanyaTaslak>) {
+    setTaslaklar((onceki) => {
+      const satir = liste.find((x) => x.kod === kod);
+      const mevcut =
+        onceki[kod] ??
+        (satir
+          ? taslakVarsayilan(satir)
+          : { maxKullanim: "", bitis: "" });
+      return { ...onceki, [kod]: { ...mevcut, ...patch } };
+    });
+  }
 
   async function kampanyaOlustur(e: React.FormEvent) {
     e.preventDefault();
@@ -83,7 +126,8 @@ export default function PanelKampanyalarPage() {
           yeniUyeKredi: Number(form.yeniUyeKredi),
           kanal: form.kanal || undefined,
           aciklama: form.aciklama || undefined,
-          maxKullanim: form.maxKullanim ? Number(form.maxKullanim) : undefined,
+          maxKullanim: form.maxKullanim ? Number(form.maxKullanim) : null,
+          bitis: form.bitis || null,
         }),
       });
       const d = await res.json();
@@ -115,6 +159,33 @@ export default function PanelKampanyalarPage() {
     }
   }
 
+  async function limitVeBitisKaydet(k: KampanyaSatir) {
+    const t = taslakAl(k);
+    setKaydedilenKod(k.kod);
+    setHata("");
+    setMesaj("");
+    try {
+      const res = await fetch("/api/panel/kampanyalar", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kod: k.kod,
+          maxKullanim: t.maxKullanim.trim() === "" ? null : Number(t.maxKullanim),
+          bitis: t.bitis.trim() === "" ? null : t.bitis,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "Güncellenemedi.");
+      setMesaj(`${k.kod}: limit / bitiş tarihi güncellendi.`);
+      await yukle();
+    } catch (e) {
+      setHata(e instanceof Error ? e.message : "Güncellenemedi.");
+    } finally {
+      setKaydedilenKod(null);
+    }
+  }
+
   async function linkKopyala(link: string, kod: string) {
     try {
       await navigator.clipboard.writeText(link);
@@ -131,7 +202,8 @@ export default function PanelKampanyalarPage() {
         <h2 className="text-2xl font-bold">Kampanya kodları</h2>
         <p className="text-sm text-slate-500 mt-1">
           Sosyal medya ve reklam kampanyaları için promosyon kodları. Yeni üyeye
-          tanımlanan kredi miktarını siz belirlersiniz (ör. 100 kredi).
+          tanımlanan kredi miktarını siz belirlersiniz (ör. 100 kredi). Limit ve
+          bitiş tarihini sonradan da değiştirebilirsiniz.
         </p>
       </div>
 
@@ -207,6 +279,12 @@ export default function PanelKampanyalarPage() {
                 setForm((f) => ({ ...f, maxKullanim: e.target.value }))
               }
             />
+            <Field
+              label="Bitiş tarihi (isteğe bağlı)"
+              type="datetime-local"
+              value={form.bitis}
+              onChange={(e) => setForm((f) => ({ ...f, bitis: e.target.value }))}
+            />
           </div>
           <Field
             label="Açıklama (isteğe bağlı)"
@@ -240,60 +318,111 @@ export default function PanelKampanyalarPage() {
       )}
 
       <div className="space-y-3">
-        {liste.map((k) => (
-          <Card key={k.kod}>
-            <div className="flex flex-wrap justify-between gap-3">
-              <div>
-                <p className="font-mono text-lg font-bold text-amber-700">
-                  {k.kod}
-                </p>
-                <p className="text-sm text-slate-700 mt-1">
-                  Yeni üye: <strong>{k.yeniUyeKredi} kredi</strong>
-                  {k.kanal && (
-                    <span className="text-slate-500"> · {k.kanal}</span>
+        {liste.map((k) => {
+          const t = taslakAl(k);
+          return (
+            <Card key={k.kod}>
+              <div className="flex flex-wrap justify-between gap-3">
+                <div>
+                  <p className="font-mono text-lg font-bold text-amber-700">
+                    {k.kod}
+                  </p>
+                  <p className="text-sm text-slate-700 mt-1">
+                    Yeni üye: <strong>{k.yeniUyeKredi} kredi</strong>
+                    {k.kanal && (
+                      <span className="text-slate-500"> · {k.kanal}</span>
+                    )}
+                  </p>
+                  {k.aciklama && (
+                    <p className="text-xs text-slate-500 mt-1">{k.aciklama}</p>
                   )}
+                  <p className="text-xs text-slate-500 mt-2">
+                    Kullanım: {k.kullanimSayisi}
+                    {k.maxKullanim ? ` / ${k.maxKullanim}` : " (sınırsız)"}
+                    {k.bitis && (
+                      <>
+                        {" · Bitiş: "}
+                        {new Date(k.bitis).toLocaleString("tr-TR")}
+                      </>
+                    )}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 items-end">
+                  <span
+                    className={`text-xs font-medium px-2 py-1 rounded-full ${
+                      k.aktif
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {k.aktif ? "Aktif" : "Pasif"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void aktiflikDegistir(k.kod, !k.aktif)}
+                    className="text-xs text-amber-700 font-medium hover:underline"
+                  >
+                    {k.aktif ? "Pasifleştir" : "Aktifleştir"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-slate-100 space-y-3">
+                <p className="text-xs font-medium text-slate-600">
+                  Limit ve bitiş tarihi
                 </p>
-                {k.aciklama && (
-                  <p className="text-xs text-slate-500 mt-1">{k.aciklama}</p>
-                )}
-                <p className="text-xs text-slate-500 mt-2">
-                  Kullanım: {k.kullanimSayisi}
-                  {k.maxKullanim ? ` / ${k.maxKullanim}` : " (sınırsız)"}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <Field
+                    label="Max kullanım"
+                    type="number"
+                    min={Math.max(1, k.kullanimSayisi)}
+                    placeholder="Sınırsız"
+                    value={t.maxKullanim}
+                    onChange={(e) =>
+                      taslakGuncelle(k.kod, { maxKullanim: e.target.value })
+                    }
+                  />
+                  <Field
+                    label="Bitiş tarihi"
+                    type="datetime-local"
+                    value={t.bitis}
+                    onChange={(e) =>
+                      taslakGuncelle(k.kod, { bitis: e.target.value })
+                    }
+                  />
+                </div>
+                <p className="text-xs text-slate-400">
+                  Boş bırakırsanız limit sınırsız / bitiş tarihi kaldırılır. Limit
+                  mevcut kullanımdan ({k.kullanimSayisi}) düşük olamaz.
                 </p>
-              </div>
-              <div className="flex flex-col gap-2 items-end">
-                <span
-                  className={`text-xs font-medium px-2 py-1 rounded-full ${
-                    k.aktif
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  {k.aktif ? "Aktif" : "Pasif"}
-                </span>
-                <button
+                <Btn
                   type="button"
-                  onClick={() => void aktiflikDegistir(k.kod, !k.aktif)}
-                  className="text-xs text-amber-700 font-medium hover:underline"
+                  disabled={kaydedilenKod === k.kod}
+                  onClick={() => void limitVeBitisKaydet(k)}
                 >
-                  {k.aktif ? "Pasifleştir" : "Aktifleştir"}
-                </button>
+                  {kaydedilenKod === k.kod
+                    ? "Kaydediliyor…"
+                    : "Limit / bitişi kaydet"}
+                </Btn>
               </div>
-            </div>
-            {k.kayitLink && (
-              <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
-                <p className="text-xs text-slate-500 break-all">{k.kayitLink}</p>
-                <button
-                  type="button"
-                  onClick={() => void linkKopyala(k.kayitLink!, k.kod)}
-                  className="text-sm text-amber-600 font-medium hover:underline"
-                >
-                  {kopyalandi === k.kod ? "Kopyalandı ✓" : "Kayıt linkini kopyala"}
-                </button>
-              </div>
-            )}
-          </Card>
-        ))}
+
+              {k.kayitLink && (
+                <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
+                  <p className="text-xs text-slate-500 break-all">{k.kayitLink}</p>
+                  <button
+                    type="button"
+                    onClick={() => void linkKopyala(k.kayitLink!, k.kod)}
+                    className="text-sm text-amber-600 font-medium hover:underline"
+                  >
+                    {kopyalandi === k.kod
+                      ? "Kopyalandı ✓"
+                      : "Kayıt linkini kopyala"}
+                  </button>
+                </div>
+              )}
+            </Card>
+          );
+        })}
       </div>
 
       {kullanimlar.length > 0 && (

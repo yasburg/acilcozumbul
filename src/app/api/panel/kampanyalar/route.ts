@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCekiciByDavetKodu } from "@/lib/db";
 import {
   ekleKampanya,
+  getKampanyaByKod,
   getKampanyaKullanimlari,
   getKampanyalar,
   guncelleKampanya,
+  type KampanyaGuncellePatch,
 } from "@/lib/kampanya-db";
 import {
   kampanyaKoduGecerliMi,
@@ -14,6 +16,24 @@ import {
   kampanyaKoduSutunuVar,
   MIGRATION_014_MESAJ,
 } from "@/lib/supabase/kampanya-schema";
+
+/** datetime-local / ISO / boş → ISO veya null (temizle) */
+function tarihAlani(v: unknown): string | null | undefined {
+  if (v === undefined) return undefined;
+  if (v === null || v === "") return null;
+  if (typeof v !== "string") return undefined;
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return undefined;
+  return d.toISOString();
+}
+
+function maxKullanimAlani(v: unknown): number | null | undefined {
+  if (v === undefined) return undefined;
+  if (v === null || v === "") return null;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return undefined;
+  return Math.floor(n);
+}
 
 export async function GET() {
   if (!(await kampanyaKoduSutunuVar())) {
@@ -83,13 +103,9 @@ export async function POST(request: NextRequest) {
         typeof body.aciklama === "string"
           ? body.aciklama.trim() || undefined
           : undefined,
-      baslangic:
-        typeof body.baslangic === "string" ? body.baslangic || undefined : undefined,
-      bitis: typeof body.bitis === "string" ? body.bitis || undefined : undefined,
-      maxKullanim:
-        body.maxKullanim != null && body.maxKullanim !== ""
-          ? Number(body.maxKullanim)
-          : undefined,
+      baslangic: tarihAlani(body.baslangic) ?? undefined,
+      bitis: tarihAlani(body.bitis) ?? undefined,
+      maxKullanim: maxKullanimAlani(body.maxKullanim) ?? undefined,
       aktif: body.aktif !== false,
     });
   } catch (e) {
@@ -125,31 +141,78 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Kod gerekli." }, { status: 400 });
   }
 
-  await guncelleKampanya(kod, {
+  const mevcut = await getKampanyaByKod(kod);
+  if (!mevcut) {
+    return NextResponse.json({ error: "Kampanya bulunamadı." }, { status: 404 });
+  }
+
+  const maxKullanim = Object.prototype.hasOwnProperty.call(body, "maxKullanim")
+    ? maxKullanimAlani(body.maxKullanim)
+    : undefined;
+  if (
+    Object.prototype.hasOwnProperty.call(body, "maxKullanim") &&
+    body.maxKullanim !== null &&
+    body.maxKullanim !== "" &&
+    maxKullanim === undefined
+  ) {
+    return NextResponse.json(
+      { error: "Geçerli bir kullanım limiti girin (veya boş bırakın)." },
+      { status: 400 }
+    );
+  }
+  if (maxKullanim != null && maxKullanim < mevcut.kullanimSayisi) {
+    return NextResponse.json(
+      {
+        error: `Limit, mevcut kullanımdan (${mevcut.kullanimSayisi}) düşük olamaz.`,
+      },
+      { status: 400 }
+    );
+  }
+
+  const bitis = Object.prototype.hasOwnProperty.call(body, "bitis")
+    ? tarihAlani(body.bitis)
+    : undefined;
+  if (
+    Object.prototype.hasOwnProperty.call(body, "bitis") &&
+    body.bitis !== null &&
+    body.bitis !== "" &&
+    bitis === undefined
+  ) {
+    return NextResponse.json(
+      { error: "Geçerli bir bitiş tarihi girin." },
+      { status: 400 }
+    );
+  }
+
+  const baslangic = Object.prototype.hasOwnProperty.call(body, "baslangic")
+    ? tarihAlani(body.baslangic)
+    : undefined;
+
+  const patch: KampanyaGuncellePatch = {
     aktif: typeof body.aktif === "boolean" ? body.aktif : undefined,
     yeniUyeKredi:
-      body.yeniUyeKredi != null ? Number(body.yeniUyeKredi) : undefined,
+      body.yeniUyeKredi != null && body.yeniUyeKredi !== ""
+        ? Number(body.yeniUyeKredi)
+        : undefined,
     kanal: typeof body.kanal === "string" ? body.kanal.trim() : undefined,
-    aciklama: typeof body.aciklama === "string" ? body.aciklama.trim() : undefined,
-    baslangic:
-      body.baslangic === null
-        ? undefined
-        : typeof body.baslangic === "string"
-          ? body.baslangic || undefined
-          : undefined,
-    bitis:
-      body.bitis === null
-        ? undefined
-        : typeof body.bitis === "string"
-          ? body.bitis || undefined
-          : undefined,
-    maxKullanim:
-      body.maxKullanim === null
-        ? undefined
-        : body.maxKullanim != null
-          ? Number(body.maxKullanim)
-          : undefined,
-  });
+    aciklama:
+      typeof body.aciklama === "string" ? body.aciklama.trim() : undefined,
+    baslangic,
+    bitis,
+    maxKullanim,
+  };
+
+  if (
+    patch.yeniUyeKredi != null &&
+    (!Number.isFinite(patch.yeniUyeKredi) || patch.yeniUyeKredi <= 0)
+  ) {
+    return NextResponse.json(
+      { error: "Geçerli bir kredi miktarı girin." },
+      { status: 400 }
+    );
+  }
+
+  await guncelleKampanya(kod, patch);
 
   return NextResponse.json({ mesaj: "Kampanya güncellendi." });
 }
