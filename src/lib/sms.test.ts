@@ -11,11 +11,16 @@ const getCekicilerBildirimAdaylari = vi.fn();
 const getCekiciById = vi.fn();
 const updateCekici = vi.fn();
 const sendSms = vi.fn();
+const talepSehriAcikMi = vi.fn();
 
 vi.mock("./db", () => ({
   getCekicilerBildirimAdaylari: (...args: unknown[]) => getCekicilerBildirimAdaylari(...args),
   getCekiciById: (...args: unknown[]) => getCekiciById(...args),
   updateCekici: (...args: unknown[]) => updateCekici(...args),
+}));
+
+vi.mock("./cekici-sehir-acilis-db", () => ({
+  talepSehriAcikMi: (...args: unknown[]) => talepSehriAcikMi(...args),
 }));
 
 vi.mock("./sms-provider", async (importOriginal) => {
@@ -31,6 +36,7 @@ describe("D — Çekici bildirim (mock)", () => {
     vi.clearAllMocks();
     sendSms.mockResolvedValue({ basarili: true, saglayici: "mock" });
     updateCekici.mockResolvedValue(undefined);
+    talepSehriAcikMi.mockResolvedValue(true);
     getCekiciById.mockImplementation(async (id: string) => {
       const list = getCekicilerBildirimAdaylari.mock.results.at(-1)?.value;
       if (Array.isArray(list)) {
@@ -266,6 +272,20 @@ describe("D — Çekici bildirim (mock)", () => {
     );
     expect(ids).toEqual([]);
     expect(sendSms).not.toHaveBeenCalled();
+  });
+
+  it("kapalı şehir — SMS gitmez", async () => {
+    talepSehriAcikMi.mockResolvedValue(false);
+    getCekicilerBildirimAdaylari.mockResolvedValue([
+      cekiciFixture({ id: "c1", kredi: 10 }),
+    ]);
+    const ids = await notifyCekiciler(
+      talepFixture({ konumIl: "Kocaeli", konumIlce: "Körfez" }),
+      "http://localhost:3000"
+    );
+    expect(ids).toEqual([]);
+    expect(sendSms).not.toHaveBeenCalled();
+    expect(getCekicilerBildirimAdaylari).not.toHaveBeenCalled();
   });
 });
 

@@ -16,8 +16,8 @@ import { demoTalepGetir, demoKatil, isDemoTalepId } from "@/lib/demo-oturum";
 import { demoKatilMesaji } from "@/lib/demo-responses";
 import {
   sehirBeklemeMesaji,
-  sehirKullanimAcikMi,
 } from "@/lib/cekici-sehir-acilis";
+import { sehirKullanimAcikMiDb } from "@/lib/cekici-sehir-acilis-db";
 
 /** Kredi ile ihaleye katıl (gizli talebi aç; SMS: premium OTP / standart toplu) */
 export async function POST(
@@ -30,7 +30,7 @@ export async function POST(
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
   }
 
-  if (!sehirKullanimAcikMi(cekici.sehir)) {
+  if (!(await sehirKullanimAcikMiDb(cekici.sehir))) {
     return NextResponse.json(
       {
         error: sehirBeklemeMesaji(cekici.sehir),

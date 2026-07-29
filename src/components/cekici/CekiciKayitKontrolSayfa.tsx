@@ -10,7 +10,10 @@ import { CekiciKayitLanding } from "@/components/cekici/CekiciKayitLanding";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { DESTEKLENEN_ILLER } from "@/lib/il-ilce";
 import { ISTANBUL_IL } from "@/lib/istanbul-ilceler";
-import { sehirKullanimAcikMi } from "@/lib/cekici-sehir-acilis";
+import {
+  KULLANIMA_ACIK_ILLER,
+  sehirKullanimAcikMi,
+} from "@/lib/cekici-sehir-acilis";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import { telefonDogrulamaHatasi, telefonGecerliMi, telefonMaskele } from "@/lib/telefon";
@@ -126,6 +129,9 @@ function KayitIcerik() {
   const [yenidenSn, setYenidenSn] = useState(0);
   const [error, setError] = useState("");
   const [yasalOnay, setYasalOnay] = useState(false);
+  const [acikIller, setAcikIller] = useState<readonly string[]>([
+    ...KULLANIMA_ACIK_ILLER,
+  ]);
   const [alanHatalari, setAlanHatalari] =
     useState<AlanHatalari>(BOS_ALAN_HATALARI);
   const [alanMesajlari, setAlanMesajlari] = useState<
@@ -149,6 +155,20 @@ function KayitIcerik() {
       });
     });
   }
+
+  useEffect(() => {
+    let iptal = false;
+    void fetch("/api/sehir-acilis")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (iptal || !d?.acikIller || !Array.isArray(d.acikIller)) return;
+        setAcikIller(d.acikIller.map(String));
+      })
+      .catch(() => {});
+    return () => {
+      iptal = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (yenidenSn <= 0) return;
@@ -685,7 +705,7 @@ function KayitIcerik() {
             ))}
           </SelectField>
           <AlanHataMetni mesaj={alanMesajlari.sehir} />
-          {form.sehir && !sehirKullanimAcikMi(form.sehir) ? (
+          {form.sehir && !sehirKullanimAcikMi(form.sehir, acikIller) ? (
             <Card className="mt-2 border-amber-300 bg-amber-50">
               <p className="text-sm text-amber-950 leading-relaxed">
                 Şu anda kayıt olabilirsiniz; fakat{" "}
@@ -695,10 +715,9 @@ function KayitIcerik() {
             </Card>
           ) : (
             <p className="text-xs text-slate-500 mt-1">
-              Erken fazda panel kullanımı yalnızca İstanbul’da açık. Diğer
-              illerden kayıt olabilirsiniz; şehir açılınca öncelikli
-              bilgilendirilirsiniz. Kayıt sonrası Ayarlar&apos;da ilçeleri
-              daraltabilirsiniz.
+              Açık şehirlerde panel hemen kullanılır. Kapalı illerden kayıt
+              olabilirsiniz; şehir açılınca öncelikli bilgilendirilirsiniz.
+              Kayıt sonrası Ayarlar&apos;da ilçeleri daraltabilirsiniz.
             </p>
           )}
         </div>

@@ -4,7 +4,10 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
-import { sehirKullanimAcikMi } from "@/lib/cekici-sehir-acilis";
+import {
+  KULLANIMA_ACIK_ILLER,
+  sehirKullanimAcikMi,
+} from "@/lib/cekici-sehir-acilis";
 import { gtagCekiciKayitOnayGoruntule } from "@/lib/gtag";
 import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
 import {
@@ -21,8 +24,32 @@ function OnayIcerik() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sehir = (searchParams.get("sehir") ?? "").trim();
-  const kullanimAcik = Boolean(sehir) && sehirKullanimAcikMi(sehir);
+  const [acikIller, setAcikIller] = useState<readonly string[]>([
+    ...KULLANIMA_ACIK_ILLER,
+  ]);
+  const [illerYuklendi, setIllerYuklendi] = useState(false);
+  const kullanimAcik =
+    illerYuklendi && Boolean(sehir) && sehirKullanimAcikMi(sehir, acikIller);
   const [kalanSn, setKalanSn] = useState(YONLENDIRME_SN);
+
+  useEffect(() => {
+    let iptal = false;
+    void fetch("/api/sehir-acilis")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (iptal) return;
+        if (d?.acikIller && Array.isArray(d.acikIller)) {
+          setAcikIller(d.acikIller.map(String));
+        }
+        setIllerYuklendi(true);
+      })
+      .catch(() => {
+        if (!iptal) setIllerYuklendi(true);
+      });
+    return () => {
+      iptal = true;
+    };
+  }, []);
 
   useEffect(() => {
     /* BirKez: formda gtag hazır olmadan gidildiyse burada tamamlanır */
@@ -91,15 +118,21 @@ function OnayIcerik() {
 
         <Card
           className={
-            kullanimAcik
-              ? "border-emerald-200 bg-emerald-50"
-              : "border-amber-300 bg-amber-50"
+            !illerYuklendi
+              ? "border-slate-200 bg-slate-50"
+              : kullanimAcik
+                ? "border-emerald-200 bg-emerald-50"
+                : "border-amber-300 bg-amber-50"
           }
         >
-          {kullanimAcik ? (
+          {!illerYuklendi ? (
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Şehir durumu kontrol ediliyor…
+            </p>
+          ) : kullanimAcik ? (
             <p className="text-sm text-emerald-950 leading-relaxed">
-              Erken fazda İstanbul kontenjanındasınız. Ana sayfaya dönüp giriş
-              yaparak paneli kullanabilirsiniz.
+              Şehriniz kullanıma açık. Ana sayfaya dönüp giriş yaparak paneli
+              kullanabilirsiniz.
             </p>
           ) : (
             <p className="text-sm text-amber-950 leading-relaxed">

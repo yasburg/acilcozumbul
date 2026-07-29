@@ -1,11 +1,15 @@
 import { ISTANBUL_IL } from "./istanbul-ilceler";
 
-/** Erken fazda paneli / talep akışını kullanabilen iller */
+/** Kod fallback — DB yoksa / boşsa yalnızca İstanbul */
 export const KULLANIMA_ACIK_ILLER = [ISTANBUL_IL] as const;
 
-export function sehirKullanimAcikMi(sehir: string | undefined | null): boolean {
+export function sehirKullanimAcikMi(
+  sehir: string | undefined | null,
+  acikIller: readonly string[] = KULLANIMA_ACIK_ILLER
+): boolean {
   if (!sehir?.trim()) return false;
-  return (KULLANIMA_ACIK_ILLER as readonly string[]).includes(sehir.trim());
+  const n = sehir.trim();
+  return acikIller.some((il) => il === n);
 }
 
 export function sehirBeklemeMesaji(sehir: string): string {

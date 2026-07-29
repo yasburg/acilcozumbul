@@ -1,5 +1,6 @@
 import { getSupabaseAdmin, supabaseDbAktif } from "./supabase/admin";
 import { getCekiciById, getCekiciler } from "./db";
+import { talepSehriAcikMi } from "./cekici-sehir-acilis-db";
 import {
   cekiciKrediHatirlatmaAdayiMi,
   cekiciKrediHatirlatmaManuelAdayiMi,
@@ -332,6 +333,7 @@ export async function notifyKrediHatirlatma(
   haricTutulan: string[] = []
 ): Promise<string[]> {
   if (!(await krediHatirlatmaTablosuVar())) return [];
+  if (!(await talepSehriAcikMi(talep))) return [];
 
   const tum = await getCekiciler();
   const ids = tum.map((c) => c.id);

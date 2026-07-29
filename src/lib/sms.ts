@@ -1,4 +1,5 @@
 import { getCekicilerBildirimAdaylari } from "./db";
+import { talepSehriAcikMi } from "./cekici-sehir-acilis-db";
 import {
   cekiciBildirimKrediTutari,
   cekiciPremiumSmsAktifMi,
@@ -40,6 +41,10 @@ export async function notifyCekiciler(
   haricTutulan: string[] = [],
   options?: { yenidenArama?: boolean }
 ): Promise<string[]> {
+  if (!(await talepSehriAcikMi(talep))) {
+    return [];
+  }
+
   const tumCekiciler = await getCekicilerBildirimAdaylari(PANEL_BILDIRIM_KREDI);
   const haric = new Set(haricTutulan);
   const yeniden = options?.yenidenArama ?? false;

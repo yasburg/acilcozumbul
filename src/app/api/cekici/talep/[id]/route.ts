@@ -18,8 +18,8 @@ import { demoTalepGetir, isDemoTalepId } from "@/lib/demo-oturum";
 import { demoCekiciTalepGetJson } from "@/lib/demo-responses";
 import {
   sehirBeklemeMesaji,
-  sehirKullanimAcikMi,
 } from "@/lib/cekici-sehir-acilis";
+import { sehirKullanimAcikMiDb } from "@/lib/cekici-sehir-acilis-db";
 
 /** Süre hesabı için koordinat (tam adres gönderilmez) */
 function rotaKoordinatlari(talep: Talep) {
@@ -44,7 +44,7 @@ export async function GET(
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
   }
 
-  if (!sehirKullanimAcikMi(cekici.sehir)) {
+  if (!(await sehirKullanimAcikMiDb(cekici.sehir))) {
     return NextResponse.json(
       {
         error: sehirBeklemeMesaji(cekici.sehir),

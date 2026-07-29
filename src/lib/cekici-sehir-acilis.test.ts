@@ -19,6 +19,11 @@ describe("sehirKullanimAcikMi", () => {
     expect(sehirKullanimAcikMi("")).toBe(false);
     expect(sehirKullanimAcikMi(null)).toBe(false);
   });
+
+  it("özel acikIller listesi", () => {
+    expect(sehirKullanimAcikMi("Ankara", ["Ankara"])).toBe(true);
+    expect(sehirKullanimAcikMi("İstanbul", ["Ankara"])).toBe(false);
+  });
 });
 
 describe("sehirBeklemeMesaji", () => {

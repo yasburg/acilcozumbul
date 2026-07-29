@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
-import { sehirKullanimAcikMi } from "@/lib/cekici-sehir-acilis";
+import { sehirKullanimAcikMiDb } from "@/lib/cekici-sehir-acilis-db";
 import {
   cekiciKurulumIlerleme,
   cekiciProfilHazirMi,
@@ -24,7 +24,7 @@ export async function GET() {
     telefon: cekici.telefon,
     kredi: cekici.kredi,
     sehir: cekici.sehir,
-    sehirKullanimAcik: sehirKullanimAcikMi(cekici.sehir),
+    sehirKullanimAcik: await sehirKullanimAcikMiDb(cekici.sehir),
     hizmetModu: cekici.hizmetModu ?? "il_ilce",
     menzilKm: cekici.menzilKm ?? 30,
     faturaEposta: cekici.faturaEposta ?? null,
