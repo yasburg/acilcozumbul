@@ -15,6 +15,7 @@ import { PanelCekiciHarita } from "@/components/panel/PanelCekiciHarita";
 import { DESTEKLENEN_ILLER, IL_ILCELER } from "@/lib/il-ilce";
 
 const PANEL_GIZLE_KEY = "acil_panel_kisisel_veri_gizli";
+const PANEL_SAYI_GIZLE_KEY = "acil_panel_cekici_sayi_gizli";
 const SEHIR_YOK = "Belirtilmemiş";
 const TOPLAM_SEHIR = DESTEKLENEN_ILLER.length;
 const TOPLAM_ILCE = DESTEKLENEN_ILLER.reduce(
@@ -119,6 +120,7 @@ export default function PanelCekicilerPage() {
   const [liste, setListe] = useState<CekiciPanelOzet[]>([]);
   const [loading, setLoading] = useState(true);
   const [gizli, setGizli] = useState(false);
+  const [sayiGizli, setSayiGizli] = useState(false);
   const [sehirFiltre, setSehirFiltre] = useState("");
   const [siralama, setSiralama] = useState<SehirSiralama>("adet");
   const [gorunum, setGorunum] = useState<Gorunum>("ozet");
@@ -126,6 +128,7 @@ export default function PanelCekicilerPage() {
   useEffect(() => {
     try {
       setGizli(window.localStorage.getItem(PANEL_GIZLE_KEY) === "1");
+      setSayiGizli(window.localStorage.getItem(PANEL_SAYI_GIZLE_KEY) === "1");
     } catch {
       /* ignore */
     }
@@ -206,6 +209,18 @@ export default function PanelCekicilerPage() {
     }
   }
 
+  function sayiGizlemeyiDegistir() {
+    const sonraki = !sayiGizli;
+    setSayiGizli(sonraki);
+    try {
+      window.localStorage.setItem(PANEL_SAYI_GIZLE_KEY, sonraki ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const haritadaSayiGizle = gorunum === "harita" && sayiGizli;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -213,17 +228,20 @@ export default function PanelCekicilerPage() {
           <h2 className="text-2xl font-bold">Çekiciler</h2>
           <p className="text-sm text-slate-500">
             Kayıt olan kullanıcılar — detay ve panele geçiş
-            {!loading && cekiciler.length > 0
-              ? ` · ${cekiciler.length} kayıt`
-              : ""}
-            {!loading && testerler.length > 0
-              ? ` · ${testerler.length} tester`
-              : ""}
-            {sehirFiltre && gosterilenAdet !== cekiciler.length
-              ? ` · ${gosterilenAdet} gösteriliyor`
-              : ""}
+            {!loading &&
+              cekiciler.length > 0 &&
+              !haritadaSayiGizle &&
+              ` · ${cekiciler.length} kayıt`}
+            {!loading &&
+              testerler.length > 0 &&
+              !haritadaSayiGizle &&
+              ` · ${testerler.length} tester`}
+            {sehirFiltre &&
+              gosterilenAdet !== cekiciler.length &&
+              !haritadaSayiGizle &&
+              ` · ${gosterilenAdet} gösteriliyor`}
           </p>
-          {!loading && cekiciler.length > 0 && (
+          {!loading && cekiciler.length > 0 && !haritadaSayiGizle && (
             <p className="mt-1 text-sm font-medium text-slate-700">
               {kapsama.sehirSayisi}/{TOPLAM_SEHIR} şehir (%
               {kapsama.sehirYuzde.toLocaleString("tr-TR")}) ·{" "}
@@ -233,6 +251,20 @@ export default function PanelCekicilerPage() {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {gorunum === "harita" && (
+            <button
+              type="button"
+              onClick={sayiGizlemeyiDegistir}
+              aria-pressed={sayiGizli}
+              className={`rounded-xl px-4 py-2 text-sm font-semibold border transition ${
+                sayiGizli
+                  ? "border-slate-800 bg-slate-900 text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+              }`}
+            >
+              {sayiGizli ? "Sayılar gizli" : "Verileri gizle"}
+            </button>
+          )}
           <button
             type="button"
             onClick={gizlemeyiDegistir}
@@ -262,10 +294,14 @@ export default function PanelCekicilerPage() {
               value={sehirFiltre}
               onChange={(e) => setSehirFiltre(e.target.value)}
             >
-              <option value="">Tüm şehirler ({cekiciler.length})</option>
+              <option value="">
+                {haritadaSayiGizle
+                  ? "Tüm şehirler"
+                  : `Tüm şehirler (${cekiciler.length})`}
+              </option>
               {sehirAdetleri.map(({ sehir, adet }) => (
                 <option key={sehir} value={sehir}>
-                  {sehir} ({adet})
+                  {haritadaSayiGizle ? sehir : `${sehir} (${adet})`}
                 </option>
               ))}
             </SelectField>
@@ -413,6 +449,7 @@ export default function PanelCekicilerPage() {
         <PanelCekiciHarita
           sehirAdetleri={ozetSatirlar}
           seciliSehir={sehirFiltre || undefined}
+          sayilariGizle={sayiGizli}
           onSehirSec={(sehir) =>
             setSehirFiltre((onceki) => (onceki === sehir ? "" : sehir))
           }

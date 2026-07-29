@@ -1,7 +1,7 @@
 # Graph Report - acilcozumbul  (2026-07-29)
 
 ## Corpus Check
-- 450 files · ~421,199 words
+- 450 files · ~421,336 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f46fce8c`
+- Built from commit: `ee66769a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -191,8 +191,8 @@ Cohesion: 0.19
 Nodes (10): hataMesajiFromParam(), Ozet, PanelIcerik(), KullaniciSayisiGrafik(), Pencere, PanelGirisForm(), CekiciKayitGunNokta, cekiciKayitGunSerisi() (+2 more)
 
 ### Community 14 - "memnuniyet.ts"
-Cohesion: 0.22
-Nodes (14): MusteriAnaSayfaIcerik(), HIZMET_QUERY_HARITASI, hizmetQuerydenSorunTipi(), SORUN_ARAC_MODELI_TIPLERI, SORUN_CAGRI_BUTON, SORUN_FOTOGRAF_TIPLERI, SORUN_HEDEF_KONUM_ATLANIR, sorunAracModeliGerekliMi() (+6 more)
+Cohesion: 0.13
+Nodes (25): MusteriAnaSayfaIcerik(), adimAciklamaMetni(), Props, SorunAkisOzeti(), SorunAkisOzetiIcerik(), CEKICI_ADIMLAR, SORUN_AKIS_ACIKLAMA, sorunAkisAciklama (+17 more)
 
 ### Community 15 - "db.ts"
 Cohesion: 0.15
@@ -215,8 +215,8 @@ Cohesion: 0.10
 Nodes (23): filtreleCekicilerBolge(), konumCekici(), talepSehriAcikMi(), filtreleCekicilerSorun(), getCekicilerBildirimAdaylari(), mergeCekiciPanelData, talepTekliflerle(), MUSTERI_OTP_TIPLERI (+15 more)
 
 ### Community 20 - "page.tsx"
-Cohesion: 0.10
-Nodes (25): Durum, MemnuniyetState, TeklifOzet, Asama, ASAMA_METIN, IhaleBekleAnimasyon(), IhaleBekleAnimasyonProps, MemnuniyetFormu() (+17 more)
+Cohesion: 0.09
+Nodes (26): BekleIcerik(), Durum, MemnuniyetState, TeklifOzet, Asama, ASAMA_METIN, IhaleBekleAnimasyon(), IhaleBekleAnimasyonProps (+18 more)
 
 ### Community 21 - "MusteriCekiciTakipHarita.tsx"
 Cohesion: 0.17
@@ -243,8 +243,8 @@ Cohesion: 0.23
 Nodes (16): Ctx, DELETE(), panelKullanici(), PATCH(), GET(), panelKullanici(), POST(), guncelleSmsSablon() (+8 more)
 
 ### Community 27 - "page.tsx"
-Cohesion: 0.10
-Nodes (32): BekleIcerik(), CekiciTalepClient(), TalepDurum, CekiciAyarlarPanel(), DavetKoduAyarlari(), DavetKoduDurum, BADGE, CekiciPanelTabs() (+24 more)
+Cohesion: 0.12
+Nodes (26): CekiciTalepClient(), TalepDurum, CekiciKart(), CekiciAyarlarPanel(), KisiselVeriGizlemeAyarlari(), BADGE, CekiciPanelTabs(), Istatistik (+18 more)
 
 ### Community 28 - "cekici-email-otp.ts"
 Cohesion: 0.21
@@ -255,8 +255,8 @@ Cohesion: 0.15
 Nodes (12): API yüzeyi, Güvenlik ve izolasyon, Kapsam dışı (ilk PR), Kayıt akışı önerisi (video senaryosu), Mevcut kodla ilişki, Problem, Test planı, UI değişiklikleri (+4 more)
 
 ### Community 30 - "demo-responses.ts"
-Cohesion: 0.17
-Nodes (22): POST(), GET(), POST(), POST(), bekleyenCekiciEpostaOtp(), cekiciEpostaDogrulandiMi(), cekiciEpostaOtpDogrula(), cekiciEpostaOtpGonder() (+14 more)
+Cohesion: 0.14
+Nodes (27): POST(), GET(), POST(), PATCH(), POST(), bekleyenCekiciEpostaOtp(), cekiciEpostaDogrulandiMi(), cekiciEpostaOtpDogrula() (+19 more)
 
 ### Community 32 - "kayit-kodu.ts"
 Cohesion: 0.29
@@ -319,8 +319,8 @@ Cohesion: 0.23
 Nodes (15): POST(), POST(), POST(), GET(), POST(), getCekiciById(), getTalepById(), updateTalep() (+7 more)
 
 ### Community 56 - "sorun-tipleri.ts"
-Cohesion: 0.10
-Nodes (32): POST(), POST(), PATCH(), GET(), POST(), sonKullanmaAyir(), hizmetBolgeleriFlatten(), tcKimlikGecerliMi() (+24 more)
+Cohesion: 0.12
+Nodes (27): POST(), POST(), GET(), POST(), sonKullanmaAyir(), hizmetBolgeleriFlatten(), garantiYapilandirildi(), istemciIpAl() (+19 more)
 
 ### Community 57 - "PanelCekiciHarita.tsx"
 Cohesion: 0.26
@@ -399,8 +399,8 @@ Cohesion: 0.18
 Nodes (14): geist, metadata, RootLayout(), viewport, GoogleAnalytics(), GoogleTagManager(), GoogleTagManagerNoscript(), gtmYapilandirildi() (+6 more)
 
 ### Community 78 - "musteri-profil.ts"
-Cohesion: 0.16
-Nodes (15): adimAciklamaMetni(), Props, SorunAkisOzeti(), SorunAkisOzetiIcerik(), SorunSecimi(), SorunSecimiProps, TextArea(), CEKICI_ADIMLAR (+7 more)
+Cohesion: 0.40
+Nodes (4): SorunSecimi(), SorunSecimiProps, TextArea(), SORUN_TIPLERI
 
 ### Community 79 - "cekici-hizmet-bolge.ts"
 Cohesion: 0.62
@@ -415,8 +415,8 @@ Cohesion: 0.19
 Nodes (9): GET(), GET(), getKrediOdemeById(), kaydetKrediOdeme(), listeleKrediOdemeler(), krediOdemeFromRow(), KrediOdemeRow, krediOdemeToRow() (+1 more)
 
 ### Community 82 - "PanelCekiciHarita.tsx"
-Cohesion: 0.14
-Nodes (12): KrediPage(), OdemeOnayPage(), KREDI_ODEME_ADIMLARI, ROZET_ODEME_ADIMLARI, Adim, SmsKaydi, CekiciKart(), MobileShell() (+4 more)
+Cohesion: 0.15
+Nodes (11): KrediPage(), OdemeOnayPage(), KREDI_ODEME_ADIMLARI, ROZET_ODEME_ADIMLARI, Adim, SmsKaydi, MobileShell(), MobileShellProps (+3 more)
 
 ### Community 83 - "meta-pixel.ts"
 Cohesion: 0.28
@@ -435,8 +435,8 @@ Cohesion: 0.38
 Nodes (5): hedefAltYazi(), KonumGuncellemeGostergesi(), renkKaristir(), TURUNCU, YESIL
 
 ### Community 89 - "NasilCalisirSerit.tsx"
-Cohesion: 0.17
-Nodes (13): BolgeApiData, BolgeAyarlari(), BolgeAyarlariProps, BolgeApiData, KisiselVeriGizlemeAyarlari(), IlceSecimi(), IlceSecimiProps, SorunTipiSecimi() (+5 more)
+Cohesion: 0.13
+Nodes (19): BolgeApiData, BolgeAyarlari(), BolgeAyarlariProps, BolgeApiData, DavetKoduAyarlari(), DavetKoduDurum, CekiciRotaPanel(), embedDirectionsUrl() (+11 more)
 
 ### Community 90 - "rozet-panel.ts"
 Cohesion: 0.39

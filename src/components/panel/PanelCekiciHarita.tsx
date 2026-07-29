@@ -31,16 +31,21 @@ export function PanelCekiciHarita({
   sehirAdetleri,
   seciliSehir,
   onSehirSec,
+  sayilariGizle = false,
 }: {
   sehirAdetleri: SehirAdet[];
   seciliSehir?: string;
   onSehirSec?: (sehir: string) => void;
+  /** Ekran paylaşımı — adet etiketlerini gizle */
+  sayilariGizle?: boolean;
 }) {
   const maxAdet = Math.max(0, ...sehirAdetleri.map((s) => s.adet));
   const noktalar: HaritaNokta[] = sehirAdetleri
     .flatMap((s) => {
       const koors = haritaSehirNoktalari(s.sehir);
-      const r = haritaYaricapLog(s.adet, maxAdet);
+      const r = sayilariGizle
+        ? 10
+        : haritaYaricapLog(s.adet, maxAdet);
       return koors.map((koor, i) => {
         const { x, y } = turkiyeProjeksiyon(koor.lon, koor.lat);
         return {
@@ -95,7 +100,7 @@ export function PanelCekiciHarita({
                 onClick={() => onSehirSec?.(n.sehir)}
               >
                 <title>
-                  {n.sehir}: {n.adet} kayıt
+                  {sayilariGizle ? n.sehir : `${n.sehir}: ${n.adet} kayıt`}
                 </title>
                 <circle
                   r={n.r}
@@ -130,29 +135,34 @@ export function PanelCekiciHarita({
                   >
                     {n.sehir}
                   </text>
-                  <text
-                    textAnchor="middle"
-                    y={13}
-                    className="select-none tabular-nums"
-                    fill={secili ? RENK.maviSecili : "#80868b"}
-                    fontSize={10}
-                    fontWeight={600}
-                  >
-                    {n.adet} kayıt
-                  </text>
+                  {!sayilariGizle && (
+                    <text
+                      textAnchor="middle"
+                      y={13}
+                      className="select-none tabular-nums"
+                      fill={secili ? RENK.maviSecili : "#80868b"}
+                      fontSize={10}
+                      fontWeight={600}
+                    >
+                      {n.adet} kayıt
+                    </text>
+                  )}
                 </g>
               );
             })}
         </svg>
       </div>
       <p className="text-xs text-slate-500">
-        Daire boyutu kayıt sayısına göre logaritmik ölçeklenir. Şehre tıklayınca
-        filtre uygulanır.
+        {sayilariGizle
+          ? "Sayılar gizli. Şehre tıklayınca filtre uygulanır."
+          : "Daire boyutu kayıt sayısına göre logaritmik ölçeklenir. Şehre tıklayınca filtre uygulanır."}
       </p>
       {eslesmeyen.length > 0 && (
         <p className="text-xs text-amber-700">
           Haritada konumlanamayan:{" "}
-          {eslesmeyen.map((s) => `${s.sehir} (${s.adet})`).join(", ")}
+          {sayilariGizle
+            ? eslesmeyen.map((s) => s.sehir).join(", ")
+            : eslesmeyen.map((s) => `${s.sehir} (${s.adet})`).join(", ")}
         </p>
       )}
     </div>
