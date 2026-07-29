@@ -43,9 +43,7 @@ export function PanelCekiciHarita({
   const noktalar: HaritaNokta[] = sehirAdetleri
     .flatMap((s) => {
       const koors = haritaSehirNoktalari(s.sehir);
-      const r = sayilariGizle
-        ? 10
-        : haritaYaricapLog(s.adet, maxAdet);
+      const r = haritaYaricapLog(s.adet, maxAdet);
       return koors.map((koor, i) => {
         const { x, y } = turkiyeProjeksiyon(koor.lon, koor.lat);
         return {
@@ -154,7 +152,7 @@ export function PanelCekiciHarita({
       </div>
       <p className="text-xs text-slate-500">
         {sayilariGizle
-          ? "Sayılar gizli. Şehre tıklayınca filtre uygulanır."
+          ? "Sayı etiketleri gizli; daire boyutu kayıt oranını gösterir. Şehre tıklayınca filtre uygulanır."
           : "Daire boyutu kayıt sayısına göre logaritmik ölçeklenir. Şehre tıklayınca filtre uygulanır."}
       </p>
       {eslesmeyen.length > 0 && (
