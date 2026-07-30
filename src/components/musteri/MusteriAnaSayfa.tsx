@@ -1828,11 +1828,13 @@ function MusteriAnaSayfaIcerik() {
                   ✓ {telefonMaskele(form.telefon)} bugün doğrulandı
                 </p>
               </Card>
-              <div className="flex gap-3">
-                <Btn variant="outline" type="button" onClick={() => adimGit("sorun")}>
-                  Geri
-                </Btn>
-                <Btn type="button" onClick={() => adimGit("konum")} disabled={!yasalOnay}>
+              <div className="pt-1">
+                <Btn
+                  type="button"
+                  className="w-full"
+                  onClick={() => adimGit("konum")}
+                  disabled={!yasalOnay}
+                >
                   Arıza Konumuna Git
                 </Btn>
               </div>
@@ -1958,16 +1960,14 @@ function MusteriAnaSayfaIcerik() {
 
               {!kodGirisAcik && (
                 <>
-                  <Btn variant="outline" type="button" onClick={() => adimGit("sorun")}>
-                    Geri
-                  </Btn>
-                  <Btn type="submit" disabled={loading}>
+                  <Btn type="submit" disabled={loading} className="w-full">
                     {loading ? "Kod gönderiliyor…" : "Doğrulama Kodu Gönder"}
                   </Btn>
                   {(otpBekleniyor || yenidenGonderSn > 0) && (
                     <Btn
                       type="button"
                       variant="outline"
+                      className="w-full"
                       onClick={() =>
                         kodGirisGoster({
                           mesaj: "SMS ile gelen 6 haneli kodu girin.",
@@ -2082,11 +2082,9 @@ function MusteriAnaSayfaIcerik() {
             </div>
           )}
 
-          <div className="flex gap-3 pt-2">
-            <Btn variant="outline" onClick={() => adimGit("konum")}>
-              Geri
-            </Btn>
+          <div className="pt-2">
             <Btn
+              className="w-full"
               onClick={() => {
                 if (!detayAdimiDevam()) return;
                 if (hedefKonumGerekli) {
@@ -2254,41 +2252,37 @@ function MusteriAnaSayfaIcerik() {
           )}
 
           <div className="space-y-2">
-            <div className="flex gap-3">
-              <Btn variant="outline" onClick={() => adimGit("bilgi")}>
-                Geri
-              </Btn>
-              <Btn
-                onClick={async () => {
-                  setError("");
-                  if (!arızaKonumuHazir) {
-                    setError(
-                      "Arıza konumu gerekli. GPS paylaşın veya arıza adresini yazın."
-                    );
-                    return;
-                  }
-                  if (!form.ad.trim() || !form.soyad.trim()) {
-                    konumIsimHatasiGoster();
-                    return;
-                  }
-                  setAdSoyadHatasi(false);
-                  musteriProfilKaydet(form.telefon, form.ad, form.soyad);
-                  if (gpsYukleniyor) gpsIptal();
-                  const ok = await adresKoordinatDoldur(false);
-                  if (ok) adimGit("detay");
-                }}
-                disabled={devamEtEngelli}
-              >
-                {adresGeocodeYukleniyor ? (
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <Spinner className="size-4 border-white/40 border-t-white" />
-                    Adres işleniyor…
-                  </span>
-                ) : (
-                  "Devam Et"
-                )}
-              </Btn>
-            </div>
+            <Btn
+              className="w-full"
+              onClick={async () => {
+                setError("");
+                if (!arızaKonumuHazir) {
+                  setError(
+                    "Arıza konumu gerekli. GPS paylaşın veya arıza adresini yazın."
+                  );
+                  return;
+                }
+                if (!form.ad.trim() || !form.soyad.trim()) {
+                  konumIsimHatasiGoster();
+                  return;
+                }
+                setAdSoyadHatasi(false);
+                musteriProfilKaydet(form.telefon, form.ad, form.soyad);
+                if (gpsYukleniyor) gpsIptal();
+                const ok = await adresKoordinatDoldur(false);
+                if (ok) adimGit("detay");
+              }}
+              disabled={devamEtEngelli}
+            >
+              {adresGeocodeYukleniyor ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Spinner className="size-4 border-white/40 border-t-white" />
+                  Adres işleniyor…
+                </span>
+              ) : (
+                "Devam Et"
+              )}
+            </Btn>
             {!arızaKonumuHazir && !gpsYukleniyor && !adresGeocodeYukleniyor && (
               <p className="text-xs text-amber-700 text-center">
                 Devam için arıza adresini yazın veya GPS izni verin.
