@@ -7,6 +7,8 @@ describe("hizmetQuerydenSorunTipi", () => {
     expect(hizmetQuerydenSorunTipi("lastik")).toBe("lastik");
     expect(hizmetQuerydenSorunTipi("aku")).toBe("aku");
     expect(hizmetQuerydenSorunTipi("anahtar")).toBe("kilit");
+    expect(hizmetQuerydenSorunTipi("ariza")).toBe("ariza");
+    expect(hizmetQuerydenSorunTipi("kaza")).toBe("kaza");
   });
 
   it("büyük/küçük harf ve boşluk toleranslı", () => {

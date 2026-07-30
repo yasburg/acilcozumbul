@@ -313,7 +313,9 @@ function MusteriAnaSayfaIcerik() {
 
   useEffect(() => {
     if (hizmetUygulandi.current) return;
-    const tip = hizmetQuerydenSorunTipi(searchParams.get("hizmet"));
+    const tip =
+      hizmetQuerydenSorunTipi(searchParams.get("sorun")) ??
+      hizmetQuerydenSorunTipi(searchParams.get("hizmet"));
     if (!tip) return;
     hizmetUygulandi.current = true;
     hizmetKaydirTip.current = tip;
@@ -321,7 +323,7 @@ function MusteriAnaSayfaIcerik() {
     setStep("sorun");
     posthogOlayYakala("sorun_secildi", {
       sorun_tipi: tip,
-      kaynak: "hizmet_query",
+      kaynak: searchParams.get("sorun") ? "sorun_query" : "hizmet_query",
     });
   }, [searchParams]);
 
