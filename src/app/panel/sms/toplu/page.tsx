@@ -764,10 +764,12 @@ export default function PanelTopluSmsPage() {
               <div>
                 <h3 className="font-semibold text-slate-800">Excel yükle</h3>
                 <p className="text-xs text-slate-500 leading-relaxed mt-1">
-                  Şablonu indirip doldurun. Sütunlar:{" "}
-                  <code className="bg-slate-100 px-1 rounded">telefon</code>{" "}
+                  Şablonu indirip doldurun veya Meta lead CSV yükleyin. Sütunlar:{" "}
+                  <code className="bg-slate-100 px-1 rounded">telefon</code> /{" "}
+                  <code className="bg-slate-100 px-1 rounded">phone_number</code>{" "}
                   (zorunlu),{" "}
-                  <code className="bg-slate-100 px-1 rounded">ad</code>{" "}
+                  <code className="bg-slate-100 px-1 rounded">ad</code> /{" "}
+                  <code className="bg-slate-100 px-1 rounded">full_name</code>{" "}
                   (isteğe bağlı).
                 </p>
               </div>

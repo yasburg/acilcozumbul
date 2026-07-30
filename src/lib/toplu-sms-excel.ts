@@ -27,18 +27,32 @@ const TELEFON_BASLIKLAR = new Set(
     "telefon",
     "tel",
     "phone",
+    "phone_number",
+    "phone number",
+    "phonenumber",
     "gsm",
     "cep",
     "cep telefonu",
+    "telefon numarası",
+    "telefon numarasi",
     "mobile",
     "numara",
   ].map((s) => s.toLocaleLowerCase("tr"))
 );
 
 const AD_BASLIKLAR = new Set(
-  ["ad", "isim", "name", "ad soyad", "adsoyad", "müşteri", "musteri"].map((s) =>
-    s.toLocaleLowerCase("tr")
-  )
+  [
+    "ad",
+    "isim",
+    "name",
+    "full_name",
+    "full name",
+    "fullname",
+    "ad soyad",
+    "adsoyad",
+    "müşteri",
+    "musteri",
+  ].map((s) => s.toLocaleLowerCase("tr"))
 );
 
 export const TOPLU_SMS_SABLON_DOSYA = "acilcozumbul-toplu-sms-sablon.xlsx";
@@ -47,8 +61,13 @@ function baslikEsle(headers: string[], adaylar: Set<string>): number {
   for (let i = 0; i < headers.length; i++) {
     const h = String(headers[i] ?? "")
       .trim()
-      .toLocaleLowerCase("tr");
+      .toLocaleLowerCase("tr")
+      .replace(/[_]+/g, " ")
+      .replace(/\s+/g, " ");
     if (adaylar.has(h)) return i;
+    /* phone_number → phone number zaten; birleşik de dene */
+    const birlesik = h.replace(/\s+/g, "");
+    if (adaylar.has(birlesik)) return i;
   }
   return -1;
 }
@@ -84,8 +103,9 @@ export function topluSmsExcelSablonIndir(): void {
 
 /**
  * Excel / CSV: ilk satır başlık.
- * Zorunlu sütun: telefon | tel | phone | gsm | cep
- * İsteğe bağlı: ad | isim | name
+ * Zorunlu sütun: telefon | phone_number | tel | phone | gsm | cep …
+ * İsteğe bağlı: ad | full_name | isim | name
+ * Meta lead export (`phone_number`, `full_name`, `p:+90…`) desteklenir.
  *
  * Sabit hatlar ve dosya içi tekrarlar listeye alınmaz.
  */
