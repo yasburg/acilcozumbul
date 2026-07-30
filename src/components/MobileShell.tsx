@@ -10,6 +10,8 @@ interface MobileShellProps {
   backHref?: string;
   /** Geri okunun yanında görünen metin (ör. İptal) */
   backLabel?: string;
+  /** Sayfa içi geri (href yerine); wizard adımları için */
+  onBack?: () => void;
   /** Header ortasında, subtitle üstünde (ör. demo ikonu) */
   headerBadge?: React.ReactNode;
   footer?: React.ReactNode;
@@ -22,9 +24,23 @@ export function MobileShell({
   showBrand = true,
   backHref,
   backLabel,
+  onBack,
   headerBadge,
   footer,
 }: MobileShellProps) {
+  const geriSinif = `flex shrink-0 items-center gap-1 rounded-full bg-slate-100 text-slate-700 touch-manipulation ${
+    backLabel
+      ? "px-3 py-2 text-sm font-medium"
+      : "h-8 w-8 justify-center text-base"
+  }`;
+  const geriAria = backLabel ? `${backLabel}, geri` : "Geri";
+  const geriIcerik = (
+    <>
+      <span aria-hidden>←</span>
+      {backLabel ? <span>{backLabel}</span> : null}
+    </>
+  );
+
   return (
     <div className="min-h-dvh flex flex-col bg-slate-50 text-slate-900">
       <header
@@ -43,20 +59,24 @@ export function MobileShell({
               subtitleAlign === "center" ? "relative z-10" : "min-w-0 shrink-0",
             ].join(" ")}
           >
-            {backHref && (
+            {onBack ? (
+              <button
+                type="button"
+                onClick={onBack}
+                className={geriSinif}
+                aria-label={geriAria}
+              >
+                {geriIcerik}
+              </button>
+            ) : backHref ? (
               <Link
                 href={backHref}
-                className={`flex shrink-0 items-center gap-1 rounded-full bg-slate-100 text-slate-700 touch-manipulation ${
-                  backLabel
-                    ? "px-3 py-2 text-sm font-medium"
-                    : "h-8 w-8 justify-center text-base"
-                }`}
-                aria-label={backLabel ? `${backLabel}, geri` : "Geri"}
+                className={geriSinif}
+                aria-label={geriAria}
               >
-                <span aria-hidden>←</span>
-                {backLabel ? <span>{backLabel}</span> : null}
+                {geriIcerik}
               </Link>
-            )}
+            ) : null}
             {showBrand && (
               <BrandLogoYazili
                 priority

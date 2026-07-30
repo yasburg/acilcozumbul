@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui";
 import { latLngStr, type LatLng } from "@/lib/koordinat";
+import { haritaSecenekleri } from "@/lib/harita-yonlendirme";
 
 interface TakipVerisi {
   konum: LatLng | null;
@@ -16,25 +17,6 @@ interface MusteriCekiciTakipHaritaProps {
   talepId: string;
   musteriKonum: LatLng;
   hedefKonum?: LatLng | null;
-}
-
-function embedDirectionsUrl(
-  cekici: LatLng,
-  musteri: LatLng,
-  hedef?: LatLng | null,
-  apiKey?: string
-): string | null {
-  if (!apiKey) return null;
-  const params = new URLSearchParams({
-    key: apiKey,
-    origin: latLngStr(cekici),
-    destination: latLngStr(hedef ?? musteri),
-    mode: "driving",
-  });
-  if (hedef) {
-    params.set("waypoints", latLngStr(musteri));
-  }
-  return `https://www.google.com/maps/embed/v1/directions?${params.toString()}`;
 }
 
 function googleMapsDirUrl(
@@ -59,14 +41,9 @@ export function MusteriCekiciTakipHarita({
 }: MusteriCekiciTakipHaritaProps) {
   const [veri, setVeri] = useState<TakipVerisi | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
-  const [haritaAcik, setHaritaAcik] = useState(true);
+  const [haritaSecim, setHaritaSecim] = useState(false);
   const musteriRef = useRef(musteriKonum);
   musteriRef.current = musteriKonum;
-
-  const embedKey =
-    typeof process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY === "string"
-      ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY.trim()
-      : "";
 
   const yukle = useCallback(async () => {
     try {
@@ -88,14 +65,15 @@ export function MusteriCekiciTakipHarita({
   }, [yukle]);
 
   const cekiciKonum = veri?.konum ?? null;
-  const embedUrl =
-    cekiciKonum && embedKey
-      ? embedDirectionsUrl(cekiciKonum, musteriKonum, hedefKonum, embedKey)
-      : null;
-
   const disLink = cekiciKonum
     ? googleMapsDirUrl(cekiciKonum, musteriKonum, hedefKonum)
     : null;
+  const haritaSecenek = cekiciKonum
+    ? haritaSecenekleri(musteriKonum, {
+        cekici: cekiciKonum,
+        hedef: hedefKonum,
+      })
+    : [];
 
   return (
     <Card className="border-emerald-200 bg-emerald-50/40 space-y-3">
@@ -137,29 +115,19 @@ export function MusteriCekiciTakipHarita({
                 : "Konum paylaşıldı"}
           </p>
 
-          {embedUrl && (
-            <>
-              <button
-                type="button"
-                onClick={() => setHaritaAcik((a) => !a)}
-                className="text-xs font-medium text-emerald-800 underline"
-              >
-                {haritaAcik ? "Haritayı gizle" : "Haritayı göster"}
-              </button>
-              {haritaAcik && (
-                <div className="rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-100">
-                  <iframe
-                    title="Çekici canlı konum"
-                    src={embedUrl}
-                    className="w-full h-full border-0"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    allowFullScreen
-                  />
-                </div>
-              )}
-            </>
-          )}
+          <button
+            type="button"
+            onClick={() => setHaritaSecim(true)}
+            className="w-full rounded-xl border-2 border-emerald-200 bg-white px-4 py-3 text-left transition hover:border-emerald-300 active:scale-[0.99]"
+          >
+            <span className="text-sm font-semibold text-emerald-900 block">
+              🗺️ Haritada rotayı göster
+            </span>
+            <span className="text-xs text-emerald-700 mt-0.5 block">
+              Çekici → sizin konumunuz
+              {hedefKonum ? " → hedef" : ""} · Google veya Apple Maps
+            </span>
+          </button>
 
           {disLink && (
             <a
@@ -172,6 +140,54 @@ export function MusteriCekiciTakipHarita({
             </a>
           )}
         </>
+      )}
+
+      {haritaSecim && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4 safe-bottom"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Harita uygulaması seçin"
+          onClick={() => setHaritaSecim(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b border-slate-100">
+              <p className="font-semibold text-slate-900">Haritada rotayı göster</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Navigasyon uygulamanızı seçin
+              </p>
+            </div>
+            <div className="p-2 flex flex-col gap-1">
+              {haritaSecenek.map((sec) => (
+                <a
+                  key={sec.id}
+                  href={sec.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setHaritaSecim(false)}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition"
+                >
+                  <span className="text-xl" aria-hidden>
+                    {sec.id === "apple" ? "🍎" : "🗺️"}
+                  </span>
+                  {sec.label}
+                </a>
+              ))}
+            </div>
+            <div className="p-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setHaritaSecim(false)}
+                className="w-full rounded-xl py-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              >
+                İptal
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </Card>
   );

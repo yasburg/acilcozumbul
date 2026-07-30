@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
-import { surusSuresiDk, googleMapsYapilandirildi } from "@/lib/google-maps";
+import {
+  surusSuresiCokNokta,
+  googleMapsYapilandirildi,
+} from "@/lib/google-maps";
 import { koordinatGecerli, type LatLng } from "@/lib/koordinat";
 import { yerelOrtamMi } from "@/lib/yerel-ortam";
 
@@ -13,6 +16,10 @@ function noktaOku(v: unknown): LatLng | null {
   return koordinatGecerli(n) ? n : null;
 }
 
+function ayniNokta(a: LatLng, b: LatLng, eps = 1e-4): boolean {
+  return Math.abs(a.lat - b.lat) < eps && Math.abs(a.lng - b.lng) < eps;
+}
+
 export async function POST(request: NextRequest) {
   const cekici = await getCurrentCekici();
   if (!cekici) {
@@ -22,7 +29,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const cekiciKonum = noktaOku((body as { cekiciKonum?: unknown }).cekiciKonum);
   const musteriKonum = noktaOku((body as { musteriKonum?: unknown }).musteriKonum);
-  const hedefKonum = noktaOku((body as { hedefKonum?: unknown }).hedefKonum);
+  const hedefHam = noktaOku((body as { hedefKonum?: unknown }).hedefKonum);
 
   if (!cekiciKonum || !musteriKonum) {
     return NextResponse.json(
@@ -31,45 +38,51 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const leg1 = await surusSuresiDk(cekiciKonum, musteriKonum);
-  let musteriHedefDk: number | null = null;
-  let leg2: Awaited<ReturnType<typeof surusSuresiDk>> | null = null;
+  /* Hedef müşteri ile aynıysa çekme bacağı yok */
+  const hedefKonum =
+    hedefHam && !ayniNokta(hedefHam, musteriKonum) ? hedefHam : null;
 
-  if (hedefKonum) {
-    leg2 = await surusSuresiDk(musteriKonum, hedefKonum);
-    musteriHedefDk = leg2.dk;
-  }
+  /* Sıra: çekici → hizmet alan (arıza) → hedef */
+  const noktalar: LatLng[] = hedefKonum
+    ? [cekiciKonum, musteriKonum, hedefKonum]
+    : [cekiciKonum, musteriKonum];
 
-  if (leg1.dk == null) {
-    const detay = leg1.hata ?? "Bilinmeyen hata";
+  const sonuc = await surusSuresiCokNokta(noktalar);
+
+  if (sonuc.dk == null) {
+    const detay = sonuc.hata ?? "Bilinmeyen hata";
     return NextResponse.json(
       {
         error: `Rota süresi hesaplanamadı: ${detay}`,
-        googleHata: leg1.googleHata ?? detay,
+        googleHata: sonuc.googleHata ?? detay,
       },
       { status: 422 }
     );
   }
 
-  const sizeMusteriDk = leg1.dk;
+  const bacaklar = sonuc.bacaklarDk;
+  let sizeMusteriDk: number;
+  let musteriHedefDk: number | null = null;
 
-  if (hedefKonum && musteriHedefDk == null) {
-    return NextResponse.json(
-      {
-        error: `Müşteri → hedef süresi hesaplanamadı: ${leg2?.hata ?? "bilinmeyen"}.`,
-        googleHata: leg2?.googleHata,
-        sizeMusteriDk,
-        kaynak: leg1.kaynak,
-      },
-      { status: 422 }
-    );
+  if (hedefKonum) {
+    if (!bacaklar || bacaklar.length < 2) {
+      return NextResponse.json(
+        {
+          error: "Müşteri → hedef süresi hesaplanamadı (bacaklar eksik).",
+          googleHata: sonuc.googleHata,
+          kaynak: sonuc.kaynak,
+        },
+        { status: 422 }
+      );
+    }
+    sizeMusteriDk = bacaklar[0]!;
+    musteriHedefDk = bacaklar[1]!;
+  } else {
+    sizeMusteriDk = bacaklar?.[0] ?? sonuc.dk;
   }
 
   const toplamDk =
-    sizeMusteriDk + (musteriHedefDk != null ? musteriHedefDk : 0);
-
-  const kaynak =
-    leg1.kaynak === "osrm" || leg2?.kaynak === "osrm" ? "osrm" : "google";
+    musteriHedefDk != null ? sizeMusteriDk + musteriHedefDk : sizeMusteriDk;
 
   return NextResponse.json({
     yapilandirildi: googleMapsYapilandirildi(),
@@ -77,11 +90,14 @@ export async function POST(request: NextRequest) {
     musteriHedefDk,
     toplamDk,
     hedefVar: !!hedefKonum,
-    kaynak,
+    siralama: hedefKonum
+      ? ["cekici", "hizmet_alan", "hedef"]
+      : ["cekici", "hizmet_alan"],
+    kaynak: sonuc.kaynak,
     googleUyari:
       yerelOrtamMi(request.headers.get("host")) &&
-      kaynak === "osrm" &&
-      leg1.googleHata
+      sonuc.kaynak === "osrm" &&
+      sonuc.googleHata
         ? "Google Routes henüz projede kapalı; süre tahmini OSRM ile hesaplandı. Harita yine Google Embed kullanır."
         : undefined,
   });

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, Suspense } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { SorunSecimi } from "@/components/SorunSecimi";
 import { Btn, Field, Card, Spinner, TextArea } from "@/components/ui";
@@ -200,6 +200,7 @@ export default function MusteriAnaSayfa() {
 
 function MusteriAnaSayfaIcerik() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [step, setStep] = useState<Step>("sorun");
   const hizmetUygulandi = useRef(false);
   const hizmetKaydirTip = useRef<string | null>(null);
@@ -1356,16 +1357,9 @@ function MusteriAnaSayfaIcerik() {
 
   function hedefNavButonlari(className = "mt-3") {
     return (
-      <div className={`flex gap-2 ${className}`}>
+      <div className={className}>
         <Btn
-          variant="outline"
-          className="flex-1"
-          onClick={() => adimGit("detay")}
-        >
-          Geri
-        </Btn>
-        <Btn
-          className="flex-1"
+          className="w-full"
           onClick={() => void hedefIleriGit()}
           disabled={hedefIleriEngelli}
         >
@@ -1594,6 +1588,17 @@ function MusteriAnaSayfaIcerik() {
     (s) => s !== "hedef" || hedefKonumGerekli
   ).map((key, i) => ({ key, label: String(i + 1) }));
 
+  function oncekiAdimaDon() {
+    const idx = steps.findIndex((s) => s.key === step);
+    if (idx > 0) {
+      adimGit(steps[idx - 1]!.key);
+      return;
+    }
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    }
+  }
+
   const sorunLabel = form.sorunTipi
     ? sorunTipiBul(form.sorunTipi)?.label
     : null;
@@ -1632,6 +1637,7 @@ function MusteriAnaSayfaIcerik() {
     <MobileShell
       subtitle="Yolda mı kaldınız? Hemen en hızlı ve uygun teklifleri alın."
       subtitleAlign="right"
+      onBack={oncekiAdimaDon}
       footer={<YasalSiteFooter />}
     >
       <h1 className="sr-only">
@@ -2601,34 +2607,25 @@ function MusteriAnaSayfaIcerik() {
             )}
 
           {!hedefSeciliMi && (
-            <div className="flex gap-2">
-              <Btn
-                variant="outline"
-                className="flex-1"
-                onClick={() => adimGit("detay")}
-              >
-                Geri
-              </Btn>
-              <Btn
-                className="flex-1"
-                onClick={() => void hedefIleriGit()}
-                disabled={hedefIleriEngelli}
-              >
-                {loading ? (
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <Spinner className="size-4 border-white/40 border-t-white" />
-                    Gönderiliyor…
-                  </span>
-                ) : adresGeocodeYukleniyor ? (
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <Spinner className="size-4 border-white/40 border-t-white" />
-                    Adres işleniyor…
-                  </span>
-                ) : (
-                  sorunCagriButonEtiketi(form.sorunTipi)
-                )}
-              </Btn>
-            </div>
+            <Btn
+              className="w-full"
+              onClick={() => void hedefIleriGit()}
+              disabled={hedefIleriEngelli}
+            >
+              {loading ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Spinner className="size-4 border-white/40 border-t-white" />
+                  Gönderiliyor…
+                </span>
+              ) : adresGeocodeYukleniyor ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Spinner className="size-4 border-white/40 border-t-white" />
+                  Adres işleniyor…
+                </span>
+              ) : (
+                sorunCagriButonEtiketi(form.sorunTipi)
+              )}
+            </Btn>
           )}
         </div>
       )}
