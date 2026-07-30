@@ -28,6 +28,11 @@ export type KayitFunnelTanim = {
   altMetin: string;
   tesvikBaslik?: string;
   tesvikMetin?: string;
+  /**
+   * A ekranındaki kontenjan + landing hero kartlarını phone-first formun üstüne koy.
+   * Başlık/alt metin/GUVEN listesi kartlarda olduğu için gizlenir.
+   */
+  aLandingKartlari?: boolean;
 };
 
 /** SMS / eski linklerin varsayılan hedefi */
@@ -57,16 +62,16 @@ export const KAYIT_FUNNELS: Record<KayitFunnelId, KayitFunnelTanim> = {
   },
   c: {
     id: "c",
-    etiket: "Phone-first · Lastikçi",
+    etiket: "Phone-first · A kartları + B kayıt",
     tip: "phone_first",
     aktif: true,
-    hizmetOnsecim: "lastik",
-    ustBaslik: "İSTANBUL’DA MOBİL LASTİKÇİLERE ÖZEL",
-    baslik: "Yakınınızdaki mobil lastik taleplerini telefonunuzdan görün.",
+    hizmetOnsecim: "cekici",
+    aLandingKartlari: true,
+    ustBaslik: "HİZMET VERENLER İÇİN · İSTANBUL",
+    baslik:
+      "Çekici, lastikçi veya anahtarcı mısınız? İstanbul’daki yol yardım taleplerine teklif verin.",
     altMetin:
-      "Bölgenizde lastik talebi açıldığında bildirim alırsınız. Fiyatınızı yazın; müşteri sizi seçerse telefon ve konum açılır.",
-    tesvikBaslik: "İstanbul erken kayıt avantajı",
-    tesvikMetin: "İlk 20 talep bildirimi ücretsiz",
+      "Erken fazda panel İstanbul’da açık. Müşteri talep açar; SMS + panel bildirimi gelir. Fiyat ve sürenizi yazın; seçilirseniz telefon ve konum açılır.",
   },
   d: {
     id: "d",
@@ -81,7 +86,19 @@ export const KAYIT_FUNNELS: Record<KayitFunnelId, KayitFunnelTanim> = {
     tesvikBaslik: "İstanbul erken kayıt avantajı",
     tesvikMetin: "İlk 20 talep bildirimi ücretsiz",
   },
-  e: placeholder("e"),
+  e: {
+    id: "e",
+    etiket: "Phone-first · Lastikçi",
+    tip: "phone_first",
+    aktif: true,
+    hizmetOnsecim: "lastik",
+    ustBaslik: "İSTANBUL’DA MOBİL LASTİKÇİLERE ÖZEL",
+    baslik: "Yakınınızdaki mobil lastik taleplerini telefonunuzdan görün.",
+    altMetin:
+      "Bölgenizde lastik talebi açıldığında bildirim alırsınız. Fiyatınızı yazın; müşteri sizi seçerse telefon ve konum açılır.",
+    tesvikBaslik: "İstanbul erken kayıt avantajı",
+    tesvikMetin: "İlk 20 talep bildirimi ücretsiz",
+  },
   f: placeholder("f"),
   g: placeholder("g"),
   h: placeholder("h"),

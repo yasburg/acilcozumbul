@@ -1,10 +1,12 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
+import { KayitKontenjanBilgi } from "@/components/KayitKontenjanBilgi";
+import { CekiciKayitLandingHero } from "@/components/cekici/CekiciKayitLandingHero";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import type { KayitFunnelTanim } from "@/lib/kayit-funnel";
 import { TELEFON_ORNEK_GIRISLERI } from "@/lib/telefon";
@@ -91,6 +93,14 @@ const SSS = [
 function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const formRef = useRef<HTMLDivElement>(null);
+  const aKartlari = Boolean(funnel.aLandingKartlari);
+
+  const onizlemeRaw = searchParams.get("onizleme");
+  const onizlemeGercekKayit =
+    process.env.NODE_ENV === "development" && onizlemeRaw
+      ? Number.parseInt(onizlemeRaw, 10)
+      : NaN;
 
   const [telefon, setTelefon] = useState("");
   const [otp, setOtp] = useState("");
@@ -283,31 +293,59 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     );
   }
 
+  function kaydaKaydir() {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <MobileShell subtitle="Çekici kaydı" backHref="/cekici/giris">
       <div className="space-y-8 pb-8">
-        <section className="space-y-4">
-          <p className="text-xs font-semibold tracking-wide text-amber-800 uppercase">
-            {funnel.ustBaslik}
-          </p>
-          <h1 className="text-[1.65rem] font-bold text-slate-900 leading-snug">
-            {funnel.baslik}
-          </h1>
-          <p className="text-[17px] text-slate-600 leading-relaxed">
-            {funnel.altMetin}
-          </p>
-          <ul className="space-y-1.5 text-[16px] text-slate-800">
-            {GUVEN.map((g) => (
-              <li key={g} className="flex gap-2">
-                <span className="text-emerald-600 font-bold" aria-hidden>
-                  ✓
-                </span>
-                {g}
-              </li>
-            ))}
-          </ul>
+        {aKartlari && (
+          <div className="space-y-4">
+            <KayitKontenjanBilgi
+              onizlemeGercekKayit={
+                Number.isFinite(onizlemeGercekKayit)
+                  ? onizlemeGercekKayit
+                  : undefined
+              }
+            />
+            <CekiciKayitLandingHero
+              onKayitBasla={kaydaKaydir}
+              ctaMetin="Ücretsiz kaydı başlat"
+            />
+          </div>
+        )}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3 shadow-sm">
+        <section className="space-y-4">
+          {!aKartlari && (
+            <>
+              <p className="text-xs font-semibold tracking-wide text-amber-800 uppercase">
+                {funnel.ustBaslik}
+              </p>
+              <h1 className="text-[1.65rem] font-bold text-slate-900 leading-snug">
+                {funnel.baslik}
+              </h1>
+              <p className="text-[17px] text-slate-600 leading-relaxed">
+                {funnel.altMetin}
+              </p>
+              <ul className="space-y-1.5 text-[16px] text-slate-800">
+                {GUVEN.map((g) => (
+                  <li key={g} className="flex gap-2">
+                    <span className="text-emerald-600 font-bold" aria-hidden>
+                      ✓
+                    </span>
+                    {g}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          <div
+            ref={formRef}
+            id="kayit-form"
+            className="scroll-mt-28 rounded-2xl border border-slate-200 bg-white p-4 space-y-3 shadow-sm"
+          >
             <h2 className="font-semibold text-slate-900 text-lg">
               Ücretsiz kaydı başlat
             </h2>

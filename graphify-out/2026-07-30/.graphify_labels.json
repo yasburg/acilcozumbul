@@ -92,7 +92,5 @@
   "90": "rozet-panel.ts",
   "91": "cekici-belge.ts",
   "92": "route.ts",
-  "93": "smsBaseUrl",
-  "94": "route.ts",
-  "95": "talep-fotograf.ts"
+  "98": "netgsmSmsMesajGecerliMi"
 }

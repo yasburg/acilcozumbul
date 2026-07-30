@@ -1,14 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { Btn, Card } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
-
-const AVANTAJLAR = [
-  "Kayıt ücretsiz",
-  "Teklif vermek ücretsiz",
-  "İstanbul ilçe bazlı çalış",
-] as const;
+import { CekiciKayitLandingHero } from "@/components/cekici/CekiciKayitLandingHero";
 
 const IS_AKISI = [
   {
@@ -100,42 +95,7 @@ export function CekiciKayitLanding({ onKayitBasla }: CekiciKayitLandingProps) {
 
   return (
     <div className="space-y-4 mb-6">
-      <section className="rounded-2xl border border-amber-200/80 bg-gradient-to-b from-amber-50 via-white to-white px-4 py-5 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 mb-2">
-          Hizmet verenler için · İstanbul
-        </p>
-        <h1 className="text-xl font-bold text-slate-900 leading-snug">
-          Çekici, lastikçi veya anahtarcı mısınız? İstanbul’daki yol yardım
-          taleplerine teklif verin.
-        </h1>
-        <p className="text-sm text-slate-600 mt-3 leading-relaxed">
-          Erken fazda panel kullanımı İstanbul’da açık. Diğer illerden kayıt
-          olabilirsiniz; şehriniz açılınca sizi önde tutarız. Müşteri talep
-          açar, size SMS + panel bildirimi gelir. Fiyat ve sürenizi yazarsınız;
-          sizi seçerse telefon ve konum açılır.
-        </p>
-
-        <ul className="mt-4 space-y-2">
-          {AVANTAJLAR.map((madde) => (
-            <li
-              key={madde}
-              className="flex items-start gap-2.5 text-sm text-slate-800"
-            >
-              <span
-                className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold"
-                aria-hidden
-              >
-                ✓
-              </span>
-              <span className="font-medium">{madde}</span>
-            </li>
-          ))}
-        </ul>
-
-        <Btn type="button" className="w-full mt-5" onClick={onKayitBasla}>
-          Ücretsiz çekici kaydı oluştur
-        </Btn>
-      </section>
+      <CekiciKayitLandingHero onKayitBasla={onKayitBasla} />
 
       <section
         id="nasil-calisir"

@@ -14,6 +14,7 @@ const SAYFALAR: {
   { path: "/kayit/b", changeFrequency: "weekly", priority: 0.9 },
   { path: "/kayit/c", changeFrequency: "weekly", priority: 0.85 },
   { path: "/kayit/d", changeFrequency: "weekly", priority: 0.85 },
+  { path: "/kayit/e", changeFrequency: "weekly", priority: 0.85 },
   { path: "/cekici/giris", changeFrequency: "monthly", priority: 0.7 },
   { path: "/cekici/sifremi-unuttum", changeFrequency: "monthly", priority: 0.4 },
   { path: "/kullanim-kosullari", changeFrequency: "yearly", priority: 0.3 },
