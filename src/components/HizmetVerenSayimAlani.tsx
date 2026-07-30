@@ -6,8 +6,10 @@ import { useHizmetVerenSayim } from "@/hooks/useHizmetVerenSayim";
 /** Sayaç + veri hook’u — ana sayfa ilk chunk’undan ayrılır */
 export function HizmetVerenSayimAlani({
   sorunTipi,
+  compact,
 }: {
   sorunTipi?: string | null;
+  compact?: boolean;
 }) {
   const { ozet, yukleniyor } = useHizmetVerenSayim();
   return (
@@ -15,6 +17,7 @@ export function HizmetVerenSayimAlani({
       sorunTipi={sorunTipi}
       ozet={ozet}
       yukleniyor={yukleniyor}
+      compact={compact}
     />
   );
 }

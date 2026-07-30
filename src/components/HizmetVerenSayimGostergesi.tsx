@@ -46,12 +46,15 @@ interface HizmetVerenSayimGostergesiProps {
   yukleniyor?: boolean;
   /** Seçili hizmet tipi — yoksa tüm platform özeti */
   sorunTipi?: string | null;
+  /** Header içinde daha sıkı görünüm */
+  compact?: boolean;
 }
 
 export function HizmetVerenSayimGostergesi({
   ozet,
   yukleniyor,
   sorunTipi,
+  compact = false,
 }: HizmetVerenSayimGostergesiProps) {
   const hizmetSecili =
     sorunTipi && gecerliSorunTipi(sorunTipi) ? sorunTipi : null;
@@ -70,7 +73,12 @@ export function HizmetVerenSayimGostergesi({
 
   if (yukleniyor && !ozet) {
     return (
-      <p className="text-sm text-slate-400 text-center py-1">
+      <p
+        className={[
+          "text-slate-400 text-center",
+          compact ? "text-[11px] leading-tight py-0" : "text-sm py-1",
+        ].join(" ")}
+      >
         Hizmet verenler yükleniyor…
       </p>
     );
@@ -78,7 +86,12 @@ export function HizmetVerenSayimGostergesi({
 
   if (aktif === 0) {
     return (
-      <p className="text-sm text-slate-500 text-center py-1">
+      <p
+        className={[
+          "text-slate-500 text-center",
+          compact ? "text-[11px] leading-tight py-0" : "text-sm py-1",
+        ].join(" ")}
+      >
         Kayıtlı hizmet veren yok
       </p>
     );
@@ -86,16 +99,31 @@ export function HizmetVerenSayimGostergesi({
 
   return (
     <div
-      className="rounded-xl border border-emerald-200/80 bg-gradient-to-r from-emerald-50 to-white px-3.5 py-2.5 flex items-center justify-center gap-2.5"
+      className={[
+        "border border-emerald-200/80 bg-gradient-to-r from-emerald-50 to-white flex items-center justify-center",
+        compact
+          ? "rounded-lg px-2 py-1 gap-1.5"
+          : "rounded-xl px-3.5 py-2.5 gap-2.5",
+      ].join(" ")}
       role="status"
       aria-live="polite"
     >
       <CevrimiciNokta />
-      <p className="text-sm text-slate-700 leading-snug text-center">
-        <span className="font-bold tabular-nums text-emerald-700 text-base">
+      <p
+        className={[
+          "text-slate-700 leading-snug text-center",
+          compact ? "text-xs" : "text-sm",
+        ].join(" ")}
+      >
+        <span
+          className={[
+            "font-bold tabular-nums text-emerald-700",
+            compact ? "text-sm" : "text-base",
+          ].join(" ")}
+        >
           {animCevrimici}
         </span>{" "}
-        online
+        Müsait
       </p>
     </div>
   );

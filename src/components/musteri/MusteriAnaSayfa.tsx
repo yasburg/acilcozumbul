@@ -1696,6 +1696,16 @@ function MusteriAnaSayfaIcerik() {
     </div>
   );
 
+  const adimUstBilgi = (compact: boolean) => (
+    <div className="w-full space-y-1.5">
+      <HizmetVerenSayimAlani
+        sorunTipi={form.sorunTipi || null}
+        compact={compact}
+      />
+      {adimIlerlemeCubugu}
+    </div>
+  );
+
   return (
     <MobileShell
       subtitle={
@@ -1707,7 +1717,7 @@ function MusteriAnaSayfaIcerik() {
       brandAlign={step === "sorun" ? "left" : "right"}
       backLabel={step === "sorun" ? undefined : "Geri"}
       onBack={step === "sorun" ? undefined : oncekiAdimaDon}
-      headerCenter={step === "sorun" ? undefined : adimIlerlemeCubugu}
+      headerCenter={step === "sorun" ? undefined : adimUstBilgi(true)}
       footer={<YasalSiteFooter />}
     >
       <h1 className="sr-only">
@@ -1735,12 +1745,8 @@ function MusteriAnaSayfaIcerik() {
       )}
 
       {step === "sorun" && (
-        <div className="mb-6">{adimIlerlemeCubugu}</div>
+        <div className="mb-6">{adimUstBilgi(false)}</div>
       )}
-
-      <div className="mb-4">
-        <HizmetVerenSayimAlani sorunTipi={form.sorunTipi || null} />
-      </div>
 
       {error && (
         <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">

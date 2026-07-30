@@ -16,7 +16,7 @@ interface MobileShellProps {
   onBack?: () => void;
   /** Header ortasında, subtitle üstünde (ör. demo ikonu) */
   headerBadge?: React.ReactNode;
-  /** Logo sağdayken Geri ile logo arasında (ör. progress bar) */
+  /** Logo sağdayken Geri ile logo arasında (ör. online + progress) */
   headerCenter?: React.ReactNode;
   footer?: React.ReactNode;
 }
@@ -80,7 +80,7 @@ export function MobileShell({
         {logoSagda ? (
           <div className="flex min-h-[3.9rem] items-center gap-2 max-w-lg mx-auto">
             <div className="shrink-0">{geriDugmesi}</div>
-            <div className="min-w-0 flex-1 flex items-center justify-center px-1">
+            <div className="min-w-0 flex-1 flex flex-col items-stretch justify-center px-1">
               {headerCenter ??
                 (subtitle ? (
                   <p className="min-w-0 text-[14.3px] leading-snug font-medium text-slate-600 line-clamp-3 text-center">
