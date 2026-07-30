@@ -20,6 +20,10 @@ interface MobileShellProps {
   headerCenter?: React.ReactNode;
   /** Logo tıklanınca (ör. wizard’ı ilk adıma al) */
   onBrandClick?: () => void;
+  /** Logo sağında küçük aksiyon (ör. Giriş) */
+  headerEnd?: React.ReactNode;
+  /** İlk ekranda daha alçak header */
+  headerCompact?: boolean;
   footer?: React.ReactNode;
 }
 
@@ -35,6 +39,8 @@ export function MobileShell({
   headerBadge,
   headerCenter,
   onBrandClick,
+  headerEnd,
+  headerCompact = false,
   footer,
 }: MobileShellProps) {
   const geriMetinli = Boolean(backLabel);
@@ -73,8 +79,12 @@ export function MobileShell({
             }
           : undefined
       }
-      className={`h-[3.9rem] w-auto max-w-[min(280px,70vw)] shrink-0 object-contain ${
-        brandAlign === "right" ? "object-right" : "object-left"
+      className={`w-auto shrink-0 object-contain ${
+        brandAlign === "right"
+          ? "h-[3.9rem] max-w-[min(280px,70vw)] object-right"
+          : headerCompact
+            ? "h-9 max-w-[min(160px,48vw)] object-left"
+            : "h-12 max-w-[min(200px,55vw)] object-left"
       }`}
     />
   ) : null;
@@ -85,7 +95,10 @@ export function MobileShell({
     <div className="min-h-dvh flex flex-col bg-slate-50 text-slate-900">
       <header
         id="app-shell-header"
-        className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur-md px-3 py-2 shadow-sm"
+        className={[
+          "sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur-md shadow-sm",
+          headerCompact ? "px-3 py-1.5" : "px-3 py-2",
+        ].join(" ")}
       >
         {logoSagda ? (
           <div className="flex min-h-[3.9rem] items-center gap-2 max-w-lg mx-auto">
@@ -104,14 +117,17 @@ export function MobileShell({
         ) : (
           <div
             className={[
-              "flex min-h-[3.9rem] items-center max-w-lg mx-auto",
-              subtitleAlign === "right" ? "justify-between gap-2" : "relative",
+              "flex items-center max-w-lg mx-auto",
+              headerCompact ? "min-h-9" : "min-h-[3.9rem]",
+              subtitleAlign === "right" || headerEnd
+                ? "justify-between gap-2"
+                : "relative",
             ].join(" ")}
           >
             <div
               className={[
                 "flex items-center gap-1.5",
-                subtitleAlign === "center"
+                subtitleAlign === "center" && !headerEnd
                   ? "relative z-10"
                   : "min-w-0 shrink-0",
               ].join(" ")}
@@ -123,7 +139,7 @@ export function MobileShell({
               <div
                 className={[
                   "pointer-events-none absolute inset-x-0 flex flex-col items-center justify-center gap-0.5 px-28",
-                  subtitleAlign === "right" ? "hidden" : "",
+                  subtitleAlign === "right" || headerEnd ? "hidden" : "",
                 ].join(" ")}
               >
                 {headerBadge}
@@ -132,20 +148,28 @@ export function MobileShell({
                 </p>
               </div>
             )}
-            {!subtitle && headerBadge && subtitleAlign === "center" && (
+            {!subtitle && headerBadge && subtitleAlign === "center" && !headerEnd && (
               <div className="pointer-events-none absolute inset-x-0 flex justify-center px-28">
                 {headerBadge}
               </div>
             )}
-            {subtitle && subtitleAlign === "right" && (
+            {subtitle && subtitleAlign === "right" && !headerEnd && (
               <p className="max-w-[46%] shrink-0 text-right text-[14.3px] leading-snug font-medium text-slate-600 line-clamp-3">
                 {subtitle}
               </p>
             )}
+            {headerEnd ? (
+              <div className="shrink-0 flex items-center gap-2">{headerEnd}</div>
+            ) : null}
           </div>
         )}
       </header>
-      <main className="flex-1 px-4 py-5 pb-24 max-w-lg mx-auto w-full">
+      <main
+        className={[
+          "flex-1 px-4 max-w-lg mx-auto w-full pb-24",
+          headerCompact ? "py-3" : "py-5",
+        ].join(" ")}
+      >
         {children}
       </main>
       {footer}

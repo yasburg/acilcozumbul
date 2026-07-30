@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import {
+  musteriFormAdimDonusumNormalize,
   musteriFormTaslakBosMu,
   musteriFormTaslakKaydet,
   musteriFormTaslakOku,
@@ -51,7 +52,7 @@ describe("musteriFormTaslak", () => {
   it("kaydeder ve okur", () => {
     musteriFormTaslakKaydet(
       bosTaslak({
-        step: "detay",
+        step: "hedef",
         form: {
           ...bosTaslak().form,
           ad: "Ayşe",
@@ -62,10 +63,25 @@ describe("musteriFormTaslak", () => {
       })
     );
     const t = musteriFormTaslakOku();
-    expect(t?.step).toBe("detay");
+    expect(t?.step).toBe("hedef");
     expect(t?.form.ad).toBe("Ayşe");
     expect(t?.form.sorunTipi).toBe("aku");
     expect(t?.yasalOnay).toBe(true);
+  });
+
+  it("eski konum adımını korur; dönüşüm normalize sorun’a map eder", () => {
+    sessionStorage.setItem(
+      "acilcozum_musteri_form_taslak",
+      JSON.stringify(
+        bosTaslak({
+          step: "sorun",
+          form: { ...bosTaslak().form, sorunTipi: "cekici" },
+        })
+      ).replace('"step":"sorun"', '"step":"konum"')
+    );
+    expect(musteriFormTaslakOku()?.step).toBe("konum");
+    expect(musteriFormAdimDonusumNormalize("konum")).toBe("sorun");
+    expect(musteriFormAdimDonusumNormalize("detay")).toBe("sorun");
   });
 
   it("boş taslağı ayırt eder", () => {
@@ -78,7 +94,7 @@ describe("musteriFormTaslak", () => {
   });
 
   it("siler", () => {
-    musteriFormTaslakKaydet(bosTaslak({ step: "konum" }));
+    musteriFormTaslakKaydet(bosTaslak({ step: "bilgi" }));
     musteriFormTaslakSil();
     expect(musteriFormTaslakOku()).toBeNull();
   });
@@ -102,7 +118,7 @@ describe("musteriFormTaslak", () => {
     });
     musteriFormTaslakKaydet(
       bosTaslak({
-        step: "detay",
+        step: "hedef",
         form: { ...bosTaslak().form, sorunTipi: "aku" },
         fotografData: "x".repeat(200),
         fotografOnizleme: "y".repeat(200),

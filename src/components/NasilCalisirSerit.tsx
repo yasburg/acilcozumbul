@@ -22,13 +22,13 @@ const NASIL_ADIMLAR: NasilAdim[] = [
   },
   {
     ikon: "📍",
-    baslik: "Bilgilerinizi verin",
-    aciklama: "Telefon, konum ve sorun detayı",
+    baslik: "Konum ve hedef",
+    aciklama: "Neredesiniz, aracınız nereye gidecek",
   },
   {
     ikon: "💬",
-    baslik: "Teklifler gelir",
-    aciklama: "Yakındaki hizmet verenler fiyat ve süre gönderir",
+    baslik: "Ücretsiz teklif alın",
+    aciklama: "Telefon doğrulayıp fiyatları görün",
   },
   {
     ikon: "✅",
@@ -39,8 +39,9 @@ const NASIL_ADIMLAR: NasilAdim[] = [
 
 function formAdimindenAnchor(adim: FormAdimi): number {
   if (adim === "sorun") return 0;
-  if (adim === "bilgi" || adim === "konum" || adim === "detay" || adim === "hedef") {
-    return 1;
+  if (adim === "hedef") return 1;
+  if (adim === "bilgi" || adim === "konum" || adim === "detay") {
+    return 2;
   }
   return 0;
 }

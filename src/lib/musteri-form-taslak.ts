@@ -17,6 +17,7 @@ export type MusteriFormAlanlari = {
   aracModeli: string;
 };
 
+/** / klasik wizard + /b 3 ekran; eski konum/detay değerleri korunur */
 export type MusteriFormAdim =
   | "bilgi"
   | "konum"
@@ -42,6 +43,15 @@ const ADIMLAR: ReadonlySet<string> = new Set([
   "detay",
   "hedef",
 ]);
+
+/** /b dönüşüm akışı — konum/detay → sorun */
+export function musteriFormAdimDonusumNormalize(
+  step: string
+): "bilgi" | "sorun" | "hedef" {
+  if (step === "konum" || step === "detay") return "sorun";
+  if (step === "hedef" || step === "bilgi" || step === "sorun") return step;
+  return "sorun";
+}
 
 function session(): Storage | null {
   if (typeof globalThis === "undefined") return null;
@@ -141,7 +151,7 @@ export function musteriFormTaslakSil(): void {
 export function musteriFormTaslakBosMu(t: MusteriFormTaslak): boolean {
   const f = t.form;
   return (
-    t.step === "sorun" &&
+    (t.step === "sorun" || t.step === "konum") &&
     !t.yasalOnay &&
     !f.ad &&
     !f.soyad &&

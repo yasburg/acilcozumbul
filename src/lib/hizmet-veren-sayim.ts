@@ -21,8 +21,8 @@ export type HizmetVerenSayimOzet = {
   benzersizCevrimici: number;
 };
 
-/** Müşteri ana sayfasında gösterilen ek offset (gerçek sayı + offset) */
-export const HIZMET_VEREN_MUSTERI_AKTIF_EK = 20;
+/** @deprecated Gerçek sayılar gösterilir; şişirme yok */
+export const HIZMET_VEREN_MUSTERI_AKTIF_EK = 0;
 
 /** Müşteriye gösterilen kısa meslek adı */
 const HIZMET_ETIKET: Record<SorunTipiId, string> = {

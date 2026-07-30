@@ -14,6 +14,7 @@ import { ipHash, istekIp } from "@/lib/request-ip";
 import { IHALE_SURE_DK } from "@/lib/ihale";
 import { parseIlIlce } from "@/lib/konum-parse";
 import {
+  sorunAracModeliAlaniGoster,
   sorunAracModeliGerekliMi,
   sorunFotografGerekliMi,
   sorunHedefKonumGerekliMi,
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
 
   const modelMetni = aracModeli?.trim();
   const sorunTam =
-    modelMetni && sorunAracModeliGerekliMi(tip)
+    modelMetni && sorunAracModeliAlaniGoster(tip)
       ? `${sorunMetni} · Araç: ${modelMetni}`
       : sorunMetni;
 

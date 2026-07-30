@@ -20,6 +20,7 @@ import {
 } from "@/lib/musteri-bildirim";
 import { adSoyadSatirGoster } from "@/lib/kisisel-veri-gizle";
 import { posthogOlayYakala } from "@/lib/posthog-client";
+import { musteriFunnelOlay } from "@/lib/musteri-funnel";
 import { metaPixelLead } from "@/lib/meta-pixel";
 import { tiktokPixelLead } from "@/lib/tiktok-pixel";
 
@@ -338,6 +339,16 @@ function BekleIcerik() {
                       : sorunTipi || undefined,
                 })
               );
+              musteriFunnelOlay(
+                "offer_received",
+                musteriFunnelProps({
+                  teklif_sayisi: yeniSayi,
+                  sorun_tipi:
+                    typeof data.sorunTipi === "string" && data.sorunTipi
+                      ? data.sorunTipi
+                      : sorunTipi || undefined,
+                })
+              );
             }
           } else {
             setDurum("ihale_bekliyor");
@@ -378,6 +389,13 @@ function BekleIcerik() {
       setMesaj("Çekici seçildi. Kısa süre içinde sizi arayacak.");
       posthogOlayYakala(
         "teklif_secildi",
+        musteriFunnelProps({
+          teklif_id: teklifId,
+          fiyat: data.fiyat,
+        })
+      );
+      musteriFunnelOlay(
+        "provider_selected",
         musteriFunnelProps({
           teklif_id: teklifId,
           fiyat: data.fiyat,

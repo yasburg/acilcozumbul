@@ -57,6 +57,11 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        /* /a,/c…/z → /kayit/:funnel — /b müşteri dönüşüm landing (app/b) */
+        source: "/:funnel([a-z])",
+        destination: "/kayit/:funnel",
+      },
+      {
         /* /kr/TOKEN — kredi hatırlatma kısa link */
         source: "/kr/:token([0-9A-Za-z]{8})",
         destination: "/kredi-hatirlatma/:token",

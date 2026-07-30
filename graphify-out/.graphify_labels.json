@@ -92,9 +92,10 @@
   "90": "sorun-akis-aciklama.ts",
   "91": "CekiciKayitLanding.tsx",
   "92": "server.ts",
+  "93": "route.ts",
   "95": "cekici-giris-otp.ts",
   "96": "page.tsx",
   "99": "MemnuniyetBekle.tsx",
-  "100": "KayitKontenjanBilgi.tsx",
-  "104": "route.ts"
+  "104": "route.ts",
+  "106": "talep-fotograf.ts"
 }

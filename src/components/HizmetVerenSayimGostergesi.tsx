@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  hizmetVerenEtiket,
   hizmetVerenSatirBul,
   type HizmetVerenSayimOzet,
 } from "@/lib/hizmet-veren-sayim";
@@ -34,9 +35,9 @@ function useAnimatedNumber(hedef: number, sureMs = 450): number {
 
 function CevrimiciNokta() {
   return (
-    <span className="relative inline-flex h-2 w-2 shrink-0" aria-hidden>
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+    <span className="relative inline-flex h-1.5 w-1.5 shrink-0" aria-hidden>
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
+      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
     </span>
   );
 }
@@ -46,7 +47,7 @@ interface HizmetVerenSayimGostergesiProps {
   yukleniyor?: boolean;
   /** Seçili hizmet tipi — yoksa tüm platform özeti */
   sorunTipi?: string | null;
-  /** Header içinde daha sıkı görünüm */
+  /** Header / ince bant */
   compact?: boolean;
 }
 
@@ -63,20 +64,19 @@ export function HizmetVerenSayimGostergesi({
       ? hizmetVerenSatirBul(ozet, hizmetSecili)
       : undefined;
 
-  const cevrimici = hizmetSecili
-    ? (satir?.cevrimici ?? 0)
-    : (ozet?.benzersizCevrimici ?? 0);
-  const aktif = hizmetSecili
+  /** Kayıtlı (aktif hesap) — gerçek zamanlı «online» iddiası yok */
+  const kayitli = hizmetSecili
     ? (satir?.aktif ?? 0)
     : (ozet?.benzersizAktif ?? 0);
-  const animCevrimici = useAnimatedNumber(cevrimici);
+  const animSayi = useAnimatedNumber(kayitli);
+  const meslek = hizmetSecili ? hizmetVerenEtiket(hizmetSecili) : null;
 
   if (yukleniyor && !ozet) {
     return (
       <p
         className={[
           "text-slate-400 text-center",
-          compact ? "text-[11px] leading-tight py-0" : "text-sm py-1",
+          compact ? "text-[11px] leading-tight py-0" : "text-xs py-0.5",
         ].join(" ")}
       >
         Hizmet verenler yükleniyor…
@@ -84,12 +84,12 @@ export function HizmetVerenSayimGostergesi({
     );
   }
 
-  if (aktif === 0) {
+  if (kayitli === 0) {
     return (
       <p
         className={[
           "text-slate-500 text-center",
-          compact ? "text-[11px] leading-tight py-0" : "text-sm py-1",
+          compact ? "text-[11px] leading-tight py-0" : "text-xs py-0.5",
         ].join(" ")}
       >
         Kayıtlı hizmet veren yok
@@ -97,13 +97,17 @@ export function HizmetVerenSayimGostergesi({
     );
   }
 
+  const metin = meslek
+    ? `İstanbul’da ${animSayi} kayıtlı ${meslek}`
+    : `İstanbul’da ${animSayi} kayıtlı hizmet veren`;
+
   return (
     <div
       className={[
-        "border border-emerald-200/80 bg-gradient-to-r from-emerald-50 to-white flex items-center justify-center",
+        "flex items-center justify-center gap-1.5 text-slate-700",
         compact
-          ? "rounded-lg px-2 py-1 gap-1.5"
-          : "rounded-xl px-3.5 py-2.5 gap-2.5",
+          ? "py-0"
+          : "rounded-md bg-emerald-50/70 border border-emerald-100/70 px-2 py-0.5",
       ].join(" ")}
       role="status"
       aria-live="polite"
@@ -111,20 +115,17 @@ export function HizmetVerenSayimGostergesi({
       <CevrimiciNokta />
       <p
         className={[
-          "text-slate-700 leading-snug text-center",
-          compact ? "text-xs" : "text-sm",
+          "leading-snug text-center",
+          compact ? "text-[11px]" : "text-xs",
         ].join(" ")}
       >
-        <span
-          className={[
-            "font-bold tabular-nums text-emerald-700",
-            compact ? "text-sm" : "text-base",
-          ].join(" ")}
-        >
-          {animCevrimici}
+        İstanbul’da{" "}
+        <span className="font-bold tabular-nums text-emerald-700">
+          {animSayi}
         </span>{" "}
-        Müsait
+        kayıtlı {meslek ?? "hizmet veren"}
       </p>
+      <span className="sr-only">{metin}</span>
     </div>
   );
 }

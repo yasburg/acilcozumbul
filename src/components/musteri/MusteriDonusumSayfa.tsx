@@ -49,6 +49,10 @@ import {
   posthogKampanyaKaydet,
   posthogOlayYakala,
 } from "@/lib/posthog-client";
+import {
+  musteriFunnelKaydet,
+  musteriFunnelOlay,
+} from "@/lib/musteri-funnel";
 import { gtagAdsAnaSayfaGoruntulemeDonusumu, gtagAdsFiyatTeklifiDonusumu } from "@/lib/gtag";
 import { metaPixelLead } from "@/lib/meta-pixel";
 import {
@@ -61,27 +65,12 @@ import {
   musteriProfilOku,
 } from "@/lib/musteri-profil";
 import {
+  musteriFormAdimDonusumNormalize,
   musteriFormTaslakBosMu,
   musteriFormTaslakKaydet,
   musteriFormTaslakOku,
   musteriFormTaslakSil,
 } from "@/lib/musteri-form-taslak";
-
-const HedefOneriHarita = dynamic(
-  () =>
-    import("@/components/HedefOneriHarita").then((m) => ({
-      default: m.HedefOneriHarita,
-    })),
-  {
-    ssr: false,
-    loading: () => (
-      <div
-        className="min-h-[12rem] rounded-xl border border-slate-100 bg-slate-50"
-        aria-hidden
-      />
-    ),
-  }
-);
 
 const NasilCalisirSerit = dynamic(
   () =>
@@ -133,6 +122,22 @@ const ArizaFotografAlani = dynamic(
   }
 );
 
+const HedefOneriHarita = dynamic(
+  () =>
+    import("@/components/HedefOneriHarita").then((m) => ({
+      default: m.HedefOneriHarita,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="min-h-[14rem] rounded-xl border border-slate-200 bg-slate-50"
+        aria-hidden
+      />
+    ),
+  }
+);
+
 const KonumIzniYardim = dynamic(
   () =>
     import("@/components/KonumIzniYardim").then((m) => ({
@@ -144,14 +149,13 @@ const KonumIzniYardim = dynamic(
   }
 );
 
-type Step = "bilgi" | "konum" | "sorun" | "detay" | "hedef";
+type Step = "bilgi" | "sorun" | "hedef";
 
-const STEP_SIRA: Step[] = ["sorun", "bilgi", "konum", "detay", "hedef"];
+const STEP_SIRA: Step[] = ["sorun", "hedef", "bilgi"];
 const OTP_BEKLEYEN_KEY = "acilcozum_otp_bekleyen";
 const ADIM_OLAYLARI: Partial<Record<Step, string>> = {
+  sorun: "adim_sorun",
   bilgi: "adim_bilgi",
-  konum: "adim_konum",
-  detay: "adim_detay",
   hedef: "adim_hedef",
 };
 
@@ -160,12 +164,7 @@ function funnelKaydet(
   telefon?: string,
   posthogProps?: Record<string, unknown>
 ) {
-  void fetch("/api/musteri/funnel", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ olay, telefon }),
-  });
-  posthogOlayYakala(olay, posthogProps);
+  musteriFunnelKaydet(olay, telefon, posthogProps);
 }
 
 function sorunProps(sorunTipi: string): Record<string, unknown> {
@@ -185,7 +184,7 @@ function kayitliAdSoyadUygula(
   };
 }
 
-export default function MusteriAnaSayfa() {
+export default function MusteriDonusumSayfa() {
   return (
     <Suspense
       fallback={
@@ -194,12 +193,12 @@ export default function MusteriAnaSayfa() {
         </MobileShell>
       }
     >
-      <MusteriAnaSayfaIcerik />
+      <MusteriDonusumSayfaIcerik />
     </Suspense>
   );
 }
 
-function MusteriAnaSayfaIcerik() {
+function MusteriDonusumSayfaIcerik() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [step, setStep] = useState<Step>("sorun");
@@ -271,6 +270,7 @@ function MusteriAnaSayfaIcerik() {
   const [fotografData, setFotografData] = useState<string | null>(null);
   const [hedefBilinmiyor, setHedefBilinmiyor] = useState(false);
   const [hedefKendimArat, setHedefKendimArat] = useState(false);
+  const [hedefHaritaAra, setHedefHaritaAra] = useState(false);
   /** Kullanıcının yazdığı arama metni (bulunan tam adresten ayrı) */
   const [hedefAramaMetni, setHedefAramaMetni] = useState("");
   const [taslakHazir, setTaslakHazir] = useState(false);
@@ -288,7 +288,7 @@ function MusteriAnaSayfaIcerik() {
     const t = musteriFormTaslakOku();
     if (t && !musteriFormTaslakBosMu(t)) {
       setForm(t.form);
-      setStep(t.step);
+      setStep(musteriFormAdimDonusumNormalize(t.step));
       setYasalOnay(t.yasalOnay);
       setFotografOnizleme(t.fotografOnizleme);
       setFotografData(t.fotografData);
@@ -301,6 +301,7 @@ function MusteriAnaSayfaIcerik() {
     setGpsGuvenli(konumGuvenliMi());
     posthogKampanyaKaydet();
     funnelKaydet("form_basla");
+    musteriFunnelOlay("request_page_view");
     tiktokPixelViewContent({
       content_id: "musteri_talep",
       content_name: "musteri_ana_sayfa",
@@ -420,22 +421,20 @@ function MusteriAnaSayfaIcerik() {
   }, [taslakHazir]);
 
   useEffect(() => {
-    if (step !== "detay") {
+    if (step === "sorun") {
       setAracModeliHatasi(false);
       setFotografHatasi(false);
       setSorunDetayHatasi(false);
-    }
-    if (step !== "konum") {
-      setAdSoyadHatasi(false);
       setArizaAdresDuzenle(false);
     }
     if (step !== "bilgi") {
+      setAdSoyadHatasi(false);
       setBilgiAlanMesajlari({ yasalOnay: "", telefon: "" });
     }
   }, [step]);
 
   useEffect(() => {
-    if (step !== "konum") return;
+    if (step !== "sorun") return;
     const guvenli = konumGuvenliMi();
     setGpsGuvenli(guvenli);
     if (!guvenli) {
@@ -456,7 +455,7 @@ function MusteriAnaSayfaIcerik() {
         setKonumIzni(izin);
       }
       if (
-        stepRef.current === "konum" &&
+        stepRef.current === "sorun" &&
         izin === "granted" &&
         !formLatRef.current &&
         !gpsYukleniyorRef.current
@@ -467,20 +466,21 @@ function MusteriAnaSayfaIcerik() {
   }, [step]);
 
   useEffect(() => {
-    if (step !== "konum") {
+    if (step !== "sorun") {
       konumGpsIlkDeneme.current = false;
       return;
     }
     if (konumGpsIlkDeneme.current || !konumGuvenliMi()) return;
     if (form.lat && form.lng) return;
+    if (!form.sorunTipi) return;
 
     konumGpsIlkDeneme.current = true;
     void konumAl(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca konum adımına girildiğinde
-  }, [step]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sorun seçilince bir kez GPS dene
+  }, [step, form.sorunTipi]);
 
   useEffect(() => {
-    if (step !== "konum" || gpsYukleniyor) return;
+    if (step !== "sorun" || gpsYukleniyor) return;
     if (form.lat && form.lng) {
       setArizaAdresDuzenle(false);
       return;
@@ -675,27 +675,21 @@ function MusteriAnaSayfaIcerik() {
   function adimGit(hedef: Step) {
     const hedefIdx = STEP_SIRA.indexOf(hedef);
     const sorunIdx = STEP_SIRA.indexOf("sorun");
-    const bilgiIdx = STEP_SIRA.indexOf("bilgi");
 
     if (hedefIdx > sorunIdx) {
       if (!form.sorunTipi) {
         setError("Lütfen sorununuzu seçin.");
+        musteriFunnelOlay("form_validation_error", { alan: "sorunTipi" });
         setStep("sorun");
         return;
       }
-    }
-
-    if (hedefIdx > bilgiIdx && !yasalOnay) {
-      setError("Devam etmek için yasal metinleri onaylayın.");
-      setStep("bilgi");
-      return;
-    }
-
-    if (hedefIdx > bilgiIdx && !telefonDogrulandi) {
-      setError("Devam etmek için telefon doğrulaması gerekli.");
-      setKodGirisAcik(true);
-      setStep("bilgi");
-      return;
+      const konumHazir = !!form.adres.trim() || (!!form.lat && !!form.lng);
+      if (!konumHazir) {
+        setError("Arıza konumu gerekli. GPS paylaşın veya adresi yazın.");
+        musteriFunnelOlay("form_validation_error", { alan: "konum" });
+        setStep("sorun");
+        return;
+      }
     }
 
     setStep(hedef);
@@ -814,7 +808,8 @@ function MusteriAnaSayfaIcerik() {
         } catch {
           /* ignore */
         }
-        setStep("konum");
+        musteriFunnelOlay("otp_verified", sorunProps(form.sorunTipi));
+        setStep("bilgi");
         return;
       }
 
@@ -849,6 +844,7 @@ function MusteriAnaSayfaIcerik() {
 
       if (data.smsGonderildi || data.gelistirmeKodu) {
         posthogOlayYakala("otp_gonder", sorunProps(form.sorunTipi));
+        musteriFunnelOlay("otp_sent", sorunProps(form.sorunTipi));
       }
 
       if (!data.smsGonderildi && !data.gelistirmeKodu) {
@@ -898,6 +894,7 @@ function MusteriAnaSayfaIcerik() {
           "Doğrulama kodu hatalı. SMS’teki 6 haneli kodu kontrol edin.";
         setOtpHata(msg);
         setError(msg);
+        musteriFunnelOlay("otp_error", sorunProps(form.sorunTipi));
         return;
       }
       setOtpHata("");
@@ -915,12 +912,13 @@ function MusteriAnaSayfaIcerik() {
         ),
       }));
       posthogOlayYakala("otp_dogrulandi", sorunProps(form.sorunTipi));
+      musteriFunnelOlay("otp_verified", sorunProps(form.sorunTipi));
       try {
         sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
       } catch {
         /* ignore */
       }
-      setStep("konum");
+      setStep("bilgi");
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "Doğrulama kodu doğrulanamadı.";
@@ -998,7 +996,8 @@ function MusteriAnaSayfaIcerik() {
       await konumKaydet(latitude, longitude, adres, hedef);
       if (!hedef) {
         setArizaAdresDuzenle(false);
-        setBilgiMesaj("✓ GPS konumu alındı. Ad ve soyadı kontrol edip «Devam Et»e basın.");
+        setBilgiMesaj("✓ GPS konumu alındı.");
+        musteriFunnelOlay("location_confirmed", sorunProps(form.sorunTipi));
       }
       setKonumIzni("granted");
       setKonumIzniBekleniyor(false);
@@ -1011,6 +1010,7 @@ function MusteriAnaSayfaIcerik() {
       if (code === 1) {
         setKonumIzni("denied");
         setKonumIzniBekleniyor(false);
+        musteriFunnelOlay("gps_denied", sorunProps(form.sorunTipi));
       }
       setError(konumHataMesaji(code));
     } finally {
@@ -1155,7 +1155,7 @@ function MusteriAnaSayfaIcerik() {
       if (!lat || !lng) {
         if (!form.adres.trim()) {
           setError("Önce arıza konumunuzu paylaşın.");
-          setStep("konum");
+          setStep("sorun");
           return;
         }
         const g = await geocodeAdres(form.adres);
@@ -1264,6 +1264,7 @@ function MusteriAnaSayfaIcerik() {
   function oneriSec(o: KonumOneri) {
     setHedefBilinmiyor(false);
     setHedefKendimArat(false);
+    setHedefHaritaAra(true);
     setForm((f) => ({
       ...f,
       hedefLat: o.lat,
@@ -1285,6 +1286,7 @@ function MusteriAnaSayfaIcerik() {
     setError("");
     setHedefBilinmiyor(false);
     setHedefKendimArat(false);
+    setHedefHaritaAra(true);
     const grupId =
       kategori === "oto_tamir"
         ? "hedef-grup-oto_tamir"
@@ -1323,7 +1325,12 @@ function MusteriAnaSayfaIcerik() {
   function hedefBilmiyorumSec() {
     setError("");
     setHedefKendimArat(false);
+    setHedefHaritaAra(false);
     setHedefBilinmiyor(true);
+    musteriFunnelOlay("destination_selected", {
+      ...sorunProps(form.sorunTipi),
+      mod: "bilmiyorum",
+    });
     setForm((f) => ({
       ...f,
       hedefLat: 0,
@@ -1336,6 +1343,7 @@ function MusteriAnaSayfaIcerik() {
   function hedefKendimAratSec() {
     setError("");
     setHedefBilinmiyor(false);
+    setHedefHaritaAra(false);
     setHedefKendimArat(true);
     if (!hedefAramaMetni.trim() && form.hedefAdres.trim() && !form.hedefLat) {
       setHedefAramaMetni(form.hedefAdres);
@@ -1343,13 +1351,61 @@ function MusteriAnaSayfaIcerik() {
     hedefAlanaKaydir("hedef-secim-ozeti");
   }
 
+  function hedefHaritaAraSec() {
+    setError("");
+    setHedefBilinmiyor(false);
+    setHedefKendimArat(false);
+    setHedefHaritaAra(true);
+    musteriFunnelOlay("destination_map_open", sorunProps(form.sorunTipi));
+    if (oneriler.length === 0 && !oneriYukleniyor) {
+      void cozumOner(false);
+    }
+    hedefAlanaKaydir("hedef-harita-paneli");
+  }
+
+  function hedefFotografKontrol(): boolean {
+    if (fotografData) {
+      setFotografHatasi(false);
+      return true;
+    }
+    setFotografHatasi(true);
+    setError("Arıza fotoğrafı zorunludur — lütfen fotoğraf ekleyin.");
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        scrollBelowStickyHeader(fotografRef.current);
+      });
+    });
+    return false;
+  }
+
   async function hedefIleriGit() {
     if (gpsYukleniyor) gpsIptal();
+    if (!hedefFotografKontrol()) return;
     if (hedefBilinmiyor) {
-      void cekiciBul();
+      musteriFunnelOlay("destination_selected", {
+        ...sorunProps(form.sorunTipi),
+        mod: "bilmiyorum",
+      });
+      adimGit("bilgi");
       return;
     }
-    if (await adresKoordinatDoldur(true)) void cekiciBul();
+    if (hedefHaritaAra && form.hedefLat && form.hedefLng && form.hedefAdres.trim()) {
+      musteriFunnelOlay("destination_selected", {
+        ...sorunProps(form.sorunTipi),
+        mod: "harita",
+      });
+      adimGit("bilgi");
+      return;
+    }
+    if (await adresKoordinatDoldur(true)) {
+      musteriFunnelOlay("destination_selected", {
+        ...sorunProps(form.sorunTipi),
+        mod: "adres",
+      });
+      adimGit("bilgi");
+    } else {
+      musteriFunnelOlay("address_not_found", sorunProps(form.sorunTipi));
+    }
   }
 
   const hedefSeciliMi =
@@ -1381,7 +1437,7 @@ function MusteriAnaSayfaIcerik() {
               Adres işleniyor…
             </span>
           ) : (
-            sorunCagriButonEtiketi(form.sorunTipi)
+            "Devam Et"
           )}
         </Btn>
       </div>
@@ -1399,7 +1455,8 @@ function MusteriAnaSayfaIcerik() {
   }
 
   function enYakinModSeciliMi(kategori: "oto_tamir" | "oto_sanayi"): boolean {
-    if (hedefBilinmiyor || hedefKendimArat || !form.hedefLat) return false;
+    if (hedefBilinmiyor || hedefKendimArat || !hedefHaritaAra || !form.hedefLat)
+      return false;
     return oneriler.some(
       (o) => o.kategori === kategori && hedefOneriSeciliMi(o)
     );
@@ -1501,13 +1558,13 @@ function MusteriAnaSayfaIcerik() {
       return;
     }
     if (!form.ad?.trim() || !form.soyad?.trim() || !form.telefon) {
-      setError("Ad ve soyad zorunludur (arıza konumu adımında).");
-      setStep("konum");
+      setError("Ad ve soyad zorunludur.");
+      setStep("bilgi");
       return;
     }
     if (!form.adres) {
       setError("Arıza konumu gerekli.");
-      setStep("konum");
+      setStep("sorun");
       return;
     }
     if (!form.sorunTipi) {
@@ -1517,17 +1574,17 @@ function MusteriAnaSayfaIcerik() {
     }
     if (form.sorunTipi === "diger" && !form.sorunDetay.trim()) {
       setError("Lütfen sorununuzu kısaca açıklayın.");
-      setStep("detay");
+      setStep(sorunHedefKonumGerekliMi(form.sorunTipi) ? "hedef" : "sorun");
       return;
     }
     if (sorunAracModeliGerekliMi(form.sorunTipi) && !form.aracModeli.trim()) {
       setError("Araç modelini girin (ör. Audi A3 sedan).");
-      setStep("detay");
+      setStep(sorunHedefKonumGerekliMi(form.sorunTipi) ? "hedef" : "sorun");
       return;
     }
     if (sorunFotografGerekliMi(form.sorunTipi) && !fotografData) {
       setError("Arıza fotoğrafı gerekli.");
-      setStep("detay");
+      setStep(sorunHedefKonumGerekliMi(form.sorunTipi) ? "hedef" : "sorun");
       return;
     }
     if (
@@ -1574,6 +1631,10 @@ function MusteriAnaSayfaIcerik() {
       musteriFormTaslakSil();
       musteriProfilKaydet(form.telefon, form.ad, form.soyad);
       posthogOlayYakala("talep_olustur", {
+        sorun_tipi: form.sorunTipi,
+        bildirilen_sayisi: data.bildirilenSayisi ?? 0,
+      });
+      musteriFunnelOlay("request_submitted", {
         sorun_tipi: form.sorunTipi,
         bildirilen_sayisi: data.bildirilenSayisi ?? 0,
       });
@@ -1626,6 +1687,7 @@ function MusteriAnaSayfaIcerik() {
   ).map((key, i) => ({ key, label: String(i + 1) }));
 
   function oncekiAdimaDon() {
+    musteriFunnelOlay("back_button_clicked", { step, ...sorunProps(form.sorunTipi) });
     const idx = steps.findIndex((s) => s.key === step);
     if (idx > 0) {
       adimGit(steps[idx - 1]!.key);
@@ -1655,53 +1717,67 @@ function MusteriAnaSayfaIcerik() {
 
   useEffect(() => {
     if (step === "hedef" && !hedefKonumGerekli) {
-      setStep("detay");
+      setStep("bilgi");
+      musteriFunnelOlay("phone_screen_view", sorunProps(form.sorunTipi));
     }
-  }, [step, hedefKonumGerekli]);
+  }, [step, hedefKonumGerekli, form.sorunTipi]);
 
   useEffect(() => {
-    if (step !== "hedef") {
-      hedefOneriBaslatildi.current = false;
-      return;
+    if (step === "hedef") {
+      musteriFunnelOlay("destination_view", sorunProps(form.sorunTipi));
     }
-    if (hedefOneriBaslatildi.current || !cozumOneriAktif || oneriYukleniyor) return;
-    hedefOneriBaslatildi.current = true;
-    void cozumOner(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca hedef adımına girildiğinde
-  }, [step, cozumOneriAktif]);
+    if (step === "bilgi") {
+      musteriFunnelOlay("phone_screen_view", sorunProps(form.sorunTipi));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   const adimIlerlemeCubugu = (
-    <div className="flex w-full gap-1">
-      {steps.map((s, i) => {
-        const aktifIdx = steps.findIndex((x) => x.key === step);
-        const gecildi = i < aktifIdx;
-        const buradayiz = i === aktifIdx;
-        return (
-          <button
-            key={s.key}
-            type="button"
-            onClick={() => adimGit(s.key)}
-            className={[
-              "flex-1 h-1.5 rounded-full transition",
-              buradayiz
-                ? "bg-amber-500 shadow-[0_0_10px_2px_rgba(245,158,11,0.65)] animate-pulse"
-                : gecildi
-                  ? "bg-amber-500"
-                  : "bg-slate-200",
-            ].join(" ")}
-            aria-label={`Adım ${s.label}`}
-            aria-current={buradayiz ? "step" : undefined}
-          />
-        );
-      })}
+    <div className="w-full space-y-1">
+      <p className="text-[11px] font-medium text-slate-600 text-center tabular-nums">
+        {(() => {
+          const idx = Math.max(0, steps.findIndex((s) => s.key === step));
+          const etiket =
+            step === "sorun"
+              ? "Sorun ve konum"
+              : step === "hedef"
+                ? "Hedef"
+                : "Telefon ve gönderim";
+          return `${idx + 1} / ${steps.length} — ${etiket}`;
+        })()}
+      </p>
+      <div className="flex w-full gap-1">
+        {steps.map((s, i) => {
+          const aktifIdx = steps.findIndex((x) => x.key === step);
+          const gecildi = i < aktifIdx;
+          const buradayiz = i === aktifIdx;
+          return (
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => adimGit(s.key)}
+              className={[
+                "flex-1 h-1.5 rounded-full transition",
+                buradayiz
+                  ? "bg-amber-500 shadow-[0_0_8px_1px_rgba(245,158,11,0.5)]"
+                  : gecildi
+                    ? "bg-amber-500"
+                    : "bg-slate-200",
+              ].join(" ")}
+              aria-label={`Adım ${s.label}`}
+              aria-current={buradayiz ? "step" : undefined}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 
-  const adimUstBilgi = (compact: boolean) => (
-    <div className="w-full space-y-1.5">
+  const adimUstBilgi = (
+    <div className="w-full space-y-1">
       <HizmetVerenSayimAlani
         sorunTipi={form.sorunTipi || null}
-        compact={compact}
+        compact
       />
       {adimIlerlemeCubugu}
     </div>
@@ -1709,16 +1785,23 @@ function MusteriAnaSayfaIcerik() {
 
   return (
     <MobileShell
-      subtitle={
-        step === "sorun"
-          ? "Yolda mı kaldınız? Hemen en hızlı ve uygun teklifleri alın."
-          : undefined
-      }
-      subtitleAlign={step === "sorun" ? "right" : "center"}
+      subtitle={undefined}
+      subtitleAlign="center"
       brandAlign={step === "sorun" ? "left" : "right"}
       backLabel={step === "sorun" ? undefined : "Geri"}
       onBack={step === "sorun" ? undefined : oncekiAdimaDon}
-      headerCenter={step === "sorun" ? undefined : adimUstBilgi(true)}
+      headerCenter={step === "sorun" ? undefined : adimUstBilgi}
+      headerCompact={step === "sorun"}
+      headerEnd={
+        step === "sorun" ? (
+          <Link
+            href="/cekici/giris"
+            className="text-[11px] font-medium text-slate-400 hover:text-slate-600 touch-manipulation max-w-[7.5rem] text-right leading-tight"
+          >
+            Firma Girişi
+          </Link>
+        ) : undefined
+      }
       onBrandClick={() => {
         setStep("sorun");
         setError("");
@@ -1731,55 +1814,56 @@ function MusteriAnaSayfaIcerik() {
         teklif alın
       </h1>
 
-      {step === "sorun" && (
-        <div className="mb-5 -mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-sm text-slate-700">
-          <span className="font-medium">Hizmet mi veriyorsunuz?</span>
-          <Link
-            href="/kayit/b"
-            className="inline-flex h-8 items-center justify-center rounded-lg bg-amber-500 px-3.5 text-sm font-semibold text-white shadow-sm shadow-amber-500/20 transition touch-manipulation hover:bg-amber-600 active:scale-[0.98]"
-          >
-            Kayıt ol
-          </Link>
-          <span className="text-slate-500">veya</span>
-          <Link
-            href="/cekici/giris"
-            className="font-medium text-amber-700 underline underline-offset-2"
-          >
-            Giriş yap
-          </Link>
-        </div>
-      )}
-
-      {step === "sorun" && (
-        <div className="mb-6">{adimUstBilgi(false)}</div>
-      )}
-
       {error && (
-        <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        <div className="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      {bilgiMesaj &&
-        (step === "bilgi" ||
-          step === "detay" ||
-          step === "konum" ||
-          step === "hedef") && (
-        <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
+      {bilgiMesaj && step === "bilgi" && (
+        <div className="mb-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
           {bilgiMesaj}
         </div>
       )}
 
       {step === "sorun" && (
-        <div className="space-y-4 animate-fade-in">
-          <h2 className="text-xl font-bold">Sorununuz</h2>
-          <p className="text-slate-500 text-sm">Aşağıdan sorununuzu seçin.</p>
+        <div className="space-y-2.5 animate-fade-in">
+          <div>
+            <h2 className="text-[2.05rem] sm:text-[2.25rem] font-bold leading-[1.15] tracking-tight text-slate-900">
+              Yolda mı kaldınız?
+            </h2>
+            <p className="mt-2 text-[1.45rem] sm:text-[1.55rem] font-bold leading-snug text-slate-800">
+              Kayıt olmadan 2 dakikada
+              <br />
+              <span className="text-amber-600">10+ çekiciden teklif alın.</span>
+            </p>
+            <p className="mt-2 text-[17px] leading-snug text-slate-600">
+              Fiyatları karşılaştırın, uygun olanı siz seçin.
+            </p>
+          </div>
+
+          <div className="text-xs text-slate-700 leading-snug space-y-0.5">
+            <p>
+              <span className="text-emerald-600 font-semibold">✓</span> Ücretsiz
+              {" "}
+              <span className="text-emerald-600 font-semibold">✓</span> Ödeme
+              yok
+            </p>
+            <p>
+              <span className="text-emerald-600 font-semibold">✓</span>{" "}
+              Bilgileriniz yalnızca seçtiğiniz çekici ile paylaşılır
+            </p>
+          </div>
+
+          <HizmetVerenSayimAlani sorunTipi={form.sorunTipi || null} />
+
           <SorunSecimi
             seciliTip={form.sorunTipi}
             detay={form.sorunDetay}
             onTipSec={(id) => {
               update("sorunTipi", id);
               posthogOlayYakala("sorun_secildi", { sorun_tipi: id });
+              musteriFunnelOlay("service_selected", { sorun_tipi: id });
               const label = sorunTipiBul(id)?.label ?? id;
               tiktokPixelSearch({
                 search_string: label,
@@ -1789,33 +1873,591 @@ function MusteriAnaSayfaIcerik() {
             }}
             onDetayChange={(v) => update("sorunDetay", v)}
             sadeceTipSecimi
-            onDevam={() => {
+            kompaktKart
+            konumAdres={
+              arizaKonumGpsAlindi && form.adres.trim() ? form.adres : null
+            }
+            onAdresDuzelt={() => setArizaAdresDuzenle(true)}
+            devamDisabled={devamEtEngelli}
+            devamIcerik={
+              adresGeocodeYukleniyor ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Spinner className="size-4 border-white/40 border-t-white" />
+                  Adres işleniyor…
+                </span>
+              ) : (
+                "Devam Et"
+              )
+            }
+            onDevam={async () => {
+              setError("");
               if (!form.sorunTipi) {
                 setError("Lütfen sorununuzu seçin.");
                 return;
               }
-              setError("");
-              adimGit("bilgi");
+              if (!arızaKonumuHazir) {
+                setError(
+                  "Arıza konumu gerekli. GPS paylaşın veya adresi yazın."
+                );
+                musteriFunnelOlay("form_validation_error", {
+                  alan: "konum",
+                });
+                return;
+              }
+              if (!hedefKonumGerekli && !detayAdimiDevam()) return;
+              if (gpsYukleniyor) gpsIptal();
+              const ok = await adresKoordinatDoldur(false);
+              if (!ok) return;
+              musteriFunnelOlay(
+                "location_confirmed",
+                sorunProps(form.sorunTipi)
+              );
+              musteriFunnelOlay(
+                "request_started",
+                sorunProps(form.sorunTipi)
+              );
+              if (hedefKonumGerekli) adimGit("hedef");
+              else adimGit("bilgi");
             }}
           />
+
+          {form.sorunTipi ? (
+            <div
+              id="ariza-konumu"
+              className="space-y-3 pt-1 border-t border-slate-100 scroll-mt-24"
+            >
+              <h3 className="text-base font-semibold text-slate-900">
+                Arıza konumunuz
+              </h3>
+              {!gpsGuvenli && <GpsHttpsBanner compact />}
+
+              {(gpsYukleniyor || adresGeocodeYukleniyor) && (
+                <div
+                  className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+                  role="status"
+                >
+                  <Spinner className="mt-0.5" />
+                  <div className="text-sm text-amber-900 leading-relaxed min-w-0">
+                    {gpsYukleniyor ? (
+                      <>
+                        <p className="font-medium">
+                          {konumIzniBekleniyor
+                            ? "Konum izni bekleniyor…"
+                            : "Konumunuz alınıyor…"}
+                        </p>
+                        <p className="text-xs text-amber-800 mt-1">
+                          İzin penceresinde «İzin Ver»e dokunun.
+                        </p>
+                      </>
+                    ) : (
+                      <p className="font-medium">Adres doğrulanıyor…</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {!arizaKonumGpsAlindi && (
+                <div className="space-y-2">
+                  <Field
+                    ref={arizaAdresRef}
+                    label="Arıza adresi"
+                    placeholder="Örn. İstanbul, Bayrampaşa, mahalle, sokak…"
+                    value={form.adres}
+                    onChange={(e) => update("adres", e.target.value)}
+                    onBlur={() => {
+                      if (form.adres.trim().length >= 6 && !form.lat) {
+                        void geocodeAdres(form.adres).then((g) => {
+                          if (g)
+                            void konumKaydet(g.lat, g.lng, g.adres, false);
+                        });
+                      }
+                    }}
+                  />
+                </div>
+              )}
+
+              {gpsGuvenli && !arizaKonumGpsAlindi && !gpsYukleniyor && (
+                <>
+                  <Btn
+                    type="button"
+                    className="w-full !py-3 text-sm"
+                    onClick={() => {
+                      void konumAl(false).then(() => {
+                        musteriFunnelOlay(
+                          "location_confirmed",
+                          sorunProps(form.sorunTipi)
+                        );
+                      });
+                    }}
+                    disabled={gpsYukleniyor}
+                  >
+                    📍 Konumumu kullan
+                  </Btn>
+                  <KonumIzniYardim
+                    durum={konumIzni}
+                    gpsGuvenli={gpsGuvenli}
+                    bekleniyor={konumIzniBekleniyor}
+                  />
+                  {konumIzni !== "denied" && <ChromeAcSecenegi />}
+                </>
+              )}
+
+              {!hedefKonumGerekli && (
+                <details className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                  <summary className="cursor-pointer text-sm font-medium text-slate-800 touch-manipulation">
+                    Araç ve fotoğraf bilgisi ekle — opsiyonel
+                  </summary>
+                  <div className="mt-3 space-y-3 pb-1">
+                    {sorunFotografAlaniGoster(form.sorunTipi) && (
+                      <div ref={fotografRef}>
+                        <ArizaFotografAlani
+                          onizleme={fotografOnizleme}
+                          invalid={fotografHatasi}
+                          zorunlu={sorunFotografGerekliMi(form.sorunTipi)}
+                          onDegisti={(dataUrl) => {
+                            setFotografOnizleme(dataUrl);
+                            setFotografData(dataUrl);
+                            if (dataUrl) setFotografHatasi(false);
+                          }}
+                        />
+                        {sorunFotografGerekliMi(form.sorunTipi) ? (
+                          <p className="text-xs text-amber-700 mt-1">Zorunlu</p>
+                        ) : (
+                          <p className="text-xs text-slate-500 mt-1">Opsiyonel</p>
+                        )}
+                      </div>
+                    )}
+                    {sorunAracModeliAlaniGoster(form.sorunTipi) && (
+                      <Field
+                        label="Araç modeli (isteğe bağlı)"
+                        placeholder="Örn. Audi A3 sedan"
+                        value={form.aracModeli}
+                        onChange={(e) => update("aracModeli", e.target.value)}
+                        invalid={aracModeliHatasi}
+                      />
+                    )}
+                    {form.sorunTipi === "diger" ? (
+                      <TextArea
+                        label="Sorununuzu açıklayın"
+                        placeholder="Kısaca yazın…"
+                        value={form.sorunDetay}
+                        onChange={(e) => update("sorunDetay", e.target.value)}
+                        rows={2}
+                      />
+                    ) : (
+                      <TextArea
+                        label="Ek detay (isteğe bağlı)"
+                        placeholder="Örn: Otoyol km 42"
+                        value={form.sorunDetay}
+                        onChange={(e) => update("sorunDetay", e.target.value)}
+                        rows={2}
+                      />
+                    )}
+                  </div>
+                </details>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500 text-center">
+              Devam etmek için yukarıdan sorununuzu seçin.
+            </p>
+          )}
+
           <NasilCalisirSerit aktifFormAdimi={step} />
+        </div>
+      )}
+
+      {step === "hedef" && (
+        <div className="space-y-4 animate-fade-in">
+          <div>
+            <h2 className="text-xl font-bold">Aracınız nereye götürülecek?</h2>
+            <p className="text-slate-500 text-sm mt-1">
+              Haritadan oto tamir seçin, adresi yazın veya bilmiyorum deyin.
+            </p>
+          </div>
+
+          {hedefBilinmiyor ? (
+            <div
+              id="hedef-secim-ozeti"
+              className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
+            >
+              <button
+                type="button"
+                onClick={hedefBilmiyorumSec}
+                className="w-full text-left px-4 pt-3.5 pb-2 font-semibold text-sm text-amber-950"
+              >
+                Bilmiyorum, çekiciyle birlikte karar vereceğim ✓
+              </button>
+              <div className="px-4 pb-3">
+                <p className="text-sm text-amber-900 leading-relaxed">
+                  Tahmini sürelere ortalama{" "}
+                  <strong>+{HEDEF_BILINMIYOR_EK_SURE_DK} dk</strong> eklenir.
+                </p>
+                {hedefNavButonlari()}
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={hedefBilmiyorumSec}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation hover:border-amber-400"
+            >
+              Bilmiyorum, çekiciyle birlikte karar vereceğim
+            </button>
+          )}
+
+          {hedefHaritaAra ? (
+            <div
+              id="hedef-harita-paneli"
+              className="rounded-xl border border-amber-500 bg-amber-50/40 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
+            >
+              <button
+                type="button"
+                onClick={hedefHaritaAraSec}
+                className="w-full text-left px-4 pt-3.5 pb-2 font-semibold text-sm text-amber-950 bg-amber-50"
+              >
+                Haritadan Oto Tamir Ara ✓
+              </button>
+              <div className="px-3 pb-3 space-y-3 bg-white/80">
+                <div className="grid gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => enYakinHedefSec("oto_tamir")}
+                    disabled={oneriYukleniyor && oneriler.length === 0}
+                    className={`w-full rounded-xl border px-4 py-3 text-left font-semibold text-sm transition touch-manipulation disabled:opacity-50 ${
+                      enYakinModSeciliMi("oto_tamir")
+                        ? "border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-200"
+                        : "border-slate-200 bg-white text-slate-900 hover:border-blue-400"
+                    }`}
+                  >
+                    En yakın oto servis
+                    {enYakinModSeciliMi("oto_tamir") ? " ✓" : ""}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => enYakinHedefSec("oto_sanayi")}
+                    disabled={oneriYukleniyor && oneriler.length === 0}
+                    className={`w-full rounded-xl border px-4 py-3 text-left font-semibold text-sm transition touch-manipulation disabled:opacity-50 ${
+                      enYakinModSeciliMi("oto_sanayi")
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-200"
+                        : "border-slate-200 bg-white text-slate-900 hover:border-emerald-400"
+                    }`}
+                  >
+                    En yakın oto sanayi
+                    {enYakinModSeciliMi("oto_sanayi") ? " ✓" : ""}
+                  </button>
+                </div>
+
+                {oneriYukleniyor && oneriler.length === 0 && (
+                  <div
+                    className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+                    role="status"
+                  >
+                    <Spinner className="mt-0.5" />
+                    <p className="text-sm font-medium text-amber-900">
+                      {googleOneriAktif
+                        ? "Semtinizdeki oto tamir ve oto sanayiler aranıyor…"
+                        : "Yakın oto tamir ve oto sanayiler aranıyor…"}
+                    </p>
+                  </div>
+                )}
+
+                {!cozumOneriAktif && !oneriYukleniyor && (
+                  <p className="text-xs text-slate-500 text-center">
+                    Öneri için önce arıza konumu gerekli.
+                  </p>
+                )}
+
+                {oneriler.length > 0 && (
+                  <div className="space-y-3">
+                    <HedefOneriHarita
+                      oneriler={oneriler}
+                      ariza={
+                        form.lat && form.lng
+                          ? { lat: form.lat, lng: form.lng }
+                          : null
+                      }
+                      secili={
+                        form.hedefLat && form.hedefLng
+                          ? { lat: form.hedefLat, lng: form.hedefLng }
+                          : null
+                      }
+                      onSec={oneriSec}
+                      mapsArama={otoTamirAramaSorgusu({
+                        semt: oneriSemt,
+                        il: form.adres.trim()
+                          ? parseIlIlce(form.adres).il
+                          : null,
+                      })}
+                    />
+                    <Btn
+                      type="button"
+                      variant="secondary"
+                      onClick={() => void cozumOner(true)}
+                      disabled={oneriYukleniyor || !cozumOneriAktif}
+                      className="!py-3 text-sm"
+                    >
+                      {oneriYukleniyor ? (
+                        <span className="inline-flex items-center justify-center gap-2">
+                          <Spinner className="size-4 border-slate-400 border-t-slate-600" />
+                          Yeni öneriler aranıyor…
+                        </span>
+                      ) : yeniOneriApiSayisi >= 5 ? (
+                        "Önceki önerilerden rastgele"
+                      ) : (
+                        `Yeni öneriler (${5 - yeniOneriApiSayisi} kaldı)`
+                      )}
+                    </Btn>
+                    {(
+                      [
+                        {
+                          key: "oto_tamir" as const,
+                          baslik: oneriSemt
+                            ? `Semtinizdeki oto tamirler (${oneriSemt})`
+                            : "Semtinizdeki oto tamirler",
+                          renk: "text-blue-700",
+                          pin: "bg-blue-100 text-blue-800",
+                        },
+                        {
+                          key: "oto_sanayi" as const,
+                          baslik: "Oto sanayi",
+                          renk: "text-emerald-700",
+                          pin: "bg-emerald-100 text-emerald-800",
+                        },
+                      ] as const
+                    ).map((grup) => {
+                      const liste = oneriler.filter(
+                        (o) => o.kategori === grup.key
+                      );
+                      if (liste.length === 0) return null;
+                      return (
+                        <div
+                          key={grup.key}
+                          id={`hedef-grup-${grup.key}`}
+                          className="space-y-2 scroll-mt-24"
+                        >
+                          <p
+                            className={`text-xs font-semibold uppercase tracking-wide ${grup.renk}`}
+                          >
+                            {grup.baslik} ({liste.length})
+                          </p>
+                          {liste.map((o, i) => {
+                            const seciliMi = hedefOneriSeciliMi(o);
+                            const no = o.etiketNo ?? i + 1;
+                            const icerik = (
+                              <>
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="font-medium text-slate-900 min-w-0 text-sm">
+                                    <span
+                                      className={`inline-flex size-5 items-center justify-center rounded-full text-xs font-bold mr-2 align-middle ${grup.pin}`}
+                                    >
+                                      {no}
+                                    </span>
+                                    {o.ad}
+                                  </p>
+                                  {o.puan != null && (
+                                    <span className="shrink-0 text-xs font-semibold text-amber-700">
+                                      ★ {o.puan}
+                                    </span>
+                                  )}
+                                </div>
+                                {o.mesafeKm != null && (
+                                  <p className="text-xs text-slate-600 mt-0.5 pl-7">
+                                    ~{o.mesafeKm} km
+                                    {o.puanSayisi != null
+                                      ? ` · ${o.puanSayisi} değerlendirme`
+                                      : ""}
+                                  </p>
+                                )}
+                                <p className="text-xs text-slate-500 mt-1 pl-7 line-clamp-2">
+                                  {o.adres}
+                                </p>
+                              </>
+                            );
+
+                            if (seciliMi) {
+                              return (
+                                <div
+                                  key={o.placeId ?? `${o.adres}-${i}`}
+                                  id="hedef-secim-ozeti"
+                                  className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => oneriSec(o)}
+                                    aria-pressed
+                                    className="w-full text-left px-4 pt-3 pb-2"
+                                  >
+                                    {icerik}
+                                  </button>
+                                  <div className="px-4 pb-3">
+                                    {hedefNavButonlari()}
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <button
+                                key={o.placeId ?? `${o.adres}-${i}`}
+                                type="button"
+                                onClick={() => oneriSec(o)}
+                                aria-pressed={false}
+                                className="w-full text-left rounded-xl border border-slate-200 bg-white px-4 py-3 transition hover:border-amber-400"
+                              >
+                                {icerik}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {!oneriYukleniyor &&
+                  cozumOneriAktif &&
+                  oneriler.length === 0 && (
+                    <Btn
+                      type="button"
+                      variant="secondary"
+                      onClick={() => void cozumOner(false)}
+                    >
+                      Tekrar öneri dene
+                    </Btn>
+                  )}
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={hedefHaritaAraSec}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation hover:border-amber-400"
+            >
+              Haritadan Oto Tamir Ara
+            </button>
+          )}
+
+          {hedefKendimArat ? (
+            <div
+              id="hedef-secim-ozeti"
+              className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
+            >
+              <button
+                type="button"
+                onClick={hedefKendimAratSec}
+                className="w-full text-left px-4 pt-3.5 pb-2 font-semibold text-sm text-amber-950"
+              >
+                Adresi Kendim Yazacağım ✓
+              </button>
+              <div className="px-4 pb-3 space-y-2">
+                {hedefAdresAramaAlani()}
+                {form.hedefAdres.trim() && form.hedefLat
+                  ? hedefNavButonlari()
+                  : null}
+                {!form.hedefLat && (
+                  <Btn
+                    className="w-full"
+                    onClick={() => void hedefIleriGit()}
+                    disabled={hedefIleriEngelli}
+                  >
+                    {adresGeocodeYukleniyor ? "Adres işleniyor…" : "Devam Et"}
+                  </Btn>
+                )}
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={hedefKendimAratSec}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation hover:border-amber-400"
+            >
+              Adresi Kendim Yazacağım
+            </button>
+          )}
+
+          <div
+            ref={fotografRef}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-3 space-y-3 scroll-mt-24"
+          >
+            <p className="text-sm font-semibold text-slate-900">
+              Araç fotoğrafı{" "}
+              <span className="text-amber-700 font-medium">(zorunlu)</span>
+            </p>
+            <ArizaFotografAlani
+              onizleme={fotografOnizleme}
+              invalid={fotografHatasi}
+              zorunlu
+              onDegisti={(dataUrl) => {
+                setFotografOnizleme(dataUrl);
+                setFotografData(dataUrl);
+                if (dataUrl) setFotografHatasi(false);
+              }}
+              onDevam={() => void hedefIleriGit()}
+            />
+            {sorunAracModeliAlaniGoster(form.sorunTipi) && (
+              <Field
+                label="Araç modeli (isteğe bağlı)"
+                placeholder="Örn. Audi A3 sedan"
+                value={form.aracModeli}
+                onChange={(e) => update("aracModeli", e.target.value)}
+                invalid={aracModeliHatasi}
+              />
+            )}
+            <TextArea
+              label="Ek detay (isteğe bağlı)"
+              placeholder="Örn: Otoyol km 42"
+              value={form.sorunDetay}
+              onChange={(e) => update("sorunDetay", e.target.value)}
+              rows={2}
+            />
+          </div>
         </div>
       )}
 
       {step === "bilgi" && (
         <div className="space-y-4 animate-fade-in">
-          <h2 className="text-xl font-bold">Telefon Doğrulama</h2>
-          <p className="text-slate-500 text-sm">
-            {telefonDogrulandi
-              ? "Telefonunuz bugün doğrulanmış; tekrar SMS gerekmez. Arıza konumuna geçebilirsiniz."
-              : "SMS kodu ile telefonunuzu doğrulayın. Konum ve araç bilgileri sonraki adımlarda."}
-          </p>
+          <div>
+            <h2 className="text-xl font-bold">
+              Teklifleri almak için telefonunuzu doğrulayın
+            </h2>
+            <p className="text-slate-500 text-sm mt-1">
+              Numaranız teklif verenlerle paylaşılmaz. Yalnızca seçtiğiniz
+              hizmet veren iletişim bilgilerinizi görebilir.
+            </p>
+          </div>
+
           {sorunLabel && (
             <Card className="bg-slate-50 border-slate-200">
               <p className="text-xs text-slate-500">Seçilen sorun</p>
               <p className="text-sm font-medium text-slate-900">{sorunLabel}</p>
             </Card>
           )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field
+              label="Ad"
+              placeholder="Ahmet"
+              value={form.ad}
+              onChange={(e) => update("ad", e.target.value)}
+              onBlur={adSoyadKaydet}
+              autoComplete="given-name"
+              name="ad"
+              required
+              invalid={adSoyadHatasi && !form.ad.trim()}
+            />
+            <Field
+              label="Soyad"
+              placeholder="Yılmaz"
+              value={form.soyad}
+              onChange={(e) => update("soyad", e.target.value)}
+              onBlur={adSoyadKaydet}
+              autoComplete="family-name"
+              name="soyad"
+              required
+              invalid={adSoyadHatasi && !form.soyad.trim()}
+            />
+          </div>
 
           <YasalOnayKutusu
             checked={yasalOnay}
@@ -1837,18 +2479,43 @@ function MusteriAnaSayfaIcerik() {
             <>
               <Card className="bg-emerald-50 border-emerald-200">
                 <p className="text-sm text-emerald-800">
-                  ✓ {telefonMaskele(form.telefon)} bugün doğrulandı
+                  ✓ {telefonMaskele(form.telefon)} doğrulandı
                 </p>
               </Card>
-              <div className="pt-1">
+              <div className="pt-1 space-y-2">
                 <Btn
                   type="button"
                   className="w-full"
-                  onClick={() => adimGit("konum")}
-                  disabled={!yasalOnay}
+                  onClick={() => {
+                    if (!yasalOnay) {
+                      setBilgiAlanMesajlari((m) => ({
+                        ...m,
+                        yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
+                      }));
+                      return;
+                    }
+                    if (!form.ad.trim() || !form.soyad.trim()) {
+                      setAdSoyadHatasi(true);
+                      setError("Ad ve soyad zorunludur.");
+                      return;
+                    }
+                    void cekiciBul();
+                  }}
+                  disabled={loading || !yasalOnay}
                 >
-                  Arıza Konumuna Git
+                  {loading ? (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Spinner className="size-4 border-white/40 border-t-white" />
+                      Gönderiliyor…
+                    </span>
+                  ) : (
+                    sorunCagriButonEtiketi(form.sorunTipi)
+                  )}
                 </Btn>
+                <p className="text-xs text-slate-500 text-center leading-relaxed">
+                  Henüz çekici çağırmıyorsunuz. Gelen fiyatları gördükten sonra
+                  karar verirsiniz.
+                </p>
               </div>
             </>
           ) : (
@@ -1857,6 +2524,12 @@ function MusteriAnaSayfaIcerik() {
               onSubmit={(e) => {
                 e.preventDefault();
                 if (loading) return;
+                if (!form.ad.trim() || !form.soyad.trim()) {
+                  setAdSoyadHatasi(true);
+                  setError("Ad ve soyad zorunludur.");
+                  return;
+                }
+                musteriFunnelOlay("phone_entered", sorunProps(form.sorunTipi));
                 if (kodGirisAcik) {
                   if (!yasalOnay) {
                     setBilgiAlanMesajlari((m) => ({
@@ -1900,8 +2573,8 @@ function MusteriAnaSayfaIcerik() {
               {kodGirisAcik && (
                 <>
                   <p className="text-sm text-slate-600">
-                    {telefonMaskele(form.telefon)} numarasına gelen 6 haneli kodu
-                    girin.
+                    {telefonMaskele(form.telefon)} numarasına gelen 6 haneli
+                    kodu girin.
                   </p>
                   {gelistirmeKodu && (
                     <Card className="bg-amber-50 border-amber-200">
@@ -1930,11 +2603,6 @@ function MusteriAnaSayfaIcerik() {
                     name="otp"
                     required
                     aria-invalid={!!otpHata}
-                    className={
-                      otpHata
-                        ? "border-red-400 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-300/50"
-                        : undefined
-                    }
                   />
                   {otpHata && (
                     <div
@@ -1945,7 +2613,7 @@ function MusteriAnaSayfaIcerik() {
                     </div>
                   )}
                   <Btn type="submit" disabled={loading || otpKod.length !== 6}>
-                    {loading ? "Doğrulanıyor…" : "Onayla — Arıza Konumuna Git"}
+                    {loading ? "Doğrulanıyor…" : "Kodu onayla"}
                   </Btn>
                   <button
                     type="button"
@@ -1996,701 +2664,18 @@ function MusteriAnaSayfaIcerik() {
         </div>
       )}
 
-      {step === "detay" && (
-        <div className="space-y-4 animate-fade-in">
-          <h2 className="text-xl font-bold">Sorun Detayı</h2>
-          <p className="text-slate-500 text-sm">
-            {hedefKonumGerekli
-              ? "Aracınız ve arıza hakkında bilgi verin — çekici doğru teklif verebilsin."
-              : "Bulunduğunuz yerde hizmet alacaksınız — ek bilgi verin."}
-          </p>
-
-          {sorunLabel && (
-            <Card className="bg-slate-50 border-slate-200">
-              <p className="text-xs text-slate-500">Seçilen sorun</p>
-              <p className="text-sm font-medium text-slate-900">{sorunLabel}</p>
-            </Card>
-          )}
-
-          {sorunFotografAlaniGoster(form.sorunTipi) && (
-            <div ref={fotografRef} className="scroll-mt-44">
-              <ArizaFotografAlani
-                onizleme={fotografOnizleme}
-                invalid={fotografHatasi}
-                zorunlu={sorunFotografGerekliMi(form.sorunTipi)}
-                onDegisti={(dataUrl) => {
-                  setFotografOnizleme(dataUrl);
-                  setFotografData(dataUrl);
-                  if (dataUrl) setFotografHatasi(false);
-                }}
-              />
-              {fotografHatasi && (
-                <p className="text-sm text-red-600 mt-1" role="alert">
-                  Arıza fotoğrafı zorunludur — çekici doğru teklif verebilsin.
-                </p>
-              )}
-            </div>
-          )}
-
-          {sorunAracModeliAlaniGoster(form.sorunTipi) && (
-            <div ref={aracModeliRef} className="scroll-mt-44">
-              <Field
-                label="Araç modeli (isteğe bağlı)"
-                placeholder="Örn. Audi A3 sedan, Renault Clio hatchback"
-                value={form.aracModeli}
-                onChange={(e) => update("aracModeli", e.target.value)}
-                invalid={aracModeliHatasi}
-              />
-            </div>
-          )}
-
-          {form.sorunTipi === "diger" ? (
-            <label className="block space-y-1.5">
-              <span
-                className={`text-sm font-medium ${sorunDetayHatasi ? "text-red-700" : "text-slate-700"}`}
-              >
-                Sorununuzu açıklayın
-              </span>
-              <textarea
-                rows={3}
-                placeholder="Sorununuzu kısaca yazın…"
-                value={form.sorunDetay}
-                onChange={(e) => update("sorunDetay", e.target.value)}
-                aria-invalid={sorunDetayHatasi || undefined}
-                className={`w-full rounded-xl bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 resize-none ${
-                  sorunDetayHatasi
-                    ? "border-red-500 ring-red-500/30 focus:ring-red-500/40"
-                    : "border-slate-200 focus:ring-amber-500/40 focus:border-amber-500"
-                }`}
-              />
-              {sorunDetayHatasi && (
-                <p className="text-sm text-red-600" role="alert">
-                  Sorun açıklaması zorunludur.
-                </p>
-              )}
-            </label>
-          ) : (
-            <TextArea
-              label="Ek detay (isteğe bağlı)"
-              placeholder="Örn: Otoyol km 42, sağ şeritteyim"
-              value={form.sorunDetay}
-              onChange={(e) => update("sorunDetay", e.target.value)}
-              rows={2}
-            />
-          )}
-
-          {(aracModeliHatasi || fotografHatasi || sorunDetayHatasi) && error && (
-            <div
-              className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
-              role="alert"
-            >
-              {error}
-            </div>
-          )}
-
-          <div className="pt-2">
-            <Btn
-              className="w-full"
-              onClick={() => {
-                if (!detayAdimiDevam()) return;
-                if (hedefKonumGerekli) {
-                  adimGit("hedef");
-                } else {
-                  void cekiciBul();
-                }
-              }}
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Spinner className="size-4 border-white/40 border-t-white" />
-                  Gönderiliyor…
-                </span>
-              ) : hedefKonumGerekli ? (
-                "Devam Et"
-              ) : (
-                sorunCagriButonEtiketi(form.sorunTipi)
-              )}
-            </Btn>
-          </div>
-        </div>
-      )}
-
-      {step === "konum" && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold">Arıza Konumu</h2>
-          <p className="text-slate-500 text-sm">
-            İletişim bilgilerinizi ve aracınızın bulunduğu yeri girin.
-          </p>
-
-          {!gpsGuvenli && <GpsHttpsBanner compact />}
-
-          <div ref={konumIsimRef} className="scroll-mt-44 space-y-2">
-            <div className="grid grid-cols-2 gap-3">
-              <Field
-                label="Ad"
-                placeholder="Ahmet"
-                value={form.ad}
-                onChange={(e) => update("ad", e.target.value)}
-                onBlur={adSoyadKaydet}
-                autoComplete="given-name"
-                name="ad"
-                required
-                invalid={adSoyadHatasi && !form.ad.trim()}
-              />
-              <Field
-                label="Soyad"
-                placeholder="Yılmaz"
-                value={form.soyad}
-                onChange={(e) => update("soyad", e.target.value)}
-                onBlur={adSoyadKaydet}
-                autoComplete="family-name"
-                name="soyad"
-                required
-                invalid={adSoyadHatasi && !form.soyad.trim()}
-              />
-            </div>
-            {adSoyadHatasi && (
-              <p className="text-sm text-red-600" role="alert">
-                Devam etmek için ad ve soyad girin (yukarıdaki alanlar).
-              </p>
-            )}
-          </div>
-          <p className="text-xs text-slate-500 -mt-2">
-            Telefon: {telefonMaskele(form.telefon)}
-          </p>
-
-          {(gpsYukleniyor || adresGeocodeYukleniyor) && (
-            <div
-              className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
-              role="status"
-            >
-              <Spinner className="mt-0.5" />
-              <div className="text-sm text-amber-900 leading-relaxed min-w-0">
-                {gpsYukleniyor ? (
-                  <>
-                    <p className="font-medium">
-                      {konumIzniBekleniyor
-                        ? "Konum izni bekleniyor…"
-                        : "Konumunuz alınıyor…"}
-                    </p>
-                    <p className="text-xs text-amber-800 mt-1">
-                      İzin penceresinde «İzin Ver»e dokunun; konum otomatik
-                      yazılacak.
-                    </p>
-                  </>
-                ) : (
-                  <p className="font-medium">Adres doğrulanıyor…</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {arizaKonumGpsAlindi && form.adres ? (
-            <Card className="bg-emerald-50 border-emerald-200">
-              <p className="text-xs text-emerald-700 uppercase tracking-wide mb-1">
-                Arıza konumu (GPS)
-              </p>
-              <p className="text-sm text-emerald-900 leading-relaxed">
-                {form.adres}
-              </p>
-              <button
-                type="button"
-                onClick={() => setArizaAdresDuzenle(true)}
-                className="mt-2 text-xs text-emerald-800 underline font-medium"
-              >
-                Adresi düzelt
-              </button>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              <Field
-                ref={arizaAdresRef}
-                label="Arıza adresi"
-                placeholder="Örn. İstanbul, Bayrampaşa, mahalle, sokak…"
-                value={form.adres}
-                onChange={(e) => update("adres", e.target.value)}
-                onBlur={() => {
-                  if (form.adres.trim().length >= 6 && !form.lat) {
-                    void geocodeAdres(form.adres).then((g) => {
-                      if (g) void konumKaydet(g.lat, g.lng, g.adres, false);
-                    });
-                  }
-                }}
-              />
-              {!gpsYukleniyor && (
-                <p className="text-xs text-slate-500">
-                  {gpsGuvenli
-                    ? "Konum otomatik alınamadıysa aracınızın bulunduğu adresi yazın."
-                    : "GPS için HTTPS gerekir; adresi elle yazabilirsiniz."}
-                </p>
-              )}
-            </div>
-          )}
-
-          {gpsGuvenli && !arizaKonumGpsAlindi && !gpsYukleniyor && (
-            <>
-              <KonumIzniYardim
-                durum={konumIzni}
-                gpsGuvenli={gpsGuvenli}
-                bekleniyor={konumIzniBekleniyor}
-              />
-              <Btn
-                type="button"
-                variant="outline"
-                onClick={() => konumAl(false)}
-                disabled={gpsYukleniyor}
-                className="!py-3 text-sm"
-              >
-                📍 GPS konumumu tekrar dene
-              </Btn>
-              {konumIzni !== "denied" && <ChromeAcSecenegi />}
-              {konumIzni === "denied" && (
-                <button
-                  type="button"
-                  onClick={konumIzniYenile}
-                  className="w-full text-sm text-amber-600 font-medium underline"
-                >
-                  Ayarlardan izin verdim — yeniden kontrol et
-                </button>
-              )}
-            </>
-          )}
-
-          <div className="space-y-2">
-            <Btn
-              className="w-full"
-              onClick={async () => {
-                setError("");
-                if (!arızaKonumuHazir) {
-                  setError(
-                    "Arıza konumu gerekli. GPS paylaşın veya arıza adresini yazın."
-                  );
-                  return;
-                }
-                if (!form.ad.trim() || !form.soyad.trim()) {
-                  konumIsimHatasiGoster();
-                  return;
-                }
-                setAdSoyadHatasi(false);
-                musteriProfilKaydet(form.telefon, form.ad, form.soyad);
-                if (gpsYukleniyor) gpsIptal();
-                const ok = await adresKoordinatDoldur(false);
-                if (ok) adimGit("detay");
-              }}
-              disabled={devamEtEngelli}
-            >
-              {adresGeocodeYukleniyor ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Spinner className="size-4 border-white/40 border-t-white" />
-                  Adres işleniyor…
-                </span>
-              ) : (
-                "Devam Et"
-              )}
-            </Btn>
-            {!arızaKonumuHazir && !gpsYukleniyor && !adresGeocodeYukleniyor && (
-              <p className="text-xs text-amber-700 text-center">
-                Devam için arıza adresini yazın veya GPS izni verin.
-              </p>
-            )}
-            {arızaKonumuHazir &&
-              (!form.ad.trim() || !form.soyad.trim()) &&
-              !gpsYukleniyor &&
-              !adresGeocodeYukleniyor && (
-                <p className="text-xs text-amber-700 text-center">
-                  Konum hazır — devam için ad ve soyadı doldurun.
-                </p>
-              )}
-          </div>
-        </div>
-      )}
-
-      {step === "hedef" && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold">Nereye Çekilecek?</h2>
-          <p className="text-slate-500 text-sm">
-            {sorunLabel
-              ? googleOneriAktif
-                ? `${sorunLabel} için semtinizdeki oto tamirleri ve yakındaki oto sanayileri öneriyoruz — birini seçin veya adresi siz yazın.`
-                : `${sorunLabel} için semtinizdeki oto tamirleri ve yakındaki oto sanayileri öneriyoruz — birini seçin veya adresi siz yazın.`
-              : "Aracınızın götürülmesini istediğiniz adresi belirtin."}
-          </p>
-
-          <div className="grid gap-2">
-            <button
-              type="button"
-              onClick={() => enYakinHedefSec("oto_tamir")}
-              disabled={oneriYukleniyor && oneriler.length === 0}
-              className={`w-full rounded-xl border px-4 py-3.5 text-left font-semibold text-sm transition touch-manipulation active:scale-[0.99] disabled:opacity-50 ${
-                enYakinModSeciliMi("oto_tamir")
-                  ? "border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-200"
-                  : "border-slate-200 bg-white text-slate-900 hover:border-blue-400"
-              }`}
-            >
-              En yakın oto servis
-              {enYakinModSeciliMi("oto_tamir") ? " ✓" : ""}
-            </button>
-            <button
-              type="button"
-              onClick={() => enYakinHedefSec("oto_sanayi")}
-              disabled={oneriYukleniyor && oneriler.length === 0}
-              className={`w-full rounded-xl border px-4 py-3.5 text-left font-semibold text-sm transition touch-manipulation active:scale-[0.99] disabled:opacity-50 ${
-                enYakinModSeciliMi("oto_sanayi")
-                  ? "border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-200"
-                  : "border-slate-200 bg-white text-slate-900 hover:border-emerald-400"
-              }`}
-            >
-              En yakın oto sanayi
-              {enYakinModSeciliMi("oto_sanayi") ? " ✓" : ""}
-            </button>
-
-            {hedefBilinmiyor ? (
-              <div
-                id="hedef-secim-ozeti"
-                className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
-              >
-                <button
-                  type="button"
-                  onClick={hedefBilmiyorumSec}
-                  className="w-full text-left px-4 pt-3.5 pb-2 font-semibold text-sm text-amber-950"
-                >
-                  Bilmiyorum, sonra seçeceğim ✓
-                </button>
-                <div className="px-4 pb-3">
-                  <p className="text-sm text-amber-900 leading-relaxed">
-                    Hedefi sonra seçebilirsiniz. Tahmini sürelere ortalama{" "}
-                    <strong>+{HEDEF_BILINMIYOR_EK_SURE_DK} dk</strong> eklenir.
-                  </p>
-                  {hedefNavButonlari()}
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={hedefBilmiyorumSec}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation active:scale-[0.99] hover:border-amber-400"
-              >
-                Bilmiyorum, sonra seçeceğim
-              </button>
-            )}
-
-            {hedefKendimArat ? (
-              <div
-                id="hedef-secim-ozeti"
-                className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
-              >
-                <button
-                  type="button"
-                  onClick={hedefKendimAratSec}
-                  className="w-full text-left px-4 pt-3.5 pb-2 font-semibold text-sm text-amber-950"
-                >
-                  Çekeceğim adresi kendim aratacağım ✓
-                </button>
-                <div className="px-4 pb-3 space-y-1">
-                  {hedefAdresAramaAlani()}
-                  {hedefNavButonlari()}
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={hedefKendimAratSec}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation active:scale-[0.99] hover:border-amber-400"
-              >
-                Çekeceğim adresi kendim aratacağım
-              </button>
-            )}
-          </div>
-
-          {oneriYukleniyor && oneriler.length === 0 && (
-            <div
-              className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
-              role="status"
-            >
-              <Spinner className="mt-0.5" />
-              <p className="text-sm font-medium text-amber-900">
-                {googleOneriAktif
-                  ? "Google’da şu an açık olan yakın yerler aranıyor…"
-                  : "Yakın yerler aranıyor…"}
-              </p>
-            </div>
-          )}
-
-          {!oneriYukleniyor && oneriAcikFiltre && oneriler.length > 0 && (
-            <Card className="bg-emerald-50 border-emerald-200 !py-3">
-              <p className="text-sm text-emerald-800 leading-relaxed">
-                Öneriler Google’dan alınır; yalnızca{" "}
-                <strong>şu an açık</strong> görünen işletmeler listelenir.
-              </p>
-            </Card>
-          )}
-
-          {!oneriYukleniyor &&
-            (oneriKaynak === "nominatim" || oneriKaynak === "maps_scrape") &&
-            oneriler.length > 0 && (
-              <Card className="bg-slate-50 border-slate-200 !py-3">
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  {oneriKaynak === "maps_scrape"
-                    ? "Öneriler Google Maps aramasından alındı (Places API yedek yolu)."
-                    : "Açık/kapalı bilgisi doğrulanamadı; yakın yerler harita verisinden listelendi."}
-                </p>
-              </Card>
-            )}
-
-          {!cozumOneriAktif && !oneriYukleniyor && (
-            <p className="text-xs text-slate-500 text-center">
-              Öneri için önce sorun tipi ve arıza konumu gerekli.
-            </p>
-          )}
-
-          {oneriler.length > 0 && (
-            <div className="space-y-4">
-              <HedefOneriHarita
-                oneriler={oneriler}
-                ariza={
-                  form.lat && form.lng
-                    ? { lat: form.lat, lng: form.lng }
-                    : null
-                }
-                secili={
-                  form.hedefLat && form.hedefLng
-                    ? { lat: form.hedefLat, lng: form.hedefLng }
-                    : null
-                }
-                onSec={oneriSec}
-                mapsArama={otoTamirAramaSorgusu({
-                  semt: oneriSemt,
-                  il: form.adres.trim()
-                    ? parseIlIlce(form.adres).il
-                    : null,
-                })}
-              />
-              <Btn
-                type="button"
-                variant="secondary"
-                onClick={() => void cozumOner(true)}
-                disabled={oneriYukleniyor || !cozumOneriAktif}
-                className="!py-3 text-sm"
-              >
-                {oneriYukleniyor ? (
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <Spinner className="size-4 border-slate-400 border-t-slate-600" />
-                    Yeni öneriler aranıyor…
-                  </span>
-                ) : yeniOneriApiSayisi >= 5 ? (
-                  "🔄 Önceki önerilerden rastgele"
-                ) : (
-                  `🔄 Yeni öneriler ver (${5 - yeniOneriApiSayisi} kaldı)`
-                )}
-              </Btn>
-              {(
-                [
-                  {
-                    key: "oto_tamir" as const,
-                    baslik: oneriSemt
-                      ? `Semtinizdeki oto tamirler (${oneriSemt})`
-                      : "Semtinizdeki oto tamirler",
-                    renk: "text-blue-700",
-                    pin: "bg-blue-100 text-blue-800",
-                  },
-                  {
-                    key: "oto_sanayi" as const,
-                    baslik: "Oto sanayi",
-                    renk: "text-emerald-700",
-                    pin: "bg-emerald-100 text-emerald-800",
-                  },
-                ] as const
-              ).map((grup) => {
-                const liste = oneriler.filter((o) => o.kategori === grup.key);
-                if (liste.length === 0) return null;
-                return (
-                  <div
-                    key={grup.key}
-                    id={`hedef-grup-${grup.key}`}
-                    className="space-y-2 scroll-mt-24"
-                  >
-                    <p
-                      className={`text-xs font-semibold uppercase tracking-wide ${grup.renk}`}
-                    >
-                      {grup.baslik} ({liste.length})
-                    </p>
-                    {liste.map((o, i) => {
-                      const seciliMi = hedefOneriSeciliMi(o);
-                      const no = o.etiketNo ?? i + 1;
-                      const icerik = (
-                        <>
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="font-medium text-slate-900 min-w-0">
-                              <span
-                                className={`inline-flex size-5 items-center justify-center rounded-full text-xs font-bold mr-2 align-middle ${grup.pin}`}
-                              >
-                                {no}
-                              </span>
-                              {o.ad}
-                            </p>
-                            <div className="shrink-0 flex flex-col items-end gap-1">
-                              {o.puan != null && (
-                                <span className="text-xs font-semibold text-amber-700">
-                                  ★ {o.puan}
-                                </span>
-                              )}
-                              {oneriAcikFiltre && (
-                                <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                                  Açık
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {o.mesafeKm != null && (
-                            <p className="text-xs text-slate-600 mt-0.5 pl-7">
-                              ~{o.mesafeKm} km
-                              {o.puanSayisi != null
-                                ? ` · ${o.puanSayisi} değerlendirme`
-                                : ""}
-                            </p>
-                          )}
-                          <p className="text-xs text-slate-500 mt-1 pl-7 line-clamp-2">
-                            {o.adres}
-                          </p>
-                        </>
-                      );
-
-                      if (seciliMi) {
-                        return (
-                          <div
-                            key={o.placeId ?? `${o.adres}-${i}`}
-                            id="hedef-secim-ozeti"
-                            className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
-                          >
-                            <button
-                              type="button"
-                              onClick={() => oneriSec(o)}
-                              aria-pressed
-                              className="w-full text-left px-4 pt-3 pb-2"
-                            >
-                              {icerik}
-                            </button>
-                            <div className="px-4 pb-3">{hedefNavButonlari()}</div>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <button
-                          key={o.placeId ?? `${o.adres}-${i}`}
-                          type="button"
-                          onClick={() => oneriSec(o)}
-                          aria-pressed={false}
-                          className="w-full text-left rounded-xl border border-slate-200 bg-white px-4 py-3 transition hover:border-amber-400"
-                        >
-                          {icerik}
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-              {/* kategori yoksa (eski/yedek) düz liste */}
-              {!oneriler.some((o) => o.kategori) && (
-                <div className="space-y-2">
-                  <p className="text-xs text-slate-500 uppercase tracking-wide">
-                    Önerilen yerler ({oneriler.length})
-                  </p>
-                  {oneriler.map((o, i) => {
-                    const seciliMi = hedefOneriSeciliMi(o);
-                    const icerik = (
-                      <>
-                        <p className="font-medium text-slate-900">
-                          <span className="inline-flex size-5 items-center justify-center rounded-full bg-amber-100 text-amber-800 text-xs font-bold mr-2 align-middle">
-                            {i + 1}
-                          </span>
-                          {o.ad}
-                        </p>
-                        {o.mesafeKm != null && (
-                          <p className="text-xs text-amber-600 mt-0.5">
-                            ~{o.mesafeKm} km
-                          </p>
-                        )}
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                          {o.adres}
-                        </p>
-                      </>
-                    );
-                    if (seciliMi) {
-                      return (
-                        <div
-                          key={o.placeId ?? o.adres}
-                          id="hedef-secim-ozeti"
-                          className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => oneriSec(o)}
-                            aria-pressed
-                            className="w-full text-left px-4 pt-3 pb-2"
-                          >
-                            {icerik}
-                          </button>
-                          <div className="px-4 pb-3">{hedefNavButonlari()}</div>
-                        </div>
-                      );
-                    }
-                    return (
-                      <button
-                        key={o.placeId ?? o.adres}
-                        type="button"
-                        onClick={() => oneriSec(o)}
-                        aria-pressed={false}
-                        className="w-full text-left rounded-xl border border-slate-200 bg-white px-4 py-3 transition hover:border-amber-400"
-                      >
-                        {icerik}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {!oneriYukleniyor &&
-            cozumOneriAktif &&
-            oneriler.length === 0 &&
-            hedefOneriBaslatildi.current && (
-              <Btn
-                type="button"
-                variant="secondary"
-                onClick={() => void cozumOner(false)}
-              >
-                Tekrar öneri dene
-              </Btn>
-            )}
-
-          {!hedefSeciliMi && (
-            <Btn
-              className="w-full"
-              onClick={() => void hedefIleriGit()}
-              disabled={hedefIleriEngelli}
-            >
-              {loading ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Spinner className="size-4 border-white/40 border-t-white" />
-                  Gönderiliyor…
-                </span>
-              ) : adresGeocodeYukleniyor ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Spinner className="size-4 border-white/40 border-t-white" />
-                  Adres işleniyor…
-                </span>
-              ) : (
-                sorunCagriButonEtiketi(form.sorunTipi)
-              )}
-            </Btn>
-          )}
-        </div>
-      )}
-
       {step === "sorun" && <SssBolumu />}
+
+      {step === "sorun" && (
+        <p className="mt-8 mb-2 text-center text-sm text-slate-600">
+          <Link
+            href="/a"
+            className="font-medium text-amber-700 underline underline-offset-2"
+          >
+            Hizmet veren misiniz? İş almak için kayıt olun →
+          </Link>
+        </p>
+      )}
     </MobileShell>
   );
 }

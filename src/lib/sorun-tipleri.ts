@@ -25,7 +25,7 @@ export const SORUN_TIPLERI: SorunTipi[] = [
   { id: "aku", label: "Akü bitti", icon: "🔋" },
   { id: "yakit", label: "Yakıt bitti", icon: "⛽" },
   { id: "kaza", label: "Kaza / çarpışma", icon: "💥" },
-  { id: "kilit", label: "Arabam kilitlendi / Anahtar çalışmıyor", icon: "🔑" },
+  { id: "kilit", label: "Araç kilitlendi / Anahtar çalışmıyor", icon: "🔑" },
   { id: "diger", label: "Diğer", icon: "✏️" },
 ];
 
@@ -68,34 +68,23 @@ export function talepSorunTipi(talep: { sorunTipi?: string }): SorunTipiId {
   return "diger";
 }
 
-/** Son adım (hedef) «çağır» butonu metni */
-const SORUN_CAGRI_BUTON: Record<SorunTipiId, string> = {
-  ariza: "Çekici çağır",
-  lastik: "Lastikçi çağır",
-  aku: "Yol yardım çağır",
-  yakit: "Yol yardım çağır",
-  kaza: "Çekici çağır",
-  kilit: "Anahtarcı çağır",
-  cekici: "Çekici çağır",
-  diger: "Yol yardım çağır",
-};
+/** Talep gönderme CTA — teklif iste (çağır değil) */
+export const UCRETSIZ_TEKLIF_CTA = "Ücretsiz teklif iste";
 
-export function sorunCagriButonEtiketi(sorunTipi?: string): string {
-  const id = talepSorunTipi({ sorunTipi: sorunTipi });
-  const tip = sorunTipiBul(id);
-  const metin = SORUN_CAGRI_BUTON[id];
-  return `${tip?.icon ?? "🚛"} ${metin}`;
+export function sorunCagriButonEtiketi(_sorunTipi?: string): string {
+  return UCRETSIZ_TEKLIF_CTA;
 }
 
-/** Fotoğraf istenen sorun tipleri (çekici / arıza / kaza vb.) */
+/** Fotoğraf istenen sorun tipleri (çekici / arıza / kaza / diğer) */
 export const SORUN_FOTOGRAF_TIPLERI: SorunTipiId[] = [
   "ariza",
   "lastik",
   "kaza",
   "cekici",
+  "diger",
 ];
 
-/** Çekici / kurtarma — araç modeli istenen tipler */
+/** Çekici / kurtarma — araç modeli alanı gösterilen tipler (opsiyonel) */
 export const SORUN_ARAC_MODELI_TIPLERI: SorunTipiId[] = ["ariza", "kaza", "cekici"];
 
 /** Yerinde müdahale — hedef (çekilecek) adres adımı yok */
@@ -139,7 +128,13 @@ export function sorunFotografGerekliMi(sorunTipi?: string): boolean {
   return SORUN_FOTOGRAF_TIPLERI.includes(id);
 }
 
-export function sorunAracModeliGerekliMi(sorunTipi?: string): boolean {
+/** Araç modeli artık zorunlu değil; alan isteğe bağlı gösterilir */
+export function sorunAracModeliGerekliMi(_sorunTipi?: string): boolean {
+  return false;
+}
+
+export function sorunAracModeliAlaniGoster(sorunTipi?: string): boolean {
+  if (!sorunTipi?.trim()) return false;
   const id = talepSorunTipi({ sorunTipi: sorunTipi });
   return SORUN_ARAC_MODELI_TIPLERI.includes(id);
 }

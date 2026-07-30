@@ -9,6 +9,8 @@ interface ArizaFotografAlaniProps {
   onDegisti: (dataUrl: string | null) => void;
   zorunlu?: boolean;
   invalid?: boolean;
+  /** Önizleme varken Kaldır yerine Devam et gösterilir */
+  onDevam?: () => void;
 }
 
 export function ArizaFotografAlani({
@@ -16,6 +18,7 @@ export function ArizaFotografAlani({
   onDegisti,
   zorunlu = true,
   invalid = false,
+  onDevam,
 }: ArizaFotografAlaniProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
@@ -70,12 +73,12 @@ export function ArizaFotografAlani({
             </Btn>
             <Btn
               type="button"
-              variant="outline"
+              variant={onDevam ? undefined : "outline"}
               className="!py-2 text-sm flex-1"
-              onClick={() => onDegisti(null)}
+              onClick={() => (onDevam ? onDevam() : onDegisti(null))}
               disabled={yukleniyor}
             >
-              Kaldır
+              {onDevam ? "Devam et" : "Kaldır"}
             </Btn>
           </div>
         </Card>

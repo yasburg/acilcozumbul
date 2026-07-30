@@ -4,7 +4,6 @@ import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   cerezBannerGosterilmeli,
-  cerezBannerKapat,
   cerezOnayKaydet,
 } from "@/lib/cerez-onay";
 import { posthogCerezSenkronize } from "@/lib/posthog-client";
@@ -71,10 +70,10 @@ function Toggle({
   aciklama: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 py-2">
+    <div className="flex items-start justify-between gap-3 py-1">
       <div className="min-w-0">
-        <p className="text-sm font-medium text-slate-900">{label}</p>
-        <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+        <p className="text-xs font-medium text-slate-900">{label}</p>
+        <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
           {aciklama}
         </p>
       </div>
@@ -86,21 +85,24 @@ function Toggle({
         disabled={disabled}
         onClick={() => onChange?.(!checked)}
         className={[
-          "relative shrink-0 h-7 w-12 rounded-full transition-colors touch-manipulation",
+          "relative shrink-0 h-5 w-9 rounded-full transition-colors touch-manipulation",
           checked ? "bg-amber-500" : "bg-slate-300",
           disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
         ].join(" ")}
       >
         <span
           className={[
-            "absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform",
-            checked ? "translate-x-5" : "translate-x-0",
+            "absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
+            checked ? "translate-x-4" : "translate-x-0",
           ].join(" ")}
         />
       </button>
     </div>
   );
 }
+
+const dugmeSinif =
+  "min-h-[32px] flex-1 rounded-md border border-slate-300 bg-white text-slate-800 text-xs font-semibold px-2 py-1.5 hover:bg-slate-50 touch-manipulation";
 
 export function CerezOnayBanner() {
   const gosterilmeli = useSyncExternalStore(
@@ -110,7 +112,6 @@ export function CerezOnayBanner() {
   );
   const [goster, setGoster] = useState(true);
   const [gorunum, setGorunum] = useState<Gorunum>("ozet");
-  /** Ayarlar açılınca varsayılan açık — reddetmek için bilinçli kapatmak gerekir */
   const [analitikAcik, setAnalitikAcik] = useState(true);
 
   if (!gosterilmeli || !goster) return null;
@@ -120,162 +121,145 @@ export function CerezOnayBanner() {
     bannerDegisti();
   };
 
-  const baslik =
-    gorunum === "ozet"
-      ? "Çerezler"
-      : gorunum === "ayarlar"
-        ? "Çerezleri ayarla"
-        : "Tercihinizi onaylayın";
-
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-[100] p-3 pointer-events-none"
+      className="fixed inset-x-0 bottom-0 z-[100] pointer-events-none"
       role="dialog"
       aria-labelledby="cerez-banner-baslik"
       aria-describedby="cerez-banner-aciklama"
     >
-      <div className="pointer-events-auto max-w-lg mx-auto rounded-xl border border-slate-200 bg-white shadow-lg px-3.5 py-3 space-y-2.5">
-        <div>
-          <p
-            id="cerez-banner-baslik"
-            className="text-sm font-semibold text-slate-900"
-          >
-            {baslik}
-          </p>
-          <p
-            id="cerez-banner-aciklama"
-            className="text-xs text-slate-600 mt-0.5 leading-snug"
-          >
-            {gorunum === "ozet" ? (
-              <>
-                Zorunlu çerezler site için gerekli. İsteğe bağlı çerezler için{" "}
-                <Link
-                  href="/cerez-politikasi"
-                  className="text-amber-700 underline"
-                >
-                  Çerez Politikası
-                </Link>
-                .
-              </>
-            ) : gorunum === "ayarlar" ? (
-              <>
-                Zorunlu çerezler kapatılamaz. Analitik ve reklam çerezlerini
-                buradan yönetin.{" "}
-                <Link
-                  href="/cerez-politikasi"
-                  className="text-amber-700 underline"
-                >
-                  Çerez Politikası
-                </Link>
-              </>
-            ) : (
-              <>
-                Analitik ve reklam çerezleri kapalı kalacak. Dönüşüm ölçümü
-                sınırlı olabilir.
-              </>
-            )}
-          </p>
-        </div>
-
-        {gorunum === "ayarlar" ? (
-          <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 divide-y divide-slate-200">
-            <Toggle
-              checked
-              disabled
-              label="Zorunlu çerezler"
-              aciklama="Oturum, güvenlik ve temel site işlevleri."
-            />
-            <Toggle
-              checked={analitikAcik}
-              onChange={setAnalitikAcik}
-              label="Analitik ve reklam"
-              aciklama="Google Analytics, Ads dönüşümleri ve benzeri ölçüm."
-            />
-          </div>
-        ) : null}
-
+      <div className="pointer-events-auto max-w-lg mx-auto border-t border-slate-200 bg-white/95 backdrop-blur-sm px-3 py-1.5 shadow-[0_-2px_12px_rgba(15,23,42,0.06)]">
         {gorunum === "ozet" ? (
-          <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => tercihKaydet("tumu", kapat)}
-              className="w-full min-h-[40px] rounded-lg bg-amber-500 text-white text-sm font-semibold px-4 py-2 hover:bg-amber-600 touch-manipulation"
+          <div className="space-y-1.5 max-h-[7.5rem]">
+            <p
+              id="cerez-banner-baslik"
+              className="text-[11px] text-slate-600 leading-snug"
             >
-              Tümünü kabul et
-            </button>
-            <div className="flex items-center justify-center gap-4">
+              Çerez tercihlerinizi yönetebilirsiniz.{" "}
+              <Link
+                href="/cerez-politikasi"
+                className="underline underline-offset-2 text-slate-500 hover:text-slate-700"
+              >
+                Politika
+              </Link>
+            </p>
+            <p id="cerez-banner-aciklama" className="sr-only">
+              Zorunlu çerezler site için gereklidir. İsteğe bağlı analitik
+              çerezlerini kabul edebilir veya reddedebilirsiniz.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => tercihKaydet("zorunlu", kapat)}
+                className={dugmeSinif}
+              >
+                Yalnızca gerekli
+              </button>
+              <button
+                type="button"
+                onClick={() => tercihKaydet("tumu", kapat)}
+                className={dugmeSinif}
+              >
+                Tümünü kabul et
+              </button>
               <button
                 type="button"
                 onClick={() => {
                   setAnalitikAcik(true);
                   setGorunum("ayarlar");
                 }}
-                className="text-[11px] text-slate-300 hover:text-slate-400 underline-offset-2 hover:underline touch-manipulation"
+                className="shrink-0 text-[11px] text-slate-500 underline underline-offset-2 hover:text-slate-700 touch-manipulation px-0.5"
               >
-                Çerezleri ayarla
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  cerezBannerKapat();
-                  kapat();
-                }}
-                className="text-[11px] text-slate-300 hover:text-slate-400 touch-manipulation"
-              >
-                Vazgeç
+                Ayarlar
               </button>
             </div>
           </div>
         ) : null}
 
         {gorunum === "ayarlar" ? (
-          <div className="flex flex-col gap-2">
-            {analitikAcik ? (
-              <button
-                type="button"
-                onClick={() => tercihKaydet("tumu", kapat)}
-                className="w-full min-h-[40px] rounded-lg bg-amber-500 text-white text-sm font-semibold px-4 py-2 hover:bg-amber-600 touch-manipulation"
-              >
-                Tercihleri kaydet
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setGorunum("onay")}
-                className="w-full min-h-[40px] rounded-lg border border-slate-200 bg-slate-50 text-slate-400 text-sm font-medium px-4 py-2 hover:bg-slate-100 touch-manipulation"
-              >
-                Devam et
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setGorunum("ozet")}
-              className="w-full min-h-[36px] text-[11px] text-slate-300 hover:text-slate-400 touch-manipulation"
+          <div className="space-y-1">
+            <p
+              id="cerez-banner-baslik"
+              className="text-xs font-semibold text-slate-900"
             >
-              Geri
-            </button>
+              Çerezleri ayarla
+            </p>
+            <div className="rounded-md border border-slate-100 bg-slate-50 px-2 divide-y divide-slate-200">
+              <Toggle
+                checked
+                disabled
+                label="Zorunlu"
+                aciklama="Oturum ve güvenlik."
+              />
+              <Toggle
+                checked={analitikAcik}
+                onChange={setAnalitikAcik}
+                label="Analitik ve reklam"
+                aciklama="Ölçüm ve dönüşüm."
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              {analitikAcik ? (
+                <button
+                  type="button"
+                  onClick={() => tercihKaydet("tumu", kapat)}
+                  className={dugmeSinif}
+                >
+                  Kaydet
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setGorunum("onay")}
+                  className={dugmeSinif}
+                >
+                  Devam
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setGorunum("ozet")}
+                className="text-[11px] text-slate-500 underline touch-manipulation"
+              >
+                Geri
+              </button>
+            </div>
           </div>
         ) : null}
 
         {gorunum === "onay" ? (
-          <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setAnalitikAcik(true);
-                setGorunum("ayarlar");
-              }}
-              className="w-full min-h-[40px] rounded-lg bg-amber-500 text-white text-sm font-semibold px-4 py-2 hover:bg-amber-600 touch-manipulation"
+          <div className="space-y-1">
+            <p
+              id="cerez-banner-baslik"
+              className="text-xs font-semibold text-slate-900"
             >
-              Analitiği açık bırak
-            </button>
-            <button
-              type="button"
-              onClick={() => tercihKaydet("zorunlu", kapat)}
-              className="w-full min-h-[36px] text-[11px] text-slate-300 hover:text-slate-400 underline-offset-2 hover:underline touch-manipulation"
+              Analitik kapalı kalacak
+            </p>
+            <p
+              id="cerez-banner-aciklama"
+              className="text-[11px] text-slate-600 leading-snug"
             >
-              Yalnızca zorunlu çerezlerle devam et
-            </button>
+              Dönüşüm ölçümü sınırlı olabilir.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => tercihKaydet("zorunlu", kapat)}
+                className={dugmeSinif}
+              >
+                Yalnızca gerekli
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAnalitikAcik(true);
+                  setGorunum("ayarlar");
+                }}
+                className="text-[11px] text-slate-600 underline touch-manipulation"
+              >
+                Analitiği aç
+              </button>
+            </div>
           </div>
         ) : null}
       </div>

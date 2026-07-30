@@ -70,11 +70,11 @@ describe("hizmetVerenSayimHesapla", () => {
     );
     const goster = hizmetVerenSayimMusteriGoster(ozet);
 
-    expect(goster.benzersizAktif).toBe(ozet.benzersizAktif + 20);
+    expect(goster.benzersizAktif).toBe(ozet.benzersizAktif);
     expect(goster.benzersizCevrimici).toBe(ozet.benzersizCevrimici);
     expect(goster.benzersizCevrimici).toBeLessThanOrEqual(goster.benzersizAktif);
     expect(goster.satirlar.find((s) => s.sorunTipi === "lastik")!.aktif).toBe(
-      21
+      1
     );
     expect(
       goster.satirlar.find((s) => s.sorunTipi === "lastik")!.cevrimici
