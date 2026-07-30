@@ -158,7 +158,7 @@ export function CerezOnayBanner() {
               <button
                 type="button"
                 onClick={() => tercihKaydet("tumu", kapat)}
-                className={dugmeSinif}
+                className="min-h-[32px] flex-1 rounded-md border border-amber-500 bg-amber-500 text-white text-xs font-semibold px-2 py-1.5 hover:bg-amber-600 touch-manipulation"
               >
                 Tümünü kabul et
               </button>

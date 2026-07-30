@@ -271,6 +271,11 @@ function MusteriDonusumSayfaIcerik() {
   const [hedefBilinmiyor, setHedefBilinmiyor] = useState(false);
   const [hedefKendimArat, setHedefKendimArat] = useState(false);
   const [hedefHaritaAra, setHedefHaritaAra] = useState(false);
+  const [hedefSecimUyari, setHedefSecimUyari] = useState("");
+  const [hedefSecimParlama, setHedefSecimParlama] = useState(false);
+  const hedefSecimParlamaTimer = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
   /** Kullanıcının yazdığı arama metni (bulunan tam adresten ayrı) */
   const [hedefAramaMetni, setHedefAramaMetni] = useState("");
   const [taslakHazir, setTaslakHazir] = useState(false);
@@ -1261,7 +1266,31 @@ function MusteriDonusumSayfaIcerik() {
     ];
   }
 
+  function hedefSecimUyariGoster() {
+    setHedefSecimUyari(
+      "Devam etmek için bir hedef seçin: bilmiyorum, haritadan ara veya adresi yazın."
+    );
+    setHedefSecimParlama(true);
+    if (hedefSecimParlamaTimer.current) {
+      clearTimeout(hedefSecimParlamaTimer.current);
+    }
+    hedefSecimParlamaTimer.current = setTimeout(() => {
+      setHedefSecimParlama(false);
+      hedefSecimParlamaTimer.current = null;
+    }, 2200);
+  }
+
+  function hedefSecimUyariTemizle() {
+    setHedefSecimUyari("");
+    setHedefSecimParlama(false);
+    if (hedefSecimParlamaTimer.current) {
+      clearTimeout(hedefSecimParlamaTimer.current);
+      hedefSecimParlamaTimer.current = null;
+    }
+  }
+
   function oneriSec(o: KonumOneri) {
+    hedefSecimUyariTemizle();
     setHedefBilinmiyor(false);
     setHedefKendimArat(false);
     setHedefHaritaAra(true);
@@ -1284,6 +1313,7 @@ function MusteriDonusumSayfaIcerik() {
 
   function enYakinHedefSec(kategori: "oto_tamir" | "oto_sanayi") {
     setError("");
+    hedefSecimUyariTemizle();
     setHedefBilinmiyor(false);
     setHedefKendimArat(false);
     setHedefHaritaAra(true);
@@ -1324,6 +1354,7 @@ function MusteriDonusumSayfaIcerik() {
 
   function hedefBilmiyorumSec() {
     setError("");
+    hedefSecimUyariTemizle();
     setHedefKendimArat(false);
     setHedefHaritaAra(false);
     setHedefBilinmiyor(true);
@@ -1342,6 +1373,7 @@ function MusteriDonusumSayfaIcerik() {
 
   function hedefKendimAratSec() {
     setError("");
+    hedefSecimUyariTemizle();
     setHedefBilinmiyor(false);
     setHedefHaritaAra(false);
     setHedefKendimArat(true);
@@ -1353,6 +1385,7 @@ function MusteriDonusumSayfaIcerik() {
 
   function hedefHaritaAraSec() {
     setError("");
+    hedefSecimUyariTemizle();
     setHedefBilinmiyor(false);
     setHedefKendimArat(false);
     setHedefHaritaAra(true);
@@ -1381,6 +1414,18 @@ function MusteriDonusumSayfaIcerik() {
   async function hedefIleriGit() {
     if (gpsYukleniyor) gpsIptal();
     if (!hedefFotografKontrol()) return;
+
+    const hedefHazir =
+      hedefBilinmiyor ||
+      Boolean(form.hedefLat && form.hedefLng && form.hedefAdres.trim()) ||
+      (hedefKendimArat &&
+        Boolean(hedefAramaMetni.trim() || form.hedefAdres.trim()));
+
+    if (!hedefHazir) {
+      hedefSecimUyariGoster();
+      return;
+    }
+
     if (hedefBilinmiyor) {
       musteriFunnelOlay("destination_selected", {
         ...sorunProps(form.sorunTipi),
@@ -1705,8 +1750,7 @@ function MusteriDonusumSayfaIcerik() {
   const arızaKonumuHazir =
     !!form.adres.trim() || (!!form.lat && !!form.lng);
 
-  const devamEtEngelli =
-    !arızaKonumuHazir || adresGeocodeYukleniyor;
+  const devamEtEngelli = adresGeocodeYukleniyor;
 
   const arızaKoordinatiVar = !!(form.lat && form.lng);
   const arizaKonumGpsAlindi = arızaKoordinatiVar && !arizaAdresDuzenle;
@@ -1731,6 +1775,25 @@ function MusteriDonusumSayfaIcerik() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
+
+  useEffect(() => {
+    if (!hedefSecimUyari || step !== "hedef") return;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        document
+          .getElementById("hedef-secim-uyari")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  }, [hedefSecimUyari, step]);
+
+  useEffect(() => {
+    return () => {
+      if (hedefSecimParlamaTimer.current) {
+        clearTimeout(hedefSecimParlamaTimer.current);
+      }
+    };
+  }, []);
 
   const adimIlerlemeCubugu = (
     <div className="w-full space-y-1">
@@ -1814,7 +1877,7 @@ function MusteriDonusumSayfaIcerik() {
         teklif alın
       </h1>
 
-      {error && (
+      {error && !(step === "sorun" && form.sorunTipi) && (
         <div className="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
@@ -1902,6 +1965,13 @@ function MusteriDonusumSayfaIcerik() {
                 musteriFunnelOlay("form_validation_error", {
                   alan: "konum",
                 });
+                window.requestAnimationFrame(() => {
+                  window.requestAnimationFrame(() => {
+                    document
+                      .getElementById("ariza-konumu")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  });
+                });
                 return;
               }
               if (!hedefKonumGerekli && !detayAdimiDevam()) return;
@@ -1929,6 +1999,14 @@ function MusteriDonusumSayfaIcerik() {
               <h3 className="text-base font-semibold text-slate-900">
                 Arıza konumunuz
               </h3>
+              {error && (
+                <div
+                  className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
+                  role="alert"
+                >
+                  {error}
+                </div>
+              )}
               {!gpsGuvenli && <GpsHttpsBanner compact />}
 
               {(gpsYukleniyor || adresGeocodeYukleniyor) && (
@@ -2076,10 +2154,22 @@ function MusteriDonusumSayfaIcerik() {
             </p>
           </div>
 
+          {hedefSecimUyari && (
+            <div
+              id="hedef-secim-uyari"
+              className="rounded-xl bg-amber-50 border border-amber-300 px-4 py-3 text-sm text-amber-950 scroll-mt-24"
+              role="alert"
+            >
+              {hedefSecimUyari}
+            </div>
+          )}
+
           {hedefBilinmiyor ? (
             <div
               id="hedef-secim-ozeti"
-              className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
+              className={`rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24 ${
+                hedefSecimParlama ? "animate-hedef-secim-parla" : ""
+              }`}
             >
               <button
                 type="button"
@@ -2100,7 +2190,11 @@ function MusteriDonusumSayfaIcerik() {
             <button
               type="button"
               onClick={hedefBilmiyorumSec}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation hover:border-amber-400"
+              className={`w-full rounded-xl border bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation hover:border-amber-400 ${
+                hedefSecimParlama
+                  ? "border-amber-500 animate-hedef-secim-parla"
+                  : "border-slate-200"
+              }`}
             >
               Bilmiyorum, çekiciyle birlikte karar vereceğim
             </button>
@@ -2109,7 +2203,9 @@ function MusteriDonusumSayfaIcerik() {
           {hedefHaritaAra ? (
             <div
               id="hedef-harita-paneli"
-              className="rounded-xl border border-amber-500 bg-amber-50/40 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
+              className={`rounded-xl border border-amber-500 bg-amber-50/40 ring-2 ring-amber-200 overflow-hidden scroll-mt-24 ${
+                hedefSecimParlama ? "animate-hedef-secim-parla" : ""
+              }`}
             >
               <button
                 type="button"
@@ -2332,7 +2428,11 @@ function MusteriDonusumSayfaIcerik() {
             <button
               type="button"
               onClick={hedefHaritaAraSec}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation hover:border-amber-400"
+              className={`w-full rounded-xl border bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation hover:border-amber-400 ${
+                hedefSecimParlama
+                  ? "border-amber-500 animate-hedef-secim-parla"
+                  : "border-slate-200"
+              }`}
             >
               Haritadan Oto Tamir Ara
             </button>
@@ -2341,7 +2441,9 @@ function MusteriDonusumSayfaIcerik() {
           {hedefKendimArat ? (
             <div
               id="hedef-secim-ozeti"
-              className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
+              className={`rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24 ${
+                hedefSecimParlama ? "animate-hedef-secim-parla" : ""
+              }`}
             >
               <button
                 type="button"
@@ -2370,7 +2472,11 @@ function MusteriDonusumSayfaIcerik() {
             <button
               type="button"
               onClick={hedefKendimAratSec}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation hover:border-amber-400"
+              className={`w-full rounded-xl border bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation hover:border-amber-400 ${
+                hedefSecimParlama
+                  ? "border-amber-500 animate-hedef-secim-parla"
+                  : "border-slate-200"
+              }`}
             >
               Adresi Kendim Yazacağım
             </button>

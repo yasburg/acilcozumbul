@@ -52,6 +52,22 @@ select {
   animation: fade-in 0.3s ease-out;
 }
 
+@keyframes hedef-secim-parla {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.45);
+    border-color: rgb(245, 158, 11);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(245, 158, 11, 0.35);
+    border-color: rgb(217, 119, 6);
+  }
+}
+
+.animate-hedef-secim-parla {
+  animation: hedef-secim-parla 0.65s ease-in-out 3;
+}
+
 @keyframes konum-pulse {
   0%,
   100% {
