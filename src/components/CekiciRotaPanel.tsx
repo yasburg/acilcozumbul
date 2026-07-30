@@ -198,12 +198,12 @@ export function CekiciRotaPanel({
             <button
               type="button"
               onClick={() => setDisHaritaSecim(true)}
-              className="w-full rounded-xl border-2 border-blue-200 bg-blue-50 px-4 py-3 text-left transition hover:border-blue-300 active:scale-[0.99]"
+              className="w-full rounded-xl border-2 border-emerald-200 bg-emerald-50 px-4 py-3 text-left transition hover:border-emerald-300 active:scale-[0.99]"
             >
-              <span className="text-sm font-semibold text-blue-900 block">
-                🗺️ Haritada rotayı göster
+              <span className="text-sm font-semibold text-emerald-900 block">
+                📍 Rotayı haritada aç
               </span>
-              <span className="text-xs text-blue-700 mt-0.5 block">
+              <span className="text-xs text-emerald-700 mt-0.5 block">
                 {cekiciKonum
                   ? "Siz → hizmet alan → hedef · Google veya Apple Maps"
                   : "Google veya Apple Maps’te aç (konum izni önerilir)"}
@@ -255,7 +255,7 @@ export function CekiciRotaPanel({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-4 py-3 border-b border-slate-100">
-              <p className="font-semibold text-slate-900">Haritada rotayı göster</p>
+              <p className="font-semibold text-slate-900">Rotayı haritada aç</p>
               <p className="text-xs text-slate-500 mt-0.5">
                 Siz → hizmet alan → hedef
               </p>

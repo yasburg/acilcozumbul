@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui";
-import { latLngStr, type LatLng } from "@/lib/koordinat";
+import type { LatLng } from "@/lib/koordinat";
 import { haritaSecenekleri } from "@/lib/harita-yonlendirme";
 
 interface TakipVerisi {
@@ -17,21 +17,6 @@ interface MusteriCekiciTakipHaritaProps {
   talepId: string;
   musteriKonum: LatLng;
   hedefKonum?: LatLng | null;
-}
-
-function googleMapsDirUrl(
-  cekici: LatLng,
-  musteri: LatLng,
-  hedef?: LatLng | null
-): string {
-  const params = new URLSearchParams({
-    api: "1",
-    origin: latLngStr(cekici),
-    destination: latLngStr(hedef ?? musteri),
-    travelmode: "driving",
-  });
-  if (hedef) params.set("waypoints", latLngStr(musteri));
-  return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
 export function MusteriCekiciTakipHarita({
@@ -65,9 +50,6 @@ export function MusteriCekiciTakipHarita({
   }, [yukle]);
 
   const cekiciKonum = veri?.konum ?? null;
-  const disLink = cekiciKonum
-    ? googleMapsDirUrl(cekiciKonum, musteriKonum, hedefKonum)
-    : null;
   const haritaSecenek = cekiciKonum
     ? haritaSecenekleri(musteriKonum, {
         cekici: cekiciKonum,
@@ -121,24 +103,13 @@ export function MusteriCekiciTakipHarita({
             className="w-full rounded-xl border-2 border-emerald-200 bg-white px-4 py-3 text-left transition hover:border-emerald-300 active:scale-[0.99]"
           >
             <span className="text-sm font-semibold text-emerald-900 block">
-              🗺️ Haritada rotayı göster
+              📍 Rotayı haritada aç
             </span>
             <span className="text-xs text-emerald-700 mt-0.5 block">
               Çekici → sizin konumunuz
               {hedefKonum ? " → hedef" : ""} · Google veya Apple Maps
             </span>
           </button>
-
-          {disLink && (
-            <a
-              href={disLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-center text-sm font-semibold text-emerald-700 underline"
-            >
-              Google Maps&apos;te aç
-            </a>
-          )}
         </>
       )}
 
@@ -155,7 +126,7 @@ export function MusteriCekiciTakipHarita({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-4 py-3 border-b border-slate-100">
-              <p className="font-semibold text-slate-900">Haritada rotayı göster</p>
+              <p className="font-semibold text-slate-900">Rotayı haritada aç</p>
               <p className="text-xs text-slate-500 mt-0.5">
                 Navigasyon uygulamanızı seçin
               </p>

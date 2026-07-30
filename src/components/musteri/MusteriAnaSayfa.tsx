@@ -270,6 +270,8 @@ function MusteriAnaSayfaIcerik() {
   const [fotografData, setFotografData] = useState<string | null>(null);
   const [hedefBilinmiyor, setHedefBilinmiyor] = useState(false);
   const [hedefKendimArat, setHedefKendimArat] = useState(false);
+  /** Kullanıcının yazdığı arama metni (bulunan tam adresten ayrı) */
+  const [hedefAramaMetni, setHedefAramaMetni] = useState("");
   const [taslakHazir, setTaslakHazir] = useState(false);
   const taslakAnlikRef = useRef({
     step: "sorun" as Step,
@@ -1085,7 +1087,7 @@ function MusteriAnaSayfaIcerik() {
 
   /** Hedef adresi elle yazınca «Arat» — her zaman yeniden geocode */
   async function hedefAdresAra() {
-    const adres = form.hedefAdres.trim();
+    const adres = hedefAramaMetni.trim() || form.hedefAdres.trim();
     if (adres.length < 4) {
       setError("Aramak için daha net bir adres yazın (ilçe, mahalle…).");
       return;
@@ -1096,6 +1098,7 @@ function MusteriAnaSayfaIcerik() {
     const g = await geocodeAdres(adres);
     setAdresGeocodeYukleniyor(false);
     if (g) {
+      if (!hedefAramaMetni.trim()) setHedefAramaMetni(adres);
       await konumKaydet(g.lat, g.lng, g.adres, true);
       return;
     }
@@ -1333,6 +1336,9 @@ function MusteriAnaSayfaIcerik() {
     setError("");
     setHedefBilinmiyor(false);
     setHedefKendimArat(true);
+    if (!hedefAramaMetni.trim() && form.hedefAdres.trim() && !form.hedefLat) {
+      setHedefAramaMetni(form.hedefAdres);
+    }
     hedefAlanaKaydir("hedef-secim-ozeti");
   }
 
@@ -1399,14 +1405,28 @@ function MusteriAnaSayfaIcerik() {
   }
 
   function hedefAdresAramaAlani() {
+    const adresBulundu =
+      !!form.hedefAdres.trim() && !!form.hedefLat && !!form.hedefLng;
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex gap-2 items-stretch">
           <input
             type="text"
-            placeholder="Oto sanayi, servis, ev adresi…"
-            value={form.hedefAdres}
-            onChange={(e) => update("hedefAdres", e.target.value)}
+            placeholder="Örn: İkitelli Oto Sanayi, Başakşehir"
+            value={hedefAramaMetni}
+            onChange={(e) => {
+              const v = e.target.value;
+              setHedefAramaMetni(v);
+              /* Yeni arama → önceki sonucu temizle */
+              if (form.hedefLat || form.hedefLng) {
+                setForm((f) => ({
+                  ...f,
+                  hedefLat: 0,
+                  hedefLng: 0,
+                  hedefAdres: "",
+                }));
+              }
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -1414,13 +1434,16 @@ function MusteriAnaSayfaIcerik() {
               }
             }}
             className="min-w-0 flex-1 rounded-xl bg-white border border-slate-200 px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500"
-            autoComplete="street-address"
-            name="hedefAdres"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            name="hedef-adres-arama"
+            enterKeyHint="search"
           />
           <button
             type="button"
             onClick={() => void hedefAdresAra()}
-            disabled={!form.hedefAdres.trim() || adresGeocodeYukleniyor}
+            disabled={!hedefAramaMetni.trim() || adresGeocodeYukleniyor}
             className="shrink-0 rounded-xl bg-amber-500 px-4 min-h-[52px] font-semibold text-sm text-white touch-manipulation active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 hover:bg-amber-600"
           >
             {adresGeocodeYukleniyor ? (
@@ -1433,15 +1456,28 @@ function MusteriAnaSayfaIcerik() {
             )}
           </button>
         </div>
-        {form.hedefAdres.trim() && form.hedefLat && form.hedefLng ? (
-          <p className="text-xs text-emerald-800 leading-relaxed">
-            Adres bulundu. Aşağıdaki çağır butonuyla devam edebilirsiniz.
+        {adresBulundu ? (
+          <div className="rounded-xl border-2 border-emerald-400 bg-emerald-50 px-3.5 py-3 space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-800">
+              Bulunan tam adres — kontrol edin
+            </p>
+            <p className="text-sm font-semibold text-slate-900 leading-snug break-words">
+              {form.hedefAdres}
+            </p>
+            <p className="text-xs text-emerald-900 leading-relaxed">
+              Doğruysa aşağıdaki çağır butonuyla devam edin. Değilse aramayı
+              düzeltip tekrar «Arat»a basın.
+            </p>
+          </div>
+        ) : hedefAramaMetni.trim() ? (
+          <p className="text-xs text-slate-600 leading-relaxed">
+            «Arat»a basın — bulunan tam adres burada görünecek.
           </p>
-        ) : form.hedefAdres.trim() ? (
-          <p className="text-xs text-slate-600">
-            Adresi yazdıktan sonra «Arat» ile haritada bulun.
+        ) : (
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Servis, oto sanayi veya ev adresini yazın; «Arat» ile bulun.
           </p>
-        ) : null}
+        )}
       </div>
     );
   }
@@ -1633,11 +1669,45 @@ function MusteriAnaSayfaIcerik() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca hedef adımına girildiğinde
   }, [step, cozumOneriAktif]);
 
+  const adimIlerlemeCubugu = (
+    <div className="flex w-full gap-1">
+      {steps.map((s, i) => {
+        const aktifIdx = steps.findIndex((x) => x.key === step);
+        const gecildi = i < aktifIdx;
+        const buradayiz = i === aktifIdx;
+        return (
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => adimGit(s.key)}
+            className={[
+              "flex-1 h-1.5 rounded-full transition",
+              buradayiz
+                ? "bg-amber-500 shadow-[0_0_10px_2px_rgba(245,158,11,0.65)] animate-pulse"
+                : gecildi
+                  ? "bg-amber-500"
+                  : "bg-slate-200",
+            ].join(" ")}
+            aria-label={`Adım ${s.label}`}
+            aria-current={buradayiz ? "step" : undefined}
+          />
+        );
+      })}
+    </div>
+  );
+
   return (
     <MobileShell
-      subtitle="Yolda mı kaldınız? Hemen en hızlı ve uygun teklifleri alın."
-      subtitleAlign="right"
-      onBack={oncekiAdimaDon}
+      subtitle={
+        step === "sorun"
+          ? "Yolda mı kaldınız? Hemen en hızlı ve uygun teklifleri alın."
+          : undefined
+      }
+      subtitleAlign={step === "sorun" ? "right" : "center"}
+      brandAlign={step === "sorun" ? "left" : "right"}
+      backLabel={step === "sorun" ? undefined : "Geri"}
+      onBack={step === "sorun" ? undefined : oncekiAdimaDon}
+      headerCenter={step === "sorun" ? undefined : adimIlerlemeCubugu}
       footer={<YasalSiteFooter />}
     >
       <h1 className="sr-only">
@@ -1664,19 +1734,9 @@ function MusteriAnaSayfaIcerik() {
         </div>
       )}
 
-      <div className="flex gap-1.5 mb-6">
-        {steps.map((s) => (
-          <button
-            key={s.key}
-            type="button"
-            onClick={() => adimGit(s.key)}
-            className={`flex-1 h-1.5 rounded-full transition ${
-              step === s.key ? "bg-amber-500" : "bg-slate-200"
-            }`}
-            aria-label={`Adım ${s.label}`}
-          />
-        ))}
-      </div>
+      {step === "sorun" && (
+        <div className="mb-6">{adimIlerlemeCubugu}</div>
+      )}
 
       <div className="mb-4">
         <HizmetVerenSayimAlani sorunTipi={form.sorunTipi || null} />

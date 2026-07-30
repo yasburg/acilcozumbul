@@ -384,6 +384,24 @@ export async function demoHedefKonumYaz(
   return t;
 }
 
+/** Kazanan çekici — işi tamamladı */
+export async function demoIslemTamamla(
+  oturum: AktifDemoOturum,
+  talepId: string
+): Promise<Talep> {
+  const yeni = await oturumGuncelle(oturum, (d) =>
+    talepGuncelle(d, talepId, (t) => ({
+      ...t,
+      durum: "anlaşıldı" as const,
+      anlasmaDurumu: "anlaşıldı" as const,
+      anlasildiAt: new Date().toISOString(),
+    }))
+  );
+  const t = demoTalepBul(yeni, talepId);
+  if (!t) throw new Error("Talep bulunamadı.");
+  return t;
+}
+
 export async function demoSimuleOlay(
   oturumId: string,
   olay: DemoSimuleOlay

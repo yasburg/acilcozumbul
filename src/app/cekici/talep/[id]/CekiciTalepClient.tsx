@@ -69,6 +69,7 @@ export default function CekiciTalepClient() {
   const [cekici, setCekici] = useState<{ ad: string; kredi: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [islem, setIslem] = useState(false);
+  const [islemBittiYukleniyor, setIslemBittiYukleniyor] = useState(false);
   const [error, setError] = useState("");
   const [teklifGonderildi, setTeklifGonderildi] = useState(false);
   const [demoAktif, setDemoAktif] = useState(false);
@@ -164,6 +165,31 @@ export default function CekiciTalepClient() {
     const interval = setInterval(yukle, 4000);
     return () => clearInterval(interval);
   }, [yukle]);
+
+  async function islemBitti() {
+    setIslemBittiYukleniyor(true);
+    setError("");
+    try {
+      const res = await cekiciFetch(`/api/cekici/talep/${id}/tamamla`, {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(
+          typeof data.error === "string"
+            ? data.error
+            : "İşlem tamamlanamadı."
+        );
+        return;
+      }
+      posthogOlayYakala("cekici_islem_bitti", { talep_id: id });
+      router.push("/cekici/panel");
+    } catch {
+      setError("Bağlantı hatası.");
+    } finally {
+      setIslemBittiYukleniyor(false);
+    }
+  }
 
   async function teklifVer() {
     const fiyatNum = Number(fiyat);
@@ -515,6 +541,16 @@ export default function CekiciTalepClient() {
                   haritaButonu
                 />
               )}
+              <Btn
+                variant="success"
+                onClick={() => void islemBitti()}
+                disabled={islemBittiYukleniyor}
+              >
+                {islemBittiYukleniyor ? "Kaydediliyor…" : "✓ İşlem bitti"}
+              </Btn>
+              <p className="text-xs text-center text-slate-500 -mt-2">
+                İşi bitirdiğinizde işaretleyin; panele dönersiniz.
+              </p>
             </>
           )}
 
