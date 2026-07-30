@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { Geist } from "next/font/google";
 import { CerezOnayBanner } from "@/components/CerezOnayBanner";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
@@ -107,6 +106,10 @@ export const viewport: Viewport = {
   themeColor: "#ffffff",
 };
 
+const googleConsentGerekli = Boolean(
+  GA_MEASUREMENT_ID || GOOGLE_ADS_ID || GTM_ID
+);
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -114,17 +117,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className={`${geist.variable} h-full`}>
-      <body className="min-h-dvh font-sans antialiased">
-        <GoogleTagManagerNoscript />
-        {GA_MEASUREMENT_ID || GOOGLE_ADS_ID || GTM_ID ? (
-          <Script
+      <head>
+        {/*
+          Consent bootstrap: next/script beforeInteractive React 19’da
+          client’ta script uyarıları veriyor; head’de düz script güvenli.
+        */}
+        {googleConsentGerekli ? (
+          <script
             id="google-consent-default"
-            strategy="beforeInteractive"
             dangerouslySetInnerHTML={{
               __html: gtagConsentBootstrapInline(),
             }}
           />
         ) : null}
+      </head>
+      <body className="min-h-dvh font-sans antialiased">
+        <GoogleTagManagerNoscript />
         <GoogleTagManager />
         <GoogleAnalytics />
         <MetaPixel />

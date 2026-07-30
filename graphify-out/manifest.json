@@ -20,8 +20,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1784665783.1437607,
-    "ast_hash": "a849d5f7a6fe023102712ddd1aebe631",
+    "mtime": 1785415633.9894009,
+    "ast_hash": "2fe1e0e8cbcee7f3b8a45fe14a82e0be",
     "semantic_hash": ""
   },
   "postcss.config.mjs": {
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "src/app/api/konum/oneri/route.ts": {
-    "mtime": 1780342027.7958322,
-    "ast_hash": "4b967359477fde4ad2819f57b9bf7831",
+    "mtime": 1785415733.4531732,
+    "ast_hash": "83ada73095d1cb7e970eecb3d1710adc",
     "semantic_hash": ""
   },
   "src/app/api/musteri/funnel/route.ts": {
@@ -400,8 +400,8 @@
     "semantic_hash": ""
   },
   "src/app/api/talep/[id]/route.ts": {
-    "mtime": 1784276849.7622914,
-    "ast_hash": "7cd28c936ee5f219e4b8bb988152dd14",
+    "mtime": 1785414541.6699567,
+    "ast_hash": "683346d73f2bc955fdf129ca7cd9e1d9",
     "semantic_hash": ""
   },
   "src/app/api/talep/[id]/teklif-sec/route.ts": {
@@ -410,18 +410,18 @@
     "semantic_hash": ""
   },
   "src/app/api/talep/[id]/teklifler/route.ts": {
-    "mtime": 1784478643.5706155,
-    "ast_hash": "32e2711a4329f4698153f5b8ae947e90",
+    "mtime": 1785414541.258318,
+    "ast_hash": "729f0eaa57d57b9d68463571926f3162",
     "semantic_hash": ""
   },
   "src/app/api/talep/route.ts": {
-    "mtime": 1785188994.6425884,
-    "ast_hash": "b6e9ace47c37f732173249f9152f659a",
+    "mtime": 1785414532.7131827,
+    "ast_hash": "10479428b5530bb7bd05185c09624a7b",
     "semantic_hash": ""
   },
   "src/app/bekle/[id]/page.tsx": {
-    "mtime": 1784982717.7201943,
-    "ast_hash": "e3f67e0524baf852f3d6ccca81d4549b",
+    "mtime": 1785414816.875538,
+    "ast_hash": "8cecebb64c2644e8f1b33f504e7938e6",
     "semantic_hash": ""
   },
   "src/app/cekici/ayarlar/page.tsx": {
@@ -510,8 +510,8 @@
     "semantic_hash": ""
   },
   "src/app/layout.tsx": {
-    "mtime": 1785265578.7966788,
-    "ast_hash": "d2e56c6b4964bb895ffd8a5eae1b5dd5",
+    "mtime": 1785413650.2828674,
+    "ast_hash": "7be6df8b9cfbef7857d2c6f6ba928cb5",
     "semantic_hash": ""
   },
   "src/app/manifest.ts": {
@@ -675,8 +675,8 @@
     "semantic_hash": ""
   },
   "src/components/KonumIzniYardim.tsx": {
-    "mtime": 1780229913.2318945,
-    "ast_hash": "56de874d7434f59df3bfdb8ab009b1ad",
+    "mtime": 1785411849.4468434,
+    "ast_hash": "ac7ee2a65c861d4ce341f69dc16ea43e",
     "semantic_hash": ""
   },
   "src/components/MemnuniyetBekle.tsx": {
@@ -780,8 +780,8 @@
     "semantic_hash": ""
   },
   "src/components/musteri/MusteriAnaSayfa.tsx": {
-    "mtime": 1785241388.7581148,
-    "ast_hash": "f264576aaba9f0a5f46514cda7264c79",
+    "mtime": 1785417705.5219672,
+    "ast_hash": "03bfce3b4078ea6167bfa0cb58d67e05",
     "semantic_hash": ""
   },
   "src/components/panel/HizmetVerenSayimPanel.tsx": {
@@ -990,13 +990,13 @@
     "semantic_hash": ""
   },
   "src/lib/demo-oturum.ts": {
-    "mtime": 1784372128.3800588,
-    "ast_hash": "934acd5881cb49cbd17c8592050861c0",
+    "mtime": 1785414583.6330621,
+    "ast_hash": "2d4e3d4f34fe4c74f6a4761ec6a570ce",
     "semantic_hash": ""
   },
   "src/lib/demo-responses.ts": {
-    "mtime": 1780782562.340162,
-    "ast_hash": "bcf5ec88f2399b66a5373a1a8ce5aa11",
+    "mtime": 1785414557.013923,
+    "ast_hash": "ce688a2d172beada96a497fe80e81c87",
     "semantic_hash": ""
   },
   "src/lib/email-gonder.ts": {
@@ -1045,13 +1045,13 @@
     "semantic_hash": ""
   },
   "src/lib/google-maps.ts": {
-    "mtime": 1780222203.13342,
-    "ast_hash": "4eab705ac7d44655b1763bdd8bba91b6",
+    "mtime": 1785416442.0162082,
+    "ast_hash": "e8f52881905d59f6ab8d454f94bbcf7b",
     "semantic_hash": ""
   },
   "src/lib/google-places.ts": {
-    "mtime": 1780342043.4930968,
-    "ast_hash": "9353879e3e77fff528503870ad81931c",
+    "mtime": 1785416426.625376,
+    "ast_hash": "dc966e519163bba9474fff032ff9657a",
     "semantic_hash": ""
   },
   "src/lib/harita-yonlendirme.test.ts": {
@@ -1065,8 +1065,8 @@
     "semantic_hash": ""
   },
   "src/lib/hedef-oneri-data.ts": {
-    "mtime": 1780416586.243952,
-    "ast_hash": "fe5fcf82e2f60efbca780475083a7fa5",
+    "mtime": 1785415625.8474586,
+    "ast_hash": "7a7226260a61aae3c3d86ef22dd9d83e",
     "semantic_hash": ""
   },
   "src/lib/hizmet-veren-sayim.test.ts": {
@@ -1140,13 +1140,13 @@
     "semantic_hash": ""
   },
   "src/lib/konum-client.ts": {
-    "mtime": 1780229919.17561,
-    "ast_hash": "95f1a0ae43fa077c09c420eae3c4c886",
+    "mtime": 1785411782.736987,
+    "ast_hash": "f2a522793a59d959e4a626fe15ad7dd0",
     "semantic_hash": ""
   },
   "src/lib/konum-oneri.ts": {
-    "mtime": 1780342056.1193404,
-    "ast_hash": "076e71d2c101e080293f977b6d5766cf",
+    "mtime": 1785415864.3967173,
+    "ast_hash": "f0cc4d5bc129463d8b21e07a393ccd6a",
     "semantic_hash": ""
   },
   "src/lib/konum-parse.ts": {
@@ -1285,8 +1285,8 @@
     "semantic_hash": ""
   },
   "src/lib/sorun-tipleri.ts": {
-    "mtime": 1784492532.2598155,
-    "ast_hash": "3ed11a59d498c15254ae1bacbe7320a7",
+    "mtime": 1785414517.6672206,
+    "ast_hash": "99b8dc3c33026c1365674ee3a470cb03",
     "semantic_hash": ""
   },
   "src/lib/supabase/admin.ts": {
@@ -1320,8 +1320,8 @@
     "semantic_hash": ""
   },
   "src/lib/supabase/mappers.ts": {
-    "mtime": 1784839717.212376,
-    "ast_hash": "016997ea79ffd9b9a006633e770403fa",
+    "mtime": 1785414470.437826,
+    "ast_hash": "2a706bb54363f5cb5dc7fb3b528cd57f",
     "semantic_hash": ""
   },
   "src/lib/supabase/middleware.ts": {
@@ -1365,8 +1365,8 @@
     "semantic_hash": ""
   },
   "src/lib/types.ts": {
-    "mtime": 1784839707.419497,
-    "ast_hash": "c37ccda495795921581d638536bedbfa",
+    "mtime": 1785414465.0117483,
+    "ast_hash": "59a9c900880ae69ce4d86a471d84b3ca",
     "semantic_hash": ""
   },
   "src/lib/yasal-sirket.ts": {
@@ -1655,13 +1655,13 @@
     "semantic_hash": ""
   },
   "src/components/GoogleAnalytics.tsx": {
-    "mtime": 1785169488.4599497,
-    "ast_hash": "ae08f0a5dc8b8e6b119821aa75370233",
+    "mtime": 1785413627.1229458,
+    "ast_hash": "139bf69c273b4cc3dbdae488ed45c091",
     "semantic_hash": ""
   },
   "src/lib/gtag.ts": {
-    "mtime": 1785241381.5320973,
-    "ast_hash": "d9ada09408163969d42de0313e163bac",
+    "mtime": 1785413627.5847576,
+    "ast_hash": "7accebed83cb8648a01efa026b1c16a9",
     "semantic_hash": ""
   },
   "src/lib/gtag.test.ts": {
@@ -2372,6 +2372,71 @@
   "supabase/migrations/039_kurulum_hatirlatma.sql": {
     "mtime": 1785400883.239937,
     "ast_hash": "8e10e8302daa930b08fdc86500fdf46d",
+    "semantic_hash": ""
+  },
+  "src/lib/musteri-form-taslak.test.ts": {
+    "mtime": 1785411665.6813593,
+    "ast_hash": "75673ca41405df0ede7a62839488120b",
+    "semantic_hash": ""
+  },
+  "src/lib/musteri-form-taslak.ts": {
+    "mtime": 1785414562.1562796,
+    "ast_hash": "9833ae5f783429d616b92ce0673bf9d3",
+    "semantic_hash": ""
+  },
+  "src/components/ChromeAcSecenegi.tsx": {
+    "mtime": 1785411808.3595784,
+    "ast_hash": "a0e8bca4b3235b0f9d3980c191e88eb5",
+    "semantic_hash": ""
+  },
+  "src/lib/konum-chrome.test.ts": {
+    "mtime": 1785411833.9533207,
+    "ast_hash": "cbfb037f3297f84162abe83fbd9c4df6",
+    "semantic_hash": ""
+  },
+  "src/components/HedefOneriHarita.tsx": {
+    "mtime": 1785417516.4864278,
+    "ast_hash": "64c2c0754f2e82072455bca62a4f70d8",
+    "semantic_hash": ""
+  },
+  "src/app/api/talep/[id]/hedef/route.ts": {
+    "mtime": 1785414583.4596388,
+    "ast_hash": "5ee4b15d303134682a38573fe4149c02",
+    "semantic_hash": ""
+  },
+  "src/components/BekleHedefDegistir.tsx": {
+    "mtime": 1785417533.9950306,
+    "ast_hash": "901089ca177d004217101df93e2bb85f",
+    "semantic_hash": ""
+  },
+  "src/lib/demo-hedef-guncelle.ts": {
+    "mtime": 1785412364.8844123,
+    "ast_hash": "64e1a0678468ca1f5bf16bc8c493e97c",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/040_talep_hedef_degistirildi.sql": {
+    "mtime": 1785412311.9391778,
+    "ast_hash": "1c017a6a1fe2194f0748d9f119b8b309",
+    "semantic_hash": ""
+  },
+  "supabase/.temp/linked-project.json": {
+    "mtime": 1785414770.938945,
+    "ast_hash": "9c67de0a6344b99f0a79a6fa4f4c2984",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/041_talep_hedef_bilinmiyor.sql": {
+    "mtime": 1785414464.6024606,
+    "ast_hash": "c1918a21016360a5fd7447388e6acaf7",
+    "semantic_hash": ""
+  },
+  "src/lib/hedef-oneri-data.test.ts": {
+    "mtime": 1785415733.8872786,
+    "ast_hash": "73f0f11a553272327d249fd8ce6fa6a0",
+    "semantic_hash": ""
+  },
+  "src/lib/google-maps-scrape.ts": {
+    "mtime": 1785415897.8401723,
+    "ast_hash": "8b6ff5ffbb3863d9e5b7a32ab29c4962",
     "semantic_hash": ""
   }
 }

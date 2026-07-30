@@ -64,6 +64,8 @@ export type TalepRow = {
   konum_il: string | null;
   konum_ilce: string | null;
   hedef_konum: Konum | null;
+  hedef_konum_degistirildi?: boolean | null;
+  hedef_bilinmiyor?: boolean | null;
   sorun: string;
   sorun_tipi: string | null;
   sorun_detay: string | null;
@@ -200,6 +202,8 @@ export function talepFromRow(r: TalepRow): Talep {
     konumIl: r.konum_il ?? undefined,
     konumIlce: r.konum_ilce ?? undefined,
     hedefKonum: r.hedef_konum ?? undefined,
+    hedefKonumDegistirildi: Boolean(r.hedef_konum_degistirildi),
+    hedefBilinmiyor: Boolean(r.hedef_bilinmiyor),
     sorun: r.sorun,
     sorunTipi: r.sorun_tipi ?? undefined,
     sorunDetay: r.sorun_detay ?? undefined,
@@ -230,6 +234,7 @@ export function talepToRow(t: Talep): Record<string, unknown> {
     konum_il: t.konumIl ?? null,
     konum_ilce: t.konumIlce ?? null,
     hedef_konum: t.hedefKonum ?? null,
+    hedef_bilinmiyor: t.hedefBilinmiyor ?? false,
     sorun: t.sorun,
     sorun_tipi: t.sorunTipi ?? null,
     sorun_detay: t.sorunDetay ?? null,

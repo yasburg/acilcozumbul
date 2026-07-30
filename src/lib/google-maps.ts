@@ -60,6 +60,8 @@ async function surusSuresiRoutesApi(
         "Content-Type": "application/json",
         "X-Goog-Api-Key": key,
         "X-Goog-FieldMask": "routes.duration",
+        Referer: "https://acilcozumbul.com/",
+        Origin: "https://acilcozumbul.com",
       },
       body: JSON.stringify({
         origin: {

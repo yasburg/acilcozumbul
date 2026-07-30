@@ -6,6 +6,7 @@ import { ensureSeedData } from "@/lib/seed";
 import { aktifTeklifler, ihaleAcikMi } from "@/lib/ihale";
 import { demoTalepGetir, isDemoTalepId } from "@/lib/demo-oturum";
 import { demoMusteriTekliflerJson } from "@/lib/demo-responses";
+import { musteriGosterimSureDk } from "@/lib/sorun-tipleri";
 
 export async function GET(
   request: NextRequest,
@@ -69,7 +70,10 @@ export async function GET(
         ilkFiyat,
         fiyatDegisti,
         secilebilir: !fiyatDegisti,
-        tahminiSureDk: t.tahminiSureDk,
+        tahminiSureDk: musteriGosterimSureDk(
+          t.tahminiSureDk,
+          talep.hedefBilinmiyor
+        ),
         mesaj: t.mesaj,
         tarih: t.tarih,
         onayliCekici,
@@ -93,5 +97,6 @@ export async function GET(
     kazananSecildi: !!talep.kazananCekiciId,
     durum: talep.durum,
     hedefKonum: talep.hedefKonum,
+    hedefBilinmiyor: Boolean(talep.hedefBilinmiyor),
   });
 }

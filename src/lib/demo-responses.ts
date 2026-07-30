@@ -11,6 +11,7 @@ import {
 import { talepBolge, talepSorunOzet } from "./talep-utils";
 import { teklifleriSirala } from "./teklif-siralama";
 import { demoRakipCekiciId } from "./demo-fixtures";
+import { musteriGosterimSureDk } from "./sorun-tipleri";
 import type { Cekici, Talep } from "./types";
 
 function rotaKoordinatlari(talep: Talep) {
@@ -173,7 +174,10 @@ export function demoMusteriTekliflerJson(talep: Talep) {
       ilkFiyat: t.ilkFiyat ?? t.fiyat,
       fiyatDegisti,
       secilebilir: !fiyatDegisti,
-      tahminiSureDk: t.tahminiSureDk,
+      tahminiSureDk: musteriGosterimSureDk(
+        t.tahminiSureDk,
+        talep.hedefBilinmiyor
+      ),
       mesaj: t.mesaj,
       tarih: t.tarih,
       onayliCekici: rakip ? false : DEMO_PUAN.onayliCekici,
@@ -194,6 +198,7 @@ export function demoMusteriTekliflerJson(talep: Talep) {
     kazananSecildi: !!talep.kazananCekiciId,
     durum: talep.durum,
     hedefKonum: talep.hedefKonum,
+    hedefBilinmiyor: Boolean(talep.hedefBilinmiyor),
     demoModu: true,
   };
 }
@@ -223,6 +228,9 @@ export function demoMusteriTalepDurumJson(talep: Talep, cekiciAd?: string) {
     anlasmaDurumu: talep.anlasmaDurumu,
     konum: talep.konum,
     hedefKonum: talep.hedefKonum,
+    hedefKonumDegistirildi: Boolean(talep.hedefKonumDegistirildi),
+    hedefBilinmiyor: Boolean(talep.hedefBilinmiyor),
+    sorunTipi: talep.sorunTipi ?? null,
     memnuniyet: null,
     demoModu: true,
   };

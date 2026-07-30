@@ -132,6 +132,10 @@ export interface Talep {
   konumIl?: string;
   konumIlce?: string;
   hedefKonum?: Konum;
+  /** Bekleme ekranında hedef bir kez değiştirildiyse true */
+  hedefKonumDegistirildi?: boolean;
+  /** Müşteri hedefi sonra seçecek — tahmini sürelere +30 dk */
+  hedefBilinmiyor?: boolean;
   sorun: string;
   sorunTipi?: string;
   sorunDetay?: string;

@@ -6,26 +6,26 @@ export interface SorunTipi {
 
 /** SMS / hizmet filtresi için geçerli sorun tipi kimlikleri */
 export const TUM_SORUN_TIP_IDLERI = [
+  "cekici",
   "ariza",
   "lastik",
   "aku",
   "yakit",
   "kaza",
   "kilit",
-  "cekici",
   "diger",
 ] as const;
 
 export type SorunTipiId = (typeof TUM_SORUN_TIP_IDLERI)[number];
 
 export const SORUN_TIPLERI: SorunTipi[] = [
+  { id: "cekici", label: "Çekici / kurtarma lazım", icon: "🚛" },
   { id: "ariza", label: "Araç arızası / çalışmıyor", icon: "⚠️" },
   { id: "lastik", label: "Lastik patladı", icon: "🛞" },
   { id: "aku", label: "Akü bitti", icon: "🔋" },
   { id: "yakit", label: "Yakıt bitti", icon: "⛽" },
   { id: "kaza", label: "Kaza / çarpışma", icon: "💥" },
   { id: "kilit", label: "Arabam kilitlendi / Anahtar çalışmıyor", icon: "🔑" },
-  { id: "cekici", label: "Çekici / kurtarma lazım", icon: "🚛" },
   { id: "diger", label: "Diğer", icon: "✏️" },
 ];
 
@@ -109,6 +109,19 @@ export const SORUN_HEDEF_KONUM_ATLANIR: SorunTipiId[] = [
 export function sorunHedefKonumGerekliMi(sorunTipi?: string): boolean {
   const id = talepSorunTipi({ sorunTipi: sorunTipi });
   return !SORUN_HEDEF_KONUM_ATLANIR.includes(id);
+}
+
+/** Hedef «bilmiyorum» seçilince müşteriye gösterilen sürelere eklenen dk */
+export const HEDEF_BILINMIYOR_EK_SURE_DK = 30;
+
+export function musteriGosterimSureDk(
+  tahminiSureDk: number,
+  hedefBilinmiyor?: boolean
+): number {
+  return (
+    tahminiSureDk +
+    (hedefBilinmiyor ? HEDEF_BILINMIYOR_EK_SURE_DK : 0)
+  );
 }
 
 /** Konum adımında fotoğraf alanı göster (zorunlu veya isteğe bağlı) */

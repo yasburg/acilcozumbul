@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import type { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { getCekiciById } from "./db";
-import type { Cekici, Talep, Teklif } from "./types";
+import type { Cekici, Konum, Talep, Teklif } from "./types";
 import {
   demoBaslangicDurumu,
   demoRakipAd,
@@ -363,6 +363,25 @@ function talepGuncelle(
     ...durum,
     talepler: durum.talepler.map((t) => (t.id === talepId ? patch(t) : t)),
   };
+}
+
+/** Müşteri bekle ekranı — hedef konumu bir kez güncelle */
+export async function demoHedefKonumYaz(
+  oturum: AktifDemoOturum,
+  talepId: string,
+  hedef: Konum
+): Promise<Talep> {
+  const yeni = await oturumGuncelle(oturum, (d) =>
+    talepGuncelle(d, talepId, (t) => ({
+      ...t,
+      hedefKonum: hedef,
+      hedefKonumDegistirildi: true,
+      hedefBilinmiyor: false,
+    }))
+  );
+  const t = demoTalepBul(yeni, talepId);
+  if (!t) throw new Error("Talep bulunamadı.");
+  return t;
 }
 
 export async function demoSimuleOlay(

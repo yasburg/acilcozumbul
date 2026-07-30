@@ -19,7 +19,9 @@
     "@netgsm/sms": "^1.1.11",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
+    "leaflet": "^1.9.4",
     "next": "16.2.6",
+    "playwright": "^1.62.0",
     "posthog-js": "^1.386.5",
     "posthog-node": "^5.21.2",
     "react": "19.2.4",
@@ -28,6 +30,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

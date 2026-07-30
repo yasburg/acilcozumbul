@@ -121,6 +121,56 @@ export function konumHataMesaji(code?: number): string {
   }
 }
 
+/** Gerçek Chrome (iOS CriOS / Android Chrome); WebView ve diğer tarayıcılar hariç */
+export function chromeIciMi(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  if (/CriOS\//i.test(ua)) return true;
+  if (/FxiOS|EdgiOS|OPiOS|EdgA|OPR|SamsungBrowser|Firefox\//i.test(ua)) {
+    return false;
+  }
+  if (/Android/i.test(ua) && /Chrome\//i.test(ua) && !/;\s*wv\)/i.test(ua)) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Mevcut (veya verilen) sayfayı Chrome’da açmak için deep link.
+ * Zaten Chrome’daysa veya masaüstündeyse null.
+ */
+export function chromeAcUrl(href?: string): string | null {
+  if (typeof window === "undefined") return null;
+  if (chromeIciMi()) return null;
+  const platform = cihazPlatformu();
+  if (platform !== "ios" && platform !== "android") return null;
+
+  let hedef: URL;
+  try {
+    hedef = new URL(href ?? window.location.href);
+  } catch {
+    return null;
+  }
+
+  if (platform === "ios") {
+    const scheme = hedef.protocol === "https:" ? "googlechromes" : "googlechrome";
+    return `${scheme}://${hedef.host}${hedef.pathname}${hedef.search}${hedef.hash}`;
+  }
+
+  const hostPath = `${hedef.host}${hedef.pathname}${hedef.search}${hedef.hash}`;
+  const scheme = hedef.protocol === "https:" ? "https" : "http";
+  const fallback = encodeURIComponent(hedef.href);
+  return `intent://${hostPath}#Intent;scheme=${scheme};package=com.android.chrome;S.browser_fallback_url=${fallback};end`;
+}
+
+/** Konum Safari / uygulama içi tarayıcıda çalışmazsa Chrome’a yönlendir */
+export function chromeAc(href?: string): boolean {
+  const link = chromeAcUrl(href);
+  if (!link) return false;
+  window.location.href = link;
+  return true;
+}
+
 /** Elle yazılan adresi koordinata çevir (Nominatim) */
 export async function geocodeAdres(
   sorgu: string

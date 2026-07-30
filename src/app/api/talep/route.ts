@@ -35,12 +35,15 @@ export async function POST(request: NextRequest) {
     telefon,
     konum,
     hedefKonum,
+    hedefBilinmiyor: hedefBilinmiyorRaw,
     sorunTipi,
     sorunDetay,
     sorun,
     aracModeli,
     fotograf,
   } = body;
+
+  const hedefBilinmiyor = Boolean(hedefBilinmiyorRaw);
 
   const tip = sorunTipi?.trim() || "diger";
   if (!sorunTipiBul(tip) && !sorun) {
@@ -86,7 +89,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (sorunHedefKonumGerekliMi(tip) && !hedefKonum?.adres) {
+  if (
+    sorunHedefKonumGerekliMi(tip) &&
+    !hedefBilinmiyor &&
+    !hedefKonum?.adres
+  ) {
     return NextResponse.json(
       { error: "Aracın çekileceği adres gerekli." },
       { status: 400 }
@@ -137,7 +144,7 @@ export async function POST(request: NextRequest) {
     },
     konumIl: konumIl ?? undefined,
     konumIlce: konumIlce ?? undefined,
-    ...(sorunHedefKonumGerekliMi(tip) && hedefKonum?.adres
+    ...(sorunHedefKonumGerekliMi(tip) && !hedefBilinmiyor && hedefKonum?.adres
       ? {
           hedefKonum: {
             lat: hedefKonum.lat ?? 0,
@@ -146,6 +153,7 @@ export async function POST(request: NextRequest) {
           },
         }
       : {}),
+    ...(hedefBilinmiyor ? { hedefBilinmiyor: true } : {}),
     sorun: sorunTam,
     sorunTipi: tip,
     sorunDetay: sorunDetay?.trim(),

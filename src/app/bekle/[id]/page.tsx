@@ -11,7 +11,9 @@ import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 import { teklifleriSirala } from "@/lib/teklif-siralama";
 import { IhaleBekleAnimasyon } from "@/components/IhaleBekleAnimasyon";
 import { MusteriCekiciTakipHarita } from "@/components/MusteriCekiciTakipHarita";
+import { BekleHedefDegistir } from "@/components/BekleHedefDegistir";
 import { koordinatGecerli } from "@/lib/koordinat";
+import { sorunHedefKonumGerekliMi } from "@/lib/sorun-tipleri";
 import {
   musteriBildirimIzniIste,
   musteriYeniTeklifBildir,
@@ -103,6 +105,8 @@ function BekleIcerik() {
     lng: number;
     adres: string;
   } | null>(null);
+  const [hedefDegistirildi, setHedefDegistirildi] = useState(false);
+  const [hedefBilinmiyor, setHedefBilinmiyor] = useState(false);
   const oncekiTeklifSayisi = useRef(0);
   const ilkTeklifKontrol = useRef(true);
   const teklifAlindiKaydedildi = useRef(false);
@@ -230,6 +234,12 @@ function BekleIcerik() {
         }
         if (data.konum) setMusteriKonum(data.konum);
         if (data.hedefKonum) setHedefKonum(data.hedefKonum);
+        if (typeof data.hedefKonumDegistirildi === "boolean") {
+          setHedefDegistirildi(data.hedefKonumDegistirildi);
+        }
+        if (typeof data.hedefBilinmiyor === "boolean") {
+          setHedefBilinmiyor(data.hedefBilinmiyor);
+        }
 
         if (data.tamamlandi) {
           anlasildiRef.current = true;
@@ -250,6 +260,9 @@ function BekleIcerik() {
             const liste = teklifData.teklifler ?? [];
             setTeklifler(liste);
             setIhaleBitis(teklifData.ihaleBitis ?? null);
+            if (typeof teklifData.hedefBilinmiyor === "boolean") {
+              setHedefBilinmiyor(teklifData.hedefBilinmiyor);
+            }
             if (liste.length > 0) {
               setAnimasyonBitti(true);
               setDurum("teklif_sec");
@@ -307,6 +320,9 @@ function BekleIcerik() {
           oncekiTeklifSayisi.current = yeniSayi;
           setTeklifler(teklifData.teklifler ?? []);
           setIhaleBitis(teklifData.ihaleBitis ?? null);
+          if (typeof teklifData.hedefBilinmiyor === "boolean") {
+            setHedefBilinmiyor(teklifData.hedefBilinmiyor);
+          }
           if (yeniSayi > 0) {
             setAnimasyonBitti(true);
             setDurum("teklif_sec");
@@ -645,6 +661,7 @@ function BekleIcerik() {
                       )}
                       <p className="text-xs text-slate-500 mt-1">
                         Tahmini ~{t.tahminiSureDk} dk
+                        {hedefBilinmiyor ? " (hedef +30 dk dahil)" : ""}
                       </p>
                       {t.mesaj?.trim() && (
                         <p className="text-sm text-slate-600 mt-2 leading-relaxed">
@@ -685,7 +702,7 @@ function BekleIcerik() {
 
   return (
     <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
-      <div className="flex flex-col items-center justify-center min-h-[65dvh] text-center px-4">
+      <div className="flex flex-col items-center px-4 pb-8 pt-2">
         {gelenTeklifBanner()}
         {durum === "yeniden_araniyor" && (
           <Card className="w-full mb-6 bg-amber-50 border-amber-200">
@@ -696,59 +713,92 @@ function BekleIcerik() {
         )}
 
         {!animasyonBitti && teklifler.length === 0 ? (
-          <IhaleBekleAnimasyon
-            operatorSayisi={operatorSayisi}
-            onTamamlandi={() => setAnimasyonBitti(true)}
-          />
+          <div className="flex flex-col items-center justify-center min-h-[55dvh] text-center w-full">
+            <IhaleBekleAnimasyon
+              operatorSayisi={operatorSayisi}
+              onTamamlandi={() => setAnimasyonBitti(true)}
+            />
+            <p className="text-slate-500 text-sm mt-6 mb-2">
+              Operatörler bilgilendiriliyor…
+            </p>
+            {ihaleBitis && (
+              <p className="text-xs text-slate-400">
+                İhale bitiş:{" "}
+                {new Date(ihaleBitis).toLocaleTimeString("tr-TR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+            )}
+            <p className="text-xs text-slate-400 mt-8 max-w-xs">
+              {operatorSayisi > 0
+                ? `${operatorSayisi} operatöre bildirim gönderildi. Yeni teklif gelince SMS alabilirsiniz.`
+                : "Yakındaki operatörler aranıyor. Teklifler geldikçe burada listelenecek."}
+            </p>
+          </div>
         ) : (
-          <>
-            <div className="relative w-32 h-32 mb-8">
-              <div className="absolute inset-0 rounded-full border-4 border-amber-200 animate-ping" />
-              <div className="absolute inset-4 rounded-full border-4 border-amber-400/60 animate-pulse" />
-              <div className="absolute inset-0 flex items-center justify-center text-5xl animate-bounce">
-                🚛
+          <div className="w-full max-w-lg space-y-4">
+            <div className="text-center">
+              <div className="relative w-20 h-20 mx-auto mb-4">
+                <div className="absolute inset-0 rounded-full border-4 border-amber-200 animate-ping opacity-40" />
+                <div className="absolute inset-0 flex items-center justify-center text-4xl">
+                  🚛
+                </div>
               </div>
+              <h2 className="text-xl font-bold text-slate-900 mb-1">
+                {teklifler.length > 0
+                  ? "Teklifler geliyor"
+                  : "Çekiciler teklif veriyor"}
+              </h2>
+              <p className="text-slate-500 text-sm mb-2">
+                {teklifler.length > 0
+                  ? `${teklifler.length} teklif alındı`
+                  : "Teklifler bekleniyor…"}
+              </p>
+              {ihaleBitis && (
+                <p className="text-xs text-slate-400 mb-2">
+                  İhale bitiş:{" "}
+                  {new Date(ihaleBitis).toLocaleTimeString("tr-TR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              )}
+              <div className="flex gap-1.5 justify-center mb-2">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="w-2 h-2 rounded-full bg-amber-500 animate-bounce"
+                    style={{ animationDelay: `${i * 0.15}s` }}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 max-w-xs mx-auto">
+                {operatorSayisi > 0
+                  ? `${operatorSayisi} operatöre bildirim gönderildi.`
+                  : "Yakındaki operatörler aranıyor."}
+              </p>
             </div>
-            <h2 className="text-xl font-bold text-slate-900 mb-2">
-              {teklifler.length > 0
-                ? "Teklifler geliyor"
-                : "Çekiciler teklif veriyor"}
-            </h2>
-          </>
-        )}
 
-        <p className="text-slate-500 text-sm mb-2">
-          {teklifler.length > 0
-            ? `${teklifler.length} teklif alındı`
-            : animasyonBitti
-              ? "Teklifler bekleniyor…"
-              : "Operatörler bilgilendiriliyor…"}
-        </p>
-        {ihaleBitis && (
-          <p className="text-xs text-slate-400 mb-6">
-            İhale bitiş:{" "}
-            {new Date(ihaleBitis).toLocaleTimeString("tr-TR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
-        )}
-        {(animasyonBitti || teklifler.length > 0) && (
-          <div className="flex gap-1.5">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className="w-2 h-2 rounded-full bg-amber-500 animate-bounce"
-                style={{ animationDelay: `${i * 0.15}s` }}
-              />
-            ))}
+            {(sorunHedefKonumGerekliMi(sorunTipi ?? undefined) ||
+              hedefKonum) &&
+              musteriKonum &&
+              koordinatGecerli(musteriKonum) && (
+                <BekleHedefDegistir
+                  talepId={id}
+                  musteriKonum={musteriKonum}
+                  hedefKonum={hedefKonum}
+                  sorunTipi={sorunTipi}
+                  degistirildi={hedefDegistirildi}
+                  onGuncellendi={(hedef) => {
+                    setHedefKonum(hedef);
+                    setHedefDegistirildi(true);
+                    setHedefBilinmiyor(false);
+                  }}
+                />
+              )}
           </div>
         )}
-        <p className="text-xs text-slate-400 mt-10 max-w-xs">
-          {operatorSayisi > 0
-            ? `${operatorSayisi} operatöre bildirim gönderildi. Yeni teklif gelince SMS alabilirsiniz.`
-            : "Yakındaki operatörler aranıyor. Teklifler geldikçe burada listelenecek."}
-        </p>
       </div>
     </MobileShell>
   );

@@ -12,7 +12,7 @@ import { idleSonra } from "@/lib/idle-sonra";
 
 /**
  * gtag.js — LCP sonrası (lazyOnload + idle).
- * Consent default root layout’ta beforeInteractive kalır.
+ * Consent default root layout `<head>` içindeki inline scriptte.
  * Ads dönüşümleri için script AW- ile yüklenir; GA4 ayrıca config edilir.
  */
 export function GoogleAnalytics() {

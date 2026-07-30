@@ -99,7 +99,7 @@ export const GTAG_CONSENT_GRANTED: GtagConsentParams = {
 };
 
 /**
- * Head’de `beforeInteractive` ile en erken çalışan bootstrap.
+ * Head’de en erken çalışan bootstrap (root layout inline `<script>`).
  * Sıra (Google advanced consent mode): dataLayer → consent default →
  * url_passthrough / ads_data_redaction → kayıtlı tercih update.
  * `config` ayrı scriptte, gtag.js yüklendikten sonra.

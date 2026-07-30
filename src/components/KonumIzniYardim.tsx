@@ -5,6 +5,7 @@ import {
   konumAyarlariAdimlari,
   type KonumIzniDurumu,
 } from "@/lib/konum-client";
+import { ChromeAcSecenegi } from "@/components/ChromeAcSecenegi";
 import { Card } from "@/components/ui";
 
 interface KonumIzniYardimProps {
@@ -76,9 +77,10 @@ export function KonumIzniYardim({
           </p>
         )}
         <p className="text-sm text-red-800 mt-2 leading-relaxed">
-          Hâlâ olmuyorsa aşağıdaki adımları izleyin, sayfayı yenileyin ve tekrar
-          deneyin. Adresi elle yazarak da devam edebilirsiniz.
+          Hâlâ olmuyorsa Chrome’da açmayı deneyin veya aşağıdaki adımları
+          izleyin. Adresi elle yazarak da devam edebilirsiniz.
         </p>
+        <ChromeAcSecenegi vurgulu className="mt-3" />
         <ol className="mt-3 space-y-2 text-sm text-red-900 list-decimal list-inside">
           {adimlar.map((adim) => (
             <li key={adim} className="leading-relaxed pl-1">
