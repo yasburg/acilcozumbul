@@ -24,8 +24,16 @@ export type KurulumHatirlatmaCekiciOzet = {
   /** Kurulum bitmeden giden başarılı SMS sayısı */
   tamamlanmamisBasarili: number;
   sonBasariliAt: string | null;
+  ilkGonderimAt: string | null;
+  /** 0-based son başarılı mesaj indeksi */
+  sonMesajIndex: number | null;
+  /** Kurulum tamamlandıysa hangi hatırlatmada (1–4) */
+  tamamlandigiHatirlatma: number | null;
+  toplamTiklama: number;
+  sonTiklamaAt: string | null;
   tiklayan: boolean;
   kurulumTamamlandi: boolean;
+  kurulumTamamAt: string | null;
 };
 
 /** 0-based: bir sonraki SMS’in metin indeksi */
@@ -135,8 +143,14 @@ export function cekiciKurulumHatirlatmaAdayiMi(
     basariliGonderim: 0,
     tamamlanmamisBasarili: 0,
     sonBasariliAt: null,
+    ilkGonderimAt: null,
+    sonMesajIndex: null,
+    tamamlandigiHatirlatma: null,
+    toplamTiklama: 0,
+    sonTiklamaAt: null,
     tiklayan: false,
     kurulumTamamlandi: false,
+    kurulumTamamAt: null,
   };
   if (o.kurulumTamamlandi) return false;
   if (kurulumHatirlatmaDurdurulduMu(o)) return false;

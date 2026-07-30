@@ -1,8 +1,13 @@
 import { getSupabaseAdmin, supabaseDbAktif } from "./supabase/admin";
 import { getCekiciById, getCekiciler } from "./db";
 import {
+  cekiciKurulumIlerleme,
+  cekiciProfilHazirMi,
+} from "./cekici-profil-hazir";
+import {
   cekiciKurulumHatirlatmaAdayiMi,
   kurulumHatirlatmaDurdurulduMu,
+  kurulumHatirlatmaKisaPath,
   kurulumHatirlatmaKisaUrl,
   kurulumHatirlatmaMesajIndex,
   kurulumHatirlatmaSmsMetni,
@@ -184,9 +189,9 @@ export async function getKurulumHatirlatmaOzetMap(
   let q = getSupabaseAdmin()
     .from("kurulum_hatirlatma_gonderim")
     .select(
-      "cekici_id, sms_basarili, olusturulma, ilk_tiklama, kurulum_tamam_at"
+      "cekici_id, sms_basarili, olusturulma, mesaj_index, ilk_tiklama, tiklama_sayisi, kurulum_tamam_at"
     )
-    .order("olusturulma", { ascending: false });
+    .order("olusturulma", { ascending: true });
 
   if (cekiciIds && cekiciIds.length > 0) {
     q = q.in("cekici_id", cekiciIds);
@@ -204,27 +209,82 @@ export async function getKurulumHatirlatmaOzetMap(
         basariliGonderim: 0,
         tamamlanmamisBasarili: 0,
         sonBasariliAt: null,
+        ilkGonderimAt: null,
+        sonMesajIndex: null,
+        tamamlandigiHatirlatma: null,
+        toplamTiklama: 0,
+        sonTiklamaAt: null,
         tiklayan: false,
         kurulumTamamlandi: false,
+        kurulumTamamAt: null,
       };
       out.set(id, o);
     }
     if (row.sms_basarili) {
       o.basariliGonderim += 1;
-      if (!o.sonBasariliAt) o.sonBasariliAt = String(row.olusturulma);
+      if (!o.ilkGonderimAt) o.ilkGonderimAt = String(row.olusturulma);
+      o.sonBasariliAt = String(row.olusturulma);
+      o.sonMesajIndex = Number(row.mesaj_index) || 0;
       if (!row.kurulum_tamam_at) o.tamamlanmamisBasarili += 1;
     }
-    if (row.ilk_tiklama) o.tiklayan = true;
-    if (row.kurulum_tamam_at) o.kurulumTamamlandi = true;
+    const tik = Number(row.tiklama_sayisi) || 0;
+    if (tik > 0 || row.ilk_tiklama) {
+      o.tiklayan = true;
+      o.toplamTiklama += tik;
+      if (row.ilk_tiklama) {
+        const t = String(row.ilk_tiklama);
+        if (!o.sonTiklamaAt || t > o.sonTiklamaAt) o.sonTiklamaAt = t;
+      }
+    }
+    if (row.kurulum_tamam_at) {
+      o.kurulumTamamlandi = true;
+      const tamamAt = String(row.kurulum_tamam_at);
+      if (!o.kurulumTamamAt || tamamAt < o.kurulumTamamAt) {
+        o.kurulumTamamAt = tamamAt;
+      }
+    }
   }
+
+  /* Tamamlanma hangi hatırlatmada: son başarılı mesaj indeksi */
+  for (const o of out.values()) {
+    if (o.kurulumTamamlandi && o.sonMesajIndex != null) {
+      o.tamamlandigiHatirlatma = o.sonMesajIndex + 1;
+    }
+  }
+
   return out;
 }
 
 export type KurulumHatirlatmaPanelOzet = {
+  eksikKurulum: number;
+  smsAlanCekici: number;
   gonderilen: number;
+  basarisizSms: number;
   tiklayanCekici: number;
+  tiklamaOrani: number | null;
   kurulumTamamlayan: number;
+  smsSonrasiTamam: number;
+  donusumOrani: number | null;
   durdurulan: number;
+  adaySayisi: number;
+  hicSmsAlmayan: number;
+};
+
+export type KurulumHatirlatmaMesajKirilim = {
+  hatirlatma: number;
+  gonderilen: number;
+  tiklanan: number;
+  tiklamaOrani: number | null;
+  tamamlanan: number;
+  donusumOrani: number | null;
+};
+
+export type KurulumHatirlatmaFunnelKirilim = {
+  funnel: string;
+  eksik: number;
+  smsAlan: number;
+  tiklayan: number;
+  tamamlayan: number;
 };
 
 export type KurulumHatirlatmaPanelSatir = {
@@ -232,64 +292,302 @@ export type KurulumHatirlatmaPanelSatir = {
   ad: string;
   telefon: string;
   kayitFunnel: string | null;
+  kayitTarihi: string | null;
+  kurulumYuzde: number;
   gonderimSayisi: number;
+  hatirlatmaNo: number;
+  sonrakiMesaj: number | null;
   tamamlanmamisBasarili: number;
+  ilkSms: string | null;
   sonSms: string | null;
   tiklayan: boolean;
+  toplamTiklama: number;
+  sonTiklama: string | null;
   kurulumTamamlandi: boolean;
-  durum: "aktif" | "durduruldu";
+  kurulumTamamAt: string | null;
+  tamamlandigiHatirlatma: number | null;
+  gunKayittan: number | null;
+  gunSonSms: number | null;
+  durum:
+    | "aday"
+    | "bekliyor"
+    | "tikladi"
+    | "tamamlandi"
+    | "durduruldu"
+    | "sms_yok";
 };
+
+export type KurulumHatirlatmaLogSatir = {
+  id: string;
+  token: string;
+  cekiciId: string;
+  ad: string;
+  telefon: string;
+  kayitFunnel: string | null;
+  hatirlatmaNo: number;
+  olusturulma: string;
+  smsBasarili: boolean;
+  tiklandi: boolean;
+  tiklamaSayisi: number;
+  ilkTiklama: string | null;
+  kurulumTamamAt: string | null;
+  kisaPath: string;
+};
+
+function oran(pay: number, payda: number): number | null {
+  if (payda <= 0) return null;
+  return pay / payda;
+}
+
+function gunFarki(iso: string | null, nowMs: number): number | null {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return null;
+  return Math.floor((nowMs - t) / (24 * 60 * 60 * 1000));
+}
+
+function takipDurum(opts: {
+  kurulumTamam: boolean;
+  durduruldu: boolean;
+  gonderimSayisi: number;
+  tiklayan: boolean;
+  adayMi: boolean;
+}): KurulumHatirlatmaPanelSatir["durum"] {
+  if (opts.kurulumTamam) return "tamamlandi";
+  if (opts.durduruldu) return "durduruldu";
+  if (opts.gonderimSayisi === 0) return "sms_yok";
+  if (opts.tiklayan) return "tikladi";
+  if (opts.adayMi) return "aday";
+  return "bekliyor";
+}
 
 export async function getKurulumHatirlatmaPanelVerisi(): Promise<{
   ozet: KurulumHatirlatmaPanelOzet;
+  mesajKirilim: KurulumHatirlatmaMesajKirilim[];
+  funnelKirilim: KurulumHatirlatmaFunnelKirilim[];
   satirlar: KurulumHatirlatmaPanelSatir[];
+  gonderimler: KurulumHatirlatmaLogSatir[];
 }> {
   const tumCekiciler = await getCekiciler();
   const byId = new Map(tumCekiciler.map((c) => [c.id, c]));
   const ozetMap = await getKurulumHatirlatmaOzetMap();
+  const nowMs = Date.now();
+
+  const mesajMap = new Map<
+    number,
+    { gonderilen: number; tiklanan: number; tamamlanan: number }
+  >();
+  for (let i = 0; i < 4; i++) {
+    mesajMap.set(i, { gonderilen: 0, tiklanan: 0, tamamlanan: 0 });
+  }
+
+  const gonderimler: KurulumHatirlatmaLogSatir[] = [];
+  let basarisizSms = 0;
+
+  if (await kurulumHatirlatmaTablosuVar()) {
+    const { data, error } = await getSupabaseAdmin()
+      .from("kurulum_hatirlatma_gonderim")
+      .select(SELECT_COLS)
+      .order("olusturulma", { ascending: false })
+      .limit(500);
+    if (error) throw error;
+
+    for (const raw of data ?? []) {
+      const g = rowToGonderim(raw as Record<string, unknown>);
+      const c = byId.get(g.cekiciId);
+      if (!g.smsBasarili) basarisizSms += 1;
+      const m = mesajMap.get(g.mesajIndex);
+      if (m && g.smsBasarili) {
+        m.gonderilen += 1;
+        if (g.ilkTiklama || g.tiklamaSayisi > 0) m.tiklanan += 1;
+        if (g.kurulumTamamAt) m.tamamlanan += 1;
+      }
+      gonderimler.push({
+        id: g.id,
+        token: g.token,
+        cekiciId: g.cekiciId,
+        ad: c?.ad || "(adsız)",
+        telefon: c?.telefon ?? g.telefon,
+        kayitFunnel: c?.kayitFunnel ?? null,
+        hatirlatmaNo: g.mesajIndex + 1,
+        olusturulma: g.olusturulma,
+        smsBasarili: g.smsBasarili,
+        tiklandi: Boolean(g.ilkTiklama) || g.tiklamaSayisi > 0,
+        tiklamaSayisi: g.tiklamaSayisi,
+        ilkTiklama: g.ilkTiklama,
+        kurulumTamamAt: g.kurulumTamamAt,
+        kisaPath: kurulumHatirlatmaKisaPath(g.token),
+      });
+    }
+  }
+
+  const mesajKirilim: KurulumHatirlatmaMesajKirilim[] = [0, 1, 2, 3].map(
+    (i) => {
+      const m = mesajMap.get(i)!;
+      return {
+        hatirlatma: i + 1,
+        gonderilen: m.gonderilen,
+        tiklanan: m.tiklanan,
+        tiklamaOrani: oran(m.tiklanan, m.gonderilen),
+        tamamlanan: m.tamamlanan,
+        donusumOrani: oran(m.tamamlanan, m.gonderilen),
+      };
+    }
+  );
 
   let gonderilen = 0;
   let tiklayanCekici = 0;
   let kurulumTamamlayan = 0;
+  let smsSonrasiTamam = 0;
   let durdurulan = 0;
+  let smsAlanCekici = 0;
+
+  const takipIds = new Set<string>();
+  for (const c of tumCekiciler) {
+    if (c.testerHesap) continue;
+    if (c.kurulumTamam === false || ozetMap.has(c.id)) {
+      takipIds.add(c.id);
+    }
+  }
+  for (const id of ozetMap.keys()) takipIds.add(id);
 
   const satirlar: KurulumHatirlatmaPanelSatir[] = [];
+  const funnelMap = new Map<
+    string,
+    { eksik: number; smsAlan: number; tiklayan: number; tamamlayan: number }
+  >();
 
-  for (const [cekiciId, o] of ozetMap) {
-    gonderilen += o.basariliGonderim;
-    if (o.tiklayan) tiklayanCekici += 1;
-    if (o.kurulumTamamlandi) kurulumTamamlayan += 1;
-    const durdur = kurulumHatirlatmaDurdurulduMu(o);
-    if (durdur) durdurulan += 1;
+  function funnelSlot(f: string | null | undefined) {
+    const key = f && f.trim() ? f.trim().toLowerCase() : "—";
+    let s = funnelMap.get(key);
+    if (!s) {
+      s = { eksik: 0, smsAlan: 0, tiklayan: 0, tamamlayan: 0 };
+      funnelMap.set(key, s);
+    }
+    return s;
+  }
+
+  let eksikKurulum = 0;
+  let hicSmsAlmayan = 0;
+
+  for (const cekiciId of takipIds) {
     const c = byId.get(cekiciId);
+    const o = ozetMap.get(cekiciId) ?? null;
+    const kurulumEksik = c?.kurulumTamam === false && !cekiciProfilHazirMi(c);
+    const gonderimSayisi = o?.basariliGonderim ?? 0;
+    const durdur = o ? kurulumHatirlatmaDurdurulduMu(o) : false;
+    const adayMi = c
+      ? cekiciKurulumHatirlatmaAdayiMi(c, o, { cooldownUygula: true, nowMs })
+      : false;
+
+    if (kurulumEksik) {
+      eksikKurulum += 1;
+      if (gonderimSayisi === 0) hicSmsAlmayan += 1;
+    }
+    if (gonderimSayisi > 0) smsAlanCekici += 1;
+    if (o) {
+      gonderilen += o.basariliGonderim;
+      if (o.tiklayan) tiklayanCekici += 1;
+      if (o.kurulumTamamlandi) {
+        kurulumTamamlayan += 1;
+        if (o.basariliGonderim > 0) smsSonrasiTamam += 1;
+      }
+      if (durdur) durdurulan += 1;
+    }
+
+    const fKey = c?.kayitFunnel ?? null;
+    const fs = funnelSlot(fKey);
+    if (kurulumEksik) fs.eksik += 1;
+    if (gonderimSayisi > 0) fs.smsAlan += 1;
+    if (o?.tiklayan) fs.tiklayan += 1;
+    if (o?.kurulumTamamlandi) fs.tamamlayan += 1;
+
+    const kurulumTamam =
+      o?.kurulumTamamlandi === true ||
+      (c != null && c.kurulumTamam !== false && !kurulumEksik);
+    const ilerleme = c ? cekiciKurulumIlerleme(c) : { yuzde: 0, adimlar: [] };
+    const hatirlatmaNo = kurulumTamam
+      ? (o?.tamamlandigiHatirlatma ?? gonderimSayisi)
+      : gonderimSayisi;
+    const sonraki =
+      !kurulumTamam && !durdur && gonderimSayisi < 4
+        ? kurulumHatirlatmaMesajIndex(gonderimSayisi) + 1
+        : null;
+
     satirlar.push({
       cekiciId,
-      ad: c?.ad ?? "—",
-      telefon: c?.telefon ?? o.cekiciId,
+      ad: c?.ad || "(adsız)",
+      telefon: c?.telefon ?? cekiciId,
       kayitFunnel: c?.kayitFunnel ?? null,
-      gonderimSayisi: o.basariliGonderim,
-      tamamlanmamisBasarili: o.tamamlanmamisBasarili,
-      sonSms: o.sonBasariliAt,
-      tiklayan: o.tiklayan,
-      kurulumTamamlandi: o.kurulumTamamlandi,
-      durum: durdur ? "durduruldu" : "aktif",
+      kayitTarihi: c?.kayitTarihi ?? null,
+      kurulumYuzde: ilerleme.yuzde,
+      gonderimSayisi,
+      hatirlatmaNo,
+      sonrakiMesaj: sonraki,
+      tamamlanmamisBasarili: o?.tamamlanmamisBasarili ?? 0,
+      ilkSms: o?.ilkGonderimAt ?? null,
+      sonSms: o?.sonBasariliAt ?? null,
+      tiklayan: o?.tiklayan ?? false,
+      toplamTiklama: o?.toplamTiklama ?? 0,
+      sonTiklama: o?.sonTiklamaAt ?? null,
+      kurulumTamamlandi: kurulumTamam,
+      kurulumTamamAt: o?.kurulumTamamAt ?? null,
+      tamamlandigiHatirlatma: o?.tamamlandigiHatirlatma ?? null,
+      gunKayittan: gunFarki(c?.kayitTarihi ?? null, nowMs),
+      gunSonSms: gunFarki(o?.sonBasariliAt ?? null, nowMs),
+      durum: takipDurum({
+        kurulumTamam,
+        durduruldu: durdur,
+        gonderimSayisi,
+        tiklayan: o?.tiklayan ?? false,
+        adayMi,
+      }),
     });
   }
 
   satirlar.sort((a, b) => {
-    const ta = a.sonSms ? new Date(a.sonSms).getTime() : 0;
-    const tb = b.sonSms ? new Date(b.sonSms).getTime() : 0;
+    const ta = a.sonSms
+      ? new Date(a.sonSms).getTime()
+      : a.kayitTarihi
+        ? new Date(a.kayitTarihi).getTime()
+        : 0;
+    const tb = b.sonSms
+      ? new Date(b.sonSms).getTime()
+      : b.kayitTarihi
+        ? new Date(b.kayitTarihi).getTime()
+        : 0;
     return tb - ta;
+  });
+
+  const funnelKirilim: KurulumHatirlatmaFunnelKirilim[] = [
+    ...funnelMap.entries(),
+  ]
+    .map(([funnel, v]) => ({ funnel, ...v }))
+    .sort((a, b) => b.eksik - a.eksik || b.smsAlan - a.smsAlan);
+
+  const adaylar = await listeleKurulumHatirlatmaAdaylar({
+    cooldownUygula: true,
   });
 
   return {
     ozet: {
+      eksikKurulum,
+      smsAlanCekici,
       gonderilen,
+      basarisizSms,
       tiklayanCekici,
+      tiklamaOrani: oran(tiklayanCekici, smsAlanCekici),
       kurulumTamamlayan,
+      smsSonrasiTamam,
+      donusumOrani: oran(smsSonrasiTamam, smsAlanCekici),
       durdurulan,
+      adaySayisi: adaylar.length,
+      hicSmsAlmayan,
     },
+    mesajKirilim,
+    funnelKirilim,
     satirlar,
+    gonderimler,
   };
 }
 
@@ -371,8 +669,16 @@ export async function manuelKurulumHatirlatmaGonder(opts: {
         basariliGonderim: (onceki?.basariliGonderim ?? 0) + 1,
         tamamlanmamisBasarili: (onceki?.tamamlanmamisBasarili ?? 0) + 1,
         sonBasariliAt: new Date().toISOString(),
+        ilkGonderimAt: onceki?.ilkGonderimAt ?? new Date().toISOString(),
+        sonMesajIndex: kurulumHatirlatmaMesajIndex(
+          onceki?.basariliGonderim ?? 0
+        ),
+        tamamlandigiHatirlatma: onceki?.tamamlandigiHatirlatma ?? null,
+        toplamTiklama: onceki?.toplamTiklama ?? 0,
+        sonTiklamaAt: onceki?.sonTiklamaAt ?? null,
         tiklayan: onceki?.tiklayan ?? false,
         kurulumTamamlandi: onceki?.kurulumTamamlandi ?? false,
+        kurulumTamamAt: onceki?.kurulumTamamAt ?? null,
       });
     } else {
       hatalar.push(`${cekici.telefon}: ${r.hata ?? "başarısız"}`);

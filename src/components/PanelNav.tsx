@@ -21,7 +21,7 @@ const LINKS: {
   { href: "/panel/sms/toplu", label: "Toplu SMS" },
   { href: "/panel/sms/sablonlar", label: "SMS şablonları" },
   { href: "/panel/kredi-takip", label: "Kredi takip" },
-  { href: "/panel/kurulum-sms", label: "Kurulum SMS" },
+  { href: "/panel/kurulum-sms", label: "Kurulum takip" },
   { href: "/panel/sehir-acilis", label: "Şehir açılış" },
   { href: "/panel/kredi-odemeler", label: "Kredi ödemeleri" },
   { href: "/panel/degerlendirmeler", label: "Değerlendirmeler" },

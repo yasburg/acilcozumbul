@@ -31,9 +31,15 @@ export async function GET() {
 
   return NextResponse.json({
     ozet: panel.ozet,
+    mesajKirilim: panel.mesajKirilim,
+    funnelKirilim: panel.funnelKirilim,
     satirlar: panel.satirlar.map((s) => ({
       ...s,
       telefon: telefonMaskele(s.telefon),
+    })),
+    gonderimler: panel.gonderimler.map((g) => ({
+      ...g,
+      telefon: telefonMaskele(g.telefon),
     })),
     adaylar: adaylar.map((a) => ({
       ...a,

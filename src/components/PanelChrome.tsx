@@ -123,7 +123,7 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
               <MobilNavLink href="/panel/sms/toplu" label="Toplu SMS" />
               <MobilNavLink href="/panel/sms/sablonlar" label="SMS şablonları" />
               <MobilNavLink href="/panel/kredi-takip" label="Kredi takip" />
-              <MobilNavLink href="/panel/kurulum-sms" label="Kurulum SMS" />
+              <MobilNavLink href="/panel/kurulum-sms" label="Kurulum takip" />
               <MobilNavLink href="/panel/sehir-acilis" label="Şehir açılış" />
               <MobilNavLink
                 href="/panel/kredi-odemeler"

@@ -24,8 +24,14 @@ function ozet(
     basariliGonderim: 0,
     tamamlanmamisBasarili: 0,
     sonBasariliAt: null,
+    ilkGonderimAt: null,
+    sonMesajIndex: null,
+    tamamlandigiHatirlatma: null,
+    toplamTiklama: 0,
+    sonTiklamaAt: null,
     tiklayan: false,
     kurulumTamamlandi: false,
+    kurulumTamamAt: null,
     ...overrides,
   };
 }
