@@ -1718,6 +1718,11 @@ function MusteriAnaSayfaIcerik() {
       backLabel={step === "sorun" ? undefined : "Geri"}
       onBack={step === "sorun" ? undefined : oncekiAdimaDon}
       headerCenter={step === "sorun" ? undefined : adimUstBilgi(true)}
+      onBrandClick={() => {
+        setStep("sorun");
+        setError("");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }}
       footer={<YasalSiteFooter />}
     >
       <h1 className="sr-only">

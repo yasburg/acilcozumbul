@@ -5587,7 +5587,7 @@
       "label": "BrandLogoYazili()",
       "file_type": "code",
       "source_file": "src/components/BrandLogo.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_brandlogo_brandlogoyazili",
       "community": 91,
@@ -5597,7 +5597,7 @@
       "label": "BrandLogoIcon()",
       "file_type": "code",
       "source_file": "src/components/BrandLogo.tsx",
-      "source_location": "L42",
+      "source_location": "L50",
       "_origin": "ast",
       "id": "src_components_brandlogo_brandlogoicon",
       "community": 91,
@@ -6477,7 +6477,7 @@
       "label": "MobileShell()",
       "file_type": "code",
       "source_file": "src/components/MobileShell.tsx",
-      "source_location": "L24",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "src_components_mobileshell_mobileshell",
       "community": 91,
@@ -52513,7 +52513,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/BrandLogo.tsx",
-      "source_location": "L42",
+      "source_location": "L50",
       "weight": 1.0,
       "source": "src_components_brandlogo",
       "target": "src_components_brandlogo_brandlogoicon",
@@ -52523,7 +52523,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/BrandLogo.tsx",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_components_brandlogo",
       "target": "src_components_brandlogo_brandlogoyazili",
@@ -55228,7 +55228,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/MobileShell.tsx",
-      "source_location": "L24",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "src_components_mobileshell",
       "target": "src_components_mobileshell_mobileshell",
@@ -58994,7 +58994,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2462",
+      "source_location": "L2467",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_hedef_oneri_data_ototamiraramasorgusu"
@@ -59005,7 +59005,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2465",
+      "source_location": "L2470",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_konum_parse_parseililce"
@@ -59016,7 +59016,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2029",
+      "source_location": "L2034",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_sorunaracmodeligereklimi"
@@ -59027,7 +59027,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2112",
+      "source_location": "L2117",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_soruncagributonetiketi"
@@ -59038,7 +59038,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2009",
+      "source_location": "L2014",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_sorunfotografalanigoster"
@@ -59049,7 +59049,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2014",
+      "source_location": "L2019",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_sorunfotografgereklimi"
@@ -59082,7 +59082,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L1834",
+      "source_location": "L1839",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_telefon_telefonmaskele"
@@ -93161,5 +93161,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "514966600cda00936fde3b1ee08c62937e2f6e94"
+  "built_at_commit": "818ffc200d398eec31816c0c6d00b96d32c1cc7e"
 }

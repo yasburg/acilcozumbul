@@ -18,6 +18,8 @@ interface MobileShellProps {
   headerBadge?: React.ReactNode;
   /** Logo sağdayken Geri ile logo arasında (ör. online + progress) */
   headerCenter?: React.ReactNode;
+  /** Logo tıklanınca (ör. wizard’ı ilk adıma al) */
+  onBrandClick?: () => void;
   footer?: React.ReactNode;
 }
 
@@ -32,6 +34,7 @@ export function MobileShell({
   onBack,
   headerBadge,
   headerCenter,
+  onBrandClick,
   footer,
 }: MobileShellProps) {
   const geriMetinli = Boolean(backLabel);
@@ -63,6 +66,13 @@ export function MobileShell({
   const logo = showBrand ? (
     <BrandLogoYazili
       priority
+      onClick={
+        onBrandClick
+          ? () => {
+              onBrandClick();
+            }
+          : undefined
+      }
       className={`h-[3.9rem] w-auto max-w-[min(280px,70vw)] shrink-0 object-contain ${
         brandAlign === "right" ? "object-right" : "object-left"
       }`}

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { MouseEventHandler } from "react";
 
 /** Header LCP yolu — ~11 KB WebP (640×416) */
 const LOGO_YAZILI_HEADER = "/acilcozumbul-logo-yazili-header.webp";
@@ -12,10 +13,12 @@ export function BrandLogoYazili({
   className = "h-9 w-auto max-w-[220px] object-contain object-left",
   priority,
   href = "/",
+  onClick,
 }: {
   className?: string;
   priority?: boolean;
   href?: string | null;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
 }) {
   const img = (
     <Image
@@ -32,7 +35,12 @@ export function BrandLogoYazili({
   if (href == null) return img;
 
   return (
-    <Link href={href} className="inline-block shrink-0" aria-label="Ana sayfa">
+    <Link
+      href={href}
+      onClick={onClick}
+      className="inline-block shrink-0 touch-manipulation"
+      aria-label="Ana sayfa"
+    >
       {img}
     </Link>
   );
