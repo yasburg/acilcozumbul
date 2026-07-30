@@ -1380,7 +1380,7 @@ function MusteriAnaSayfaIcerik() {
               Adres işleniyor…
             </span>
           ) : (
-            "İleri"
+            sorunCagriButonEtiketi(form.sorunTipi)
           )}
         </Btn>
       </div>
@@ -1441,7 +1441,7 @@ function MusteriAnaSayfaIcerik() {
         </div>
         {form.hedefAdres.trim() && form.hedefLat && form.hedefLng ? (
           <p className="text-xs text-emerald-800 leading-relaxed">
-            Adres bulundu. İleri ile devam edebilirsiniz.
+            Adres bulundu. Aşağıdaki çağır butonuyla devam edebilirsiniz.
           </p>
         ) : form.hedefAdres.trim() ? (
           <p className="text-xs text-slate-600">
@@ -2625,7 +2625,7 @@ function MusteriAnaSayfaIcerik() {
                     Adres işleniyor…
                   </span>
                 ) : (
-                  "İleri"
+                  sorunCagriButonEtiketi(form.sorunTipi)
                 )}
               </Btn>
             </div>
