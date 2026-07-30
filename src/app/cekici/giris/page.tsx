@@ -14,6 +14,12 @@ function epostaGibiMi(deger: string): boolean {
   return deger.includes("@");
 }
 
+/** Open redirect önleme — yalnızca site içi göreli path */
+function guvenliNext(raw: string | null): string | null {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
+
 function GirisIcerik() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,7 +63,10 @@ function GirisIcerik() {
     if (searchParams.get("mesaj") === "hesap-silindi") return;
     if (searchParams.get("mesaj") === "zaten-kayitli") return;
     void cekiciFetch("/api/cekici/me").then((res) => {
-      if (res.ok) router.replace("/cekici/panel");
+      if (res.ok) {
+        const next = guvenliNext(searchParams.get("next"));
+        router.replace(next ?? "/cekici/panel");
+      }
     });
   }, [router, searchParams]);
 
@@ -87,7 +96,8 @@ function GirisIcerik() {
       yontem: epostaIle ? "eposta" : "telefon",
     });
     router.refresh();
-    router.push("/cekici/panel");
+    const next = guvenliNext(searchParams.get("next"));
+    router.push(next ?? "/cekici/panel");
   }
 
   async function otpKodGonder() {
@@ -136,8 +146,10 @@ function GirisIcerik() {
       }
       posthogOlayYakala("cekici_giris", { rol: "cekici", yontem: "otp" });
       router.refresh();
+      const next = guvenliNext(searchParams.get("next"));
       router.push(
-        typeof d.yonlendir === "string" ? d.yonlendir : "/cekici/panel"
+        next ??
+          (typeof d.yonlendir === "string" ? d.yonlendir : "/cekici/panel")
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Giriş başarısız.");

@@ -9,6 +9,7 @@ import { kayitFunnelMi } from "@/lib/kayit-funnel";
 import { kaydetKayitFunnelOlay } from "@/lib/kayit-funnel-olay";
 import { cekiciProfilHazirMi } from "@/lib/cekici-profil-hazir";
 import { cekiciSifreyiAuthaTasi } from "@/lib/cekici-auth";
+import { baglaKurulumHatirlatmaTamam } from "@/lib/kurulum-hatirlatma-db";
 
 const MIN_SIFRE_UZUNLUK = 6;
 
@@ -158,6 +159,11 @@ export async function POST(request: NextRequest) {
     /* Menzil kurulumda yok — varsayılan kalsın; ayarlardan değişir */
     guncel.kurulumTamam = true;
     await updateCekici(guncel);
+    try {
+      await baglaKurulumHatirlatmaTamam(guncel.id);
+    } catch (e) {
+      console.error("[kurulum-hatirlatma] tamam bagla", e);
+    }
     await kaydetKayitFunnelOlay({
       funnel,
       olay: "kurulum_2",

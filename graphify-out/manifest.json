@@ -15,8 +15,8 @@
     "semantic_hash": ""
   },
   "next.config.ts": {
-    "mtime": 1785188988.990284,
-    "ast_hash": "2d0da993c7623d8a9c6bb481d539a9ec",
+    "mtime": 1785401051.79489,
+    "ast_hash": "3042c71d75bc7029f4766cec5bc0c21d",
     "semantic_hash": ""
   },
   "package.json": {
@@ -435,8 +435,8 @@
     "semantic_hash": ""
   },
   "src/app/cekici/giris/page.tsx": {
-    "mtime": 1784983569.638878,
-    "ast_hash": "12b475200767c577b1998c3cb42f929f",
+    "mtime": 1785401125.6947792,
+    "ast_hash": "8806a3d60931929f10eb3b286bf14dba",
     "semantic_hash": ""
   },
   "src/app/cekici/kayit/layout.tsx": {
@@ -710,13 +710,13 @@
     "semantic_hash": ""
   },
   "src/components/PanelChrome.tsx": {
-    "mtime": 1785308895.3133254,
-    "ast_hash": "614ebc146bc464302df0db68c57c184f",
+    "mtime": 1785401055.8810909,
+    "ast_hash": "b149b8790b7f920e8e33b788687f9a1c",
     "semantic_hash": ""
   },
   "src/components/PanelNav.tsx": {
-    "mtime": 1785308894.692316,
-    "ast_hash": "7d5635a4e66eb123995c36925d56c54f",
+    "mtime": 1785401053.516492,
+    "ast_hash": "17e4965ca3566c5256525b8c4e677bed",
     "semantic_hash": ""
   },
   "src/components/PostHogProvider.tsx": {
@@ -2100,8 +2100,8 @@
     "semantic_hash": ""
   },
   "src/app/api/cekici/kurulum/route.ts": {
-    "mtime": 1784983540.2290287,
-    "ast_hash": "377ca302d795579cffb471466e51b32f",
+    "mtime": 1785401059.8213415,
+    "ast_hash": "d56e56512c6e1787b1f854fc675b6b92",
     "semantic_hash": ""
   },
   "src/app/api/kayit/funnel-olay/route.ts": {
@@ -2120,8 +2120,8 @@
     "semantic_hash": ""
   },
   "src/app/kayit/kurulum/page.tsx": {
-    "mtime": 1785026254.78647,
-    "ast_hash": "f1a63d6d0798caac3337da25db49a4e5",
+    "mtime": 1785401060.2818196,
+    "ast_hash": "34a66d61beadb4b1d3ffa4cc1f0f3459",
     "semantic_hash": ""
   },
   "src/app/kayit/layout.tsx": {
@@ -2337,6 +2337,41 @@
   "src/components/cekici/CekiciKayitLandingHero.tsx": {
     "mtime": 1785400451.055627,
     "ast_hash": "beed352826832ecdba243420aaac5403",
+    "semantic_hash": ""
+  },
+  "src/app/api/panel/kurulum-sms/route.ts": {
+    "mtime": 1785401033.4474106,
+    "ast_hash": "76a9192d8dd47525b913c9e22a552a22",
+    "semantic_hash": ""
+  },
+  "src/app/kurulum-hatirlatma/[token]/route.ts": {
+    "mtime": 1785400996.853269,
+    "ast_hash": "0322b54de78bc548a340eb92e7cc9a3f",
+    "semantic_hash": ""
+  },
+  "src/app/panel/kurulum-sms/page.tsx": {
+    "mtime": 1785401033.447516,
+    "ast_hash": "d6e1dc23b3c0aedb111d9da0bf03e691",
+    "semantic_hash": ""
+  },
+  "src/lib/kurulum-hatirlatma-db.ts": {
+    "mtime": 1785400983.664628,
+    "ast_hash": "7bcc0fd7026c6fe5e7d9d12fde886b7b",
+    "semantic_hash": ""
+  },
+  "src/lib/kurulum-hatirlatma.test.ts": {
+    "mtime": 1785400988.4566033,
+    "ast_hash": "6a4f9fa70194da0638f6db5d94479a39",
+    "semantic_hash": ""
+  },
+  "src/lib/kurulum-hatirlatma.ts": {
+    "mtime": 1785400883.0741103,
+    "ast_hash": "7cda24d4e30281db3d0555eefeeb9ed7",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/039_kurulum_hatirlatma.sql": {
+    "mtime": 1785400883.239937,
+    "ast_hash": "8e10e8302daa930b08fdc86500fdf46d",
     "semantic_hash": ""
   }
 }

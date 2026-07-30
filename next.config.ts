@@ -62,6 +62,11 @@ const nextConfig: NextConfig = {
         destination: "/kredi-hatirlatma/:token",
       },
       {
+        /* /ku/TOKEN — kurulum hatırlatma kısa link */
+        source: "/ku/:token([0-9A-Za-z]{8})",
+        destination: "/kurulum-hatirlatma/:token",
+      },
+      {
         /* /sms50a/TOKEN … kişiye özel — daha spesifik kural önce */
         source: "/sms50:varyant([a-z])/:token([0-9A-Za-z]{8})",
         destination: "/sms50/:varyant/:token",

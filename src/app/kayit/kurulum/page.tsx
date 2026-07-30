@@ -60,7 +60,9 @@ export default function KayitKurulumPage() {
     void (async () => {
       const res = await cekiciFetch("/api/cekici/kurulum");
       if (res.status === 401) {
-        router.replace("/cekici/giris");
+        router.replace(
+          `/cekici/giris?next=${encodeURIComponent("/kayit/kurulum")}`
+        );
         return;
       }
       const d = await res.json().catch(() => ({}));
