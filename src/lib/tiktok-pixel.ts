@@ -1,6 +1,5 @@
 import {
   cerezAnalitikAktif,
-  cerezOnayOku,
   CEREZ_ONAY_STORAGE_KEY,
 } from "./cerez-onay";
 import { telefonNormalize } from "./telefon";
@@ -212,9 +211,7 @@ export function tiktokPixelCerezSenkronize(): void {
     return;
   }
 
-  if (cerezOnayOku() === "zorunlu") {
-    ttqCagir("revokeConsent");
-  }
+  ttqCagir("revokeConsent");
 }
 
 /** Analitik onayı varken PageView */
@@ -459,7 +456,8 @@ export function tiktokPixelCompleteRegistration(params?: {
 }
 
 /**
- * Script bootstrap: queue + holdConsent + load; «tumu» ise grant + page.
+ * Script bootstrap: queue + holdConsent + load.
+ * Varsayılan grant; yalnızca «zorunlu» ise revoke.
  */
 export function tiktokPixelBootstrapInline(pixelId: string): string {
   return `
@@ -470,7 +468,9 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
   ttq.holdConsent();
   ttq.load('${pixelId}');
   try{
-    if(localStorage.getItem('${CEREZ_ONAY_STORAGE_KEY}')==='tumu'){
+    if(localStorage.getItem('${CEREZ_ONAY_STORAGE_KEY}')==='zorunlu'){
+      ttq.revokeConsent();
+    } else {
       ttq.grantConsent();
       ttq.page();
     }

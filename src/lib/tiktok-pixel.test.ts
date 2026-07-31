@@ -22,8 +22,10 @@ describe("tiktok pixel", () => {
     expect(html).toContain("analytics.tiktok.com");
     expect(html).toContain("holdConsent");
     expect(html).toContain("grantConsent");
+    expect(html).toContain("revokeConsent");
     expect(html).toContain(TIKTOK_PIXEL_ID);
     expect(html).toContain(CEREZ_ONAY_STORAGE_KEY);
+    expect(html).toContain("zorunlu");
     expect(html).toContain("ttq.page");
   });
 

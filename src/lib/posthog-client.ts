@@ -1,4 +1,4 @@
-import { cerezAnalitikAktif, cerezOnayOku } from "./cerez-onay";
+import { cerezAnalitikAktif } from "./cerez-onay";
 
 const UTM_ANAHTARLARI = [
   "utm_source",
@@ -85,9 +85,7 @@ export function posthogCerezSenkronize(): void {
       posthogKampanyaKaydet();
       return;
     }
-    if (cerezOnayOku() === "zorunlu") {
-      ph.opt_out_capturing();
-    }
+    ph.opt_out_capturing();
   });
 }
 

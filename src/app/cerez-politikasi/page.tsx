@@ -36,21 +36,23 @@ export default function CerezPolitikasiPage() {
         <p className="font-medium text-slate-800 mt-4">İsteğe bağlı çerezler</p>
         <YasalListe
           items={[
-            "Performans ve kullanım analitiği (yalnızca «Tümünü kabul et» seçeneğinde)",
+            "Performans, kullanım analitiği ve reklam ölçümü (varsayılan açık; «Yalnızca gerekli» ile kapatılır)",
             "Tercih hatırlama (isteğe bağlı iyileştirmeler)",
           ]}
         />
         <p>
-          «Zorunlu olmayanları reddet» seçeneği ile yalnızca zorunlu çerezler
-          kullanılır.
+          «Yalnızca gerekli» seçeneği ile isteğe bağlı çerezler kapatılır ve ilgili
+          çerezler temizlenir.
         </p>
       </YasalBolum>
 
       <YasalBolum baslik="3. Tercih yönetimi">
         <p>
-          Siteye ilk girişinizde çerez banner’ı görüntülenir: Tümünü kabul et, Zorunlu
-          olmayanları reddet veya Vazgeç (banner’ı kapatır; tercih kaydedilmez,
-          sonraki oturumda tekrar sorulabilir). Tercihinizi tarayıcı ayarlarından da
+          Analitik ve reklam çerezleri varsayılan olarak açıktır. Banner’dan «Tümünü
+          kabul et» ile bu durumu onaylayabilir veya «Yalnızca gerekli» ile isteğe
+          bağlı çerezleri kapatabilirsiniz (mevcut analitik çerezleri de temizlenir).
+          Tarayıcıdan site çerezlerini manuel silerseniz tercih otomatik olarak
+          «yalnızca gerekli»ye geçer. Tercihinizi tarayıcı ayarlarından da
           silebilirsiniz.
         </p>
       </YasalBolum>

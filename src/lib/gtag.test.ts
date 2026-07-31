@@ -19,7 +19,9 @@ describe("gtag consent mode (advanced)", () => {
     expect(html).toContain("url_passthrough");
     expect(html).toContain("ads_data_redaction");
     expect(html).toContain(CEREZ_ONAY_STORAGE_KEY);
-    expect(html).toContain("tumu");
+    expect(html).toContain("zorunlu");
+    /* Opt-out: varsayılan granted */
+    expect(html).toMatch(/consent',\s*'default'[\s\S]*analytics_storage:\s*'granted'/);
   });
 
   it("v2 parametre setleri tutarlı", () => {

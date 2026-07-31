@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   cerezBannerGosterilmeli,
+  cerezManuelSilmeSenkronize,
   cerezOnayKaydet,
 } from "@/lib/cerez-onay";
 import { posthogCerezSenkronize } from "@/lib/posthog-client";
@@ -19,8 +20,7 @@ import {
 
 type Gorunum = "ozet" | "ayarlar" | "onay";
 
-function tercihKaydet(tercih: "tumu" | "zorunlu", kapat: () => void) {
-  cerezOnayKaydet(tercih);
+function terciheGoreSenkronize(tercih: "tumu" | "zorunlu") {
   posthogCerezSenkronize();
   gtagCerezSenkronize();
   metaPixelCerezSenkronize();
@@ -29,6 +29,11 @@ function tercihKaydet(tercih: "tumu" | "zorunlu", kapat: () => void) {
     metaPixelPageView();
     tiktokPixelPageView();
   }
+}
+
+function tercihKaydet(tercih: "tumu" | "zorunlu", kapat: () => void) {
+  cerezOnayKaydet(tercih);
+  terciheGoreSenkronize(tercih);
   kapat();
 }
 
@@ -113,6 +118,14 @@ export function CerezOnayBanner() {
   const [goster, setGoster] = useState(true);
   const [gorunum, setGorunum] = useState<Gorunum>("ozet");
   const [analitikAcik, setAnalitikAcik] = useState(true);
+
+  useEffect(() => {
+    cerezManuelSilmeSenkronize();
+    posthogCerezSenkronize();
+    gtagCerezSenkronize();
+    metaPixelCerezSenkronize();
+    tiktokPixelCerezSenkronize();
+  }, []);
 
   if (!gosterilmeli || !goster) return null;
 

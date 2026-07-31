@@ -1,7 +1,4 @@
-import {
-  cerezAnalitikAktif,
-  cerezOnayOku,
-} from "./cerez-onay";
+import { cerezAnalitikAktif } from "./cerez-onay";
 
 /** Meta (Facebook) Pixel kimliği */
 export const META_PIXEL_ID =
@@ -34,9 +31,7 @@ export function metaPixelCerezSenkronize(): void {
     return;
   }
 
-  if (cerezOnayOku() === "zorunlu") {
-    fbqCagir("consent", "revoke");
-  }
+  fbqCagir("consent", "revoke");
 }
 
 /** Analitik onayı varken PageView */
@@ -82,8 +77,8 @@ export function metaPixelCompleteRegistration(params?: {
 }
 
 /**
- * Head / Script için bootstrap: queue + revoke varsayılan + init.
- * Consent grant, çerez «tumu» ise hemen.
+ * Head / Script için bootstrap: queue + init.
+ * Varsayılan grant; yalnızca «zorunlu» ise revoke kalır.
  */
 export function metaPixelBootstrapInline(pixelId: string): string {
   return `
@@ -92,10 +87,11 @@ n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
 n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
 document,'script','https://connect.facebook.net/en_US/fbevents.js');
-fbq('consent','revoke');
 fbq('init','${pixelId}');
 try{
-  if(localStorage.getItem('acil_cerez_onay')==='tumu'){
+  if(localStorage.getItem('acil_cerez_onay')==='zorunlu'){
+    fbq('consent','revoke');
+  } else {
     fbq('consent','grant');
     fbq('track','PageView');
   }

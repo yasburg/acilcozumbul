@@ -12,13 +12,15 @@ describe("meta pixel", () => {
     expect(META_PIXEL_ID).toBe("1552497653179792");
   });
 
-  it("bootstrap revoke + init + çerez grant içerir", () => {
+  it("bootstrap init + çerez grant/revoke içerir", () => {
     const html = metaPixelBootstrapInline(META_PIXEL_ID);
     expect(html).toContain("fbevents.js");
     expect(html).toContain("consent");
     expect(html).toContain("revoke");
+    expect(html).toContain("grant");
     expect(html).toContain(META_PIXEL_ID);
     expect(html).toContain(CEREZ_ONAY_STORAGE_KEY);
+    expect(html).toContain("zorunlu");
     expect(html).toContain("PageView");
   });
 

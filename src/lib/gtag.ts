@@ -1,7 +1,6 @@
 import {
   CEREZ_ONAY_STORAGE_KEY,
   cerezAnalitikAktif,
-  cerezOnayOku,
 } from "./cerez-onay";
 import { telefonNormalize } from "./telefon";
 
@@ -82,7 +81,7 @@ declare global {
   }
 }
 
-/** Consent Mode v2 — tüm parametreler denied (EEA / KVKK varsayılanı) */
+/** Consent Mode v2 — isteğe bağlı depolama kapalı */
 export const GTAG_CONSENT_DENIED: GtagConsentParams = {
   ad_storage: "denied",
   ad_user_data: "denied",
@@ -100,8 +99,7 @@ export const GTAG_CONSENT_GRANTED: GtagConsentParams = {
 
 /**
  * Head’de en erken çalışan bootstrap (root layout inline `<script>`).
- * Sıra (Google advanced consent mode): dataLayer → consent default →
- * url_passthrough / ads_data_redaction → kayıtlı tercih update.
+ * Varsayılan: analitik/reklam açık (opt-out). Yalnızca «zorunlu» ise denied.
  * `config` ayrı scriptte, gtag.js yüklendikten sonra.
  */
 export function gtagConsentBootstrapInline(): string {
@@ -111,29 +109,29 @@ window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 window.gtag = gtag;
 gtag('consent', 'default', {
-  ad_storage: 'denied',
-  ad_user_data: 'denied',
-  ad_personalization: 'denied',
-  analytics_storage: 'denied',
+  ad_storage: 'granted',
+  ad_user_data: 'granted',
+  ad_personalization: 'granted',
+  analytics_storage: 'granted',
   wait_for_update: 500
 });
 gtag('set', 'url_passthrough', true);
 gtag('set', 'ads_data_redaction', true);
 try {
   var tercih = localStorage.getItem(${JSON.stringify(key)});
-  if (tercih === 'tumu') {
-    gtag('consent', 'update', {
-      ad_storage: 'granted',
-      ad_user_data: 'granted',
-      ad_personalization: 'granted',
-      analytics_storage: 'granted'
-    });
-  } else if (tercih === 'zorunlu') {
+  if (tercih === 'zorunlu') {
     gtag('consent', 'update', {
       ad_storage: 'denied',
       ad_user_data: 'denied',
       ad_personalization: 'denied',
       analytics_storage: 'denied'
+    });
+  } else {
+    gtag('consent', 'update', {
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+      analytics_storage: 'granted'
     });
   }
 } catch (e) {}
@@ -241,9 +239,7 @@ export function gtagCerezSenkronize(): void {
     return;
   }
 
-  if (cerezOnayOku() === "zorunlu") {
-    gtagCagir("consent", "update", { ...GTAG_CONSENT_DENIED });
-  }
+  gtagCagir("consent", "update", { ...GTAG_CONSENT_DENIED });
 }
 
 /** Dönüşüm / özel etkinlik (analitik onayı varken) */
