@@ -7,7 +7,7 @@ import {
   type CekiciKayitGunNokta,
 } from "@/lib/cekici-kayit-serisi";
 
-type Pencere = 30 | 90 | "hepsi";
+type Pencere = 7 | 30 | 90 | "hepsi";
 
 function gunEtiket(gun: string): string {
   const [, m, d] = gun.split("-");
@@ -224,6 +224,7 @@ export function KullaniciSayisiGrafik({
         <div className="flex rounded-xl border border-slate-200 p-0.5 bg-slate-50">
           {(
             [
+              [7, "7g"],
               [30, "30g"],
               [90, "90g"],
               ["hepsi", "Tümü"],
