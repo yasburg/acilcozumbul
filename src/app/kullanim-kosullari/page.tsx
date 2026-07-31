@@ -75,6 +75,17 @@ export default function KullanimKosullariPage() {
         />
       </YasalBolum>
 
+      <YasalBolum baslik="5A. Hizmet veren profil fotoğrafı">
+        <YasalListe
+          items={[
+            "Hizmet verenler Hesabım üzerinden profil fotoğrafı yükleyebilir; fotoğraf yalnızca yüzü göstermelidir ve arka plan sade olmalıdır.",
+            "Yüklenen fotoğraf platform incelemesine tabidir; onaylanmadan müşterilere gösterilmez.",
+            "Uygun olmayan fotoğraflar reddedilebilir; red nedeni hesap sayfasında gösterilir. Yeniden yükleme mümkündür.",
+            "Yükleme, Gizlilik Politikası kapsamında açık rıza ve onay sonrası müşteriye gösterim kabulünü içerir.",
+          ]}
+        />
+      </YasalBolum>
+
       <YasalBolum baslik="6. Konum ve iletişim verisi">
         <p>
           Talep sürecinde konum ve telefon numarası işlenir. İşleme amaçları ve

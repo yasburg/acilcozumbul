@@ -107,6 +107,10 @@ export async function POST(
 
   return NextResponse.json({
     cekiciAd: cekici?.ad ?? teklif.cekiciAd,
+    cekiciProfilFotoUrl:
+      cekici?.profilFotoDurum === "onaylandi" && cekici.profilFotoUrl?.trim()
+        ? cekici.profilFotoUrl.trim()
+        : null,
     fiyat: teklif.fiyat,
     mesaj: "Çekici seçildi. Kısa süre içinde sizi arayacak.",
   });

@@ -58,9 +58,16 @@ export async function GET(
   const ihaleAcik = ihaleAcikMi(talep);
 
   let cekiciAd: string | undefined;
+  let cekiciProfilFotoUrl: string | null = null;
   if (talep.kazananCekiciId) {
     const cekici = await getCekiciById(talep.kazananCekiciId);
     cekiciAd = cekici?.ad;
+    if (
+      cekici?.profilFotoDurum === "onaylandi" &&
+      cekici.profilFotoUrl?.trim()
+    ) {
+      cekiciProfilFotoUrl = cekici.profilFotoUrl.trim();
+    }
   }
 
   const kazananTeklif = talep.kazananTeklifId
@@ -89,6 +96,7 @@ export async function GET(
     yenidenAranıyor,
     tamamlandi,
     cekiciAd,
+    cekiciProfilFotoUrl,
     kazananFiyat: kazananTeklif?.fiyat,
     anlasmaDurumu: talep.anlasmaDurumu,
     konum: talep.konum,

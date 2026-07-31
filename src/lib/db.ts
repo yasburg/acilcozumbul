@@ -10,7 +10,13 @@ import {
   type SmsLogRow,
   type TalepRow,
 } from "./supabase/mappers";
-import type { BelgeDurum, Cekici, SmsKaydi, Talep } from "./types";
+import type {
+  BelgeDurum,
+  Cekici,
+  ProfilFotoDurum,
+  SmsKaydi,
+  Talep,
+} from "./types";
 import { davetKoduNormalize } from "./davet-kodu";
 import {
   hydrateTalepIliskileri,
@@ -152,6 +158,18 @@ export async function countCekicilerBelgeDurum(
   return count ?? 0;
 }
 
+/** Profil fotoğrafı durumu bekleyen çekici sayısı */
+export async function countCekicilerProfilFotoDurum(
+  durum: ProfilFotoDurum
+): Promise<number> {
+  const { count, error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .select("*", { count: "exact", head: true })
+    .eq("profil_foto_durum", durum);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function getCekiciById(id: string): Promise<Cekici | undefined> {
   const { data, error } = await getSupabaseAdmin()
     .from("cekiciler")
@@ -282,6 +300,26 @@ export async function updateCekiciBelgeDurum(
     .single();
   if (error) throw error;
   return (data.belge_durum as BelgeDurum) ?? patch.belgeDurum;
+}
+
+export async function updateCekiciProfilFotoDurum(
+  id: string,
+  patch: { profilFotoDurum: ProfilFotoDurum; profilFotoRedNedeni?: string | null }
+): Promise<ProfilFotoDurum> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("cekiciler")
+    .update({
+      profil_foto_durum: patch.profilFotoDurum,
+      profil_foto_red_nedeni:
+        patch.profilFotoDurum === "reddedildi"
+          ? (patch.profilFotoRedNedeni?.trim() ?? null)
+          : null,
+    })
+    .eq("id", id)
+    .select("profil_foto_durum")
+    .single();
+  if (error) throw error;
+  return (data.profil_foto_durum as ProfilFotoDurum) ?? patch.profilFotoDurum;
 }
 
 export async function saveCekiciler(

@@ -41,6 +41,10 @@ export type CekiciRow = {
   belge_durum?: string | null;
   belge_red_nedeni?: string | null;
   belge_gonderim?: string | null;
+  profil_foto_url?: string | null;
+  profil_foto_durum?: string | null;
+  profil_foto_red_nedeni?: string | null;
+  profil_foto_gonderim?: string | null;
   rozet_aktif?: boolean | null;
   rozet_odeme_tarihi?: string | null;
   musaitlik_aktif?: boolean | null;
@@ -123,6 +127,10 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     belgeDurum: (r.belge_durum as Cekici["belgeDurum"]) ?? "yok",
     belgeRedNedeni: r.belge_red_nedeni ?? undefined,
     belgeGonderim: r.belge_gonderim ?? undefined,
+    profilFotoUrl: r.profil_foto_url ?? undefined,
+    profilFotoDurum: (r.profil_foto_durum as Cekici["profilFotoDurum"]) ?? "yok",
+    profilFotoRedNedeni: r.profil_foto_red_nedeni ?? undefined,
+    profilFotoGonderim: r.profil_foto_gonderim ?? undefined,
     rozetAktif: Boolean(r.rozet_aktif),
     rozetOdemeTarihi: r.rozet_odeme_tarihi ?? undefined,
     musaitlikAktif: Boolean(r.musaitlik_aktif),
@@ -174,6 +182,10 @@ export function cekiciToRow(
     belge_durum: c.belgeDurum ?? "yok",
     belge_red_nedeni: c.belgeRedNedeni ?? null,
     belge_gonderim: c.belgeGonderim ?? null,
+    profil_foto_url: c.profilFotoUrl ?? null,
+    profil_foto_durum: c.profilFotoDurum ?? "yok",
+    profil_foto_red_nedeni: c.profilFotoRedNedeni ?? null,
+    profil_foto_gonderim: c.profilFotoGonderim ?? null,
     rozet_aktif: c.rozetAktif ?? false,
     rozet_odeme_tarihi: c.rozetOdemeTarihi ?? null,
     musaitlik_aktif: c.musaitlikAktif ?? false,

@@ -13,6 +13,7 @@ import { useCekiciKonumSync } from "@/hooks/useCekiciKonumSync";
 import { KonumGuncellemeGostergesi } from "@/components/KonumGuncellemeGostergesi";
 import { DavetKoduAyarlari } from "@/components/cekici/DavetKoduAyarlari";
 import { OnayliCekiciHesap } from "@/components/cekici/OnayliCekiciHesap";
+import { ProfilFotoHesap } from "@/components/cekici/ProfilFotoHesap";
 import { CekiciAyarlarPanel } from "@/components/cekici/CekiciAyarlarPanel";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 import { DemoHeaderBadge } from "@/components/DemoHeaderBadge";
@@ -905,6 +906,8 @@ export default function CekiciPanelTabs() {
               {telefonGoster(cekici.telefon, hesapSeviye)}
             </p>
           </Card>
+
+          <ProfilFotoHesap />
 
           <OnayliCekiciHesap />
 

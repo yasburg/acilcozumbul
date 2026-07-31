@@ -48,6 +48,7 @@ interface TeklifOzet {
   fiyatGarantiPuani: number;
   fiyatGarantiYuzde: number;
   onayliCekici?: boolean;
+  profilFotoUrl?: string | null;
 }
 
 const demoHeaderBadge = <DemoHeaderBadge />;
@@ -87,6 +88,9 @@ function BekleIcerik() {
   const [durum, setDurum] = useState<Durum>("ihale_bekliyor");
   const [teklifler, setTeklifler] = useState<TeklifOzet[]>([]);
   const [cekiciAd, setCekiciAd] = useState<string | null>(null);
+  const [cekiciProfilFotoUrl, setCekiciProfilFotoUrl] = useState<string | null>(
+    null
+  );
   const [kazananFiyat, setKazananFiyat] = useState<number | null>(null);
   const [islem, setIslem] = useState(false);
   const [mesaj, setMesaj] = useState("");
@@ -280,6 +284,11 @@ function BekleIcerik() {
           anlasildiRef.current = true;
           setDurum("anlasildi");
           setCekiciAd(data.cekiciAd ?? null);
+          setCekiciProfilFotoUrl(
+            typeof data.cekiciProfilFotoUrl === "string"
+              ? data.cekiciProfilFotoUrl
+              : null
+          );
           if (data.memnuniyet) setMemnuniyet(data.memnuniyet);
           planla(30_000);
           return;
@@ -288,6 +297,7 @@ function BekleIcerik() {
         if (data.yenidenAranıyor) {
           anlasildiRef.current = false;
           setCekiciAd(null);
+          setCekiciProfilFotoUrl(null);
           setTeklifBanner(null);
           const teklifRes = await fetch(`/api/talep/${id}/teklifler`);
           if (teklifRes.ok) {
@@ -319,6 +329,11 @@ function BekleIcerik() {
         if (data.kazananSecildi && data.anlasmaBekliyor && !anlasildiRef.current) {
           setDurum("anlasma_bekliyor");
           setCekiciAd(data.cekiciAd ?? "Çekici");
+          setCekiciProfilFotoUrl(
+            typeof data.cekiciProfilFotoUrl === "string"
+              ? data.cekiciProfilFotoUrl
+              : null
+          );
           setKazananFiyat(data.kazananFiyat ?? null);
           planla(8000);
           return;
@@ -327,6 +342,11 @@ function BekleIcerik() {
         if (data.kazananSecildi) {
           setDurum("cekici_bulundu");
           setCekiciAd(data.cekiciAd ?? "Çekici");
+          setCekiciProfilFotoUrl(
+            typeof data.cekiciProfilFotoUrl === "string"
+              ? data.cekiciProfilFotoUrl
+              : null
+          );
           planla(8000);
           return;
         }
@@ -418,6 +438,11 @@ function BekleIcerik() {
         throw new Error(data.error);
       }
       setCekiciAd(data.cekiciAd);
+      setCekiciProfilFotoUrl(
+        typeof data.cekiciProfilFotoUrl === "string"
+          ? data.cekiciProfilFotoUrl
+          : null
+      );
       setKazananFiyat(data.fiyat);
       setDurum("anlasma_bekliyor");
       setMesaj("Çekici seçildi. Kısa süre içinde sizi arayacak.");
@@ -465,6 +490,7 @@ function BekleIcerik() {
       } else {
         anlasildiRef.current = false;
         setCekiciAd(null);
+        setCekiciProfilFotoUrl(null);
         posthogOlayYakala("anlasma_reddedildi", musteriFunnelProps());
 
         const teklifRes = await fetch(`/api/talep/${id}/teklifler`);
@@ -518,7 +544,16 @@ function BekleIcerik() {
       <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
         <div className="space-y-6 py-4">
           <div className="text-center">
-            <div className="text-5xl mb-4">{anlasildi ? "✅" : "🚛"}</div>
+            {cekiciProfilFotoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={cekiciProfilFotoUrl}
+                alt=""
+                className="size-20 rounded-full object-cover border-2 border-emerald-200 mx-auto mb-4 bg-slate-100"
+              />
+            ) : (
+              <div className="text-5xl mb-4">{anlasildi ? "✅" : "🚛"}</div>
+            )}
             <h2 className="text-xl font-bold text-slate-900">
               {anlasildi ? "Anlaşma sağlandı" : "Çekici Seçildi!"}
             </h2>
@@ -698,6 +733,14 @@ function BekleIcerik() {
 
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
+                        {t.profilFotoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={t.profilFotoUrl}
+                            alt=""
+                            className="size-9 rounded-full object-cover border border-slate-200 bg-slate-100 shrink-0"
+                          />
+                        ) : null}
                         <p className="font-semibold text-slate-900">
                           {adSoyadSatirGoster(t.cekiciAd, gizlilik)}
                         </p>

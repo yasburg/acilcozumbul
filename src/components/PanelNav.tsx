@@ -11,11 +11,16 @@ const LINKS: {
   href: string;
   label: string;
   exact?: boolean;
-  sayac?: "cekici" | "rozet" | "talep";
+  sayac?: "cekici" | "rozet" | "profilFoto" | "talep";
 }[] = [
   { href: "/panel", label: "Özet", exact: true },
   { href: "/panel/cekiciler", label: "Çekiciler", sayac: "cekici" },
   { href: "/panel/rozetler", label: "Rozetler", sayac: "rozet" },
+  {
+    href: "/panel/profil-fotograflari",
+    label: "Profil fotoğrafları",
+    sayac: "profilFoto",
+  },
   { href: "/panel/talepler", label: "Talepler", sayac: "talep" },
   { href: "/panel/sms", label: "SMS Sağlık", exact: true },
   { href: "/panel/sms/toplu", label: "Toplu SMS" },
@@ -33,12 +38,13 @@ const LINKS: {
 ];
 
 function sayacDeger(
-  tip: "cekici" | "rozet" | "talep" | undefined,
+  tip: "cekici" | "rozet" | "profilFoto" | "talep" | undefined,
   sayac: PanelNavSayac | null
 ): number | undefined {
   if (!tip || !sayac) return undefined;
   if (tip === "cekici") return sayac.cekiciSayisi;
   if (tip === "rozet") return sayac.rozetTalepSayisi;
+  if (tip === "profilFoto") return sayac.profilFotoTalepSayisi;
   return sayac.talepSayisi;
 }
 

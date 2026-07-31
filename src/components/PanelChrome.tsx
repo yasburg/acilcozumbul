@@ -115,6 +115,11 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
                 adet={sayac?.rozetTalepSayisi}
               />
               <MobilNavLink
+                href="/panel/profil-fotograflari"
+                label="Profil foto"
+                adet={sayac?.profilFotoTalepSayisi}
+              />
+              <MobilNavLink
                 href="/panel/talepler"
                 label="Talepler"
                 adet={sayac?.talepSayisi}

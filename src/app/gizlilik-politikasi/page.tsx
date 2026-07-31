@@ -32,6 +32,7 @@ export default function GizlilikPolitikasiPage() {
         <YasalListe
           items={[
             "Kimlik ve iletişim: ad, soyad, telefon, e-posta (hizmet verenlerde)",
+            "Hizmet veren profil fotoğrafı (yüz görüntüsü) — yükleme sırasında verilen açık rıza ile; onay sonrası müşteri ekranında gösterilir",
             "Konum: talep adresi, GPS koordinatları, canlı takip verileri",
             "Araç ve talep: marka/model, arıza türü, fotoğraf, notlar",
             "İşlem ve ödeme: kredi satın alma, fatura bilgileri (çekici ödemeleri)",
@@ -45,9 +46,12 @@ export default function GizlilikPolitikasiPage() {
         <p>
           Verileriniz; talep eşleştirme, teklif iletimi, canlı konum paylaşımı,
           kimlik doğrulama, ödeme ve faturalama, dolandırıcılık önleme, yasal
-          yükümlülükler ve meşru menfaat kapsamında işlenir. Hukuki sebepler: KVKK
-          m.5/2 (sözleşmenin kurulması ve ifası, hukuki yükümlülük, meşru menfaat)
-          ve gerektiğinde açık rızanız (m.5/1).
+          yükümlülükler ve meşru menfaat kapsamında işlenir. Hizmet veren profil
+          fotoğrafı, yükleme anında verilen açık rıza (KVKK m.5/1) ile kimlik ve
+          güven amacıyla işlenir; yalnızca platform incelemesinden sonra
+          müşterilere gösterilir. Diğer hukuki sebepler: KVKK m.5/2 (sözleşmenin
+          kurulması ve ifası, hukuki yükümlülük, meşru menfaat) ve gerektiğinde
+          açık rızanız (m.5/1).
         </p>
       </YasalBolum>
 

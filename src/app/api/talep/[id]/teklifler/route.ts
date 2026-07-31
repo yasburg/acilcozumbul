@@ -34,7 +34,10 @@ export async function GET(
 
   const aktif = aktifTeklifler(talep);
   const puanMap = await cekiciPuanOzetleri(aktif.map((t) => t.cekiciId));
-  const rozetCache = new Map<string, boolean>();
+  const cekiciCache = new Map<
+    string,
+    { onayliCekici: boolean; profilFotoUrl: string | null }
+  >();
 
   const tekliflerHam = await Promise.all(
     aktif.map(async (t) => {
@@ -52,11 +55,17 @@ export async function GET(
       const fiyatDegisti = teklifFiyatDegistiMi(t);
       const ilkFiyat = t.ilkFiyat ?? t.fiyat;
 
-      let onayliCekici = rozetCache.get(t.cekiciId);
-      if (onayliCekici === undefined) {
+      let meta = cekiciCache.get(t.cekiciId);
+      if (!meta) {
         const c = await getCekiciById(t.cekiciId);
-        onayliCekici = Boolean(c?.rozetAktif);
-        rozetCache.set(t.cekiciId, onayliCekici);
+        meta = {
+          onayliCekici: Boolean(c?.rozetAktif),
+          profilFotoUrl:
+            c?.profilFotoDurum === "onaylandi" && c.profilFotoUrl?.trim()
+              ? c.profilFotoUrl.trim()
+              : null,
+        };
+        cekiciCache.set(t.cekiciId, meta);
       }
 
       return {
@@ -76,7 +85,8 @@ export async function GET(
         ),
         mesaj: t.mesaj,
         tarih: t.tarih,
-        onayliCekici,
+        onayliCekici: meta.onayliCekici,
+        profilFotoUrl: meta.profilFotoUrl,
         tercihPuani: puan.gorunurTercihPuani ?? puan.tercihPuani,
         tercihYuzde: puan.tercihYuzde,
         hizmetPuani: puan.hizmetPuani,

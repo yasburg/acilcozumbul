@@ -6,6 +6,7 @@ export type PanelNavSayac = {
   cekiciSayisi: number;
   talepSayisi: number;
   rozetTalepSayisi: number;
+  profilFotoTalepSayisi: number;
 };
 
 export function usePanelNavSayac(aktif: boolean): PanelNavSayac | null {
@@ -22,6 +23,7 @@ export function usePanelNavSayac(aktif: boolean): PanelNavSayac | null {
           cekiciSayisi: Number(d.cekiciSayisi) || 0,
           talepSayisi: Number(d.talepSayisi) || 0,
           rozetTalepSayisi: Number(d.rozetTalepSayisi) || 0,
+          profilFotoTalepSayisi: Number(d.profilFotoTalepSayisi) || 0,
         });
       })
       .catch(() => {

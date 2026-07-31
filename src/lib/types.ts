@@ -44,6 +44,9 @@ export type HizmetBolgeModu = "il_ilce" | "konum";
 /** Ruhsat / çekici belgesi admin onay akışı */
 export type BelgeDurum = "yok" | "beklemede" | "onaylandi" | "reddedildi";
 
+/** Profil fotoğrafı inceleme durumu (belge ile aynı değerler) */
+export type ProfilFotoDurum = BelgeDurum;
+
 export type OdemeTipi = "kredi" | "rozet";
 
 /** İl adı → seçili ilçe listesi */
@@ -86,6 +89,11 @@ export interface Cekici {
   belgeDurum?: BelgeDurum;
   belgeRedNedeni?: string;
   belgeGonderim?: string;
+  /** Onaya gönderilen / onaylı profil fotoğrafı URL */
+  profilFotoUrl?: string;
+  profilFotoDurum?: ProfilFotoDurum;
+  profilFotoRedNedeni?: string;
+  profilFotoGonderim?: string;
   rozetAktif?: boolean;
   rozetOdemeTarihi?: string;
   /** true ise yalnızca belirtilen saat/günlerde bildirim alır */
