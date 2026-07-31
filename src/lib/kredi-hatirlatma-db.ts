@@ -12,6 +12,7 @@ import {
   type KrediHatirlatmaCekiciOzet,
   type KrediHatirlatmaKaynak,
 } from "./kredi-hatirlatma";
+import { smsYalnizTesterCekicilerMi } from "./sms";
 import { sendSms } from "./sms-provider";
 import { telefonNormalize } from "./telefon";
 import type { Cekici, Talep } from "./types";
@@ -326,6 +327,7 @@ async function gonderBirCekiciye(opts: {
 
 /**
  * Talep create sonrası — koşullu + kredisi yetmeyenlere (best-effort).
+ * development / SMS_TESTER_ONLY: yalnızca testerHesap.
  */
 export async function notifyKrediHatirlatma(
   talep: Talep,
@@ -339,14 +341,26 @@ export async function notifyKrediHatirlatma(
   const ids = tum.map((c) => c.id);
   const ozetMap = await getKrediHatirlatmaOzetMap(ids);
   const haric = new Set(haricTutulan);
+  const yalnizTester = smsYalnizTesterCekicilerMi();
 
   const adaylar = tum.filter(
     (c) =>
       !haric.has(c.id) &&
+      (!yalnizTester || Boolean(c.testerHesap)) &&
       cekiciKrediHatirlatmaAdayiMi(talep, c, ozetMap.get(c.id) ?? null, {
         cooldownUygula: true,
       })
   );
+
+  if (yalnizTester && adaylar.length === 0) {
+    console.info(
+      "[kredi-hatirlatma] development: tester adayı yok — gerçek çekicilere SMS yok"
+    );
+  } else if (yalnizTester) {
+    console.info(
+      `[kredi-hatirlatma] development: yalnızca ${adaylar.length} tester’a hatırlatma`
+    );
+  }
 
   const giden: string[] = [];
   await Promise.all(

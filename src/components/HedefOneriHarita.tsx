@@ -52,6 +52,29 @@ function ayniNokta(a?: Nokta | null, b?: Nokta | null): boolean {
   return Math.abs(a.lat - b.lat) < 1e-5 && Math.abs(a.lng - b.lng) < 1e-5;
 }
 
+function noktaImza(n?: Nokta | null): string {
+  if (!n || !Number.isFinite(n.lat) || !Number.isFinite(n.lng)) return "";
+  return `${n.lat.toFixed(5)},${n.lng.toFixed(5)}`;
+}
+
+/** Aynı içerik için yeni dizi referansı haritayı yeniden kurmasın */
+function oneriImza(oneriler: KonumOneri[]): string {
+  return oneriler
+    .map((o) =>
+      [
+        o.placeId ?? "",
+        Number.isFinite(o.lat) ? o.lat.toFixed(5) : "",
+        Number.isFinite(o.lng) ? o.lng.toFixed(5) : "",
+        o.etiketNo ?? "",
+        o.kategori ?? "",
+        o.puan ?? "",
+        o.puanSayisi ?? "",
+        o.ad,
+      ].join(":")
+    )
+    .join("|");
+}
+
 function kategoriRenk(kategori?: KonumOneri["kategori"]) {
   if (kategori === "oto_tamir") return KATEGORI_RENK.oto_tamir;
   if (kategori === "oto_sanayi") return KATEGORI_RENK.oto_sanayi;
@@ -226,12 +249,24 @@ export function HedefOneriHarita({
   const mapRef = useRef<import("leaflet").Map | null>(null);
   const onSecRef = useRef(onSec);
   onSecRef.current = onSec;
+  const onerilerRef = useRef(oneriler);
+  onerilerRef.current = oneriler;
+  const arizaRef = useRef(ariza);
+  arizaRef.current = ariza;
+  const seciliRef = useRef(secili);
+  seciliRef.current = secili;
 
   const gruplu = oneriler.some((o) => o.kategori);
+  const oneriKey = oneriImza(oneriler);
+  const arizaKey = noktaImza(ariza);
+  const seciliKey = noktaImza(secili);
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el || oneriler.length === 0) return;
+    const liste = onerilerRef.current;
+    const arizaNokta = arizaRef.current;
+    const seciliNokta = seciliRef.current;
+    if (!el || liste.length === 0) return;
 
     let iptal = false;
     let map: import("leaflet").Map | null = null;
@@ -243,37 +278,35 @@ export function HedefOneriHarita({
 
       map = L.map(containerRef.current, {
         scrollWheelZoom: false,
-        attributionControl: true,
+        attributionControl: false,
       });
       mapRef.current = map;
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 19,
       }).addTo(map);
 
       const bounds = L.latLngBounds([]);
-      const yerler = pinYerlesimleri(oneriler);
+      const yerler = pinYerlesimleri(liste);
 
       if (
-        ariza &&
-        Number.isFinite(ariza.lat) &&
-        Number.isFinite(ariza.lng)
+        arizaNokta &&
+        Number.isFinite(arizaNokta.lat) &&
+        Number.isFinite(arizaNokta.lng)
       ) {
-        const m = L.marker([ariza.lat, ariza.lng], {
+        const m = L.marker([arizaNokta.lat, arizaNokta.lng], {
           icon: arizaIkon(L),
           interactive: false,
           zIndexOffset: 200,
         }).addTo(map);
         m.bindTooltip("Arıza konumu", { direction: "top", offset: [0, -12] });
-        bounds.extend([ariza.lat, ariza.lng]);
+        bounds.extend([arizaNokta.lat, arizaNokta.lng]);
       }
 
-      oneriler.forEach((o, i) => {
+      liste.forEach((o, i) => {
         if (!map || !Number.isFinite(o.lat) || !Number.isFinite(o.lng)) return;
         const yer = yerler[i];
-        const seciliMi = ayniNokta(secili, o);
+        const seciliMi = ayniNokta(seciliNokta, o);
         const no = o.etiketNo ?? i + 1;
         const marker = L.marker([yer.lat, yer.lng], {
           icon: numaraIkon(
@@ -296,14 +329,14 @@ export function HedefOneriHarita({
       });
 
       if (
-        ariza &&
-        Number.isFinite(ariza.lat) &&
-        Number.isFinite(ariza.lng)
+        arizaNokta &&
+        Number.isFinite(arizaNokta.lat) &&
+        Number.isFinite(arizaNokta.lng)
       ) {
         let zoom = 14;
-        if (oneriler.length > 0) {
+        if (liste.length > 0) {
           const maxKm = Math.max(
-            ...oneriler.map((o) =>
+            ...liste.map((o) =>
               Number.isFinite(o.mesafeKm) ? (o.mesafeKm as number) : 0
             ),
             0
@@ -313,7 +346,7 @@ export function HedefOneriHarita({
           else if (maxKm > 2) zoom = 13;
           else zoom = 14;
         }
-        map.setView([ariza.lat, ariza.lng], zoom, { animate: false });
+        map.setView([arizaNokta.lat, arizaNokta.lng], zoom, { animate: false });
       } else if (bounds.isValid()) {
         map.fitBounds(bounds.pad(0.2), { maxZoom: 14, animate: false });
       }
@@ -327,7 +360,7 @@ export function HedefOneriHarita({
       map?.remove();
       mapRef.current = null;
     };
-  }, [oneriler, ariza, secili]);
+  }, [oneriKey, arizaKey, seciliKey]);
 
   if (oneriler.length === 0) return null;
 
@@ -369,6 +402,15 @@ export function HedefOneriHarita({
       </div>
       <p className="text-xs text-slate-500 text-center">
         Numaraya dokunarak hedef seçin. A = arıza konumu.
+        {" · "}
+        <a
+          href="https://www.openstreetmap.org/copyright"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline decoration-slate-300 hover:text-slate-700"
+        >
+          © OpenStreetMap
+        </a>
       </p>
       <style>{`
         .acil-harita-pin {

@@ -19,6 +19,8 @@ interface SorunSecimiProps {
   /** Devam Et üstünde gösterilecek konum özeti */
   konumAdres?: string | null;
   onAdresDuzelt?: () => void;
+  /** Seçili kutunun içinde Devam üstü özel konum alanı (öncelikli) */
+  konumIcerik?: ReactNode;
   /** Compact: daha alçak kartlar (müşteri landing) */
   kompaktKart?: boolean;
 }
@@ -34,6 +36,7 @@ export function SorunSecimi({
   devamIcerik,
   konumAdres,
   onAdresDuzelt,
+  konumIcerik,
   kompaktKart = false,
 }: SorunSecimiProps) {
   const kartPy = kompaktKart ? "py-2.5 px-3.5" : "py-3 px-4";
@@ -67,28 +70,30 @@ export function SorunSecimi({
                 </button>
                 <div className="px-3.5 pb-2.5 pt-0 space-y-2">
                   {!kompaktKart && <SorunAkisOzeti sorunTipi={tip.id} icinde />}
-                  {konumAdres?.trim() && (
-                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
-                      <p className="text-[10px] text-emerald-700 uppercase tracking-wide mb-0.5">
-                        Arıza konumu (GPS)
-                      </p>
-                      <p className="text-sm text-emerald-900 leading-snug">
-                        {konumAdres}
-                      </p>
-                      {onAdresDuzelt && (
-                        <button
-                          type="button"
-                          onClick={onAdresDuzelt}
-                          className="mt-1.5 text-xs text-emerald-800 underline font-medium"
-                        >
-                          Adresi düzelt
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  {konumIcerik ??
+                    (konumAdres?.trim() ? (
+                      <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
+                        <p className="text-[10px] text-emerald-700 uppercase tracking-wide mb-0.5">
+                          Arıza konumu (GPS)
+                        </p>
+                        <p className="text-sm text-emerald-900 leading-snug">
+                          {konumAdres}
+                        </p>
+                        {onAdresDuzelt && (
+                          <button
+                            type="button"
+                            onClick={onAdresDuzelt}
+                            className="mt-1.5 text-xs text-emerald-800 underline font-medium"
+                          >
+                            Adresi düzelt
+                          </button>
+                        )}
+                      </div>
+                    ) : null)}
                   {onDevam && (
                     <Btn
                       type="button"
+                      id="sorun-devam-et"
                       className="w-full"
                       onClick={onDevam}
                       disabled={devamDisabled}

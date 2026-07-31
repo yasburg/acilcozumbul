@@ -10,6 +10,18 @@ import { sendSms, smsInfraHatasiMi, type SmsKanal } from "./sms-provider";
 import type { Cekici, Talep } from "./types";
 
 /**
+ * Yerel `next dev` / açıkça açılan modda gerçek çekicilere SMS gitmez;
+ * yalnızca `testerHesap` hesaplara bildirim gider.
+ * Üretimde kapalı. Zorla: SMS_TESTER_ONLY=1 | 0
+ */
+export function smsYalnizTesterCekicilerMi(): boolean {
+  const zorla = process.env.SMS_TESTER_ONLY?.trim().toLowerCase();
+  if (zorla === "1" || zorla === "true" || zorla === "evet") return true;
+  if (zorla === "0" || zorla === "false" || zorla === "hayir") return false;
+  return process.env.NODE_ENV === "development";
+}
+
+/**
  * Çekici talep SMS metni.
  * OTP (premium) max 155 — kısa konum; link sonda korunur.
  * Toplu (standart) aynı metni kullanır (Türkçe karakter ASCII'ye çevrilmez XML'de).
@@ -34,6 +46,8 @@ export function cekiciTalepSmsMetni(
  * Uygun çekicilere talep bildirimi.
  * - premium açık (varsayılan): OTP SMS + 2 kredi
  * - kapatılmışsa: toplu (XML) SMS + 1 kredi
+ * - development / SMS_TESTER_ONLY: yalnızca tester hesaplar
+ *   (otomatik kredi hatırlatma da aynı kuralı kullanır — notifyKrediHatirlatma)
  */
 export async function notifyCekiciler(
   talep: Talep,
@@ -48,10 +62,24 @@ export async function notifyCekiciler(
   const tumCekiciler = await getCekicilerBildirimAdaylari(PANEL_BILDIRIM_KREDI);
   const haric = new Set(haricTutulan);
   const yeniden = options?.yenidenArama ?? false;
+  const yalnizTester = smsYalnizTesterCekicilerMi();
 
   const adaylar = tumCekiciler.filter(
-    (c) => !haric.has(c.id) && cekiciTalepSmsAdayiMi(talep, c)
+    (c) =>
+      !haric.has(c.id) &&
+      cekiciTalepSmsAdayiMi(talep, c) &&
+      (!yalnizTester || Boolean(c.testerHesap))
   );
+
+  if (yalnizTester && adaylar.length === 0) {
+    console.info(
+      "[sms] development: tester çekici adayı yok — gerçek çekicilere SMS gönderilmedi"
+    );
+  } else if (yalnizTester) {
+    console.info(
+      `[sms] development: yalnızca ${adaylar.length} tester çekiciye SMS`
+    );
+  }
 
   const bildirilenIds: string[] = [];
 

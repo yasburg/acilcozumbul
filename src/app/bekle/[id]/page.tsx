@@ -233,8 +233,42 @@ function BekleIcerik() {
         if (typeof data.sorunTipi === "string" && data.sorunTipi) {
           setSorunTipi(data.sorunTipi);
         }
-        if (data.konum) setMusteriKonum(data.konum);
-        if (data.hedefKonum) setHedefKonum(data.hedefKonum);
+                        if (data.konum) {
+                          setMusteriKonum((prev) => {
+                            const k = data.konum as {
+                              lat: number;
+                              lng: number;
+                              adres: string;
+                            };
+                            if (
+                              prev &&
+                              Math.abs(prev.lat - k.lat) < 1e-7 &&
+                              Math.abs(prev.lng - k.lng) < 1e-7 &&
+                              prev.adres === k.adres
+                            ) {
+                              return prev;
+                            }
+                            return k;
+                          });
+                        }
+                        if (data.hedefKonum) {
+                          setHedefKonum((prev) => {
+                            const k = data.hedefKonum as {
+                              lat: number;
+                              lng: number;
+                              adres: string;
+                            };
+                            if (
+                              prev &&
+                              Math.abs(prev.lat - k.lat) < 1e-7 &&
+                              Math.abs(prev.lng - k.lng) < 1e-7 &&
+                              prev.adres === k.adres
+                            ) {
+                              return prev;
+                            }
+                            return k;
+                          });
+                        }
         if (typeof data.hedefKonumDegistirildi === "boolean") {
           setHedefDegistirildi(data.hedefKonumDegistirildi);
         }

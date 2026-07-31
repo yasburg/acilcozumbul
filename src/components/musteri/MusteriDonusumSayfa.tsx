@@ -956,6 +956,7 @@ function MusteriDonusumSayfaIcerik() {
       }));
       hedefAlanaKaydir("hedef-secim-ozeti");
     } else {
+      setError("");
       setForm((f) => ({
         ...f,
         lat,
@@ -1943,10 +1944,109 @@ function MusteriDonusumSayfaIcerik() {
             onDetayChange={(v) => update("sorunDetay", v)}
             sadeceTipSecimi
             kompaktKart
-            konumAdres={
-              arizaKonumGpsAlindi && form.adres.trim() ? form.adres : null
+            konumIcerik={
+              form.sorunTipi ? (
+                <div id="ariza-konumu" className="space-y-2">
+                  {error && (
+                    <div
+                      className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700"
+                      role="alert"
+                    >
+                      {error}
+                    </div>
+                  )}
+                  {!gpsGuvenli && <GpsHttpsBanner compact />}
+
+                  {(gpsYukleniyor || adresGeocodeYukleniyor) && (
+                    <div
+                      className="flex items-start gap-2.5 rounded-lg border border-amber-300 bg-white/80 px-3 py-2.5"
+                      role="status"
+                    >
+                      <Spinner className="mt-0.5 size-4 shrink-0" />
+                      <div className="text-sm text-amber-950 leading-snug min-w-0">
+                        {gpsYukleniyor ? (
+                          <>
+                            <p className="font-medium">
+                              {konumIzniBekleniyor
+                                ? "Konum izni bekleniyor…"
+                                : "Konumunuz alınıyor…"}
+                            </p>
+                            <p className="text-xs text-amber-800 mt-0.5">
+                              İzin penceresinde «İzin Ver»e dokunun.
+                            </p>
+                          </>
+                        ) : (
+                          <p className="font-medium">Adres doğrulanıyor…</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {arizaKonumGpsAlindi && form.adres.trim() ? (
+                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
+                      <p className="text-[10px] text-emerald-700 uppercase tracking-wide mb-0.5">
+                        Arıza konumu (GPS)
+                      </p>
+                      <p className="text-sm text-emerald-900 leading-snug">
+                        {form.adres}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setArizaAdresDuzenle(true)}
+                        className="mt-1.5 text-xs text-emerald-800 underline font-medium"
+                      >
+                        Adresi düzelt
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {!arizaKonumGpsAlindi && !gpsYukleniyor && (
+                    <div className="space-y-2">
+                      <Field
+                        ref={arizaAdresRef}
+                        label="Arıza adresi"
+                        placeholder="Örn. İstanbul, Bayrampaşa, mahalle, sokak…"
+                        value={form.adres}
+                        onChange={(e) => update("adres", e.target.value)}
+                        onBlur={() => {
+                          if (form.adres.trim().length >= 6 && !form.lat) {
+                            void geocodeAdres(form.adres).then((g) => {
+                              if (g)
+                                void konumKaydet(g.lat, g.lng, g.adres, false);
+                            });
+                          }
+                        }}
+                      />
+                      {gpsGuvenli && (
+                        <>
+                          <Btn
+                            type="button"
+                            className="w-full !py-2.5 text-sm"
+                            onClick={() => {
+                              void konumAl(false).then(() => {
+                                musteriFunnelOlay(
+                                  "location_confirmed",
+                                  sorunProps(form.sorunTipi)
+                                );
+                              });
+                            }}
+                            disabled={gpsYukleniyor}
+                          >
+                            📍 Konumumu kullan
+                          </Btn>
+                          <KonumIzniYardim
+                            durum={konumIzni}
+                            gpsGuvenli={gpsGuvenli}
+                            bekleniyor={konumIzniBekleniyor}
+                          />
+                          {konumIzni !== "denied" && <ChromeAcSecenegi />}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : null
             }
-            onAdresDuzelt={() => setArizaAdresDuzenle(true)}
             devamDisabled={devamEtEngelli}
             devamIcerik={
               adresGeocodeYukleniyor ? (
@@ -1965,18 +2065,12 @@ function MusteriDonusumSayfaIcerik() {
                 return;
               }
               if (!arızaKonumuHazir) {
+                if (gpsYukleniyor) gpsIptal();
                 setError(
                   "Arıza konumu gerekli. GPS paylaşın veya adresi yazın."
                 );
                 musteriFunnelOlay("form_validation_error", {
                   alan: "konum",
-                });
-                window.requestAnimationFrame(() => {
-                  window.requestAnimationFrame(() => {
-                    document
-                      .getElementById("ariza-konumu")
-                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  });
                 });
                 return;
               }
@@ -1997,155 +2091,60 @@ function MusteriDonusumSayfaIcerik() {
             }}
           />
 
-          {form.sorunTipi ? (
-            <div
-              id="ariza-konumu"
-              className="space-y-3 pt-1 border-t border-slate-100 scroll-mt-24"
-            >
-              <h3 className="text-base font-semibold text-slate-900">
-                Arıza konumunuz
-              </h3>
-              {error && (
-                <div
-                  className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
-                  role="alert"
-                >
-                  {error}
-                </div>
-              )}
-              {!gpsGuvenli && <GpsHttpsBanner compact />}
-
-              {(gpsYukleniyor || adresGeocodeYukleniyor) && (
-                <div
-                  className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
-                  role="status"
-                >
-                  <Spinner className="mt-0.5" />
-                  <div className="text-sm text-amber-900 leading-relaxed min-w-0">
-                    {gpsYukleniyor ? (
-                      <>
-                        <p className="font-medium">
-                          {konumIzniBekleniyor
-                            ? "Konum izni bekleniyor…"
-                            : "Konumunuz alınıyor…"}
-                        </p>
-                        <p className="text-xs text-amber-800 mt-1">
-                          İzin penceresinde «İzin Ver»e dokunun.
-                        </p>
-                      </>
+          {form.sorunTipi && !hedefKonumGerekli ? (
+            <details className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+              <summary className="cursor-pointer text-sm font-medium text-slate-800 touch-manipulation">
+                Araç ve fotoğraf bilgisi ekle — opsiyonel
+              </summary>
+              <div className="mt-3 space-y-3 pb-1">
+                {sorunFotografAlaniGoster(form.sorunTipi) && (
+                  <div ref={fotografRef}>
+                    <ArizaFotografAlani
+                      onizleme={fotografOnizleme}
+                      invalid={fotografHatasi}
+                      zorunlu={sorunFotografGerekliMi(form.sorunTipi)}
+                      onDegisti={(dataUrl) => {
+                        setFotografOnizleme(dataUrl);
+                        setFotografData(dataUrl);
+                        if (dataUrl) setFotografHatasi(false);
+                      }}
+                    />
+                    {sorunFotografGerekliMi(form.sorunTipi) ? (
+                      <p className="text-xs text-amber-700 mt-1">Zorunlu</p>
                     ) : (
-                      <p className="font-medium">Adres doğrulanıyor…</p>
+                      <p className="text-xs text-slate-500 mt-1">Opsiyonel</p>
                     )}
                   </div>
-                </div>
-              )}
-
-              {!arizaKonumGpsAlindi && (
-                <div className="space-y-2">
+                )}
+                {sorunAracModeliAlaniGoster(form.sorunTipi) && (
                   <Field
-                    ref={arizaAdresRef}
-                    label="Arıza adresi"
-                    placeholder="Örn. İstanbul, Bayrampaşa, mahalle, sokak…"
-                    value={form.adres}
-                    onChange={(e) => update("adres", e.target.value)}
-                    onBlur={() => {
-                      if (form.adres.trim().length >= 6 && !form.lat) {
-                        void geocodeAdres(form.adres).then((g) => {
-                          if (g)
-                            void konumKaydet(g.lat, g.lng, g.adres, false);
-                        });
-                      }
-                    }}
+                    label="Araç modeli (isteğe bağlı)"
+                    placeholder="Örn. Audi A3 sedan"
+                    value={form.aracModeli}
+                    onChange={(e) => update("aracModeli", e.target.value)}
+                    invalid={aracModeliHatasi}
                   />
-                </div>
-              )}
-
-              {gpsGuvenli && !arizaKonumGpsAlindi && !gpsYukleniyor && (
-                <>
-                  <Btn
-                    type="button"
-                    className="w-full !py-3 text-sm"
-                    onClick={() => {
-                      void konumAl(false).then(() => {
-                        musteriFunnelOlay(
-                          "location_confirmed",
-                          sorunProps(form.sorunTipi)
-                        );
-                      });
-                    }}
-                    disabled={gpsYukleniyor}
-                  >
-                    📍 Konumumu kullan
-                  </Btn>
-                  <KonumIzniYardim
-                    durum={konumIzni}
-                    gpsGuvenli={gpsGuvenli}
-                    bekleniyor={konumIzniBekleniyor}
+                )}
+                {form.sorunTipi === "diger" ? (
+                  <TextArea
+                    label="Sorununuzu açıklayın"
+                    placeholder="Kısaca yazın…"
+                    value={form.sorunDetay}
+                    onChange={(e) => update("sorunDetay", e.target.value)}
+                    rows={2}
                   />
-                  {konumIzni !== "denied" && <ChromeAcSecenegi />}
-                </>
-              )}
-
-              {!hedefKonumGerekli && (
-                <details className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                  <summary className="cursor-pointer text-sm font-medium text-slate-800 touch-manipulation">
-                    Araç ve fotoğraf bilgisi ekle — opsiyonel
-                  </summary>
-                  <div className="mt-3 space-y-3 pb-1">
-                    {sorunFotografAlaniGoster(form.sorunTipi) && (
-                      <div ref={fotografRef}>
-                        <ArizaFotografAlani
-                          onizleme={fotografOnizleme}
-                          invalid={fotografHatasi}
-                          zorunlu={sorunFotografGerekliMi(form.sorunTipi)}
-                          onDegisti={(dataUrl) => {
-                            setFotografOnizleme(dataUrl);
-                            setFotografData(dataUrl);
-                            if (dataUrl) setFotografHatasi(false);
-                          }}
-                        />
-                        {sorunFotografGerekliMi(form.sorunTipi) ? (
-                          <p className="text-xs text-amber-700 mt-1">Zorunlu</p>
-                        ) : (
-                          <p className="text-xs text-slate-500 mt-1">Opsiyonel</p>
-                        )}
-                      </div>
-                    )}
-                    {sorunAracModeliAlaniGoster(form.sorunTipi) && (
-                      <Field
-                        label="Araç modeli (isteğe bağlı)"
-                        placeholder="Örn. Audi A3 sedan"
-                        value={form.aracModeli}
-                        onChange={(e) => update("aracModeli", e.target.value)}
-                        invalid={aracModeliHatasi}
-                      />
-                    )}
-                    {form.sorunTipi === "diger" ? (
-                      <TextArea
-                        label="Sorununuzu açıklayın"
-                        placeholder="Kısaca yazın…"
-                        value={form.sorunDetay}
-                        onChange={(e) => update("sorunDetay", e.target.value)}
-                        rows={2}
-                      />
-                    ) : (
-                      <TextArea
-                        label="Ek detay (isteğe bağlı)"
-                        placeholder="Örn: Otoyol km 42"
-                        value={form.sorunDetay}
-                        onChange={(e) => update("sorunDetay", e.target.value)}
-                        rows={2}
-                      />
-                    )}
-                  </div>
-                </details>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-slate-500 text-center">
-              Devam etmek için yukarıdan sorununuzu seçin.
-            </p>
-          )}
+                ) : (
+                  <TextArea
+                    label="Ek detay (isteğe bağlı)"
+                    placeholder="Örn: Otoyol km 42"
+                    value={form.sorunDetay}
+                    onChange={(e) => update("sorunDetay", e.target.value)}
+                    rows={2}
+                  />
+                )}
+              </div>
+            </details>
+          ) : null}
 
           <NasilCalisirSerit aktifFormAdimi={step} />
         </div>
@@ -2624,9 +2623,10 @@ function MusteriDonusumSayfaIcerik() {
                     sorunCagriButonEtiketi(form.sorunTipi)
                   )}
                 </Btn>
-                <p className="text-xs text-slate-500 text-center leading-relaxed">
-                  Henüz çekici çağırmıyorsunuz. Gelen fiyatları gördükten sonra
-                  karar verirsiniz.
+                <p className="text-[15px] sm:text-base font-medium text-slate-800 text-center leading-snug">
+                  Henüz çekici çağırılmıyor.
+                  <br />
+                  Fiyatları gördükten sonra karar sizindir.
                 </p>
               </div>
             </>

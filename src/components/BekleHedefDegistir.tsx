@@ -123,7 +123,10 @@ export function BekleHedefDegistir({
   );
 
   const yukle = useCallback(async () => {
-    if (!musteriKonum?.lat || !musteriKonum?.lng) {
+    const lat = musteriKonum?.lat;
+    const lng = musteriKonum?.lng;
+    const adres = musteriKonum?.adres?.trim() ?? "";
+    if (lat == null || lng == null) {
       setHata("Arıza konumu yok; yakın servisler listelenemiyor.");
       return;
     }
@@ -131,10 +134,8 @@ export function BekleHedefDegistir({
     setHata("");
     try {
       const res = await fetch(
-        `/api/konum/oneri?lat=${musteriKonum.lat}&lng=${musteriKonum.lng}&mod=servis${
-          musteriKonum.adres?.trim()
-            ? `&adres=${encodeURIComponent(musteriKonum.adres.trim())}`
-            : ""
+        `/api/konum/oneri?lat=${lat}&lng=${lng}&mod=servis${
+          adres ? `&adres=${encodeURIComponent(adres)}` : ""
         }`
       );
       const data = await res.json();
@@ -154,7 +155,7 @@ export function BekleHedefDegistir({
     } finally {
       setYukleniyor(false);
     }
-  }, [musteriKonum]);
+  }, [musteriKonum?.lat, musteriKonum?.lng, musteriKonum?.adres]);
 
   useEffect(() => {
     void yukle();
