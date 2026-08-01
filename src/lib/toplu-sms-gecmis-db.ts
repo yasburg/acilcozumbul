@@ -1,6 +1,7 @@
 import { getSupabaseAdmin } from "./supabase/admin";
 import { telefonNormalize } from "./telefon";
 import { getSms50TokenOzetByTelefonlar } from "./sms50-token";
+import { topluSmsAdminTestTelefonMu } from "./toplu-sms-admin-test";
 
 export type TopluSmsListeOzet = {
   id: string;
@@ -313,7 +314,9 @@ export async function getTopluSmsGenelTelefonlar(
     .limit(limit);
   if (error) throw error;
 
-  const rows = data ?? [];
+  const rows = (data ?? []).filter(
+    (r) => !topluSmsAdminTestTelefonMu(String(r.telefon))
+  );
   const telefonlar = rows.map((r) => String(r.telefon));
   const tokenMap = await getSms50TokenOzetByTelefonlar(telefonlar);
 

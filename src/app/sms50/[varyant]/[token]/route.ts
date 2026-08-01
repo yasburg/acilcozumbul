@@ -6,11 +6,13 @@ import {
   sms50TokenGecerliMi,
   sms50VaryantMi,
 } from "@/lib/sms50-kampanya";
+import { getSms50KayitFunnelHaritasi } from "@/lib/sms50-kayit-funnel-harita-db";
 import { kaydetSmsKampanyaTiklama } from "@/lib/sms50-tiklama-db";
 import {
   getSms50LinkToken,
   kaydetSms50TokenTiklama,
 } from "@/lib/sms50-token";
+import { topluSmsAdminTestTelefonMu } from "@/lib/toplu-sms-admin-test";
 
 /**
  * /sms50/[varyant]/[token] — kişiye özel tıklama + kayıt 302
@@ -34,13 +36,16 @@ export async function GET(
   }
 
   try {
-    await kaydetSms50TokenTiklama(token);
-    await kaydetSmsKampanyaTiklama({
-      varyant,
-      kampanyaKodu: kayit.kampanyaKodu,
-      userAgent: request.headers.get("user-agent"),
-      ip: istekIp(request),
-    });
+    /* Admin test: teslimat kontrolü — tıklama/heatmap sonuçlarına yazma */
+    if (!topluSmsAdminTestTelefonMu(kayit.telefon)) {
+      await kaydetSms50TokenTiklama(token);
+      await kaydetSmsKampanyaTiklama({
+        varyant,
+        kampanyaKodu: kayit.kampanyaKodu,
+        userAgent: request.headers.get("user-agent"),
+        ip: istekIp(request),
+      });
+    }
   } catch (e) {
     console.error("[sms50-token] tıklama", e);
   }
@@ -49,8 +54,9 @@ export async function GET(
   const base = smsBaseUrl(
     `${request.nextUrl.protocol}//${request.nextUrl.host}`
   );
+  const harita = await getSms50KayitFunnelHaritasi();
   return NextResponse.redirect(
-    sms50KayitUrl(varyant, base, { smsToken: token }),
+    sms50KayitUrl(varyant, base, { smsToken: token, harita }),
     302
   );
 }

@@ -4,6 +4,7 @@ import {
   sms50KayitUrl,
   sms50VaryantMi,
 } from "@/lib/sms50-kampanya";
+import { getSms50KayitFunnelHaritasi } from "@/lib/sms50-kayit-funnel-harita-db";
 import { kaydetSmsKampanyaTiklama } from "@/lib/sms50-tiklama-db";
 
 /**
@@ -30,5 +31,6 @@ export async function GET(
     console.error("[sms50] tıklama", e);
   }
 
-  return NextResponse.redirect(sms50KayitUrl(varyant), 302);
+  const harita = await getSms50KayitFunnelHaritasi();
+  return NextResponse.redirect(sms50KayitUrl(varyant, undefined, { harita }), 302);
 }

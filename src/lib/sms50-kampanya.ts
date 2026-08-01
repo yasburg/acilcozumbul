@@ -64,18 +64,29 @@ export function sms50KisaUrl(
   return `${base ?? smsBaseUrl()}${sms50KisaPath(varyant, token)}`;
 }
 
-export function sms50KayitFunnelId(varyant: Sms50Varyant): KayitFunnelId {
-  return SMS50_KAYIT_FUNNEL_HARITASI[varyant] ?? KAYIT_FUNNEL_VARSAYILAN;
+export type Sms50KayitFunnelHaritaPartial = Partial<
+  Record<Sms50Varyant, KayitFunnelId>
+>;
+
+export function sms50KayitFunnelId(
+  varyant: Sms50Varyant,
+  harita?: Sms50KayitFunnelHaritaPartial
+): KayitFunnelId {
+  const map = harita ?? SMS50_KAYIT_FUNNEL_HARITASI;
+  return map[varyant] ?? KAYIT_FUNNEL_VARSAYILAN;
 }
 
 /** Yönlendirme hedefi: kayıt funnel + kampanya + UTM (+ isteğe bağlı sms_token) */
 export function sms50KayitUrl(
   varyant: Sms50Varyant,
   base?: string,
-  opts?: { smsToken?: string | null }
+  opts?: {
+    smsToken?: string | null;
+    harita?: Sms50KayitFunnelHaritaPartial;
+  }
 ): string {
   const origin = base ?? smsBaseUrl();
-  const funnel = sms50KayitFunnelId(varyant);
+  const funnel = sms50KayitFunnelId(varyant, opts?.harita);
   const q = new URLSearchParams({
     kampanya: SMS50_KAMPANYA_KODU,
     utm_source: "sms",
@@ -102,11 +113,14 @@ export type Sms50LinkHaritaSatir = {
 };
 
 /** Panel: tüm /sms50{a–z} → kayıt hedefi listesi */
-export function sms50LinkHaritasi(base?: string): Sms50LinkHaritaSatir[] {
+export function sms50LinkHaritasi(
+  base?: string,
+  harita?: Sms50KayitFunnelHaritaPartial
+): Sms50LinkHaritaSatir[] {
   const origin = base ?? smsBaseUrl();
   return SMS50_VARYANTLAR.map((varyant) => {
-    const kayitFunnel = sms50KayitFunnelId(varyant);
-    const hedefUrl = sms50KayitUrl(varyant, origin);
+    const kayitFunnel = sms50KayitFunnelId(varyant, harita);
+    const hedefUrl = sms50KayitUrl(varyant, origin, { harita });
     let hedefPath = hedefUrl;
     try {
       const u = new URL(hedefUrl);
@@ -123,10 +137,7 @@ export function sms50LinkHaritasi(base?: string): Sms50LinkHaritaSatir[] {
       hedefPath,
       hedefUrl,
       kampanyaKodu: SMS50_KAMPANYA_KODU,
-      ozelHarita: Object.prototype.hasOwnProperty.call(
-        SMS50_KAYIT_FUNNEL_HARITASI,
-        varyant
-      ),
+      ozelHarita: kayitFunnel !== KAYIT_FUNNEL_VARSAYILAN,
     };
   });
 }

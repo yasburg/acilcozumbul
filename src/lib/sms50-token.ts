@@ -9,6 +9,7 @@ import {
   type Sms50Varyant,
 } from "./sms50-kampanya";
 import { telefonNormalize } from "./telefon";
+import { topluSmsAdminTestTelefonMu } from "./toplu-sms-admin-test";
 
 let tokenTabloVar: boolean | null = null;
 
@@ -153,6 +154,10 @@ export async function baglaSms50TokenKayit(opts: {
 }): Promise<void> {
   if (!sms50TokenGecerliMi(opts.token)) return;
   if (!(await smsKampanyaTokenTablosuVar())) return;
+  const mevcut = await getSms50LinkToken(opts.token);
+  if (!mevcut) return;
+  /* Admin test kaydı kampanya sonuçlarına bağlanmaz */
+  if (topluSmsAdminTestTelefonMu(mevcut.telefon)) return;
   const { error } = await getSupabaseAdmin()
     .from("sms_kampanya_link_token")
     .update({

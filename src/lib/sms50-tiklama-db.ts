@@ -8,6 +8,7 @@ import {
   sms50KisaUrl,
 } from "./sms50-kampanya";
 import { smsKampanyaTokenTablosuVar } from "./sms50-token";
+import { topluSmsAdminTestTelefonMu } from "./toplu-sms-admin-test";
 
 let tiklamaTabloVar: boolean | null = null;
 
@@ -349,7 +350,7 @@ export async function getSms50VaryantOzetleri(
   const kayitTelefonlar = new Map<string, Set<string>>();
   function kayitEkle(varyant: string, telefon: string) {
     const t = telefon.trim();
-    if (!t || !varyant) return;
+    if (!t || !varyant || topluSmsAdminTestTelefonMu(t)) return;
     let set = kayitTelefonlar.get(varyant);
     if (!set) {
       set = new Set();
@@ -368,8 +369,9 @@ export async function getSms50VaryantOzetleri(
       for (const row of tokenRows ?? []) {
         const v = String(row.varyant ?? "");
         if (!v) continue;
-        tokenVaryantVar.add(v);
         const tel = String(row.telefon ?? "").trim();
+        if (topluSmsAdminTestTelefonMu(tel)) continue;
+        tokenVaryantVar.add(v);
         if (row.kayit_at) kayitEkle(v, tel);
         if (row.ilk_tiklama && tel) {
           let set = tiklayanTelefon.get(v);
@@ -391,6 +393,7 @@ export async function getSms50VaryantOzetleri(
   if (tumListeIdleri.length > 0) {
     const telefonByListe = new Map<string, string[]>();
     const CHUNK = 100;
+    let aliciOk = true;
     for (let i = 0; i < tumListeIdleri.length; i += CHUNK) {
       const parti = tumListeIdleri.slice(i, i + CHUNK);
       const { data: aliciRows, error: aliciErr } = await sb
@@ -398,37 +401,52 @@ export async function getSms50VaryantOzetleri(
         .select("liste_id, telefon, basarili")
         .in("liste_id", parti)
         .eq("basarili", true);
-      if (aliciErr) break;
+      if (aliciErr) {
+        aliciOk = false;
+        break;
+      }
       for (const row of aliciRows ?? []) {
         const lid = String(row.liste_id ?? "");
         const tel = String(row.telefon ?? "").trim();
-        if (!lid || !tel) continue;
+        if (!lid || !tel || topluSmsAdminTestTelefonMu(tel)) continue;
         const arr = telefonByListe.get(lid) ?? [];
         arr.push(tel);
         telefonByListe.set(lid, arr);
       }
     }
 
-    const adayTelefonlar = [
-      ...new Set([...telefonByListe.values()].flat()),
-    ];
-    const kayitliSet = new Set<string>();
-    const TEL_CHUNK = 200;
-    for (let i = 0; i < adayTelefonlar.length; i += TEL_CHUNK) {
-      const parti = adayTelefonlar.slice(i, i + TEL_CHUNK);
-      const { data: cekiciler } = await sb
-        .from("cekiciler")
-        .select("telefon")
-        .in("telefon", parti);
-      for (const c of cekiciler ?? []) {
-        if (c.telefon) kayitliSet.add(String(c.telefon));
+    if (aliciOk) {
+      /* Gönderim sayısı: admin test alıcısı hariç */
+      gonderilen.clear();
+      for (const [varyant, listeIds] of listeIdsByVaryant) {
+        let n = 0;
+        for (const lid of listeIds) {
+          n += (telefonByListe.get(lid) ?? []).length;
+        }
+        gonderilen.set(varyant, n);
       }
-    }
 
-    for (const [varyant, listeIds] of listeIdsByVaryant) {
-      for (const lid of listeIds) {
-        for (const tel of telefonByListe.get(lid) ?? []) {
-          if (kayitliSet.has(tel)) kayitEkle(varyant, tel);
+      const adayTelefonlar = [
+        ...new Set([...telefonByListe.values()].flat()),
+      ];
+      const kayitliSet = new Set<string>();
+      const TEL_CHUNK = 200;
+      for (let i = 0; i < adayTelefonlar.length; i += TEL_CHUNK) {
+        const parti = adayTelefonlar.slice(i, i + TEL_CHUNK);
+        const { data: cekiciler } = await sb
+          .from("cekiciler")
+          .select("telefon")
+          .in("telefon", parti);
+        for (const c of cekiciler ?? []) {
+          if (c.telefon) kayitliSet.add(String(c.telefon));
+        }
+      }
+
+      for (const [varyant, listeIds] of listeIdsByVaryant) {
+        for (const lid of listeIds) {
+          for (const tel of telefonByListe.get(lid) ?? []) {
+            if (kayitliSet.has(tel)) kayitEkle(varyant, tel);
+          }
         }
       }
     }

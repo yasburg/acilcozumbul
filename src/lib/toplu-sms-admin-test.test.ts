@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   TOPLU_SMS_ADMIN_TEST_TELEFON,
   topluSmsAdminTestIleBaslat,
+  topluSmsAdminTestTelefonMu,
 } from "./toplu-sms-admin-test";
 
 describe("topluSmsAdminTestIleBaslat", () => {
@@ -31,5 +32,14 @@ describe("topluSmsAdminTestIleBaslat", () => {
     expect(topluSmsAdminTestIleBaslat([])).toEqual([
       TOPLU_SMS_ADMIN_TEST_TELEFON,
     ]);
+  });
+});
+
+describe("topluSmsAdminTestTelefonMu", () => {
+  it("format farklarını tanır", () => {
+    expect(topluSmsAdminTestTelefonMu("0537 250 05 86")).toBe(true);
+    expect(topluSmsAdminTestTelefonMu("+90 537 250 05 86")).toBe(true);
+    expect(topluSmsAdminTestTelefonMu("05321111111")).toBe(false);
+    expect(topluSmsAdminTestTelefonMu("")).toBe(false);
   });
 });
