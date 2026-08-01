@@ -22,6 +22,13 @@ import { posthogKampanyaKaydet, posthogOlayYakala } from "@/lib/posthog-client";
 import { metaPixelCompleteRegistration, metaKayitUserSakla } from "@/lib/meta-pixel";
 import { gtagAdsKaydolmaDonusumuBirKez } from "@/lib/gtag";
 import {
+  kayitFunnelAlanDoldu,
+  kayitFunnelAlanFocus,
+  kayitFunnelOlayBirKez,
+  kayitFunnelOlayGonder,
+  kayitFunnelSessionId,
+} from "@/lib/kayit-funnel-client";
+import {
   tiktokPixelClickButton,
   tiktokPixelHesapOlustur,
   tiktokPixelKayitOl,
@@ -185,11 +192,7 @@ function KayitIcerik() {
       content_id: "kayit_a",
       content_name: "cekici_kayit_kontrol",
     });
-    void fetch("/api/kayit/funnel-olay", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ funnel: "a", olay: "goruldu" }),
-    }).catch(() => {});
+    kayitFunnelOlayBirKez("a", "goruldu");
   }, []);
 
   useEffect(() => {
@@ -366,11 +369,24 @@ function KayitIcerik() {
   }
 
   function kaydaKaydir() {
+    kayitFunnelOlayBirKez("a", "cta_kayit_basla");
     alanaKaydir(formRef);
+  }
+
+  function funnelMeta() {
+    return smsTokenParam ? { kaynak: "sms50" as const } : undefined;
   }
 
   async function otpGonder() {
     if (!formDogrula()) return;
+
+    const yeniden = otpAsamasi;
+    void kayitFunnelOlayGonder(
+      "a",
+      yeniden ? "btn_otp_yeniden" : "btn_otp_gonder",
+      { meta: funnelMeta() }
+    );
+    void kayitFunnelOlayGonder("a", "otp_gonder", { meta: funnelMeta() });
 
     setLoading(true);
     setError("");
@@ -424,6 +440,9 @@ function KayitIcerik() {
       content_id: "kayit_a_kayit_ol",
       content_name: "kayit_ol",
     });
+    void kayitFunnelOlayGonder("a", "btn_kayit_submit", {
+      meta: funnelMeta(),
+    });
 
     setLoading(true);
     setError("");
@@ -446,10 +465,20 @@ function KayitIcerik() {
             ? davetKoduNormalize(form.davetKodu)
             : undefined,
           smsToken: smsTokenParam || undefined,
+          sessionId: kayitFunnelSessionId(),
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (res.status === 409) {
+        void kayitFunnelOlayGonder("a", "zaten_kayitli", {
+          meta: funnelMeta(),
+        });
+        throw new Error(data.error ?? "Bu telefon numarası zaten kayıtlı.");
+      }
+      if (!res.ok) {
+        void kayitFunnelOlayGonder("a", "otp_hata", { meta: funnelMeta() });
+        throw new Error(data.error);
+      }
       posthogOlayYakala("cekici_kayit_tamamlandi", {
         rol: "cekici",
         sehir: form.sehir || undefined,
@@ -545,9 +574,12 @@ function KayitIcerik() {
               label="Ad"
               placeholder="Ahmet"
               value={form.ad}
+              onFocus={() => kayitFunnelAlanFocus("a", "ad")}
+              onBlur={() => kayitFunnelAlanDoldu("a", "ad", form.ad)}
               onChange={(e) => {
                 alanHatasiTemizle("ad");
                 setForm((f) => ({ ...f, ad: e.target.value }));
+                kayitFunnelAlanDoldu("a", "ad", e.target.value);
               }}
               autoComplete="given-name"
               name="ad"
@@ -558,9 +590,12 @@ function KayitIcerik() {
               label="Soyad"
               placeholder="Yılmaz"
               value={form.soyad}
+              onFocus={() => kayitFunnelAlanFocus("a", "soyad")}
+              onBlur={() => kayitFunnelAlanDoldu("a", "soyad", form.soyad)}
               onChange={(e) => {
                 alanHatasiTemizle("soyad");
                 setForm((f) => ({ ...f, soyad: e.target.value }));
+                kayitFunnelAlanDoldu("a", "soyad", e.target.value);
               }}
               autoComplete="family-name"
               name="soyad"
@@ -591,9 +626,13 @@ function KayitIcerik() {
             <SelectField
               label="Gün"
               value={form.dogumGun}
+              onFocus={() => kayitFunnelAlanFocus("a", "dogum_tarihi")}
               onChange={(e) => {
                 alanHatasiTemizle("dogumTarihi");
                 setForm((f) => ({ ...f, dogumGun: e.target.value }));
+                if (e.target.value && form.dogumAy && form.dogumYil) {
+                  kayitFunnelAlanDoldu("a", "dogum_tarihi", "1");
+                }
               }}
               invalid={alanHatalari.dogumTarihi}
               required
@@ -617,6 +656,7 @@ function KayitIcerik() {
             <SelectField
               label="Ay"
               value={form.dogumAy}
+              onFocus={() => kayitFunnelAlanFocus("a", "dogum_tarihi")}
               onChange={(e) => {
                 alanHatasiTemizle("dogumTarihi");
                 const ay = e.target.value;
@@ -633,6 +673,9 @@ function KayitIcerik() {
                       gun && gun > maxGun ? String(maxGun) : f.dogumGun,
                   };
                 });
+                if (ay && form.dogumGun && form.dogumYil) {
+                  kayitFunnelAlanDoldu("a", "dogum_tarihi", "1");
+                }
               }}
               invalid={alanHatalari.dogumTarihi}
               required
@@ -648,6 +691,7 @@ function KayitIcerik() {
             <SelectField
               label="Yıl"
               value={form.dogumYil}
+              onFocus={() => kayitFunnelAlanFocus("a", "dogum_tarihi")}
               onChange={(e) => {
                 alanHatasiTemizle("dogumTarihi");
                 const yil = e.target.value;
@@ -664,6 +708,9 @@ function KayitIcerik() {
                       gun && gun > maxGun ? String(maxGun) : f.dogumGun,
                   };
                 });
+                if (yil && form.dogumGun && form.dogumAy) {
+                  kayitFunnelAlanDoldu("a", "dogum_tarihi", "1");
+                }
               }}
               invalid={alanHatalari.dogumTarihi}
               required
@@ -689,9 +736,12 @@ function KayitIcerik() {
             type="tel"
             placeholder="05XX XXX XX XX"
             value={form.telefon}
+            onFocus={() => kayitFunnelAlanFocus("a", "telefon")}
+            onBlur={() => kayitFunnelAlanDoldu("a", "telefon", form.telefon)}
             onChange={(e) => {
               alanHatasiTemizle("telefon");
               setForm((f) => ({ ...f, telefon: e.target.value }));
+              kayitFunnelAlanDoldu("a", "telefon", e.target.value);
             }}
             invalid={alanHatalari.telefon}
             required
@@ -703,9 +753,11 @@ function KayitIcerik() {
           <SelectField
             label="Şehir"
             value={form.sehir}
+            onFocus={() => kayitFunnelAlanFocus("a", "sehir")}
             onChange={(e) => {
               alanHatasiTemizle("sehir");
               setForm((f) => ({ ...f, sehir: e.target.value }));
+              kayitFunnelAlanDoldu("a", "sehir", e.target.value);
             }}
             invalid={alanHatalari.sehir}
             required
@@ -740,14 +792,20 @@ function KayitIcerik() {
             label="Davet / kampanya kodu (isteğe bağlı)"
             placeholder="ör. TIKTOK100 veya arkadaşınızın kodu"
             value={form.davetKodu}
+            onFocus={() => kayitFunnelAlanFocus("a", "davet_kodu")}
+            onBlur={() =>
+              kayitFunnelAlanDoldu("a", "davet_kodu", form.davetKodu)
+            }
             onChange={(e) => {
               setDavetMesaj("");
               setDavetGecersiz(false);
               setDavetKontrol(false);
+              const v = davetKoduNormalize(e.target.value);
               setForm((f) => ({
                 ...f,
-                davetKodu: davetKoduNormalize(e.target.value),
+                davetKodu: v,
               }));
+              kayitFunnelAlanDoldu("a", "davet_kodu", v);
             }}
             invalid={davetGecersiz}
             maxLength={20}
@@ -782,9 +840,12 @@ function KayitIcerik() {
             placeholder="En az 6 karakter"
             autoComplete="new-password"
             value={form.sifre}
+            onFocus={() => kayitFunnelAlanFocus("a", "sifre")}
+            onBlur={() => kayitFunnelAlanDoldu("a", "sifre", form.sifre)}
             onChange={(e) => {
               alanHatasiTemizle("sifre");
               setForm((f) => ({ ...f, sifre: e.target.value }));
+              kayitFunnelAlanDoldu("a", "sifre", e.target.value);
             }}
             invalid={alanHatalari.sifre}
             required
@@ -801,12 +862,17 @@ function KayitIcerik() {
             placeholder="Şifrenizi tekrar girin"
             autoComplete="new-password"
             value={form.sifreTekrar}
+            onFocus={() => kayitFunnelAlanFocus("a", "sifre_tekrar")}
+            onBlur={() =>
+              kayitFunnelAlanDoldu("a", "sifre_tekrar", form.sifreTekrar)
+            }
             onChange={(e) => {
               alanHatasiTemizle("sifreTekrar");
               if (alanHatalari.sifre && alanMesajlari.sifre === "Şifreler eşleşmiyor.") {
                 alanHatasiTemizle("sifre");
               }
               setForm((f) => ({ ...f, sifreTekrar: e.target.value }));
+              kayitFunnelAlanDoldu("a", "sifre_tekrar", e.target.value);
             }}
             invalid={alanHatalari.sifreTekrar}
             required
@@ -820,6 +886,7 @@ function KayitIcerik() {
             onChange={(v) => {
               alanHatasiTemizle("yasalOnay");
               setYasalOnay(v);
+              if (v) kayitFunnelOlayBirKez("a", "yasal_onay_tik");
             }}
             invalid={alanHatalari.yasalOnay}
             rol="hizmet-veren"
@@ -853,9 +920,12 @@ function KayitIcerik() {
               placeholder="123456"
               maxLength={6}
               value={otpKod}
+              onFocus={() => kayitFunnelAlanFocus("a", "otp")}
               onChange={(e) => {
                 setError("");
-                setOtpKod(e.target.value.replace(/\D/g, "").slice(0, 6));
+                const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                setOtpKod(v);
+                kayitFunnelAlanDoldu("a", "otp", v);
               }}
             />
             <button

@@ -29,12 +29,19 @@ import {
 import { dogumTarihiDogrula } from "@/lib/dogum-tarihi";
 import { baglaSms50TokenKayit } from "@/lib/sms50-token";
 import { sms50TokenGecerliMi } from "@/lib/sms50-kampanya";
+import { kaydetKayitFunnelOlay } from "@/lib/kayit-funnel-olay";
 
 export async function POST(request: NextRequest) {
   await ensureSeedData();
 
   const body = await request.json();
   const { ad, telefon, sehir, sifre, otpKod, dogumTarihi } = body;
+  const sessionId =
+    typeof body.sessionId === "string"
+      ? body.sessionId
+      : typeof body.session_id === "string"
+        ? body.session_id
+        : null;
   const kodHam =
     typeof body.kayitKodu === "string"
       ? body.kayitKodu
@@ -93,6 +100,12 @@ export async function POST(request: NextRequest) {
   if (!otpDogrulama.ok) {
     return NextResponse.json({ error: otpDogrulama.hata }, { status: 400 });
   }
+
+  await kaydetKayitFunnelOlay({
+    funnel: "a",
+    olay: "otp_ok",
+    sessionId,
+  });
 
   const kodNormalized = kodHam?.trim()
     ? kampanyaKoduNormalize(kodHam)
@@ -170,6 +183,14 @@ export async function POST(request: NextRequest) {
       console.error("[kayit] sms_token bağlama:", e);
     }
   }
+
+  await kaydetKayitFunnelOlay({
+    funnel: "a",
+    olay: "hesap",
+    sessionId,
+    cekiciId: cekici.id,
+    meta: smsToken ? { kaynak: "sms50" } : undefined,
+  });
 
   const mesaj = kayitHazir.sonuc.uygulandi
     ? `Kayıt başarılı. ${baslangicKredi} hediye kredi hesabınıza tanımlandı!`

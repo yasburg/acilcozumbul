@@ -11,6 +11,9 @@ import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import type { KayitFunnelTanim } from "@/lib/kayit-funnel";
 import { TELEFON_ORNEK_GIRISLERI } from "@/lib/telefon";
 import {
+  kayitFunnelAlanDoldu,
+  kayitFunnelAlanFocus,
+  kayitFunnelOlayBirKez,
   kayitFunnelOlayGonder,
   kayitFunnelSessionId,
 } from "@/lib/kayit-funnel-client";
@@ -122,8 +125,14 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   const [yenidenSn, setYenidenSn] = useState(0);
   const [basarili, setBasarili] = useState(false);
 
+  const smsTokenParam = searchParams.get("sms_token")?.trim() || "";
+
   useEffect(() => {
-    void kayitFunnelOlayGonder(funnel.id, "goruldu");
+    kayitFunnelOlayBirKez(
+      funnel.id,
+      "goruldu",
+      smsTokenParam ? { meta: { kaynak: "sms50" } } : undefined
+    );
     return idleSonra(() => {
       posthogYakala("cekici_kayit_goruldu", {
         rol: "cekici",
@@ -131,13 +140,17 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
       });
       tiktokView(`kayit_${funnel.id}`, `cekici_kayit_${funnel.id}`);
     });
-  }, [funnel.id]);
+  }, [funnel.id, smsTokenParam]);
 
   useEffect(() => {
     if (yenidenSn <= 0) return;
     const t = setTimeout(() => setYenidenSn((s) => s - 1), 1000);
     return () => clearTimeout(t);
   }, [yenidenSn]);
+
+  function funnelMeta() {
+    return smsTokenParam ? { kaynak: "sms50" as const } : undefined;
+  }
 
   async function kodGonder() {
     if (!yasalOnay) {
@@ -151,7 +164,14 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     setYasalHata(false);
     try {
       tiktokClick(`kayit_${funnel.id}_otp`, "telefonuma_kod_gonder");
-      void kayitFunnelOlayGonder(funnel.id, "otp_gonder");
+      void kayitFunnelOlayGonder(
+        funnel.id,
+        otpAsama ? "btn_otp_yeniden" : "btn_otp_gonder",
+        { meta: funnelMeta() }
+      );
+      void kayitFunnelOlayGonder(funnel.id, "otp_gonder", {
+        meta: funnelMeta(),
+      });
       const res = await fetch("/api/cekici/kayit/otp/gonder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -159,6 +179,9 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
       });
       const d = await res.json().catch(() => ({}));
       if (res.status === 409) {
+        void kayitFunnelOlayGonder(funnel.id, "zaten_kayitli", {
+          meta: funnelMeta(),
+        });
         const q = new URLSearchParams({
           telefon: telefon.trim(),
           mesaj: "zaten-kayitli",
@@ -197,6 +220,9 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     setYasalHata(false);
     try {
       tiktokClick(`kayit_${funnel.id}_dogrula`, "dogrula_ve_kaydi_tamamla");
+      void kayitFunnelOlayGonder(funnel.id, "btn_kayit_submit", {
+        meta: funnelMeta(),
+      });
       const smsToken = searchParams.get("sms_token")?.trim() || undefined;
       const res = await fetch("/api/cekici/kayit/hizli", {
         method: "POST",
@@ -212,6 +238,9 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
       });
       const d = await res.json().catch(() => ({}));
       if (res.status === 409) {
+        void kayitFunnelOlayGonder(funnel.id, "zaten_kayitli", {
+          meta: funnelMeta(),
+        });
         const q = new URLSearchParams({
           telefon: telefon.trim(),
           mesaj: "zaten-kayitli",
@@ -220,6 +249,9 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
         return;
       }
       if (!res.ok) {
+        void kayitFunnelOlayGonder(funnel.id, "otp_hata", {
+          meta: funnelMeta(),
+        });
         throw new Error(typeof d.error === "string" ? d.error : "Kayıt başarısız.");
       }
       posthogYakala("cekici_kayit_tamamlandi", {
@@ -302,6 +334,9 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   }
 
   function kaydaKaydir() {
+    kayitFunnelOlayBirKez(funnel.id, "cta_kayit_basla", {
+      meta: funnelMeta(),
+    });
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -365,10 +400,17 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                   autoComplete="tel"
                   placeholder={TELEFON_ORNEK_GIRISLERI[0] ?? "05XX XXX XX XX"}
                   value={telefon}
-                  onChange={(e) => setTelefon(e.target.value)}
+                  onChange={(e) => {
+                    setTelefon(e.target.value);
+                    kayitFunnelAlanDoldu(funnel.id, "telefon", e.target.value);
+                  }}
                   onFocus={() => {
                     void kayitFunnelOlayGonder(funnel.id, "telefon_focus");
+                    kayitFunnelAlanFocus(funnel.id, "telefon");
                   }}
+                  onBlur={() =>
+                    kayitFunnelAlanDoldu(funnel.id, "telefon", telefon)
+                  }
                   className="text-lg min-h-[52px]"
                 />
                 <YasalOnayKutusu
@@ -378,6 +420,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                     if (v) {
                       setYasalHata(false);
                       setError("");
+                      kayitFunnelOlayBirKez(funnel.id, "yasal_onay_tik");
                     }
                   }}
                   invalid={yasalHata}
@@ -409,9 +452,12 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                   maxLength={6}
                   placeholder="6 haneli kod"
                   value={otp}
-                  onChange={(e) =>
-                    setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
-                  }
+                  onFocus={() => kayitFunnelAlanFocus(funnel.id, "otp")}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                    setOtp(v);
+                    kayitFunnelAlanDoldu(funnel.id, "otp", v);
+                  }}
                   className="text-lg tracking-widest min-h-[52px]"
                 />
                 <Btn
