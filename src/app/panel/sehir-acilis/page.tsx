@@ -12,6 +12,7 @@ export default function PanelSehirAcilisPage() {
   const [arama, setArama] = useState("");
   const [kaydedilen, setKaydedilen] = useState<string | null>(null);
   const [bekleyen, setBekleyen] = useState<Set<string>>(new Set());
+  const [topluBekliyor, setTopluBekliyor] = useState(false);
 
   const yukle = useCallback(async () => {
     setLoading(true);
@@ -46,6 +47,7 @@ export default function PanelSehirAcilisPage() {
   }, [iller, arama]);
 
   const acikSayisi = iller.filter((i) => i.acik).length;
+  const busy = topluBekliyor || bekleyen.size > 0;
 
   async function toggle(il: string, acik: boolean) {
     setHata(null);
@@ -78,6 +80,45 @@ export default function PanelSehirAcilisPage() {
     }
   }
 
+  async function tumunuAyarla(acik: boolean) {
+    const eylem = acik ? "açmak" : "kapatmak";
+    if (
+      !window.confirm(
+        `Tüm şehirleri ${eylem} istediğinize emin misiniz? (${iller.length || 81} il)`
+      )
+    ) {
+      return;
+    }
+
+    setHata(null);
+    setKaydedilen(null);
+    setTopluBekliyor(true);
+    const onceki = iller;
+    setIller((prev) => prev.map((s) => ({ ...s, acik })));
+    try {
+      const r = await fetch("/api/panel/sehir-acilis", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tumu: true, acik }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error ?? "Güncellenemedi.");
+      const sayi = typeof j.sayi === "number" ? j.sayi : iller.length;
+      setKaydedilen(
+        acik
+          ? `Tüm şehirler açıldı (${sayi} il).`
+          : `Tüm şehirler kapatıldı (${sayi} il).`
+      );
+      await yukle();
+    } catch (e) {
+      setIller(onceki);
+      setHata(e instanceof Error ? e.message : "Güncellenemedi.");
+    } finally {
+      setTopluBekliyor(false);
+    }
+  }
+
   return (
     <div className="space-y-4 lg:space-y-6">
       <div>
@@ -104,9 +145,27 @@ export default function PanelSehirAcilisPage() {
           />
           <Btn
             type="button"
+            variant="success"
+            className="!w-auto !min-h-0 !py-2 !px-3 !text-xs"
+            onClick={() => void tumunuAyarla(true)}
+            disabled={loading || busy || (iller.length > 0 && acikSayisi === iller.length)}
+          >
+            {topluBekliyor ? "Kaydediliyor…" : "Tüm şehirleri aç"}
+          </Btn>
+          <Btn
+            type="button"
+            variant="danger"
+            className="!w-auto !min-h-0 !py-2 !px-3 !text-xs"
+            onClick={() => void tumunuAyarla(false)}
+            disabled={loading || busy || acikSayisi === 0}
+          >
+            {topluBekliyor ? "Kaydediliyor…" : "Tüm şehirleri kapat"}
+          </Btn>
+          <Btn
+            type="button"
             variant="secondary"
             onClick={() => void yukle()}
-            disabled={loading}
+            disabled={loading || busy}
           >
             Yenile
           </Btn>
@@ -130,7 +189,7 @@ export default function PanelSehirAcilisPage() {
         <Card className="p-0 overflow-hidden">
           <ul className="divide-y divide-slate-100">
             {filtreli.map(({ il, acik }) => {
-              const busy = bekleyen.has(il);
+              const satirBusy = bekleyen.has(il) || topluBekliyor;
               return (
                 <li
                   key={il}
@@ -151,7 +210,7 @@ export default function PanelSehirAcilisPage() {
                     role="switch"
                     aria-checked={acik}
                     aria-label={`${il} ${acik ? "kapat" : "aç"}`}
-                    disabled={busy}
+                    disabled={satirBusy}
                     onClick={() => void toggle(il, !acik)}
                     className={`relative h-8 w-14 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
                       acik ? "bg-emerald-500" : "bg-slate-300"

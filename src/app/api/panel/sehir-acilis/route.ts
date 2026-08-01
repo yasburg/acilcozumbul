@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   listeleSehirAcilis,
   sehirAcilisAyarla,
+  sehirAcilisTopluAyarla,
 } from "@/lib/cekici-sehir-acilis-db";
 import { createClient } from "@/lib/supabase/server";
 import { panelEpostaIzinli } from "@/lib/supabase/env";
@@ -35,17 +36,34 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
   }
 
-  let body: { il?: string; acik?: boolean };
+  let body: { il?: string; acik?: boolean; tumu?: boolean };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Geçersiz JSON." }, { status: 400 });
   }
 
-  const il = typeof body.il === "string" ? body.il.trim() : "";
-  if (!il || typeof body.acik !== "boolean") {
+  if (typeof body.acik !== "boolean") {
     return NextResponse.json(
-      { error: "il (string) ve acik (boolean) gerekli." },
+      { error: "acik (boolean) gerekli." },
+      { status: 400 }
+    );
+  }
+
+  if (body.tumu === true) {
+    try {
+      const sonuc = await sehirAcilisTopluAyarla(body.acik);
+      return NextResponse.json({ ok: true, tumu: true, ...sonuc });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Güncellenemedi.";
+      return NextResponse.json({ error: msg }, { status: 500 });
+    }
+  }
+
+  const il = typeof body.il === "string" ? body.il.trim() : "";
+  if (!il) {
+    return NextResponse.json(
+      { error: "il (string) veya tumu: true gerekli." },
       { status: 400 }
     );
   }

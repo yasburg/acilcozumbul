@@ -115,3 +115,29 @@ export async function sehirAcilisAyarla(
   sehirAcilisCacheTemizle();
   return { il: temiz, acik };
 }
+
+/** Panel: tüm desteklenen illeri aç veya kapat */
+export async function sehirAcilisTopluAyarla(
+  acik: boolean
+): Promise<{ sayi: number; acik: boolean }> {
+  if (!(await sehirAcilisTablosuVar())) {
+    throw new Error(
+      "sehir_acilis tablosu yok. supabase/migrations/038_sehir_acilis.sql çalıştırın."
+    );
+  }
+
+  const guncelleme = new Date().toISOString();
+  const rows = DESTEKLENEN_ILLER.map((il) => ({
+    il,
+    acik,
+    guncelleme,
+  }));
+
+  const { error } = await getSupabaseAdmin()
+    .from("sehir_acilis")
+    .upsert(rows, { onConflict: "il" });
+  if (error) throw new Error(error.message);
+
+  sehirAcilisCacheTemizle();
+  return { sayi: rows.length, acik };
+}
