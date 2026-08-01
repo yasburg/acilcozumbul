@@ -252,10 +252,13 @@ export async function metaPixelLead(params?: {
 /**
  * Hizmet veren kayıt → Meta standart olay «CompleteRegistration».
  * Advanced Matching: ph / fn / ln / external_id (SHA-256).
+ * value + currency: Meta tanısı / ROAS için zorunlu (ücretsiz kayıt → sembolik 1 TRY).
  */
 export async function metaPixelCompleteRegistration(params?: {
   content_name?: string;
   status?: boolean;
+  value?: number;
+  currency?: string;
   phone?: string | null;
   firstName?: string | null;
   lastName?: string | null;
@@ -277,6 +280,8 @@ export async function metaPixelCompleteRegistration(params?: {
   fbqCagir("track", "CompleteRegistration", {
     content_name: params?.content_name ?? "cekici_kayit",
     status: params?.status ?? true,
+    value: params?.value ?? 1.0,
+    currency: params?.currency ?? "TRY",
   });
 }
 

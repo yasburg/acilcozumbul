@@ -106,6 +106,13 @@ describe("metaPixelCompleteRegistration advanced matching", () => {
         (c) => c[0] === "track" && c[1] === "CompleteRegistration"
       )
     ).toBe(true);
+    const trackCall = fbq.mock.calls.find(
+      (c) => c[0] === "track" && c[1] === "CompleteRegistration"
+    );
+    expect(trackCall?.[2]).toMatchObject({
+      value: 1.0,
+      currency: "TRY",
+    });
   });
 
   it("PageView saklı telefondan AM uygular", async () => {
