@@ -4,9 +4,11 @@ import {
   abonelikPaketKredisi,
   abonelikRenewsAtHesapla,
   getAbonelikByGarantiOrderId,
+  getAktifAbonelik,
   guncelleAbonelik,
   kaydetAbonelikIslem,
   listAboneliklerYenilemeKontrol,
+  listIptalDonemSonuAbonelikler,
 } from "./abonelik-db";
 import { getCekiciById, updateCekici } from "./db";
 import {
@@ -14,7 +16,11 @@ import {
   type GarantiOrderTxn,
 } from "./garanti/orderlistinq";
 import { garantiYapilandirildi } from "./garanti/config";
-import { abonelikKrediSifirlaVeYukle } from "./kredi-bakiye";
+import {
+  abonelikKrediSifirlaVeYukle,
+  abonelikKrediYak,
+} from "./kredi-bakiye";
+import type { CekiciAbonelik } from "./types";
 
 const GRACE_MS = 24 * 60 * 60 * 1000;
 const MAX_RETRY = 3;
@@ -23,9 +29,44 @@ export type YenilemeOzet = {
   processedRenewals: number;
   pastDue: number;
   expired: number;
+  periodEndBurned: number;
   skipped: number;
   results: Array<Record<string, unknown>>;
 };
+
+/**
+ * Abonelik dönem hakkı biterse (iptal/expire) kalan abonelik kredisini yakar.
+ * Yeniden abone olmuşsa dokunmaz (yeni dönemin bakiyesini silmesin).
+ */
+export async function cekiciAbonelikKredisiniYak(
+  abonelik: CekiciAbonelik,
+  eventId: string
+): Promise<"ok" | "skip"> {
+  if (await abonelikIslemVarMi(eventId)) return "skip";
+
+  const aktif = await getAktifAbonelik(abonelik.cekiciId);
+  if (aktif && aktif.id !== abonelik.id) return "skip";
+
+  const cekici = await getCekiciById(abonelik.cekiciId);
+  if (!cekici) return "skip";
+
+  const yakilan = abonelikKrediYak(cekici);
+  const kaydedildi = await kaydetAbonelikIslem({
+    abonelikId: abonelik.id,
+    cekiciId: abonelik.cekiciId,
+    tip: "period_end",
+    tutarTl: 0,
+    kredi: yakilan,
+    garantiOrderId: abonelik.garantiOrderId,
+    eventId,
+  });
+  if (!kaydedildi) return "skip";
+
+  if (yakilan > 0) {
+    await updateCekici(cekici);
+  }
+  return "ok";
+}
 
 function yyyymmdd(d: Date): string {
   const y = d.getFullYear();
@@ -124,6 +165,7 @@ export async function abonelikPastDueIsle(): Promise<{
           garantiOrderId: a.garantiOrderId,
           eventId: expiredEvent,
         });
+        await cekiciAbonelikKredisiniYak(a, `period_end_${a.id}`);
         expired++;
       }
       continue;
@@ -151,6 +193,17 @@ export async function abonelikPastDueIsle(): Promise<{
   }
 
   return { pastDue, expired };
+}
+
+/** İptal sonrası renews_at dolunca kullanılmayan abonelik kredisini yak */
+export async function abonelikIptalDonemSonuIsle(): Promise<number> {
+  const liste = await listIptalDonemSonuAbonelikler();
+  let burned = 0;
+  for (const a of liste) {
+    const r = await cekiciAbonelikKredisiniYak(a, `period_end_${a.id}`);
+    if (r === "ok") burned++;
+  }
+  return burned;
 }
 
 export async function processGarantiAbonelikYenilemeleri(opts?: {
@@ -198,11 +251,13 @@ export async function processGarantiAbonelikYenilemeleri(opts?: {
   }
 
   const { pastDue, expired } = await abonelikPastDueIsle();
+  const periodEndBurned = await abonelikIptalDonemSonuIsle();
 
   return {
     processedRenewals,
     pastDue,
     expired,
+    periodEndBurned,
     skipped,
     results,
   };

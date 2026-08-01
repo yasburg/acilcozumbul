@@ -63,7 +63,7 @@ export const SSS_MADDELERI = [
   {
     soru: "Abonelik kredisi ay sonunda ne olur? Ek kredi alınırsa ne olur?",
     cevap:
-      "Abonelik kredisi aylık dönem hakkıdır (paket + bonus birlikte). Yenilemede kullanılmayan abonelik kredisi ve bonus sıfırlanır; yeni ayın paket kredisi yüklenir. «Kredi satın al» ile aldığınız ekstra krediler kalıcıdır; abonelik yenilense veya iptal olsa da bakiyenizde kalır. Harcamada önce abonelik kredisi, sonra satın alınan kredi kullanılır.",
+      "Abonelik kredisi aylık dönem hakkıdır (paket + bonus birlikte). Yenilemede kullanılmayan abonelik kredisi ve bonus sıfırlanır; yeni ayın paket kredisi yüklenir. Abonelik iptal edilirse dönem sonuna kadar kullanılabilir; dönem bitince veya abonelik süresi dolunca kalan abonelik kredisi yanar. «Kredi satın al» ile aldığınız ekstra krediler kalıcıdır. Harcamada önce abonelik kredisi, sonra satın alınan kredi kullanılır.",
   },
 ] as const;
 

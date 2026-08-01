@@ -34,6 +34,13 @@ export function abonelikKrediSifirlaVeYukle(
   c.abonelikKredi = Math.max(0, Number(paketKredi));
 }
 
+/** Dönem sonu / expire / iptal süresi dolunca: abonelik bakiyesini yak (satın alınan kalır) */
+export function abonelikKrediYak(c: KrediBakiyeli): number {
+  const onceki = Number(c.abonelikKredi || 0);
+  c.abonelikKredi = 0;
+  return onceki;
+}
+
 /** İlk / yeni abonelik ödemesi — dönem hakkını pakete ekler (satın alınan krediye dokunmaz) */
 export function abonelikKrediYukle(c: KrediBakiyeli, paketKredi: number): void {
   c.abonelikKredi = Number(c.abonelikKredi || 0) + Math.max(0, Number(paketKredi));

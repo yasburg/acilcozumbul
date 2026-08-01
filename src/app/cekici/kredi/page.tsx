@@ -202,7 +202,11 @@ export default function KrediPage() {
   }
 
   async function abonelikIptal() {
-    if (!confirm("Aboneliği iptal etmek istediğinize emin misiniz? Kalan krediniz silinmez; otomatik yenileme durur.")) {
+    if (
+      !confirm(
+        "Aboneliği iptal etmek istediğinize emin misiniz? Otomatik yenileme durur. Abonelik krediniz dönem sonuna kadar kullanılabilir; sonrasında sıfırlanır. Satın alınan krediler kalır."
+      )
+    ) {
       return;
     }
     setIptalYukleniyor(true);
@@ -214,6 +218,13 @@ export default function KrediPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setAbonelik(null);
+      const me = await cekiciFetch("/api/cekici/me");
+      if (me.ok) {
+        const d = await me.json();
+        setKredi(d.kredi);
+        setAbonelikKredi(Number(d.abonelikKredi ?? 0));
+        setSatinAlinanKredi(Number(d.satinAlinanKredi ?? 0));
+      }
       posthogOlayYakala("cekici_abonelik_iptal", { rol: "cekici" });
     } catch (e) {
       setError(e instanceof Error ? e.message : "İptal başarısız.");
@@ -422,8 +433,9 @@ export default function KrediPage() {
 
         {kaynak === "abonelik" && (
           <p className="text-[11px] text-slate-400 leading-snug -mt-1">
-            Kullanılmayan abonelik kredisi (bonus dahil) ay yenilenince
-            sıfırlanır. «Kredi satın al» ile aldığınız ekstra krediler kalır.
+            Kullanılmayan abonelik kredisi (bonus dahil) ay yenilenince veya
+            iptal sonrası dönem bitince sıfırlanır. «Kredi satın al» ile
+            aldığınız ekstra krediler kalır.
           </p>
         )}
 

@@ -62,7 +62,8 @@ export type AbonelikIslemTip =
   | "cancelled"
   | "payment_failed"
   | "expired"
-  | "retry";
+  | "retry"
+  | "period_end";
 
 export interface CekiciAbonelik {
   id: string;

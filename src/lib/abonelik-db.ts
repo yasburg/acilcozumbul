@@ -178,6 +178,20 @@ export async function listAboneliklerYenilemeKontrol(): Promise<CekiciAbonelik[]
   return (data as AbonelikRow[] | null)?.map(fromRow) ?? [];
 }
 
+/** İptal edilmiş; dönem (renews_at) bitmiş — abonelik kredisi yakılacak adaylar */
+export async function listIptalDonemSonuAbonelikler(
+  now = new Date()
+): Promise<CekiciAbonelik[]> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("cekici_abonelik")
+    .select("*")
+    .eq("status", "cancelled")
+    .not("renews_at", "is", null)
+    .lte("renews_at", now.toISOString());
+  if (error) throw error;
+  return (data as AbonelikRow[] | null)?.map(fromRow) ?? [];
+}
+
 export function abonelikPaketKredisi(paketTl: number): number {
   return krediPaketBul(paketTl, "abonelik")?.kredi ?? 0;
 }

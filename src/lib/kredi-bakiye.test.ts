@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   abonelikKrediSifirlaVeYukle,
+  abonelikKrediYak,
   abonelikKrediYukle,
   cekiciKrediDus,
   cekiciToplamKredi,
@@ -37,5 +38,12 @@ describe("kredi-bakiye", () => {
     const c = { kredi: 0, abonelikKredi: 100 };
     abonelikKrediYukle(c, 500);
     expect(c.abonelikKredi).toBe(600);
+  });
+
+  it("abonelikKrediYak yalnızca abonelik bakiyesini sıfırlar", () => {
+    const c = { kredi: 250, abonelikKredi: 700 };
+    expect(abonelikKrediYak(c)).toBe(700);
+    expect(c.abonelikKredi).toBe(0);
+    expect(c.kredi).toBe(250);
   });
 });
