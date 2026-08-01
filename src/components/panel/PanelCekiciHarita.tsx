@@ -32,12 +32,16 @@ export function PanelCekiciHarita({
   seciliSehir,
   onSehirSec,
   sayilariGizle = false,
+  adetEtiket = "kayıt",
+  baslik = "Şehir bazında çekici kayıt haritası",
 }: {
   sehirAdetleri: SehirAdet[];
   seciliSehir?: string;
   onSehirSec?: (sehir: string) => void;
   /** Ekran paylaşımı — adet etiketlerini gizle */
   sayilariGizle?: boolean;
+  adetEtiket?: string;
+  baslik?: string;
 }) {
   const maxAdet = Math.max(0, ...sehirAdetleri.map((s) => s.adet));
   const noktalar: HaritaNokta[] = sehirAdetleri
@@ -68,7 +72,7 @@ export function PanelCekiciHarita({
           viewBox={`0 0 ${width} ${height}`}
           className="w-full h-auto min-h-[280px]"
           role="img"
-          aria-label="Şehir bazında çekici kayıt haritası"
+          aria-label={baslik}
         >
           <defs>
             <filter id="harita-golge" x="-20%" y="-20%" width="140%" height="140%">
@@ -98,7 +102,9 @@ export function PanelCekiciHarita({
                 onClick={() => onSehirSec?.(n.sehir)}
               >
                 <title>
-                  {sayilariGizle ? n.sehir : `${n.sehir}: ${n.adet} kayıt`}
+                  {sayilariGizle
+                    ? n.sehir
+                    : `${n.sehir}: ${n.adet} ${adetEtiket}`}
                 </title>
                 <circle
                   r={n.r}
@@ -142,7 +148,7 @@ export function PanelCekiciHarita({
                       fontSize={10}
                       fontWeight={600}
                     >
-                      {n.adet} kayıt
+                      {n.adet} {adetEtiket}
                     </text>
                   )}
                 </g>
@@ -152,8 +158,8 @@ export function PanelCekiciHarita({
       </div>
       <p className="text-xs text-slate-500">
         {sayilariGizle
-          ? "Sayı etiketleri gizli; daire boyutu kayıt oranını gösterir. Şehre tıklayınca filtre uygulanır."
-          : "Daire boyutu kayıt sayısına göre logaritmik ölçeklenir. Şehre tıklayınca filtre uygulanır."}
+          ? `Sayı etiketleri gizli; daire boyutu ${adetEtiket} oranını gösterir. Şehre tıklayınca filtre uygulanır.`
+          : `Daire boyutu ${adetEtiket} sayısına göre logaritmik ölçeklenir. Şehre tıklayınca filtre uygulanır.`}
       </p>
       {eslesmeyen.length > 0 && (
         <p className="text-xs text-amber-700">

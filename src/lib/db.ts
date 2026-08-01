@@ -18,6 +18,7 @@ import type {
   Talep,
 } from "./types";
 import { davetKoduNormalize } from "./davet-kodu";
+import { SEHIR_YOK, talepSehirEtiketi } from "./panel-talep";
 import {
   hydrateTalepIliskileri,
   listBildirilenCekiciIds,
@@ -383,10 +384,16 @@ export async function getTaleplerMemnuniyetBekleyen(): Promise<Talep[]> {
   return hydrateTalepler(rows.map(talepFromRow), rows);
 }
 
-export async function countTalepler(): Promise<number> {
-  const { count, error } = await getSupabaseAdmin()
+export async function countTalepler(opts?: {
+  sinceIso?: string;
+}): Promise<number> {
+  let q = getSupabaseAdmin()
     .from("talepler")
     .select("*", { count: "exact", head: true });
+  if (opts?.sinceIso) {
+    q = q.gte("olusturulma", opts.sinceIso);
+  }
+  const { count, error } = await q;
   if (error) throw error;
   return count ?? 0;
 }
@@ -394,18 +401,144 @@ export async function countTalepler(): Promise<number> {
 export async function getTaleplerSayfali(opts?: {
   limit?: number;
   offset?: number;
+  sinceIso?: string;
 }): Promise<{ talepler: Talep[]; total: number }> {
   const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 200);
   const offset = Math.max(opts?.offset ?? 0, 0);
-  const { data, error, count } = await getSupabaseAdmin()
+  let q = getSupabaseAdmin()
     .from("talepler")
     .select("*", { count: "exact" })
-    .order("olusturulma", { ascending: false })
-    .range(offset, offset + limit - 1);
+    .order("olusturulma", { ascending: false });
+  if (opts?.sinceIso) {
+    q = q.gte("olusturulma", opts.sinceIso);
+  }
+  const { data, error, count } = await q.range(offset, offset + limit - 1);
   if (error) throw error;
   const rows = (data ?? []) as TalepRow[];
   const talepler = await hydrateTalepler(rows.map(talepFromRow), rows);
   return { talepler, total: count ?? talepler.length };
+}
+
+/** Panel özet — hydrate yok (hafif) */
+export async function getPanelTalepOzet(sinceIso: string): Promise<{
+  total: number;
+  durumAdetleri: { durum: string; adet: number }[];
+  sehirAdetleri: { sehir: string; adet: number }[];
+  sehirSayisi: number;
+  teklifsiz: number;
+  ihalede: number;
+  anlasildi: number;
+}> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("talepler")
+    .select("id, durum, konum_il, olusturulma")
+    .gte("olusturulma", sinceIso)
+    .order("olusturulma", { ascending: false });
+  if (error) throw error;
+
+  const rows = (data ?? []) as {
+    id: string;
+    durum: string;
+    konum_il: string | null;
+  }[];
+
+  const durumMap = new Map<string, number>();
+  const sehirMap = new Map<string, number>();
+  let ihalede = 0;
+  let anlasildi = 0;
+
+  for (const r of rows) {
+    durumMap.set(r.durum, (durumMap.get(r.durum) ?? 0) + 1);
+    const sehir = talepSehirEtiketi(r.konum_il);
+    sehirMap.set(sehir, (sehirMap.get(sehir) ?? 0) + 1);
+    if (r.durum === "ihalede" || r.durum === "yeniden_ihalede") ihalede += 1;
+    if (r.durum === "anlaşıldı") anlasildi += 1;
+  }
+
+  const talepIds = rows.map((r) => r.id);
+  let teklifsiz = rows.length;
+  if (talepIds.length > 0) {
+    const teklifli = new Set<string>();
+    const chunk = 200;
+    for (let i = 0; i < talepIds.length; i += chunk) {
+      const slice = talepIds.slice(i, i + chunk);
+      const { data: teklifRows, error: te } = await getSupabaseAdmin()
+        .from("teklifler")
+        .select("talep_id")
+        .in("talep_id", slice);
+      if (te) throw te;
+      for (const t of teklifRows ?? []) {
+        if (t.talep_id) teklifli.add(String(t.talep_id));
+      }
+    }
+    teklifsiz = talepIds.filter((id) => !teklifli.has(id)).length;
+  }
+
+  const sehirAdetleri = [...sehirMap.entries()]
+    .map(([sehir, adet]) => ({ sehir, adet }))
+    .sort((a, b) => b.adet - a.adet || a.sehir.localeCompare(b.sehir, "tr"));
+
+  return {
+    total: rows.length,
+    durumAdetleri: [...durumMap.entries()]
+      .map(([durum, adet]) => ({ durum, adet }))
+      .sort((a, b) => b.adet - a.adet),
+    sehirAdetleri,
+    sehirSayisi: sehirAdetleri.filter((s) => s.sehir !== SEHIR_YOK).length,
+    teklifsiz,
+    ihalede,
+    anlasildi,
+  };
+}
+
+/** Panel harita noktaları — lat/lng + şehir */
+export async function getPanelTalepHaritaNoktalari(
+  sinceIso: string
+): Promise<
+  {
+    id: string;
+    lat: number;
+    lng: number;
+    sehir: string;
+    ilce: string | null;
+    durum: string;
+    olusturulma: string;
+  }[]
+> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("talepler")
+    .select("id, konum, konum_il, konum_ilce, durum, olusturulma")
+    .gte("olusturulma", sinceIso)
+    .order("olusturulma", { ascending: false });
+  if (error) throw error;
+
+  const out: {
+    id: string;
+    lat: number;
+    lng: number;
+    sehir: string;
+    ilce: string | null;
+    durum: string;
+    olusturulma: string;
+  }[] = [];
+
+  for (const r of data ?? []) {
+    const konum = r.konum as { lat?: number; lng?: number } | null;
+    const lat = Number(konum?.lat);
+    const lng = Number(konum?.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+    if (lat === 0 && lng === 0) continue;
+    out.push({
+      id: String(r.id),
+      lat,
+      lng,
+      sehir: talepSehirEtiketi(r.konum_il as string | null),
+      ilce: (r.konum_ilce as string | null) ?? null,
+      durum: String(r.durum),
+      olusturulma: String(r.olusturulma),
+    });
+  }
+  return out;
 }
 
 export async function getTalepById(id: string): Promise<Talep | undefined> {

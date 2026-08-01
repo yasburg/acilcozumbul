@@ -5,6 +5,7 @@ import {
   countCekicilerProfilFotoDurum,
   countTalepler,
 } from "@/lib/db";
+import { PANEL_TALEP_MIN_OLUSTURULMA } from "@/lib/panel-talep";
 import { ensureSeedData } from "@/lib/seed";
 
 /** Sol nav başlıkları yanındaki sayaçlar */
@@ -13,7 +14,7 @@ export async function GET() {
   const [cekiciSayisi, talepSayisi, rozetTalepSayisi, profilFotoTalepSayisi] =
     await Promise.all([
       countCekiciler(),
-      countTalepler(),
+      countTalepler({ sinceIso: PANEL_TALEP_MIN_OLUSTURULMA }),
       countCekicilerBelgeDurum("beklemede"),
       countCekicilerProfilFotoDurum("beklemede"),
     ]);
