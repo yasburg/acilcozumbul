@@ -289,30 +289,29 @@ export default function KrediPage() {
           ))}
         </div>
 
-        <Card>
-          <p className="text-sm font-medium text-slate-800 mb-3">
-            Fatura e-postası (zorunlu)
+        {epostaDogrulandi ? (
+          <p className="text-sm text-emerald-800">
+            e-posta: {eposta} · E-posta doğrulandı
           </p>
-          <p className="text-xs text-slate-500 mb-3">
-            Ödeme öncesi doğrulama gerekir. Fatura bu adrese iletilecektir.
-          </p>
-          <Field
-            label="E-posta"
-            type="email"
-            placeholder="ornek@firma.com"
-            value={eposta}
-            onChange={(e) => {
-              setEposta(e.target.value);
-              setEpostaDogrulandi(false);
-              setOtpBekliyor(false);
-            }}
-            disabled={epostaDogrulandi}
-          />
-          {epostaDogrulandi ? (
-            <p className="text-sm text-emerald-700 font-medium mt-2">
-              ✓ E-posta doğrulandı
+        ) : (
+          <Card>
+            <p className="text-sm font-medium text-slate-800 mb-3">
+              Fatura e-postası (zorunlu)
             </p>
-          ) : (
+            <p className="text-xs text-slate-500 mb-3">
+              Ödeme öncesi doğrulama gerekir. Fatura bu adrese iletilecektir.
+            </p>
+            <Field
+              label="E-posta"
+              type="email"
+              placeholder="ornek@firma.com"
+              value={eposta}
+              onChange={(e) => {
+                setEposta(e.target.value);
+                setEpostaDogrulandi(false);
+                setOtpBekliyor(false);
+              }}
+            />
             <div className="mt-3 space-y-2">
               {!otpBekliyor ? (
                 <Btn
@@ -357,8 +356,8 @@ export default function KrediPage() {
                 </>
               )}
             </div>
-          )}
-        </Card>
+          </Card>
+        )}
 
         <p className="text-sm font-medium text-slate-700">Paket seçin</p>
         <p className="text-xs text-slate-500 -mt-2">
