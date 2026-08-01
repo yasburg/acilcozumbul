@@ -183,6 +183,8 @@ function sessionOlayEslesir(
   if (formEtkilesim) {
     for (const o of olaylar) {
       if (o.startsWith("field_filled_")) return true;
+      if (o.startsWith("field_focus_")) return true;
+      if (o === "telefon_focus") return true;
     }
     return false;
   }
@@ -226,19 +228,51 @@ export type KayitFunnelGunluk = {
   hesap: number;
 };
 
+/** Europe/Istanbul günü (YYYY-MM-DD) */
+export function kayitFunnelGunTr(iso: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(iso));
+}
+
+function gunSonraki(gun: string): string {
+  const d = new Date(`${gun}T12:00:00+03:00`);
+  d.setDate(d.getDate() + 1);
+  return kayitFunnelGunTr(d.toISOString());
+}
+
 export function kayitFunnelGunlukHesapla(
-  rows: KayitFunnelOlaySatir[]
+  rows: KayitFunnelOlaySatir[],
+  aralik?: { from: string; to: string }
 ): KayitFunnelGunluk[] {
   const map = new Map<string, { goruldu: number; hesap: number }>();
   for (const r of rows) {
-    const t = r.olusturulma ? new Date(r.olusturulma) : null;
-    if (!t || Number.isNaN(t.getTime())) continue;
-    const gun = t.toISOString().slice(0, 10);
+    if (!r.olusturulma) continue;
+    const t = new Date(r.olusturulma);
+    if (Number.isNaN(t.getTime())) continue;
+    const gun = kayitFunnelGunTr(r.olusturulma);
     if (!map.has(gun)) map.set(gun, { goruldu: 0, hesap: 0 });
     const m = map.get(gun)!;
     if (r.olay === "goruldu") m.goruldu += 1;
     if (r.olay === "hesap") m.hesap += 1;
   }
+
+  if (aralik?.from && aralik?.to) {
+    const out: KayitFunnelGunluk[] = [];
+    let gun = aralik.from;
+    let guvenlik = 0;
+    while (gun <= aralik.to && guvenlik < 400) {
+      const v = map.get(gun) ?? { goruldu: 0, hesap: 0 };
+      out.push({ gun, ...v });
+      gun = gunSonraki(gun);
+      guvenlik += 1;
+    }
+    return out;
+  }
+
   return [...map.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([gun, v]) => ({ gun, ...v }));

@@ -8,6 +8,8 @@ type Props = {
   invalid?: boolean;
   /** müşteri | hizmet-veren */
   rol?: "musteri" | "hizmet-veren";
+  /** Daha küçük metin (kayıt formları) */
+  kucukMetin?: boolean;
 };
 
 export function YasalOnayKutusu({
@@ -16,6 +18,7 @@ export function YasalOnayKutusu({
   disabled = false,
   invalid = false,
   rol = "musteri",
+  kucukMetin = false,
 }: Props) {
   const rolMetin =
     rol === "hizmet-veren"
@@ -24,7 +27,9 @@ export function YasalOnayKutusu({
 
   return (
     <label
-      className={`flex items-start gap-3 rounded-xl border px-4 py-3 cursor-pointer ${
+      className={`flex items-start gap-2.5 rounded-xl border cursor-pointer ${
+        kucukMetin ? "px-3 py-2" : "px-4 py-3 gap-3"
+      } ${
         disabled
           ? "border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed"
           : invalid
@@ -39,10 +44,17 @@ export function YasalOnayKutusu({
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         disabled={disabled}
-        className="mt-1 rounded border-slate-300 text-amber-600"
+        className={`rounded border-slate-300 text-amber-600 ${
+          kucukMetin ? "mt-0.5 scale-90" : "mt-1"
+        }`}
         aria-describedby="yasal-onay-aciklama"
       />
-      <span id="yasal-onay-aciklama" className="text-sm text-slate-700 leading-relaxed">
+      <span
+        id="yasal-onay-aciklama"
+        className={`text-slate-700 leading-snug ${
+          kucukMetin ? "text-[11px]" : "text-sm leading-relaxed"
+        }`}
+      >
         {rolMetin} Platformu kullanmak için aşağıdaki metinleri okudum ve kabul
         ediyorum:{" "}
         {YASAL_LINKLER.map((l, i) => (

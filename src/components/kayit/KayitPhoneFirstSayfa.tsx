@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
@@ -18,6 +18,38 @@ import {
   kayitFunnelSessionId,
 } from "@/lib/kayit-funnel-client";
 import { idleSonra } from "@/lib/idle-sonra";
+import { cerezBannerAc, cerezOnayOku } from "@/lib/cerez-onay";
+
+function cerezOnaySubscribe(onStoreChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+  const handler = () => onStoreChange();
+  window.addEventListener("storage", handler);
+  window.addEventListener("acil-cerez-banner", handler);
+  return () => {
+    window.removeEventListener("storage", handler);
+    window.removeEventListener("acil-cerez-banner", handler);
+  };
+}
+
+function cerezOnaySecildiMi(): boolean {
+  return cerezOnayOku() != null;
+}
+
+function KayitHeaderGiris() {
+  return (
+    <div className="flex flex-col items-end gap-1 max-w-[11rem] sm:max-w-none sm:flex-row sm:items-center sm:gap-2">
+      <span className="text-[11px] sm:text-xs text-slate-600 leading-tight text-right">
+        Zaten hesabınız var mı?
+      </span>
+      <Link
+        href="/cekici/giris"
+        className="inline-flex items-center justify-center rounded-full bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 touch-manipulation"
+      >
+        Giriş yapın
+      </Link>
+    </div>
+  );
+}
 
 /** Analitik — dinamik import; posthog/gtag/pixel kayıt bundle’ına girmesin */
 function posthogYakala(
@@ -97,7 +129,13 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const formRef = useRef<HTMLDivElement>(null);
+  const telefonRef = useRef<HTMLInputElement>(null);
   const aKartlari = Boolean(funnel.aLandingKartlari);
+  const cerezSecildi = useSyncExternalStore(
+    cerezOnaySubscribe,
+    cerezOnaySecildiMi,
+    () => true
+  );
 
   const onizlemeRaw = searchParams.get("onizleme");
   const onizlemeGercekKayit =
@@ -119,6 +157,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   const setDavetKodu = setDavetDuzenleme;
   const [yasalOnay, setYasalOnay] = useState(false);
   const [yasalHata, setYasalHata] = useState(false);
+  const [telefonHata, setTelefonHata] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [mesaj, setMesaj] = useState("");
@@ -150,6 +189,22 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
 
   function funnelMeta() {
     return smsTokenParam ? { kaynak: "sms50" as const } : undefined;
+  }
+
+  function kodGonderTikla() {
+    if (loading) return;
+    const rakamSayisi = telefon.replace(/\D/g, "").length;
+    if (rakamSayisi < 10) {
+      setTelefonHata(true);
+      telefonRef.current?.focus();
+      telefonRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      return;
+    }
+    setTelefonHata(false);
+    void kodGonder();
   }
 
   async function kodGonder() {
@@ -307,7 +362,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
 
   if (basarili) {
     return (
-      <MobileShell subtitle="Kayıt tamam" backHref="/cekici/giris">
+      <MobileShell subtitle="Kayıt tamam" headerEnd={<KayitHeaderGiris />}>
         <Card className="space-y-4 border-emerald-200 bg-emerald-50">
           <h1 className="text-xl font-bold text-slate-900">
             Kaydınız oluşturuldu
@@ -341,10 +396,42 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   }
 
   return (
-    <MobileShell subtitle="Çekici kaydı" backHref="/cekici/giris">
-      <div className="space-y-8 pb-8">
+    <MobileShell
+      headerEnd={<KayitHeaderGiris />}
+      footer={
+        !otpAsama ? (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(15,23,42,0.06)]">
+            <div className="mx-auto w-full max-w-lg space-y-1.5">
+              <Btn
+                className="w-full min-h-[48px] text-base bg-amber-600 hover:bg-amber-700"
+                disabled={loading}
+                onClick={kodGonderTikla}
+              >
+                {loading ? "Gönderiliyor…" : "Telefonuma kod gönder"}
+              </Btn>
+              <p className="text-center text-[11px] text-slate-500 leading-snug">
+                SMS ile doğrulanır · Kart gerekmez · ~2 dk
+                {!cerezSecildi ? (
+                  <>
+                    {" · "}
+                    <button
+                      type="button"
+                      className="underline text-slate-500 hover:text-slate-700"
+                      onClick={() => cerezBannerAc()}
+                    >
+                      Çerezleri yönet
+                    </button>
+                  </>
+                ) : null}
+              </p>
+            </div>
+          </div>
+        ) : undefined
+      }
+    >
+      <div className={`space-y-5 ${!otpAsama ? "pb-28" : "pb-8"}`}>
         {aKartlari && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <KayitKontenjanBilgi
               onizlemeGercekKayit={
                 Number.isFinite(onizlemeGercekKayit)
@@ -359,19 +446,19 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
           </div>
         )}
 
-        <section className="space-y-4">
+        <section className="space-y-3">
           {!aKartlari && (
             <>
-              <p className="text-xs font-semibold tracking-wide text-amber-800 uppercase">
+              <p className="text-[11px] font-semibold tracking-wide text-amber-800 uppercase">
                 {funnel.ustBaslik}
               </p>
-              <h1 className="text-[1.65rem] font-bold text-slate-900 leading-snug">
+              <h1 className="text-[1.35rem] font-bold text-slate-900 leading-snug">
                 {funnel.baslik}
               </h1>
-              <p className="text-[17px] text-slate-600 leading-relaxed">
+              <p className="text-sm text-slate-600 leading-snug">
                 {funnel.altMetin}
               </p>
-              <ul className="space-y-1.5 text-[16px] text-slate-800">
+              <ul className="space-y-1 text-sm text-slate-800">
                 {GUVEN.map((g) => (
                   <li key={g} className="flex gap-2">
                     <span className="text-emerald-600 font-bold" aria-hidden>
@@ -387,21 +474,27 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
           <div
             ref={formRef}
             id="kayit-form"
-            className="scroll-mt-28 rounded-2xl border border-slate-200 bg-white p-4 space-y-3 shadow-sm"
+            className="scroll-mt-28 rounded-2xl border border-slate-200 bg-white p-3.5 space-y-2.5 shadow-sm"
           >
-            <h2 className="font-semibold text-slate-900 text-lg">
+            <h2 className="font-semibold text-slate-900 text-base">
               Ücretsiz kaydı başlat
             </h2>
+            <p className="text-sm font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-snug">
+              İlk 50 çekiciye 50 SMS ücretsiz.
+            </p>
             {!otpAsama ? (
               <>
                 <Field
+                  ref={telefonRef}
                   label="Telefon numaranız"
                   inputMode="tel"
                   autoComplete="tel"
                   placeholder={TELEFON_ORNEK_GIRISLERI[0] ?? "05XX XXX XX XX"}
                   value={telefon}
+                  invalid={telefonHata}
                   onChange={(e) => {
                     setTelefon(e.target.value);
+                    if (telefonHata) setTelefonHata(false);
                     kayitFunnelAlanDoldu(funnel.id, "telefon", e.target.value);
                   }}
                   onFocus={() => {
@@ -411,8 +504,13 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                   onBlur={() =>
                     kayitFunnelAlanDoldu(funnel.id, "telefon", telefon)
                   }
-                  className="text-lg min-h-[52px]"
+                  className="text-base min-h-[46px]"
                 />
+                {telefonHata && (
+                  <p className="text-sm text-red-600" role="alert">
+                    Telefon numarası geçersiz
+                  </p>
+                )}
                 <YasalOnayKutusu
                   checked={yasalOnay}
                   onChange={(v) => {
@@ -425,18 +523,10 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                   }}
                   invalid={yasalHata}
                   rol="hizmet-veren"
+                  kucukMetin
                 />
-                <Btn
-                  className="w-full min-h-[52px] text-base bg-amber-600 hover:bg-amber-700"
-                  disabled={loading || telefon.trim().length < 10 || !yasalOnay}
-                  onClick={() => void kodGonder()}
-                >
-                  {loading ? "Gönderiliyor…" : "Telefonuma kod gönder"}
-                </Btn>
-                <p className="text-sm text-slate-500 leading-relaxed">
-                  SMS ile doğrulanır. Kart bilgisi gerekmez. Yaklaşık 2 dakika
-                  sürer.
-                </p>
+                {mesaj && <p className="text-sm text-emerald-700">{mesaj}</p>}
+                {error && <p className="text-sm text-red-600">{error}</p>}
               </>
             ) : (
               <>
@@ -490,10 +580,10 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                     Numarayı değiştir
                   </button>
                 </div>
+                {mesaj && <p className="text-sm text-emerald-700">{mesaj}</p>}
+                {error && <p className="text-sm text-red-600">{error}</p>}
               </>
             )}
-            {mesaj && <p className="text-sm text-emerald-700">{mesaj}</p>}
-            {error && <p className="text-sm text-red-600">{error}</p>}
           </div>
 
           {funnel.tesvikMetin && (
@@ -620,7 +710,7 @@ export function KayitPhoneFirstSayfa({ funnel }: { funnel: KayitFunnelTanim }) {
   return (
     <Suspense
       fallback={
-        <MobileShell subtitle="Kayıt" backHref="/cekici/giris">
+        <MobileShell subtitle="Kayıt" headerEnd={<KayitHeaderGiris />}>
           <p className="text-center text-slate-500 py-12">Yükleniyor…</p>
         </MobileShell>
       }

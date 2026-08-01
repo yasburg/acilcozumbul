@@ -59,55 +59,150 @@ function gunEksi(n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-function HuniSvg({ adimlar, renk = "#d97706" }: { adimlar: HuniAdim[]; renk?: string }) {
+const HUNI_ADIM_RENKLERI = [
+  "#c45c5c",
+  "#d4a017",
+  "#5ba3d9",
+  "#4a6fa5",
+  "#3d8b7a",
+  "#6b7c8a",
+] as const;
+
+function HuniSvg({ adimlar }: { adimlar: HuniAdim[] }) {
   if (!adimlar.length) {
     return <p className="text-sm text-slate-500">Veri yok.</p>;
   }
-  const max = Math.max(...adimlar.map((a) => a.sessionSayisi), 1);
-  const w = 320;
-  const rowH = 36;
-  const h = adimlar.length * rowH + 8;
+
+  const n = adimlar.length;
+  const labelW = 100;
+  const pctSolW = 40;
+  const funnelW = 180;
+  const pctSagW = 48;
+  const svgW = labelW + pctSolW + funnelW + pctSagW;
+  const segH = 54;
+  const svgH = n * segH + 22;
+  const funnelLeft = labelW + pctSolW;
+  const cx = funnelLeft + funnelW / 2;
+  const maxBand = funnelW - 12;
+  const minBand = maxBand * 0.32;
+  const maxCount = Math.max(
+    ...adimlar.map((a) => a.sessionSayisi),
+    1
+  );
+  const basSayi = Math.max(adimlar[0]?.sessionSayisi ?? 0, 1);
+
+  function bandGenislik(sayi: number): number {
+    return minBand + (maxBand - minBand) * (sayi / maxCount);
+  }
+
+  const genislikler = adimlar.map((a) => bandGenislik(a.sessionSayisi));
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full max-w-md" role="img">
-      {adimlar.map((a, i) => {
-        const barW = Math.max(24, (a.sessionSayisi / max) * (w - 120));
-        const y = i * rowH + 4;
-        const drop =
-          i > 0 && adimlar[i - 1]!.sessionSayisi > 0
-            ? 1 - a.sessionSayisi / adimlar[i - 1]!.sessionSayisi
-            : null;
-        return (
-          <g key={a.adim}>
-            <text x={0} y={y + 16} className="fill-slate-600" fontSize={11}>
-              {a.label}
-            </text>
-            <rect
-              x={100}
-              y={y + 4}
-              width={barW}
-              height={20}
-              rx={3}
-              fill={renk}
-              opacity={0.85 - i * 0.08}
-            />
-            <text
-              x={108 + barW}
-              y={y + 18}
-              className="fill-slate-800"
-              fontSize={11}
-              fontWeight={600}
-            >
-              {a.sessionSayisi}
-              {drop != null && drop > 0
-                ? ` (−${(drop * 100).toFixed(0)}%)`
-                : ""}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
+    <div className="rounded-xl bg-slate-100 px-2 py-3">
+      <svg
+        viewBox={`0 0 ${svgW} ${svgH}`}
+        className="w-full block"
+        role="img"
+        aria-label="Kayıt hunisi"
+      >
+        <text
+          x={labelW + pctSolW / 2}
+          y={12}
+          textAnchor="middle"
+          fill="#94a3b8"
+          fontSize={9}
+        >
+          total
+        </text>
+        <text
+          x={funnelLeft + funnelW + pctSagW / 2}
+          y={12}
+          textAnchor="middle"
+          fill="#94a3b8"
+          fontSize={9}
+        >
+          adım
+        </text>
+        {adimlar.map((a, i) => {
+          const topW = genislikler[i]!;
+          const bottomW =
+            i === n - 1 ? topW : genislikler[i + 1]!;
+          const y0 = i * segH + 18;
+          const y1 = y0 + segH - 2;
+          const x0t = cx - topW / 2;
+          const x1t = cx + topW / 2;
+          const x0b = cx - bottomW / 2;
+          const x1b = cx + bottomW / 2;
+          const points = `${x0t},${y0} ${x1t},${y0} ${x1b},${y1} ${x0b},${y1}`;
+          const midY = (y0 + y1) / 2;
+          const totalYuzde = (a.sessionSayisi / basSayi) * 100;
+          const oncekiSayi =
+            i === 0 ? a.sessionSayisi : adimlar[i - 1]!.sessionSayisi;
+          const adimYuzde =
+            i === 0
+              ? 100
+              : oncekiSayi > 0
+                ? (a.sessionSayisi / oncekiSayi) * 100
+                : 0;
+
+          return (
+            <g key={a.adim}>
+              <text
+                x={labelW - 4}
+                y={midY + 4}
+                textAnchor="end"
+                fill="#475569"
+                fontSize={11}
+                fontWeight={600}
+              >
+                {a.label}
+              </text>
+              <text
+                x={labelW + pctSolW / 2}
+                y={midY + 4}
+                textAnchor="middle"
+                fill="#64748b"
+                fontSize={11}
+                fontWeight={700}
+              >
+                {totalYuzde.toFixed(0)}%
+              </text>
+              <polygon
+                points={points}
+                fill={HUNI_ADIM_RENKLERI[i % HUNI_ADIM_RENKLERI.length]}
+              />
+              <text
+                x={cx}
+                y={midY + 5}
+                textAnchor="middle"
+                fill="#fff"
+                fontSize={15}
+                fontWeight={700}
+              >
+                {a.sessionSayisi}
+              </text>
+              <text
+                x={funnelLeft + funnelW + pctSagW / 2}
+                y={midY + 4}
+                textAnchor="middle"
+                fill="#64748b"
+                fontSize={11}
+                fontWeight={700}
+              >
+                {adimYuzde.toFixed(0)}%
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
   );
+}
+
+function gunKisaEtiket(gun: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(gun);
+  if (!m) return gun;
+  return `${m[3]}.${m[2]}`;
 }
 
 function TrendSvg({ gunluk }: { gunluk: Gunluk[] }) {
@@ -118,41 +213,63 @@ function TrendSvg({ gunluk }: { gunluk: Gunluk[] }) {
       </p>
     );
   }
-  const w = 420;
-  const h = 140;
-  const pad = 28;
-  const maxY = Math.max(...gunluk.map((g) => Math.max(g.goruldu, g.hesap)), 1);
+  const w = Math.max(420, gunluk.length * 56);
+  const h = 180;
+  const padL = 28;
+  const padR = 28;
+  const padT = 36;
+  const padB = 36;
+  const maxY = Math.max(...gunluk.map((g) => g.goruldu), 1);
 
-  const pts = (key: "goruldu" | "hesap") =>
-    gunluk
-      .map((g, i) => {
-        const x =
-          pad + (i / Math.max(gunluk.length - 1, 1)) * (w - pad * 2);
-        const y = h - pad - (g[key] / maxY) * (h - pad * 2);
-        return `${x},${y}`;
-      })
-      .join(" ");
+  const xAt = (i: number) =>
+    padL + (i / Math.max(gunluk.length - 1, 1)) * (w - padL - padR);
+
+  const yAt = (v: number) =>
+    h - padB - (v / maxY) * (h - padT - padB);
+
+  const pts = gunluk
+    .map((g, i) => `${xAt(i)},${yAt(g.goruldu)}`)
+    .join(" ");
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full max-w-lg" role="img">
-      <polyline
-        fill="none"
-        stroke="#94a3b8"
-        strokeWidth={2}
-        points={pts("goruldu")}
-      />
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" role="img">
+      <text x={padL} y={14} fontSize={10} className="fill-slate-500">
+        Günlük görülme
+      </text>
       <polyline
         fill="none"
         stroke="#d97706"
         strokeWidth={2.5}
-        points={pts("hesap")}
+        points={pts}
       />
-      <text x={pad} y={14} fontSize={10} className="fill-slate-500">
-        Gri: görülme · Amber: hesap
-      </text>
-      <text x={pad} y={h - 6} fontSize={10} className="fill-slate-400">
-        {gunluk[0]?.gun} → {gunluk[gunluk.length - 1]?.gun}
-      </text>
+      {gunluk.map((g, i) => {
+        const x = xAt(i);
+        const y = yAt(g.goruldu);
+        return (
+          <g key={g.gun}>
+            <circle cx={x} cy={y} r={3.5} fill="#d97706" />
+            <text
+              x={x}
+              y={y - 10}
+              textAnchor="middle"
+              fill="#334155"
+              fontSize={11}
+              fontWeight={700}
+            >
+              {g.goruldu}
+            </text>
+            <text
+              x={x}
+              y={h - 12}
+              textAnchor="middle"
+              fill="#64748b"
+              fontSize={10}
+            >
+              {gunKisaEtiket(g.gun)}
+            </text>
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -219,6 +336,18 @@ export default function PanelKayitFunnelsPage() {
     setFrom(gunEksi(gun - 1));
   }
 
+  function presetBugun() {
+    const g = bugun();
+    setFrom(g);
+    setTo(g);
+  }
+
+  function presetDun() {
+    const g = gunEksi(1);
+    setFrom(g);
+    setTo(g);
+  }
+
   function toggleFunnel(f: string) {
     setSecili((prev) => {
       if (prev.includes(f)) {
@@ -230,7 +359,7 @@ export default function PanelKayitFunnelsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 w-full">
       <div className="flex flex-wrap justify-between gap-3 items-end">
         <div>
           <h1 className="text-xl font-bold text-slate-900">Kayıt funnelleri</h1>
@@ -252,6 +381,20 @@ export default function PanelKayitFunnelsPage() {
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Tarih
           </span>
+          <button
+            type="button"
+            className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            onClick={presetBugun}
+          >
+            Bugün
+          </button>
+          <button
+            type="button"
+            className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            onClick={presetDun}
+          >
+            Dün
+          </button>
           <button
             type="button"
             className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
@@ -367,15 +510,12 @@ export default function PanelKayitFunnelsPage() {
             A/B karşılaştırması
           </h2>
           <div className="grid sm:grid-cols-2 gap-4">
-            {karsilastirmaFunneller.map((k, i) => (
+            {karsilastirmaFunneller.map((k) => (
               <div key={k.funnel} className="space-y-1">
                 <p className="text-xs font-bold uppercase text-slate-600">
                   Funnel {k.funnel}
                 </p>
-                <HuniSvg
-                  adimlar={k.adimlar}
-                  renk={i % 2 === 0 ? "#d97706" : "#0f766e"}
-                />
+                <HuniSvg adimlar={k.adimlar} />
               </div>
             ))}
           </div>
@@ -436,6 +576,9 @@ export default function PanelKayitFunnelsPage() {
             <h2 className="text-sm font-semibold text-slate-900">
               Tüm aktif funneller (özet)
             </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Seçili tarih aralığına göre (funnel chip filtresi uygulanmaz).
+            </p>
           </div>
           <table className="w-full text-sm text-left">
             <thead className="bg-slate-50 text-xs text-slate-500 uppercase tracking-wide">

@@ -83,7 +83,7 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
           </button>
         </div>
       </header>
-      <div className="mx-auto flex max-w-6xl gap-0 lg:gap-6 lg:p-6">
+      <div className="flex w-full max-w-none gap-0 lg:gap-6 lg:p-6">
         <aside className="hidden w-56 shrink-0 lg:block">
           <div className="sticky top-6 flex max-h-[calc(100dvh-3rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="shrink-0 border-b border-slate-100 px-4 py-4 space-y-2">

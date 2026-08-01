@@ -60,6 +60,17 @@ describe("kayitFunnelSessionHuniHesapla", () => {
     expect(huni[5]!.sessionSayisi).toBe(1);
     expect(kayitFunnelBenzersizSession(rows)).toBe(2);
   });
+
+  it("telefon_focus form etkileşim sayılır", () => {
+    const huni = kayitFunnelSessionHuniHesapla([
+      { funnel: "b", olay: "goruldu", session_id: "s1" },
+      { funnel: "b", olay: "telefon_focus", session_id: "s1" },
+    ]);
+    expect(huni[1]).toMatchObject({
+      adim: "form_etkilesim",
+      sessionSayisi: 1,
+    });
+  });
 });
 
 describe("kayitFunnelGunlukHesapla / olay hacmi", () => {
@@ -89,6 +100,24 @@ describe("kayitFunnelGunlukHesapla / olay hacmi", () => {
     expect(gunluk).toEqual([
       { gun: "2026-07-01", goruldu: 2, hesap: 1 },
       { gun: "2026-07-02", goruldu: 0, hesap: 1 },
+    ]);
+  });
+
+  it("tarih aralığındaki boş günleri doldurur", () => {
+    const gunluk = kayitFunnelGunlukHesapla(
+      [
+        {
+          funnel: "a",
+          olay: "goruldu",
+          olusturulma: "2026-07-01T10:00:00+03:00",
+        },
+      ],
+      { from: "2026-07-01", to: "2026-07-03" }
+    );
+    expect(gunluk).toEqual([
+      { gun: "2026-07-01", goruldu: 1, hesap: 0 },
+      { gun: "2026-07-02", goruldu: 0, hesap: 0 },
+      { gun: "2026-07-03", goruldu: 0, hesap: 0 },
     ]);
   });
 

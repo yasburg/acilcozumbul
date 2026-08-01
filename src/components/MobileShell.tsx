@@ -119,7 +119,7 @@ export function MobileShell({
             className={[
               "flex items-center max-w-lg mx-auto",
               headerCompact ? "min-h-9" : "min-h-[3.9rem]",
-              subtitleAlign === "right" || headerEnd
+              subtitleAlign === "right"
                 ? "justify-between gap-2"
                 : "relative",
             ].join(" ")}
@@ -127,7 +127,7 @@ export function MobileShell({
             <div
               className={[
                 "flex items-center gap-1.5",
-                subtitleAlign === "center" && !headerEnd
+                subtitleAlign === "center"
                   ? "relative z-10"
                   : "min-w-0 shrink-0",
               ].join(" ")}
@@ -135,21 +135,16 @@ export function MobileShell({
               {geriDugmesi}
               {logo}
             </div>
-            {subtitle && (
-              <div
-                className={[
-                  "pointer-events-none absolute inset-x-0 flex flex-col items-center justify-center gap-0.5 px-28",
-                  subtitleAlign === "right" || headerEnd ? "hidden" : "",
-                ].join(" ")}
-              >
+            {subtitle && subtitleAlign !== "right" && (
+              <div className="pointer-events-none absolute inset-x-0 flex flex-col items-center justify-center gap-0.5 px-24 sm:px-28">
                 {headerBadge}
                 <p className="text-[14.3px] leading-snug font-medium text-slate-600 line-clamp-3 text-center">
                   {subtitle}
                 </p>
               </div>
             )}
-            {!subtitle && headerBadge && subtitleAlign === "center" && !headerEnd && (
-              <div className="pointer-events-none absolute inset-x-0 flex justify-center px-28">
+            {!subtitle && headerBadge && subtitleAlign === "center" && (
+              <div className="pointer-events-none absolute inset-x-0 flex justify-center px-24 sm:px-28">
                 {headerBadge}
               </div>
             )}
@@ -159,7 +154,9 @@ export function MobileShell({
               </p>
             )}
             {headerEnd ? (
-              <div className="shrink-0 flex items-center gap-2">{headerEnd}</div>
+              <div className="relative z-10 ml-auto shrink-0 flex items-center gap-2">
+                {headerEnd}
+              </div>
             ) : null}
           </div>
         )}

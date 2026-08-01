@@ -17,6 +17,8 @@ import {
   type KayitFunnelOlaySatir,
 } from "@/lib/kayit-funnel-olay";
 
+const SAYFA = 1000;
+
 function gunBaslangicIso(gun: string): string {
   return `${gun}T00:00:00.000Z`;
 }
@@ -45,6 +47,40 @@ function parseFunnelFiltre(raw: string | null): KayitFunnelId[] {
   return ids.length ? ids : varsayilan;
 }
 
+/** Supabase varsayılan 1000 satır limiti — sayfalayarak tüm satırları al */
+async function kayitFunnelOlaylariCek(opts: {
+  from: string;
+  to: string;
+  funnels: string[];
+}): Promise<{ rows: KayitFunnelOlaySatir[]; error: string | null }> {
+  const rows: KayitFunnelOlaySatir[] = [];
+  let offset = 0;
+  for (;;) {
+    const { data, error } = await getSupabaseAdmin()
+      .from("kayit_funnel_olay")
+      .select("funnel, olay, session_id, olusturulma")
+      .gte("olusturulma", gunBaslangicIso(opts.from))
+      .lte("olusturulma", gunBitisIso(opts.to))
+      .in("funnel", opts.funnels)
+      .order("olusturulma", { ascending: true })
+      .range(offset, offset + SAYFA - 1);
+    if (error) {
+      return {
+        rows: [],
+        error: error.message.includes("kayit_funnel_olay")
+          ? "kayit_funnel_olay tablosu yok. 036/044 migration çalıştırın."
+          : error.message,
+      };
+    }
+    const batch = (data ?? []) as KayitFunnelOlaySatir[];
+    rows.push(...batch);
+    if (batch.length < SAYFA) break;
+    offset += SAYFA;
+    if (offset > 100_000) break;
+  }
+  return { rows, error: null };
+}
+
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const {
@@ -63,38 +99,29 @@ export async function GET(request: NextRequest) {
   const from = sp.get("from")?.trim() || gunEksi(to, 6);
   const funnels = parseFunnelFiltre(sp.get("funnels"));
 
-  const { data, error } = await getSupabaseAdmin()
-    .from("kayit_funnel_olay")
-    .select("funnel, olay, session_id, olusturulma")
-    .gte("olusturulma", gunBaslangicIso(from))
-    .lte("olusturulma", gunBitisIso(to))
-    .in("funnel", funnels);
-  if (error) {
-    return NextResponse.json(
-      {
-        error: error.message.includes("kayit_funnel_olay")
-          ? "kayit_funnel_olay tablosu yok. 036/044 migration çalıştırın."
-          : error.message,
-      },
-      { status: 503 }
-    );
-  }
+  const aktifIds = kayitFunnelAktifListe().map((f) => f.id);
+  const listeFunnelIds =
+    aktifIds.length > 0 ? aktifIds : (["a", "b"] as KayitFunnelId[]);
 
-  const rows = (data ?? []) as KayitFunnelOlaySatir[];
-
-  const { data: tumData, error: tumErr } = await getSupabaseAdmin()
-    .from("kayit_funnel_olay")
-    .select("funnel, olay");
+  const { rows: tumTarihRows, error: tumErr } = await kayitFunnelOlaylariCek({
+    from,
+    to,
+    funnels: listeFunnelIds,
+  });
   if (tumErr) {
-    return NextResponse.json({ error: tumErr.message }, { status: 503 });
+    return NextResponse.json({ error: tumErr }, { status: 503 });
   }
+
+  const rows = tumTarihRows.filter((r) =>
+    funnels.includes(r.funnel as KayitFunnelId)
+  );
 
   const tumTanimlar = kayitFunnelAktifListe().map((f) => ({
     id: f.id,
     etiket: f.etiket,
     yol: kayitFunnelYolu(f.id),
   }));
-  const liste = kayitFunnelOzetHesapla(tumData ?? [], tumTanimlar);
+  const liste = kayitFunnelOzetHesapla(tumTarihRows, tumTanimlar);
 
   const huni = kayitFunnelSessionHuniHesapla(rows);
   const karsilastirma = funnels.map((funnel) => ({
@@ -124,7 +151,7 @@ export async function GET(request: NextRequest) {
     huni,
     karsilastirma,
     olayHacmi: kayitFunnelOlayHacmiHesapla(rows),
-    gunluk: kayitFunnelGunlukHesapla(rows),
+    gunluk: kayitFunnelGunlukHesapla(rows, { from, to }),
     liste,
   });
 }

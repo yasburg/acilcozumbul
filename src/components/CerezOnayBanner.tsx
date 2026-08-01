@@ -6,6 +6,7 @@ import {
   cerezBannerGosterilmeli,
   cerezManuelSilmeSenkronize,
   cerezOnayKaydet,
+  cerezOnayOku,
 } from "@/lib/cerez-onay";
 import { posthogCerezSenkronize } from "@/lib/posthog-client";
 import { gtagCerezSenkronize } from "@/lib/gtag";
@@ -116,6 +117,7 @@ export function CerezOnayBanner() {
     bannerServerSnapshot
   );
   const [goster, setGoster] = useState(true);
+  const [zorlaAcik, setZorlaAcik] = useState(false);
   const [gorunum, setGorunum] = useState<Gorunum>("ozet");
   const [analitikAcik, setAnalitikAcik] = useState(true);
 
@@ -127,28 +129,42 @@ export function CerezOnayBanner() {
     tiktokPixelCerezSenkronize();
   }, []);
 
-  if (!gosterilmeli || !goster) return null;
+  useEffect(() => {
+    const ac = () => {
+      const mevcut = cerezOnayOku();
+      setAnalitikAcik(mevcut !== "zorunlu");
+      setGorunum(mevcut != null ? "ayarlar" : "ozet");
+      setZorlaAcik(true);
+      setGoster(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    window.addEventListener("acil-cerez-banner-ac", ac);
+    return () => window.removeEventListener("acil-cerez-banner-ac", ac);
+  }, []);
+
+  if ((!gosterilmeli && !zorlaAcik) || !goster) return null;
 
   const kapat = () => {
     setGoster(false);
+    setZorlaAcik(false);
     bannerDegisti();
   };
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-[100] pointer-events-none"
+      className="fixed inset-x-0 top-0 z-[100] pointer-events-none"
       role="dialog"
       aria-labelledby="cerez-banner-baslik"
       aria-describedby="cerez-banner-aciklama"
     >
-      <div className="pointer-events-auto max-w-lg mx-auto border-t border-slate-200 bg-white/95 backdrop-blur-sm px-3 py-1.5 shadow-[0_-2px_12px_rgba(15,23,42,0.06)]">
+      <div className="pointer-events-auto max-w-lg mx-auto border-b border-slate-200 bg-white/95 backdrop-blur-sm px-3 py-1.5 shadow-[0_2px_12px_rgba(15,23,42,0.06)]">
         {gorunum === "ozet" ? (
-          <div className="space-y-1.5 max-h-[7.5rem]">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <p
               id="cerez-banner-baslik"
-              className="text-[11px] text-slate-600 leading-snug"
+              className="text-[11px] text-slate-600 leading-snug min-w-0 flex-1"
             >
-              Çerez tercihlerinizi yönetebilirsiniz.{" "}
+              Çerezleri yönetebilirsiniz.{" "}
               <Link
                 href="/cerez-politikasi"
                 className="underline underline-offset-2 text-slate-500 hover:text-slate-700"
@@ -160,7 +176,7 @@ export function CerezOnayBanner() {
               Zorunlu çerezler site için gereklidir. İsteğe bağlı analitik
               çerezlerini kabul edebilir veya reddedebilirsiniz.
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={() => tercihKaydet("zorunlu", kapat)}
@@ -171,7 +187,7 @@ export function CerezOnayBanner() {
               <button
                 type="button"
                 onClick={() => tercihKaydet("tumu", kapat)}
-                className="min-h-[32px] flex-1 rounded-md border border-amber-500 bg-amber-500 text-white text-xs font-semibold px-2 py-1.5 hover:bg-amber-600 touch-manipulation"
+                className="min-h-[32px] rounded-md border border-amber-500 bg-amber-500 text-white text-xs font-semibold px-2.5 py-1.5 hover:bg-amber-600 touch-manipulation"
               >
                 Tümünü kabul et
               </button>

@@ -182,3 +182,11 @@ export function cerezBannerGosterilmeli(): boolean {
   if (cerezOnayOku() != null) return false;
   return !cerezBannerKapaliMi();
 }
+
+/** Tercih paneli / ayarlar — her zaman açılabilir */
+export function cerezBannerAc(): void {
+  if (typeof window === "undefined") return;
+  sessionStorage.removeItem(BANNER_KAPALI_KEY);
+  window.dispatchEvent(new Event("acil-cerez-banner-ac"));
+  window.dispatchEvent(new Event("acil-cerez-banner"));
+}
