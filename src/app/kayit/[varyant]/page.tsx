@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { kayitFunnelGetir, kayitFunnelMi } from "@/lib/kayit-funnel";
 import { CekiciKayitKontrolSayfa } from "@/components/cekici/CekiciKayitKontrolSayfa";
 import { KayitPhoneFirstSayfa } from "@/components/kayit/KayitPhoneFirstSayfa";
+import { KayitSecimWizardSayfa } from "@/components/kayit/KayitSecimWizardSayfa";
 
 type Props = { params: Promise<{ varyant: string }> };
 
@@ -25,6 +26,10 @@ export default async function KayitFunnelPage({ params }: Props) {
 
   if (funnel.tip === "kontrol") {
     return <CekiciKayitKontrolSayfa />;
+  }
+
+  if (funnel.tip === "secim_wizard") {
+    return <KayitSecimWizardSayfa funnel={funnel} />;
   }
 
   return <KayitPhoneFirstSayfa funnel={funnel} />;

@@ -12,7 +12,7 @@ const SAYFALAR: {
   { path: "/", changeFrequency: "daily", priority: 1 },
   { path: "/kayit/a", changeFrequency: "weekly", priority: 0.9 },
   { path: "/kayit/b", changeFrequency: "weekly", priority: 0.9 },
-  { path: "/kayit/c", changeFrequency: "weekly", priority: 0.85 },
+  { path: "/c", changeFrequency: "weekly", priority: 0.85 },
   { path: "/kayit/d", changeFrequency: "weekly", priority: 0.85 },
   { path: "/kayit/e", changeFrequency: "weekly", priority: 0.85 },
   { path: "/cekici/giris", changeFrequency: "monthly", priority: 0.7 },

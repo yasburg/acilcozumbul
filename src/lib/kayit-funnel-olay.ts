@@ -20,6 +20,21 @@ export const KAYIT_FUNNEL_OLAY_SABIT = [
   "kurulum_2",
   "kurulum_3",
   "panel_hazir",
+  "wheel_icon_viewed",
+  "wheel_icon_clicked",
+  "wheel_auto_opened",
+  "wheel_modal_closed",
+  "wheel_spin_started",
+  "wheel_spin_retry_result",
+  "wheel_spin_reward_result",
+  "wheel_reward_10",
+  "wheel_reward_20",
+  "wheel_reward_50",
+  "wheel_reward_100",
+  "wheel_reward_200",
+  "wheel_reward_claim_clicked",
+  "wheel_reward_claimed",
+  "wheel_reward_claim_failed",
 ] as const;
 
 /** Alan adları (field_focus_* / field_filled_*) */

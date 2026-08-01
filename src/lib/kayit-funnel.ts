@@ -14,7 +14,7 @@ export type KayitHizmetOnsecim =
   | "birden_fazla"
   | null;
 
-export type KayitFunnelTip = "kontrol" | "phone_first";
+export type KayitFunnelTip = "kontrol" | "phone_first" | "secim_wizard";
 
 export type KayitFunnelTanim = {
   id: KayitFunnelId;
@@ -62,16 +62,14 @@ export const KAYIT_FUNNELS: Record<KayitFunnelId, KayitFunnelTanim> = {
   },
   c: {
     id: "c",
-    etiket: "Phone-first · A kartları + B kayıt",
-    tip: "phone_first",
+    etiket: "Seçim wizard · İş → Şehir → Bölge → Telefon",
+    tip: "secim_wizard",
     aktif: true,
-    hizmetOnsecim: "cekici",
-    aLandingKartlari: true,
-    ustBaslik: "HİZMET VERENLER İÇİN · İSTANBUL",
-    baslik:
-      "Çekici, lastikçi veya anahtarcı mısınız? İstanbul’daki yol yardım taleplerine teklif verin.",
+    hizmetOnsecim: null,
+    ustBaslik: "İSTANBUL’DA HİZMET VERENLERE ÖZEL",
+    baslik: "Bölgenizde yeni işler açıldığında telefonunuza gelsin.",
     altMetin:
-      "Erken fazda panel İstanbul’da açık. Müşteri talep açar; SMS + panel bildirimi gelir. Fiyat ve sürenizi yazın; seçilirseniz telefon ve konum açılır.",
+      "Hizmetinizi seçin, çalışma bölgenizi belirleyin, müşteri talep açınca fiyatınızı ve varış sürenizi yazın.",
   },
   d: {
     id: "d",
@@ -145,6 +143,7 @@ export function kayitFunnelGetir(v: string): KayitFunnelTanim | null {
 }
 
 export function kayitFunnelYolu(v: KayitFunnelId): string {
+  if (v === "c") return "/c";
   return `/kayit/${v}`;
 }
 

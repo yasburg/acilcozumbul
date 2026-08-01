@@ -2,6 +2,7 @@ import { smsBaseUrl } from "./sms-base-url";
 import {
   KAYIT_FUNNEL_VARSAYILAN,
   KAYIT_FUNNELS,
+  kayitFunnelYolu,
   type KayitFunnelId,
 } from "./kayit-funnel";
 
@@ -97,7 +98,7 @@ export function sms50KayitUrl(
   if (opts?.smsToken && sms50TokenGecerliMi(opts.smsToken)) {
     q.set("sms_token", opts.smsToken);
   }
-  return `${origin}/kayit/${funnel}?${q.toString()}`;
+  return `${origin}${kayitFunnelYolu(funnel)}?${q.toString()}`;
 }
 
 export type Sms50LinkHaritaSatir = {

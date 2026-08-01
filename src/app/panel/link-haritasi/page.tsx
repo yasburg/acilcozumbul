@@ -3,11 +3,15 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui";
-import { KAYIT_FUNNEL_VARSAYILAN } from "@/lib/kayit-funnel";
+import { KAYIT_FUNNEL_VARSAYILAN, kayitFunnelMi, kayitFunnelYolu } from "@/lib/kayit-funnel";
 import { SMS50_KAMPANYA_KODU } from "@/lib/sms50-kampanya";
 import type { Sms50LinkHaritaSatir } from "@/lib/sms50-kampanya";
 
 type FunnelSecenek = { id: string; etiket: string };
+
+function kayitYolGoster(id: string): string {
+  return kayitFunnelMi(id) ? kayitFunnelYolu(id) : `/kayit/${id}`;
+}
 
 export default function PanelLinkHaritasiPage() {
   const [satirlar, setSatirlar] = useState<Sms50LinkHaritaSatir[]>([]);
@@ -78,7 +82,7 @@ export default function PanelLinkHaritasiPage() {
         );
       }
       setKaydedilen(
-        `/sms50${varyant} → /kayit/${kayitFunnel} kaydedildi.`
+        `/sms50${varyant} → ${kayitYolGoster(kayitFunnel)} kaydedildi.`
       );
     } catch (e) {
       if (onceki) {
@@ -133,7 +137,7 @@ export default function PanelLinkHaritasiPage() {
             {ozel.map((s) => (
               <li key={s.varyant}>
                 <code className="font-mono">{s.kisaPath}</code> →{" "}
-                <code className="font-mono">/kayit/{s.kayitFunnel}</code> (
+                <code className="font-mono">{kayitYolGoster(s.kayitFunnel)}</code> (
                 {s.kayitFunnelEtiket})
               </li>
             ))}
@@ -193,17 +197,17 @@ export default function PanelLinkHaritasiPage() {
                     >
                       {funneller.map((f) => (
                         <option key={f.id} value={f.id}>
-                          /kayit/{f.id} — {f.etiket}
+                          {kayitYolGoster(f.id)} — {f.etiket}
                         </option>
                       ))}
                       {!funneller.some((f) => f.id === s.kayitFunnel) && (
                         <option value={s.kayitFunnel}>
-                          /kayit/{s.kayitFunnel} — {s.kayitFunnelEtiket}
+                          {kayitYolGoster(s.kayitFunnel)} — {s.kayitFunnelEtiket}
                         </option>
                       )}
                     </select>
                     <Link
-                      href={`/kayit/${s.kayitFunnel}`}
+                      href={kayitYolGoster(s.kayitFunnel)}
                       className="mt-1 inline-block text-xs text-slate-500 hover:underline"
                     >
                       Önizle

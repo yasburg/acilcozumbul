@@ -1,0 +1,30 @@
+diff --git a/node_modules/react-spin-prize/dist/SpinnerWheel.js b/node_modules/react-spin-prize/dist/SpinnerWheel.js
+index dcf0a3d..9f85154 100644
+--- a/node_modules/react-spin-prize/dist/SpinnerWheel.js
++++ b/node_modules/react-spin-prize/dist/SpinnerWheel.js
+@@ -125,18 +125,14 @@ export const SpinnerWheel = ({ items, onSpinComplete, onButtonClick, spinning: e
+             // Text position and rendering based on layout
+             let textElement;
+             if (textLayout === "horizontal") {
+-                // Horizontal layout: text starts from edge towards center
+-                const outerTextRadius = wheelRadius * 0.85;
+-                const innerTextRadius = wheelRadius * 0.25;
+-                // Calculate start position (at the edge)
+-                const startX = centerX + outerTextRadius * Math.cos(midAngle);
+-                const startY = centerY + outerTextRadius * Math.sin(midAngle);
+-                // Calculate end position (towards center)
+-                const endX = centerX + innerTextRadius * Math.cos(midAngle);
+-                const endY = centerY + innerTextRadius * Math.sin(midAngle);
+-                // Text path for horizontal text
++                // Center → rim, mid-segment (angular midAngle + radial mid of band)
++                const outerTextRadius = wheelRadius * 0.82;
++                const innerTextRadius = wheelRadius * 0.38;
++                const startX = centerX + innerTextRadius * Math.cos(midAngle);
++                const startY = centerY + innerTextRadius * Math.sin(midAngle);
++                const endX = centerX + outerTextRadius * Math.cos(midAngle);
++                const endY = centerY + outerTextRadius * Math.sin(midAngle);
+                 const textPathId = `textPath-${item.id}`;
+-                // Truncate long labels - more aggressive truncation
+                 let displayLabel = item.label;
+                 if (items.length > 30 && displayLabel.length > 6) {
+                     displayLabel = displayLabel.substring(0, 5) + "...";

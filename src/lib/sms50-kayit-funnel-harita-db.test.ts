@@ -15,7 +15,7 @@ describe("sms50-kayit-funnel-harita", () => {
     const harita = sms50KayitFunnelHaritaKodVarsayilan();
     harita.a = "c";
     const url = sms50KayitUrl("a", "https://www.acilcozumbul.com", { harita });
-    expect(url).toContain("/kayit/c?");
+    expect(url).toContain("/c?");
   });
 
   it("link haritası özel satırı varsayılan dışı olarak işaretler", () => {

@@ -16,6 +16,7 @@ describe("kayit-funnel", () => {
 
   it("yol üretir", () => {
     expect(kayitFunnelYolu("b")).toBe("/kayit/b");
+    expect(kayitFunnelYolu("c")).toBe("/c");
   });
 
   it("aktif listede a–e var", () => {
@@ -30,11 +31,11 @@ describe("kayit-funnel", () => {
     expect(kayitHizmetSorunOnerisi("cekici")).toContain("cekici");
   });
 
-  it("c A kartları + B kayıt", () => {
+  it("c seçim wizard", () => {
     const f = kayitFunnelGetir("c");
-    expect(f?.tip).toBe("phone_first");
-    expect(f?.hizmetOnsecim).toBe("cekici");
-    expect(f?.aLandingKartlari).toBe(true);
+    expect(f?.tip).toBe("secim_wizard");
+    expect(f?.hizmetOnsecim).toBeNull();
+    expect(f?.aLandingKartlari).toBeUndefined();
   });
 
   it("e phone_first lastikçi", () => {

@@ -52,6 +52,27 @@ select {
   animation: fade-in 0.3s ease-out;
 }
 
+@keyframes popup-in {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-popup-in {
+  animation: popup-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-popup-in {
+    animation: none;
+  }
+}
+
 @keyframes hedef-secim-parla {
   0%,
   100% {
@@ -66,6 +87,158 @@ select {
 
 .animate-hedef-secim-parla {
   animation: hedef-secim-parla 0.65s ease-in-out 3;
+}
+
+@keyframes sms-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-110%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-sms-banner-in {
+  animation: sms-banner-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes sms-banner-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-120%) scale(0.96);
+  }
+}
+
+.animate-sms-banner-out {
+  animation: sms-banner-out 0.35s ease-in forwards;
+  pointer-events: none;
+}
+
+@keyframes sms-banner-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 10px 28px rgba(15, 23, 42, 0.12),
+      0 0 0 1px rgba(255, 255, 255, 0.55),
+      0 0 18px 2px rgba(52, 211, 153, 0.28);
+  }
+  50% {
+    box-shadow:
+      0 14px 36px rgba(15, 23, 42, 0.14),
+      0 0 0 1px rgba(255, 255, 255, 0.7),
+      0 0 28px 6px rgba(16, 185, 129, 0.42);
+  }
+}
+
+.animate-sms-banner-glow {
+  animation: sms-banner-glow 1.8s ease-in-out infinite;
+}
+
+@keyframes sms-banner-sis {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.48;
+    transform: scale(1.08);
+  }
+}
+
+.animate-sms-banner-sis {
+  animation: sms-banner-sis 2.4s ease-in-out infinite;
+}
+
+@keyframes sms-banner-titre {
+  0%,
+  18%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  3% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  6% {
+    transform: translate3d(4px, 0, 0);
+  }
+  9% {
+    transform: translate3d(-3px, 0, 0);
+  }
+  12% {
+    transform: translate3d(3px, 0, 0);
+  }
+  15% {
+    transform: translate3d(-1px, 0, 0);
+  }
+}
+
+.animate-sms-banner-titre {
+  animation: sms-banner-titre 2s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes cark-ikon-titre {
+  0%,
+  12%,
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  2% {
+    transform: translateX(-4px) rotate(-6deg);
+  }
+  4% {
+    transform: translateX(4px) rotate(6deg);
+  }
+  6% {
+    transform: translateX(-3px) rotate(-4deg);
+  }
+  8% {
+    transform: translateX(3px) rotate(4deg);
+  }
+  10% {
+    transform: translateX(-1px) rotate(-1deg);
+  }
+}
+
+.animate-cark-ikon-titre {
+  animation: cark-ikon-titre 3s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes cark-ikon-glow {
+  0%,
+  12%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  4% {
+    opacity: 0.7;
+    transform: scale(1.12);
+  }
+  8% {
+    opacity: 0.55;
+    transform: scale(1.06);
+  }
+}
+
+.animate-cark-ikon-glow {
+  animation: cark-ikon-glow 3s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-cark-ikon-titre,
+  .animate-cark-ikon-glow {
+    animation: none;
+  }
 }
 
 @keyframes konum-pulse {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { addCekici, getCekiciByTelefon } from "@/lib/db";
+import { addCekici, getCekiciByTelefon, updateCekici } from "@/lib/db";
 import { CEKICI_COOKIE, cekiciOturumCookieAyarlari } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
 import {
@@ -14,7 +14,7 @@ import {
   telefonGecerliMi,
   telefonNormalize,
 } from "@/lib/telefon";
-import type { Cekici } from "@/lib/types";
+import type { Cekici, HizmetBolgeleri } from "@/lib/types";
 import {
   cekiciAuthKullaniciOlustur,
   cekiciAuthKullaniciSil,
@@ -28,10 +28,14 @@ import { baglaSms50TokenKayit } from "@/lib/sms50-token";
 import { kayitFunnelMi } from "@/lib/kayit-funnel";
 import { kaydetKayitFunnelOlay } from "@/lib/kayit-funnel-olay";
 import { sms50TokenGecerliMi } from "@/lib/sms50-kampanya";
+import { ilGecerliMi, ilceListesi } from "@/lib/il-ilce";
+import { gecerliSorunTipi } from "@/lib/sorun-tipleri";
+import { ISTANBUL_IL } from "@/lib/istanbul-ilceler";
+import { kayitCarkOdulTalepEt } from "@/lib/kayit-cark-db";
 
 /**
  * Passwordless hızlı kayıt: OTP doğrula → hesap oluştur → cookie.
- * Ad / bölge / hizmet kurulumda tamamlanır.
+ * Ad / ayrıntılı ayarlar kurulumda tamamlanır; şehir/bölge/hizmet önceden gelebilir.
  */
 export async function POST(request: NextRequest) {
   await ensureSeedData();
@@ -42,6 +46,24 @@ export async function POST(request: NextRequest) {
   const funnel = kayitFunnelMi(funnelHam) ? funnelHam : "b";
   const sessionId =
     typeof body.sessionId === "string" ? body.sessionId.trim() : null;
+
+  const sehirHam =
+    typeof body.sehir === "string" ? body.sehir.trim() : ISTANBUL_IL;
+  const sehir = ilGecerliMi(sehirHam) ? sehirHam : ISTANBUL_IL;
+  const gecerliIlceler = new Set(ilceListesi(sehir));
+  const hizmetIlceleri = Array.isArray(body.hizmetIlceleri)
+    ? (body.hizmetIlceleri as unknown[])
+        .filter((x): x is string => typeof x === "string")
+        .map((x) => x.trim())
+        .filter((x) => gecerliIlceler.has(x))
+    : [];
+  const hizmetBolgeleri: HizmetBolgeleri =
+    hizmetIlceleri.length > 0 ? { [sehir]: hizmetIlceleri } : {};
+  const hizmetSorunTipleri = Array.isArray(body.hizmetSorunTipleri)
+    ? (body.hizmetSorunTipleri as unknown[])
+        .filter((x): x is string => typeof x === "string")
+        .filter(gecerliSorunTipi)
+    : [];
 
   const kodHam =
     typeof body.kayitKodu === "string"
@@ -56,6 +78,8 @@ export async function POST(request: NextRequest) {
         ? body.sms_token.trim()
         : "";
   const smsToken = sms50TokenGecerliMi(smsTokenHam) ? smsTokenHam : null;
+  const carkToken =
+    typeof body.carkToken === "string" ? body.carkToken.trim() : "";
 
   if (!telefon?.trim()) {
     return NextResponse.json({ error: "Telefon gerekli." }, { status: 400 });
@@ -122,12 +146,12 @@ export async function POST(request: NextRequest) {
     sifre: "",
     authUserId,
     kredi: baslangicKredi,
-    sehir: "İstanbul",
-    hizmetIlceleri: [],
-    hizmetBolgeleri: {},
+    sehir,
+    hizmetIlceleri,
+    hizmetBolgeleri,
     hizmetModu: "il_ilce",
     menzilKm: 30,
-    hizmetSorunTipleri: [],
+    hizmetSorunTipleri,
     aktif: true,
     kayitTarihi: new Date().toISOString(),
     premiumSmsAktif: true,
@@ -163,6 +187,39 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  let carkSms = 0;
+  if (carkToken) {
+    try {
+      const claim = await kayitCarkOdulTalepEt({
+        token: carkToken,
+        telefon: tel,
+        cekiciId: cekici.id,
+      });
+      if (claim.ok) {
+        carkSms = claim.rewardSms;
+        cekici.kredi = baslangicKredi + carkSms;
+        await updateCekici(cekici);
+        await kaydetKayitFunnelOlay({
+          funnel,
+          olay: "wheel_reward_claimed",
+          sessionId,
+          cekiciId: cekici.id,
+          meta: { reward_sms: carkSms },
+        });
+      } else {
+        await kaydetKayitFunnelOlay({
+          funnel,
+          olay: "wheel_reward_claim_failed",
+          sessionId,
+          cekiciId: cekici.id,
+          meta: { hata: claim.hata },
+        });
+      }
+    } catch (e) {
+      console.error("[kayit/hizli] cark:", e);
+    }
+  }
+
   await kaydetKayitFunnelOlay({
     funnel,
     olay: "hesap",
@@ -174,7 +231,8 @@ export async function POST(request: NextRequest) {
     id: cekici.id,
     mesaj: "Kaydınız oluşturuldu.",
     kurulumGerekli: true,
-    hediyeKredi: baslangicKredi,
+    hediyeKredi: baslangicKredi + carkSms,
+    carkSms: carkSms || undefined,
     kodUygulandi: kayitHazir.sonuc.uygulandi,
   });
 
