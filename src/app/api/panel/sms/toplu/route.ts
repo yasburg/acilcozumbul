@@ -22,7 +22,7 @@ import {
   topluSmsAdminTestIleBaslat,
 } from "@/lib/toplu-sms-admin-test";
 
-const MAX_ALICI = 500;
+const MAX_ALICI = 2000;
 
 async function panelKullanici() {
   const supabase = await createClient();
