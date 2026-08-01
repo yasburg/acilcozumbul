@@ -340,7 +340,9 @@ export function odemeFromRow(r: OdemeRow): BekleyenOdeme {
         : r.paket_tl != null
           ? Number(r.paket_tl)
           : undefined,
-    odemeTipi: (r.odeme_tipi === "rozet" ? "rozet" : "kredi") as BekleyenOdeme["odemeTipi"],
+    odemeTipi: (r.odeme_tipi === "rozet" || r.odeme_tipi === "abonelik"
+      ? r.odeme_tipi
+      : "kredi") as BekleyenOdeme["odemeTipi"],
     olusturulma: r.olusturulma,
     durum: r.durum as BekleyenOdeme["durum"],
     faturaEposta: r.fatura_eposta ?? undefined,

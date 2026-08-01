@@ -1,5 +1,9 @@
 import { randomUUID } from "crypto";
-import { krediPaketOdenecekTL, krediPaketBul } from "./kredi-fiyat";
+import {
+  krediPaketOdenecekTL,
+  krediPaketBul,
+  type KrediPaketKaynak,
+} from "./kredi-fiyat";
 import {
   ROZET_INDIRIMLI_FIYAT_TL,
   ROZET_LISTE_FIYAT_TL,
@@ -11,9 +15,10 @@ import type { BekleyenOdeme, OdemeFatura } from "./types";
 export async function olusturBekleyenOdeme(
   cekiciId: string,
   paketTl: number,
-  faturaEposta: string
+  faturaEposta: string,
+  kaynak: KrediPaketKaynak = "kredi"
 ): Promise<BekleyenOdeme> {
-  const paket = krediPaketBul(paketTl);
+  const paket = krediPaketBul(paketTl, kaynak);
   if (!paket) {
     throw new Error("Geçersiz kredi paketi.");
   }
@@ -24,7 +29,7 @@ export async function olusturBekleyenOdeme(
     tutar: krediPaketOdenecekTL(paket),
     paketTl: paket.tutarTL,
     listeFiyati: paket.tutarTL,
-    odemeTipi: "kredi",
+    odemeTipi: kaynak === "abonelik" ? "abonelik" : "kredi",
     olusturulma: new Date().toISOString(),
     durum: "bekliyor",
     faturaEposta: faturaEposta.toLowerCase(),

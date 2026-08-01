@@ -1,34 +1,56 @@
-/** 1 kredi = 1 TL (SMS bildirimi başına) */
+/** 1 kredi = 1 TL tüketim (SMS bildirimi başına) */
 export const KREDI_BIRIM_FIYAT_TL = 1;
 
-/** Satın alınabilir paketler (TL); minimum 100 TL */
-export const KREDI_PAKET_TL_LISTESI = [100, 250, 500, 1000] as const;
+/** Satın alınabilir paket tutarları (TL) */
+export const KREDI_PAKET_TL_LISTESI = [499, 999, 1999] as const;
 export type KrediPaketTl = (typeof KREDI_PAKET_TL_LISTESI)[number];
 
+export type KrediPaketKaynak = "abonelik" | "kredi";
+
 export type KrediPaket = {
-  /** Paket etiketi / liste fiyatı (TL) */
+  /** Paket etiketi / ödenen tutar (TL) */
   tutarTL: KrediPaketTl;
-  /** Hesaba eklenecek kredi */
+  /** Hesaba eklenecek toplam kredi */
   kredi: number;
-  /** İndirim yüzdesi (ör. 1000 TL pakette 10) */
+  /** Bonus kredi (abonelikte; kredi satın almada 0) */
+  bonusKredi: number;
+  /** @deprecated Ödeme indirimi yok; her zaman 0 */
   indirimYuzde: number;
 };
 
-export const KREDI_PAKETLERI: readonly KrediPaket[] = [
-  { tutarTL: 100, kredi: 100, indirimYuzde: 0 },
-  { tutarTL: 250, kredi: 250, indirimYuzde: 0 },
-  { tutarTL: 500, kredi: 500, indirimYuzde: 0 },
-  { tutarTL: 1000, kredi: 1000, indirimYuzde: 10 },
+/** Tek seferlik kredi satın al — bonus yok */
+export const KREDI_SATIN_AL_PAKETLERI: readonly KrediPaket[] = [
+  { tutarTL: 499, kredi: 250, bonusKredi: 0, indirimYuzde: 0 },
+  { tutarTL: 999, kredi: 750, bonusKredi: 0, indirimYuzde: 0 },
+  { tutarTL: 1999, kredi: 1000, bonusKredi: 0, indirimYuzde: 0 },
 ];
 
-export function krediPaketBul(tutarTL: number): KrediPaket | undefined {
-  return KREDI_PAKETLERI.find((p) => p.tutarTL === tutarTL);
+/** Aylık abonelik — bonus 2./3. pakette */
+export const ABONELIK_PAKETLERI: readonly KrediPaket[] = [
+  { tutarTL: 499, kredi: 500, bonusKredi: 0, indirimYuzde: 0 },
+  { tutarTL: 999, kredi: 1100, bonusKredi: 100, indirimYuzde: 0 },
+  { tutarTL: 1999, kredi: 2400, bonusKredi: 400, indirimYuzde: 0 },
+];
+
+/** @deprecated Kredi satın al ile aynı; UI kaynak seçsin */
+export const KREDI_PAKETLERI = KREDI_SATIN_AL_PAKETLERI;
+
+export function krediPaketListesi(
+  kaynak: KrediPaketKaynak
+): readonly KrediPaket[] {
+  return kaynak === "abonelik" ? ABONELIK_PAKETLERI : KREDI_SATIN_AL_PAKETLERI;
 }
 
-/** Ödenecek tutar (TL) — indirim sonrası */
+export function krediPaketBul(
+  tutarTL: number,
+  kaynak: KrediPaketKaynak = "kredi"
+): KrediPaket | undefined {
+  return krediPaketListesi(kaynak).find((p) => p.tutarTL === tutarTL);
+}
+
+/** Ödenecek tutar — her zaman liste fiyatı (ödeme indirimi yok) */
 export function krediPaketOdenecekTL(paket: KrediPaket): number {
-  if (paket.indirimYuzde <= 0) return paket.tutarTL;
-  return Math.round(paket.tutarTL * (1 - paket.indirimYuzde / 100));
+  return paket.tutarTL;
 }
 
 /** Garanti sanal POS tutarı (kuruş) — ödenecek TL üzerinden */

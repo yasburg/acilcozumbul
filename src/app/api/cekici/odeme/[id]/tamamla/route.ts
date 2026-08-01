@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  kaydetAbonelikIslem,
+  olusturCekiciAbonelik,
+} from "@/lib/abonelik-db";
 import { getCurrentCekici } from "@/lib/auth";
 import { cekiciEpostaDogrulandiMi } from "@/lib/cekici-email-otp";
 import { getCekiciById, updateCekici } from "@/lib/db";
 import { garantiYapilandirildi } from "@/lib/garanti/config";
-import { garantiKrediOdemesiYap } from "@/lib/garanti/payment";
+import {
+  aylikRecurringOpts,
+  garantiKrediOdemesiYap,
+  orderIdTemizle,
+} from "@/lib/garanti/payment";
 import { istemciIpAl } from "@/lib/istemci-ip";
 import { baglaKrediHatirlatmaYukleme } from "@/lib/kredi-hatirlatma-db";
 import { kaydetKrediOdeme } from "@/lib/kredi-odeme";
@@ -96,6 +104,7 @@ export async function POST(
       );
     }
 
+    const clientIp = istemciIpAl(request);
     const sonuc = await garantiKrediOdemesiYap({
       orderId: id,
       amountKurus: tlTutarKurus(bekleyen.tutar),
@@ -103,8 +112,10 @@ export async function POST(
       expiryMonth: sk.ay,
       expiryYear: sk.yil,
       cvv: String(cvv),
-      clientIp: istemciIpAl(request),
+      clientIp,
       email: faturaSonuc.data.faturaEposta,
+      recurring:
+        bekleyen.odemeTipi === "abonelik" ? aylikRecurringOpts() : undefined,
     });
 
     if (!sonuc.basarili) {
@@ -149,6 +160,30 @@ export async function POST(
   await updateCekici(guncelCekici);
   await tamamlaOdeme(id);
 
+  let abonelikId: string | undefined;
+  if (bekleyen.odemeTipi === "abonelik") {
+    const orderId = orderIdTemizle(id);
+    const abonelik = await olusturCekiciAbonelik({
+      cekiciId: cekici.id,
+      paketTl: bekleyen.paketTl ?? bekleyen.tutar,
+      garantiOrderId: orderId,
+      garantiOriginalRetrefNum: referans.startsWith("VPOS-")
+        ? undefined
+        : referans,
+      garantiClientIp: istemciIpAl(request),
+    });
+    abonelikId = abonelik.id;
+    await kaydetAbonelikIslem({
+      abonelikId: abonelik.id,
+      cekiciId: cekici.id,
+      tip: "created",
+      tutarTl: bekleyen.tutar,
+      kredi: bekleyen.miktar,
+      garantiOrderId: orderId,
+      eventId: `created_${orderId}`,
+    });
+  }
+
   await kaydetKrediOdeme({
     id: bekleyen.id,
     cekiciId: cekici.id,
@@ -178,9 +213,10 @@ export async function POST(
 
   return NextResponse.json({
     success: true,
-    odemeTipi: "kredi",
+    odemeTipi: bekleyen.odemeTipi === "abonelik" ? "abonelik" : "kredi",
     eklenenKredi: bekleyen.miktar,
     toplamKredi: guncelCekici.kredi,
+    abonelikId,
     referans,
     demo,
   });

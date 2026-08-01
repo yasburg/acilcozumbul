@@ -27,6 +27,15 @@ const ROZET_ODEME_ADIMLARI = [
   "Onaylı çekici rozetiniz aktifleştirildi",
 ] as const;
 
+const ABONELIK_ODEME_ADIMLARI = [
+  "Kart doğrulanıyor",
+  "Kart doğrulandı",
+  "Bankayla iletişim kuruluyor",
+  "Kart onaylandı",
+  "Ödeme gerçekleşti",
+  "Aboneliğiniz aktifleştirildi",
+] as const;
+
 function bekle(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
@@ -100,10 +109,16 @@ export default function OdemePage() {
   const [error, setError] = useState("");
   const [garantiAktif, setGarantiAktif] = useState(false);
   const [smokeDolduruldu, setSmokeDolduruldu] = useState(false);
-  const [odemeTipi, setOdemeTipi] = useState<"kredi" | "rozet">("kredi");
+  const [odemeTipi, setOdemeTipi] = useState<"kredi" | "rozet" | "abonelik">(
+    "kredi"
+  );
 
   const odemeAdimlari =
-    odemeTipi === "rozet" ? ROZET_ODEME_ADIMLARI : KREDI_ODEME_ADIMLARI;
+    odemeTipi === "rozet"
+      ? ROZET_ODEME_ADIMLARI
+      : odemeTipi === "abonelik"
+        ? ABONELIK_ODEME_ADIMLARI
+        : KREDI_ODEME_ADIMLARI;
 
   useEffect(() => {
     let iptal = false;
@@ -123,7 +138,11 @@ export default function OdemePage() {
         setMiktar(d.miktar);
         setTutar(d.tutar);
         setListeFiyati(Number(d.listeFiyati) || d.tutar);
-        setOdemeTipi(d.odemeTipi === "rozet" ? "rozet" : "kredi");
+        setOdemeTipi(
+          d.odemeTipi === "rozet" || d.odemeTipi === "abonelik"
+            ? d.odemeTipi
+            : "kredi"
+        );
         setEposta(d.faturaEposta ?? meData.faturaEposta ?? "");
         setAdres(d.faturaAdres ?? "");
         setTcKimlik(d.faturaTcKimlik ?? "");
@@ -138,7 +157,11 @@ export default function OdemePage() {
           setMiktar(s.miktar);
           setTutar(s.tutar);
           setListeFiyati(Number(s.listeFiyati) || s.tutar);
-          setOdemeTipi(s.odemeTipi === "rozet" ? "rozet" : "kredi");
+          setOdemeTipi(
+            s.odemeTipi === "rozet" || s.odemeTipi === "abonelik"
+              ? s.odemeTipi
+              : "kredi"
+          );
           setEposta(s.eposta ?? meData.faturaEposta ?? "");
           setGarantiAktif(Boolean(s.garantiAktif));
         } else if (!iptal) {
@@ -235,8 +258,12 @@ export default function OdemePage() {
 
       await animasyonGorev;
 
-      const tip: "kredi" | "rozet" =
-        data.odemeTipi === "rozet" || odemeTipi === "rozet" ? "rozet" : "kredi";
+      const tip: "kredi" | "rozet" | "abonelik" =
+        data.odemeTipi === "rozet" || odemeTipi === "rozet"
+          ? "rozet"
+          : data.odemeTipi === "abonelik" || odemeTipi === "abonelik"
+            ? "abonelik"
+            : "kredi";
 
       posthogOlayYakala("cekici_odeme_tamamla", {
         rol: "cekici",
@@ -319,6 +346,12 @@ export default function OdemePage() {
           <p className="text-sm opacity-90 mt-1">
             Onaylı çekici rozeti — teklifleriniz üst sıralarda
           </p>
+        ) : odemeTipi === "abonelik" ? (
+          miktar > 0 && (
+            <p className="text-sm opacity-90">
+              {miktar} kredi / aylık abonelik
+            </p>
+          )
         ) : (
           miktar > 0 && (
             <p className="text-sm opacity-90">{miktar} kredi satın alımı</p>
@@ -331,6 +364,14 @@ export default function OdemePage() {
           <p className="text-sm text-emerald-900 leading-relaxed">
             Ödeme sonrası hesabınızda doğrulanmış rozet görünür ve müşterilere
             verdiğiniz teklifler listede öncelikli sıralanır.
+          </p>
+        </Card>
+      )}
+      {odemeTipi === "abonelik" && (
+        <Card className="border-amber-200 bg-amber-50 mb-4">
+          <p className="text-sm text-amber-950 leading-relaxed">
+            Abonelik her ay otomatik yenilenir (Garanti). İstediğiniz zaman kredi
+            sayfasından iptal edebilirsiniz; kalan krediniz silinmez.
           </p>
         </Card>
       )}

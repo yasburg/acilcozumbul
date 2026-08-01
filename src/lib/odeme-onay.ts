@@ -1,5 +1,5 @@
 export type OdemeOnayKayit = {
-  odemeTipi: "kredi" | "rozet";
+  odemeTipi: "kredi" | "rozet" | "abonelik";
   eklenenKredi?: number;
   toplamKredi?: number;
   tutar?: number;

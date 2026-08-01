@@ -72,6 +72,7 @@ export default function OdemeOnayPage() {
   }
 
   const rozet = kayit.odemeTipi === "rozet";
+  const abonelik = kayit.odemeTipi === "abonelik";
 
   return (
     <MobileShell subtitle="Ödeme onayı" showBrand={false}>
@@ -89,7 +90,9 @@ export default function OdemeOnayPage() {
           <p className="text-sm text-slate-600 mt-2 leading-relaxed">
             {rozet
               ? "Onaylı çekici rozetiniz aktifleştirildi."
-              : "Kredileriniz hesabınıza yüklendi."}
+              : abonelik
+                ? "Aboneliğiniz aktif. Krediler hesabınıza yüklendi; her ay otomatik yenilenir."
+                : "Kredileriniz hesabınıza yüklendi."}
           </p>
         </div>
 

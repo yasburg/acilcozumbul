@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  ABONELIK_PAKETLERI,
+  KREDI_SATIN_AL_PAKETLERI,
   krediPaketBul,
   krediPaketOdenecekTL,
   krediTutarKurus,
@@ -7,20 +9,38 @@ import {
 } from "./kredi-fiyat";
 
 describe("kredi-fiyat", () => {
-  it("paket ödemeleri", () => {
-    const p1000 = krediPaketBul(1000)!;
-    expect(p1000.kredi).toBe(1000);
-    expect(krediPaketOdenecekTL(p1000)).toBe(900);
-    expect(tlTutarKurus(900)).toBe(90000);
+  it("kredi satın al paketleri", () => {
+    expect(krediPaketBul(499, "kredi")?.kredi).toBe(250);
+    expect(krediPaketBul(999, "kredi")?.kredi).toBe(750);
+    expect(krediPaketBul(1999, "kredi")?.kredi).toBe(1000);
+    for (const p of KREDI_SATIN_AL_PAKETLERI) {
+      expect(p.bonusKredi).toBe(0);
+      expect(krediPaketOdenecekTL(p)).toBe(p.tutarTL);
+    }
   });
 
-  it("indirimsiz paketler", () => {
-    expect(krediPaketOdenecekTL(krediPaketBul(100)!)).toBe(100);
-    expect(krediPaketOdenecekTL(krediPaketBul(250)!)).toBe(250);
-    expect(tlTutarKurus(250)).toBe(25000);
+  it("abonelik paketleri bonuslu", () => {
+    expect(krediPaketBul(499, "abonelik")?.kredi).toBe(500);
+    expect(krediPaketBul(999, "abonelik")).toMatchObject({
+      kredi: 1100,
+      bonusKredi: 100,
+    });
+    expect(krediPaketBul(1999, "abonelik")).toMatchObject({
+      kredi: 2400,
+      bonusKredi: 400,
+    });
+    for (const p of ABONELIK_PAKETLERI) {
+      expect(krediPaketOdenecekTL(p)).toBe(p.tutarTL);
+    }
+  });
+
+  it("kaynak karışmaz", () => {
+    expect(krediPaketBul(999, "kredi")?.kredi).toBe(750);
+    expect(krediPaketBul(999, "abonelik")?.kredi).toBe(1100);
   });
 
   it("birim fiyat (SMS)", () => {
     expect(krediTutarKurus(1)).toBe(100);
+    expect(tlTutarKurus(499)).toBe(49900);
   });
 });

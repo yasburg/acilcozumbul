@@ -47,7 +47,39 @@ export type BelgeDurum = "yok" | "beklemede" | "onaylandi" | "reddedildi";
 /** Profil fotoğrafı inceleme durumu (belge ile aynı değerler) */
 export type ProfilFotoDurum = BelgeDurum;
 
-export type OdemeTipi = "kredi" | "rozet";
+export type OdemeTipi = "kredi" | "rozet" | "abonelik";
+
+export type AbonelikStatus =
+  | "active"
+  | "past_due"
+  | "cancelled"
+  | "expired"
+  | "payment_failed";
+
+export type AbonelikIslemTip =
+  | "created"
+  | "renewal"
+  | "cancelled"
+  | "payment_failed"
+  | "expired"
+  | "retry";
+
+export interface CekiciAbonelik {
+  id: string;
+  cekiciId: string;
+  paketTl: number;
+  status: AbonelikStatus;
+  garantiOrderId?: string;
+  garantiOriginalRetrefNum?: string;
+  garantiClientIp?: string;
+  renewsAt?: string;
+  endsAt?: string;
+  subscribedAt: string;
+  retryCount: number;
+  nextRetryAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /** İl adı → seçili ilçe listesi */
 export type HizmetBolgeleri = Record<string, string[]>;

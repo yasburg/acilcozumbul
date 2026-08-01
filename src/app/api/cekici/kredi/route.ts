@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
 import { updateCekici } from "@/lib/db";
-import { krediPaketBul, krediPaketOdenecekTL } from "@/lib/kredi-fiyat";
+import {
+  krediPaketBul,
+  krediPaketOdenecekTL,
+  type KrediPaketKaynak,
+} from "@/lib/kredi-fiyat";
 import { ensureSeedData } from "@/lib/seed";
 
 export async function POST(request: NextRequest) {
@@ -11,12 +15,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
   }
 
-  const { paketTl, miktar, kartNo, sonKullanma, cvv } = await request.json();
-  const paket = krediPaketBul(Number(paketTl ?? miktar));
+  const body = await request.json();
+  const { paketTl, miktar, kartNo, sonKullanma, cvv } = body;
+  const kaynak: KrediPaketKaynak =
+    body.kaynak === "abonelik" ? "abonelik" : "kredi";
+  const paket = krediPaketBul(Number(paketTl ?? miktar), kaynak);
 
   if (!paket) {
     return NextResponse.json(
-      { error: "Geçerli bir paket seçin (100, 250, 500 veya 1000 TL)." },
+      { error: "Geçerli bir paket seçin (499, 999 veya 1999 TL)." },
       { status: 400 }
     );
   }

@@ -5,6 +5,14 @@ import { garantiYanitAlanlari } from "./yanit";
 
 const BASARI_KODLARI = new Set(["00", "000"]);
 
+export type GarantiRecurringOpts = {
+  totalPaymentNum: number;
+  frequencyType: "M" | "D" | "W";
+  frequencyInterval: number;
+  /** YYYYMMDD */
+  startDate: string;
+};
+
 export type GarantiKrediOdemeIstegi = {
   orderId: string;
   amountKurus: number;
@@ -14,6 +22,8 @@ export type GarantiKrediOdemeIstegi = {
   cvv: string;
   clientIp: string;
   email?: string;
+  /** Abonelik ilk çekiminde banka-side recurring */
+  recurring?: GarantiRecurringOpts;
 };
 
 export type GarantiOdemeSonuc = {
@@ -25,14 +35,44 @@ export type GarantiOdemeSonuc = {
   refNo?: string;
 };
 
-function orderIdTemizle(id: string): string {
+export function orderIdTemizle(id: string): string {
   return id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 36);
 }
 
-function xmlIstekOlustur(
+/** Bugünün tarihi YYYYMMDD (Garanti Recurring StartDate) */
+export function garantiRecurringStartDate(d = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}${m}${day}`;
+}
+
+export function aylikRecurringOpts(startDate?: string): GarantiRecurringOpts {
+  return {
+    totalPaymentNum: 12,
+    frequencyType: "M",
+    frequencyInterval: 1,
+    startDate: startDate ?? garantiRecurringStartDate(),
+  };
+}
+
+/** Test / unit için XML üretimi */
+export function garantiXmlIstekOlustur(
   cfg: ReturnType<typeof garantiConfigOku>,
-  tx: Record<string, string>
+  tx: Record<string, string>,
+  recurring?: GarantiRecurringOpts
 ): string {
+  const recurringSection = recurring
+    ? `
+    <Recurring>
+      <Type>R</Type>
+      <TotalPaymentNum>${recurring.totalPaymentNum}</TotalPaymentNum>
+      <FrequencyType>${recurring.frequencyType}</FrequencyType>
+      <FrequencyInterval>${recurring.frequencyInterval}</FrequencyInterval>
+      <StartDate>${recurring.startDate}</StartDate>
+    </Recurring>`
+    : "";
+
   return `<?xml version="1.0" encoding="iso-8859-9"?>
 <GVPSRequest>
   <Mode>${cfg.mode}</Mode>
@@ -55,7 +95,7 @@ function xmlIstekOlustur(
   </Card>
   <Order>
     <OrderID>${tx.ORDERID}</OrderID>
-    <GroupID />
+    <GroupID />${recurringSection}
   </Order>
   <Transaction>
     <Type>sales</Type>
@@ -105,7 +145,7 @@ export async function garantiKrediOdemesiYap(
   const response = await fetch(cfg.postUrl, {
     method: "POST",
     headers: { "Content-Type": "application/xml; charset=iso-8859-9" },
-    body: xmlIstekOlustur(cfg, tx),
+    body: garantiXmlIstekOlustur(cfg, tx, istek.recurring),
   });
 
   if (!response.ok) {
