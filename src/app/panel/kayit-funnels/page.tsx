@@ -68,11 +68,108 @@ const HUNI_ADIM_RENKLERI = [
   "#6b7c8a",
 ] as const;
 
-function HuniSvg({ adimlar }: { adimlar: HuniAdim[] }) {
-  if (!adimlar.length) {
-    return <p className="text-sm text-slate-500">Veri yok.</p>;
-  }
+function HuniSvgYatay({ adimlar }: { adimlar: HuniAdim[] }) {
+  const n = adimlar.length;
+  const svgW = Math.max(520, n * 110);
+  const topPad = 6;
+  const funnelH = 96;
+  const labelH = 58;
+  const svgH = topPad + funnelH + labelH;
+  const baseline = topPad + funnelH;
+  const maxCount = Math.max(...adimlar.map((a) => a.sessionSayisi), 1);
+  const basSayi = Math.max(adimlar[0]?.sessionSayisi ?? 0, 1);
+  const maxBandH = funnelH - 6;
+  const minBandH = maxBandH * 0.2;
+  const heights = adimlar.map(
+    (a) => minBandH + (maxBandH - minBandH) * (a.sessionSayisi / maxCount)
+  );
+  const segW = svgW / n;
 
+  return (
+    <div className="rounded-xl bg-slate-100 px-2 py-3 overflow-x-auto">
+      <svg
+        viewBox={`0 0 ${svgW} ${svgH}`}
+        className="w-full min-w-[28rem] block"
+        role="img"
+        aria-label="Kayıt hunisi yatay"
+      >
+        {adimlar.map((a, i) => {
+          const x0 = i * segW;
+          const x1 = (i + 1) * segW;
+          const hL = heights[i]!;
+          const hR = i === n - 1 ? hL : heights[i + 1]!;
+          const yL = baseline - hL;
+          const yR = baseline - hR;
+          const points = `${x0},${yL} ${x1},${yR} ${x1},${baseline} ${x0},${baseline}`;
+          const midX = (x0 + x1) / 2;
+          const midY = (yL + yR) / 2 + (baseline - (yL + yR) / 2) * 0.35;
+          const totalYuzde = (a.sessionSayisi / basSayi) * 100;
+          const oncekiSayi =
+            i === 0 ? a.sessionSayisi : adimlar[i - 1]!.sessionSayisi;
+          const adimYuzde =
+            i === 0
+              ? 100
+              : oncekiSayi > 0
+                ? (a.sessionSayisi / oncekiSayi) * 100
+                : 0;
+
+          return (
+            <g key={a.adim}>
+              <polygon
+                points={points}
+                fill={HUNI_ADIM_RENKLERI[i % HUNI_ADIM_RENKLERI.length]}
+              />
+              <text
+                x={midX}
+                y={midY + 4}
+                textAnchor="middle"
+                fill="#fff"
+                fontSize={13}
+                fontWeight={700}
+              >
+                {a.sessionSayisi}
+              </text>
+              <text
+                x={midX}
+                y={baseline + 16}
+                textAnchor="middle"
+                fill="#334155"
+                fontSize={10}
+                fontWeight={600}
+              >
+                {a.label}
+              </text>
+              <text
+                x={midX}
+                y={baseline + 30}
+                textAnchor="middle"
+                fill="#64748b"
+                fontSize={10}
+                fontWeight={700}
+              >
+                {totalYuzde.toFixed(0)}%
+              </text>
+              <text
+                x={midX}
+                y={baseline + 44}
+                textAnchor="middle"
+                fill="#94a3b8"
+                fontSize={9}
+              >
+                adım {adimYuzde.toFixed(0)}%
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+      <p className="text-[10px] text-slate-400 px-1 mt-1">
+        Üst %: total (ilk adıma göre) · Alt %: önceki adıma göre
+      </p>
+    </div>
+  );
+}
+
+function HuniSvgDikey({ adimlar }: { adimlar: HuniAdim[] }) {
   const n = adimlar.length;
   const labelW = 100;
   const pctSolW = 40;
@@ -85,17 +182,11 @@ function HuniSvg({ adimlar }: { adimlar: HuniAdim[] }) {
   const cx = funnelLeft + funnelW / 2;
   const maxBand = funnelW - 12;
   const minBand = maxBand * 0.32;
-  const maxCount = Math.max(
-    ...adimlar.map((a) => a.sessionSayisi),
-    1
-  );
+  const maxCount = Math.max(...adimlar.map((a) => a.sessionSayisi), 1);
   const basSayi = Math.max(adimlar[0]?.sessionSayisi ?? 0, 1);
-
-  function bandGenislik(sayi: number): number {
-    return minBand + (maxBand - minBand) * (sayi / maxCount);
-  }
-
-  const genislikler = adimlar.map((a) => bandGenislik(a.sessionSayisi));
+  const genislikler = adimlar.map(
+    (a) => minBand + (maxBand - minBand) * (a.sessionSayisi / maxCount)
+  );
 
   return (
     <div className="rounded-xl bg-slate-100 px-2 py-3">
@@ -103,7 +194,7 @@ function HuniSvg({ adimlar }: { adimlar: HuniAdim[] }) {
         viewBox={`0 0 ${svgW} ${svgH}`}
         className="w-full block"
         role="img"
-        aria-label="Kayıt hunisi"
+        aria-label="Kayıt hunisi dikey"
       >
         <text
           x={labelW + pctSolW / 2}
@@ -125,8 +216,7 @@ function HuniSvg({ adimlar }: { adimlar: HuniAdim[] }) {
         </text>
         {adimlar.map((a, i) => {
           const topW = genislikler[i]!;
-          const bottomW =
-            i === n - 1 ? topW : genislikler[i + 1]!;
+          const bottomW = i === n - 1 ? topW : genislikler[i + 1]!;
           const y0 = i * segH + 18;
           const y1 = y0 + segH - 2;
           const x0t = cx - topW / 2;
@@ -199,6 +289,23 @@ function HuniSvg({ adimlar }: { adimlar: HuniAdim[] }) {
   );
 }
 
+function HuniSvg({
+  adimlar,
+  yon = "dikey",
+}: {
+  adimlar: HuniAdim[];
+  yon?: "yatay" | "dikey";
+}) {
+  if (!adimlar.length) {
+    return <p className="text-sm text-slate-500">Veri yok.</p>;
+  }
+  return yon === "yatay" ? (
+    <HuniSvgYatay adimlar={adimlar} />
+  ) : (
+    <HuniSvgDikey adimlar={adimlar} />
+  );
+}
+
 function gunKisaEtiket(gun: string): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(gun);
   if (!m) return gun;
@@ -214,11 +321,11 @@ function TrendSvg({ gunluk }: { gunluk: Gunluk[] }) {
     );
   }
   const w = Math.max(420, gunluk.length * 56);
-  const h = 180;
+  const h = 160;
   const padL = 28;
   const padR = 28;
-  const padT = 36;
-  const padB = 36;
+  const padT = 32;
+  const padB = 32;
   const maxY = Math.max(...gunluk.map((g) => g.goruldu), 1);
 
   const xAt = (i: number) =>
@@ -485,17 +592,17 @@ export default function PanelKayitFunnelsPage() {
       )}
 
       {!yukleniyor && !hata && (
-        <div className="grid lg:grid-cols-2 gap-4">
-          <Card className="space-y-2">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-stretch">
+          <Card className="space-y-2 min-w-0">
             <h2 className="text-sm font-semibold text-slate-900">
               Session hunisi
             </h2>
             <p className="text-xs text-slate-500">
-              Seçili funnellerde unique session adım geçişi.
+              Seçili funnellerde unique session adım geçişi (yatay).
             </p>
-            <HuniSvg adimlar={huni} />
+            <HuniSvg adimlar={huni} yon="yatay" />
           </Card>
-          <Card className="space-y-2">
+          <Card className="space-y-2 min-w-0">
             <h2 className="text-sm font-semibold text-slate-900">
               Günlük trend
             </h2>
