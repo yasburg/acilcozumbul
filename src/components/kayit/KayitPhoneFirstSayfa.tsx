@@ -234,16 +234,24 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
       try {
         if (sessionStorage.getItem(META_COMPLETE_REG_KEY) !== "1") {
           sessionStorage.setItem(META_COMPLETE_REG_KEY, "1");
-          void import("@/lib/meta-pixel").then((m) =>
-            m.metaPixelCompleteRegistration({
+          void import("@/lib/meta-pixel").then((m) => {
+            m.metaKayitUserSakla({
+              phone: telefonTrim,
+              externalId: cekiciId || null,
+            });
+            return m.metaPixelCompleteRegistration({
               content_name: `cekici_kayit_${funnel.id}`,
-            })
-          );
+              phone: telefonTrim,
+              externalId: cekiciId || null,
+            });
+          });
         }
       } catch {
         void import("@/lib/meta-pixel").then((m) =>
           m.metaPixelCompleteRegistration({
             content_name: `cekici_kayit_${funnel.id}`,
+            phone: telefonTrim,
+            externalId: cekiciId || null,
           })
         );
       }

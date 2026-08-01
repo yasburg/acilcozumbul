@@ -9,7 +9,10 @@ import {
   sehirKullanimAcikMi,
 } from "@/lib/cekici-sehir-acilis";
 import { gtagCekiciKayitOnayGoruntule } from "@/lib/gtag";
-import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
+import {
+  metaKayitUserOku,
+  metaPixelCompleteRegistration,
+} from "@/lib/meta-pixel";
 import {
   tiktokPixelHesapOlustur,
   tiktokPixelKayitOl,
@@ -65,7 +68,14 @@ function OnayIcerik() {
       /* private mode — yine de dene */
     }
     if (metaDonusum) {
-      metaPixelCompleteRegistration({ content_name: "cekici_kayit" });
+      const kayitUser = metaKayitUserOku();
+      void metaPixelCompleteRegistration({
+        content_name: "cekici_kayit",
+        phone: kayitUser?.phone,
+        firstName: kayitUser?.firstName,
+        lastName: kayitUser?.lastName,
+        externalId: kayitUser?.externalId,
+      });
     }
     /* Funnel A yedek: formda kaçtıysa kayıt + hesap burada */
     void (async () => {

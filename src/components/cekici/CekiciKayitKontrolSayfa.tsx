@@ -19,7 +19,7 @@ import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import { telefonDogrulamaHatasi, telefonGecerliMi, telefonMaskele } from "@/lib/telefon";
 import { davetKoduNormalize } from "@/lib/davet-kodu";
 import { posthogKampanyaKaydet, posthogOlayYakala } from "@/lib/posthog-client";
-import { metaPixelCompleteRegistration } from "@/lib/meta-pixel";
+import { metaPixelCompleteRegistration, metaKayitUserSakla } from "@/lib/meta-pixel";
 import { gtagAdsKaydolmaDonusumuBirKez } from "@/lib/gtag";
 import {
   tiktokPixelClickButton,
@@ -458,13 +458,26 @@ function KayitIcerik() {
       /* Funnel A: kayıt + hesap aynı anda — son onayda ikisi birden */
       const cekiciId =
         typeof data.id === "string" ? data.id : String(data.id ?? "");
+      const metaUser = {
+        phone: form.telefon,
+        firstName: form.ad,
+        lastName: form.soyad,
+        externalId: cekiciId || null,
+      };
+      metaKayitUserSakla(metaUser);
       try {
         if (sessionStorage.getItem(META_COMPLETE_REG_KEY) !== "1") {
           sessionStorage.setItem(META_COMPLETE_REG_KEY, "1");
-          metaPixelCompleteRegistration({ content_name: "cekici_kayit" });
+          void metaPixelCompleteRegistration({
+            content_name: "cekici_kayit",
+            ...metaUser,
+          });
         }
       } catch {
-        metaPixelCompleteRegistration({ content_name: "cekici_kayit" });
+        void metaPixelCompleteRegistration({
+          content_name: "cekici_kayit",
+          ...metaUser,
+        });
       }
       await tiktokPixelKayitOl({
         content_name: "cekici_kayit_a",

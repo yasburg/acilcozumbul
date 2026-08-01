@@ -1702,7 +1702,14 @@ function MusteriDonusumSayfaIcerik() {
       try {
         if (sessionStorage.getItem(`acil_meta_lead_${data.id}`) !== "1") {
           sessionStorage.setItem(`acil_meta_lead_${data.id}`, "1");
-          metaPixelLead({ content_name: form.sorunTipi || "musteri_talep" });
+          metaPixelLead({
+            content_name: form.sorunTipi || "musteri_talep",
+            phone: form.telefon,
+            firstName: form.ad,
+            lastName: form.soyad,
+            externalId:
+              typeof data.id === "string" ? data.id : String(data.id ?? ""),
+          });
           void tiktokPixelLead({
             content_name: form.sorunTipi || "musteri_talep",
             phone: form.telefon,
@@ -1716,8 +1723,16 @@ function MusteriDonusumSayfaIcerik() {
         if (form.sorunTipi) {
           sessionStorage.setItem(`acil_bekle_sorun_${data.id}`, form.sorunTipi);
         }
+        if (form.telefon.trim()) {
+          sessionStorage.setItem(`acil_bekle_tel_${data.id}`, form.telefon.trim());
+        }
       } catch {
-        metaPixelLead({ content_name: form.sorunTipi || "musteri_talep" });
+        void metaPixelLead({
+          content_name: form.sorunTipi || "musteri_talep",
+          phone: form.telefon,
+          firstName: form.ad,
+          lastName: form.soyad,
+        });
         void tiktokPixelLead({
           content_name: form.sorunTipi || "musteri_talep",
           phone: form.telefon,

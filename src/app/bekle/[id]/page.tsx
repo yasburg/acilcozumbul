@@ -199,14 +199,20 @@ function BekleIcerik() {
   useEffect(() => {
     if (demoTalep || demoParam) return;
     let sorun: string | null = null;
+    let telefon: string | null = null;
     try {
       if (sessionStorage.getItem(`acil_meta_lead_${id}`) === "1") return;
       sessionStorage.setItem(`acil_meta_lead_${id}`, "1");
       sorun = sessionStorage.getItem(`acil_bekle_sorun_${id}`);
+      telefon = sessionStorage.getItem(`acil_bekle_tel_${id}`);
     } catch {
       /* private mode — yine de dene */
     }
-    metaPixelLead({ content_name: sorun || "musteri_talep" });
+    void metaPixelLead({
+      content_name: sorun || "musteri_talep",
+      phone: telefon,
+      externalId: id,
+    });
     void tiktokPixelLead({ content_name: sorun || "musteri_talep" });
   }, [id, demoTalep, demoParam]);
 
