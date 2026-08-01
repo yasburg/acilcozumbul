@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { getSupabaseAdmin, supabaseDbAktif } from "./supabase/admin";
 import {
   carkOdulSmsMi,
-  carkRastgeleDilimIndex,
+  carkScriptliDilimIndex,
   carkDilimSonuc,
   type CarkOdulSms,
 } from "./kayit-cark";
@@ -45,8 +45,11 @@ export type CarkSpinSonuc =
       token: string;
     };
 
-export async function kayitCarkSpin(): Promise<CarkSpinSonuc> {
-  const dilimIndex = carkRastgeleDilimIndex();
+export async function kayitCarkSpin(opts?: {
+  deneme?: number;
+}): Promise<CarkSpinSonuc> {
+  const deneme = opts?.deneme === 2 ? 2 : 1;
+  const dilimIndex = carkScriptliDilimIndex(deneme);
   const dilim = carkDilimSonuc(dilimIndex);
   if (dilim.tip === "tekrar") {
     return { tip: "tekrar", dilimIndex };

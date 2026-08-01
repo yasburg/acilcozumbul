@@ -78,7 +78,7 @@ const COKLU_HIZMETLER: { id: string; label: string }[] = [
   { id: "kilit", label: "Araç anahtarı" },
 ];
 
-/** Ana akış 4 adım — is_coklu / ilce / otp ara adımları aynı numaraya düşer */
+/** Ana akış 3 adım — şehir + bölge/ilçe aynı adımda (2) */
 function ilerlemeBilgi(
   adim: Adim
 ): { no: number; etiket: string } | null {
@@ -87,13 +87,12 @@ function ilerlemeBilgi(
     case "is_coklu":
       return { no: 1, etiket: "Hizmet seçimi" };
     case "sehir":
-      return { no: 2, etiket: "Şehir seçimi" };
     case "bolge":
     case "ilce":
-      return { no: 3, etiket: "Bölge seçimi" };
+      return { no: 2, etiket: "Şehir ve bölge" };
     case "telefon":
     case "otp":
-      return { no: 4, etiket: "Telefon doğrulama" };
+      return { no: 3, etiket: "Telefon doğrulama" };
     default:
       return null;
   }
@@ -117,12 +116,12 @@ function IlerlemeCubugu({ adim }: { adim: Adim }) {
   const bil = ilerlemeBilgi(adim);
   if (!bil) return null;
   return (
-    <div className="space-y-1.5" aria-label={`Adım ${bil.no} / 4`}>
+    <div className="space-y-1.5" aria-label={`Adım ${bil.no} / 3`}>
       <p className="text-xs font-medium text-slate-500">
-        {bil.no} / 4 — {bil.etiket}
+        {bil.no} / 3 — {bil.etiket}
       </p>
       <div className="flex gap-1.5" aria-hidden>
-        {[1, 2, 3, 4].map((n) => (
+        {[1, 2, 3].map((n) => (
           <div
             key={n}
             className={`h-1 flex-1 rounded-full ${

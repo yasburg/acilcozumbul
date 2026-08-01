@@ -6,6 +6,7 @@ import {
   carkHedefDonusDerece,
   carkOdulSmsMi,
   carkRastgeleDilimIndex,
+  carkScriptliDilimIndex,
 } from "./kayit-cark";
 
 describe("kayit-cark", () => {
@@ -33,6 +34,15 @@ describe("kayit-cark", () => {
       expect(idx).toBeGreaterThanOrEqual(0);
       expect(idx).toBeLessThan(12);
       expect(carkDilimSonuc(idx)).toBeTruthy();
+    }
+  });
+
+  it("1. deneme her zaman tekrar, 2. deneme her zaman 50 SMS", () => {
+    for (let i = 0; i < 20; i++) {
+      const a = carkScriptliDilimIndex(1, () => i / 20);
+      expect(carkDilimSonuc(a).tip).toBe("tekrar");
+      const b = carkScriptliDilimIndex(2, () => i / 20);
+      expect(carkDilimSonuc(b).tip).toBe(50);
     }
   });
 

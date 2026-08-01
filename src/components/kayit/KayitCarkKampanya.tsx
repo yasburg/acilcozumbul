@@ -17,6 +17,8 @@ import {
   carkDismissedMi,
   carkOdulOku,
   carkOdulSakla,
+  carkSonrakiDeneme,
+  carkSpinSayisiArttir,
 } from "@/lib/kayit-cark-client";
 import {
   kayitFunnelOlayBirKez,
@@ -154,11 +156,12 @@ export function KayitCarkKampanya({ funnelId, aktif }: Props) {
     setHata("");
     void kayitFunnelOlayGonder(funnelId, "wheel_spin_started");
 
+    const deneme = carkSonrakiDeneme();
     try {
       const res = await fetch("/api/cekici/kayit/cark/spin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ deneme }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -175,6 +178,8 @@ export function KayitCarkKampanya({ funnelId, aktif }: Props) {
       ) {
         throw new Error("Geçersiz çark sonucu.");
       }
+
+      carkSpinSayisiArttir();
 
       if (d.tip === "tekrar") {
         pendingSonuc.current = { tip: "tekrar", dilimIndex };

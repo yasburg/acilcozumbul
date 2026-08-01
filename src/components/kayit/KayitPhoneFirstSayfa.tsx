@@ -449,9 +449,11 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
         <section className="space-y-3">
           {!aKartlari && (
             <>
-              <p className="text-[11px] font-semibold tracking-wide text-amber-800 uppercase">
-                {funnel.ustBaslik}
-              </p>
+              {funnel.ustBaslik ? (
+                <p className="text-[11px] font-semibold tracking-wide text-amber-800 uppercase">
+                  {funnel.ustBaslik}
+                </p>
+              ) : null}
               <h1 className="text-[1.35rem] font-bold text-slate-900 leading-snug">
                 {funnel.baslik}
               </h1>

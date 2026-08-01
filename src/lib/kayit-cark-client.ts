@@ -9,6 +9,7 @@ const KEY_STATUS = "kayit_cark_status";
 const KEY_AUTO = "kayit_cark_auto_opened";
 const KEY_DISMISS = "kayit_cark_dismissed";
 const KEY_COMPLETED = "kayit_cark_completed";
+const KEY_SPIN_SAYISI = "kayit_cark_spin_sayisi";
 
 export type CarkOdulDurum = "pending" | "claimed" | null;
 
@@ -49,6 +50,17 @@ export function carkCompletedMi(): boolean {
   return okuma(KEY_COMPLETED) === "1";
 }
 
+/** Sonraki spin deneme no: 1 (ilk) veya 2 (tekrar sonrası) */
+export function carkSonrakiDeneme(): 1 | 2 {
+  const n = Number(okuma(KEY_SPIN_SAYISI) ?? "0");
+  return n >= 1 ? 2 : 1;
+}
+
+export function carkSpinSayisiArttir(): void {
+  const n = Number(okuma(KEY_SPIN_SAYISI) ?? "0");
+  yaz(KEY_SPIN_SAYISI, String(Math.min(2, Math.max(0, n) + 1)));
+}
+
 export function carkOdulSakla(opts: {
   rewardSms: CarkOdulSms;
   token: string;
@@ -80,6 +92,7 @@ export function carkOdulTemizle(): void {
     sessionStorage.removeItem(KEY_COMPLETED);
     sessionStorage.removeItem(KEY_AUTO);
     sessionStorage.removeItem(KEY_DISMISS);
+    sessionStorage.removeItem(KEY_SPIN_SAYISI);
   } catch {
     /* ignore */
   }

@@ -40,13 +40,32 @@ export function carkOdulSmsMi(n: unknown): n is CarkOdulSms {
   );
 }
 
-/** Ağırlıklı rastgele dilim indeksi (0..11) */
+/** Ağırlıklı rastgele dilim indeksi (0..11) — görsel dilimler için */
 export function carkRastgeleDilimIndex(
   rastgele: () => number = Math.random
 ): number {
   const r = rastgele();
   const i = Math.floor(r * CARK_DILIM_SAYISI);
   return Math.min(CARK_DILIM_SAYISI - 1, Math.max(0, i));
+}
+
+/**
+ * Funnel C kampanya akışı:
+ * 1. deneme → %100 Tekrar
+ * 2. deneme → %100 50 SMS
+ */
+export function carkScriptliDilimIndex(
+  deneme: number,
+  rastgele: () => number = Math.random
+): number {
+  const hedef: CarkDilimTip = deneme <= 1 ? "tekrar" : 50;
+  const adaylar: number[] = [];
+  for (let i = 0; i < CARK_DILIMLER.length; i++) {
+    if (CARK_DILIMLER[i]!.tip === hedef) adaylar.push(i);
+  }
+  if (adaylar.length === 0) return 0;
+  const i = Math.floor(rastgele() * adaylar.length);
+  return adaylar[Math.min(adaylar.length - 1, Math.max(0, i))]!;
 }
 
 export function carkDilimSonuc(index: number): CarkDilim {

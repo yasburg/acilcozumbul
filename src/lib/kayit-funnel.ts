@@ -55,7 +55,7 @@ export const KAYIT_FUNNELS: Record<KayitFunnelId, KayitFunnelTanim> = {
     tip: "phone_first",
     aktif: true,
     hizmetOnsecim: "cekici",
-    ustBaslik: "İSTANBUL’DA ÇEKİCİLERE ÖZEL",
+    ustBaslik: "",
     baslik: "Yakınlarda çekici arayanlar telefonunuza SMS olarak gelsin.",
     altMetin:
       "Müşteri talep oluşturur. Fiyatınızı ve kaç dakikada varacağınızı yazarsınız. Müşteri sizi seçerse telefon ve konum açılır.",
