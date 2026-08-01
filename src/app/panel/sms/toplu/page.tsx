@@ -35,6 +35,7 @@ import {
   type TopluSmsTempo,
   type TopluSmsTempoPresetId,
 } from "@/lib/toplu-sms-tempo";
+import { TOPLU_SMS_ADMIN_TEST_TELEFON } from "@/lib/toplu-sms-admin-test";
 import { Sms50TiklamaSaatTablosu } from "@/components/panel/Sms50TiklamaSaatTablosu";
 
 type KuyrukIs = {
@@ -629,7 +630,7 @@ export default function PanelTopluSmsPage() {
     }
 
     const onay = window.confirm(
-      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${takipMetin}${atlaMetin}${zamanMetin}.\n\nDiğer planlardan bağımsız çalışır; ekranı kapatabilirsiniz. Devam?`
+      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${takipMetin}${atlaMetin}${zamanMetin}.\n\nİlk SMS her zaman admin test numarasına (${TOPLU_SMS_ADMIN_TEST_TELEFON}) gider.\n\nDiğer planlardan bağımsız çalışır; ekranı kapatabilirsiniz. Devam?`
     );
     if (!onay) return;
 
@@ -1403,6 +1404,10 @@ export default function PanelTopluSmsPage() {
             </div>
           )}
 
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Her gönderimde ilk SMS otomatik olarak admin test numarasına (
+            {TOPLU_SMS_ADMIN_TEST_TELEFON}) gider — teslimat kontrolü için.
+          </p>
           <Btn
             type="button"
             disabled={

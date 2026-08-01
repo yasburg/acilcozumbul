@@ -22,6 +22,11 @@ import {
   olusturTopluSmsIsi,
   tetikleTopluSmsKuyruk,
 } from "@/lib/toplu-sms-is-db";
+import {
+  TOPLU_SMS_ADMIN_TEST_AD,
+  TOPLU_SMS_ADMIN_TEST_TELEFON,
+  topluSmsAdminTestIleBaslat,
+} from "@/lib/toplu-sms-admin-test";
 
 const MAX_ALICI = 500;
 
@@ -176,6 +181,9 @@ export async function POST(request: Request) {
     }
   }
 
+  /* Teslimat kontrolü: her işte ilk SMS admin test numarasına */
+  benzersiz = topluSmsAdminTestIleBaslat(benzersiz);
+
   const durum = smsDurumu();
   if (!durum.gercekGonderim) {
     return NextResponse.json(
@@ -218,7 +226,10 @@ export async function POST(request: Request) {
     baslangicAt = new Date(t).toISOString();
   }
 
-  const adlar = body.adlar ?? {};
+  const adlar = { ...(body.adlar ?? {}) };
+  if (!adlar[TOPLU_SMS_ADMIN_TEST_TELEFON]) {
+    adlar[TOPLU_SMS_ADMIN_TEST_TELEFON] = TOPLU_SMS_ADMIN_TEST_AD;
+  }
   const is = await olusturTopluSmsIsi({
     gonderenEposta: user.email,
     mesaj,

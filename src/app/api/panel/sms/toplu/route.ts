@@ -16,6 +16,11 @@ import {
   SMS50_KAMPANYA_KODU,
   sms50VaryantMi,
 } from "@/lib/sms50-kampanya";
+import {
+  TOPLU_SMS_ADMIN_TEST_AD,
+  TOPLU_SMS_ADMIN_TEST_TELEFON,
+  topluSmsAdminTestIleBaslat,
+} from "@/lib/toplu-sms-admin-test";
 
 const MAX_ALICI = 500;
 
@@ -106,6 +111,8 @@ export async function POST(request: Request) {
     }
   }
 
+  benzersiz = topluSmsAdminTestIleBaslat(benzersiz);
+
   const durum = smsDurumu();
   if (!durum.gercekGonderim) {
     return NextResponse.json(
@@ -122,7 +129,10 @@ export async function POST(request: Request) {
   let listeId: string | null = null;
   if (gecmisVar) {
     try {
-      const adlar = body.adlar ?? {};
+      const adlar = { ...(body.adlar ?? {}) };
+      if (!adlar[TOPLU_SMS_ADMIN_TEST_TELEFON]) {
+        adlar[TOPLU_SMS_ADMIN_TEST_TELEFON] = TOPLU_SMS_ADMIN_TEST_AD;
+      }
       const kayit = await kaydetTopluSmsGecmis({
         gonderenEposta: user.email,
         mesaj,
