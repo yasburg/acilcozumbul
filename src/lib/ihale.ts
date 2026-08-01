@@ -4,6 +4,7 @@ import { refreshCekiciPuanOzet } from "./puan-ozet-db";
 import { cekiciTalepBolgesineUygunMu } from "./cekici-bolge";
 import { cekiciMusaitMi } from "./cekici-musaitlik";
 import { cekiciTalepSorununaUygunMu } from "./cekici-sorun";
+import { cekiciToplamKredi } from "./kredi-bakiye";
 import type { Cekici, Talep, Teklif } from "./types";
 
 /** Panel bildirimi (SMS yok) başına kredi */
@@ -59,7 +60,7 @@ export function cekiciTalepSmsAdayiMi(talep: Talep, cekici: Cekici): boolean {
     cekici.aktif &&
     cekiciAcikTalepUygunMu(talep, cekici) &&
     cekiciYeterliBildirimKredisi(
-      cekici.kredi,
+      cekiciToplamKredi(cekici),
       cekiciBildirimKrediTutari(cekici)
     )
   );

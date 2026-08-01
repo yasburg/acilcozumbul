@@ -4,6 +4,7 @@ import {
   cekiciBildirimKrediTutari,
   cekiciYeterliBildirimKredisi,
 } from "./ihale";
+import { cekiciToplamKredi } from "./kredi-bakiye";
 import { smsBaseUrl } from "./sms-base-url";
 import type { Cekici, Talep } from "./types";
 
@@ -94,7 +95,7 @@ export function cekiciKrediHatirlatmaAdayiMi(
   if (!cekici.aktif) return false;
   if (!cekiciAcikTalepUygunMu(talep, cekici)) return false;
   const tutar = cekiciBildirimKrediTutari(cekici);
-  if (cekiciYeterliBildirimKredisi(cekici.kredi, tutar)) return false;
+  if (cekiciYeterliBildirimKredisi(cekiciToplamKredi(cekici), tutar)) return false;
 
   const o: KrediHatirlatmaCekiciOzet = ozet ?? {
     cekiciId: cekici.id,
@@ -121,7 +122,7 @@ export function cekiciKrediHatirlatmaManuelAdayiMi(
 ): boolean {
   if (!cekici.aktif) return false;
   const tutar = cekiciBildirimKrediTutari(cekici);
-  if (cekiciYeterliBildirimKredisi(cekici.kredi, tutar)) return false;
+  if (cekiciYeterliBildirimKredisi(cekiciToplamKredi(cekici), tutar)) return false;
   const o: KrediHatirlatmaCekiciOzet = ozet ?? {
     cekiciId: cekici.id,
     basariliGonderim: 0,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCekiciByToken } from "@/lib/db";
 import { CEKICI_COOKIE, cekiciOturumCookieAyarlari } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
+import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 
 export async function POST(request: NextRequest) {
   await ensureSeedData();
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
   const response = NextResponse.json({
     id: cekici.id,
     ad: cekici.ad,
-    kredi: cekici.kredi,
+    kredi: cekiciToplamKredi(cekici),
   });
 
   response.cookies.set(CEKICI_COOKIE, token, cekiciOturumCookieAyarlari(true));

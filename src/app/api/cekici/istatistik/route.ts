@@ -3,6 +3,7 @@ import { getCurrentCekici } from "@/lib/auth";
 import { getSmsLog, getTaleplerByKazananCekici } from "@/lib/db";
 import { cekiciPuanOzeti } from "@/lib/cekici-puan";
 import { SMS_BILDIRIM_KREDI } from "@/lib/ihale";
+import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 import { ensureSeedData } from "@/lib/seed";
 import { countHaricByCekici } from "@/lib/talep-iliski-db";
 import type { Talep } from "@/lib/types";
@@ -93,7 +94,7 @@ export async function GET() {
     hizmetPuani: puan.hizmetPuani,
     hizmetDegerlendirmeAdet: puan.hizmetDegerlendirmeAdet,
     buHaftaHarcanan,
-    mevcutKredi: cekici.kredi,
+    mevcutKredi: cekiciToplamKredi(cekici),
     kazancBuAy,
     kazancToplam,
   });

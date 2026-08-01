@@ -23,6 +23,7 @@ import { demoTeklifMesaji } from "@/lib/demo-responses";
 import {
   sehirBeklemeMesaji,
 } from "@/lib/cekici-sehir-acilis";
+import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 import { sehirKullanimAcikMiDb } from "@/lib/cekici-sehir-acilis-db";
 
 export async function POST(
@@ -156,7 +157,7 @@ export async function POST(
     return NextResponse.json(
       {
         error:
-          cekici.kredi < SMS_BILDIRIM_KREDI
+          cekiciToplamKredi(cekici) < SMS_BILDIRIM_KREDI
             ? "Bu talep size bildirilmedi. Kredi yükleyerek yeni talep SMS'leri alabilirsiniz."
             : "Bu talep size SMS ile bildirilmedi.",
         erisimYok: true,
@@ -205,7 +206,7 @@ export async function POST(
 
   return NextResponse.json({
     teklifId: teklif.id,
-    kredi: cekici.kredi,
+    kredi: cekiciToplamKredi(cekici),
     mesaj: "Teklifiniz alındı. Ücretsiz — müşteri seçim yapana kadar bekleyin.",
     onizleme: {
       bolge: talepBolge(talep),

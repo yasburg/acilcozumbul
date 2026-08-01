@@ -17,6 +17,7 @@ import {
 } from "@/lib/talep-utils";
 import type { Cekici, ListeDurumu, Talep, TalepOzet } from "@/lib/types";
 import { demoCookieYanitaYaz, demoOturumCekiciIcin, demoPanelVerisi } from "@/lib/demo-oturum";
+import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 
 function listeDurumuBelirle(talep: Talep, cekici: Cekici): ListeDurumu {
   const cekiciId = cekici.id;
@@ -115,9 +116,9 @@ export async function GET(request: NextRequest) {
         (a, b) =>
           new Date(b.olusturulma).getTime() - new Date(a.olusturulma).getTime()
       ),
-      kredi: cekici.kredi,
+      kredi: cekiciToplamKredi(cekici),
       krediYok: !cekiciYeterliBildirimKredisi(
-        cekici.kredi,
+        cekiciToplamKredi(cekici),
         cekiciBildirimKrediTutari(cekici)
       ),
       bildirimKredi: cekiciBildirimKrediTutari(cekici),
@@ -138,9 +139,9 @@ export async function GET(request: NextRequest) {
     kaybettiklerim,
     tercihEdilmedi,
     bugunTumu,
-    kredi: cekici.kredi,
+    kredi: cekiciToplamKredi(cekici),
     krediYok: !cekiciYeterliBildirimKredisi(
-      cekici.kredi,
+      cekiciToplamKredi(cekici),
       cekiciBildirimKrediTutari(cekici)
     ),
     bildirimKredi: cekiciBildirimKrediTutari(cekici),

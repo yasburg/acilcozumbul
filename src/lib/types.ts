@@ -96,7 +96,14 @@ export interface Cekici {
   sifre: string;
   /** Supabase auth.users.id */
   authUserId?: string;
+  /** Satın alınan / hediye / kalıcı kredi (ay sonunda sıfırlanmaz) */
   kredi: number;
+  /**
+   * Aylık abonelik dönemi kredisi.
+   * Yenilemede paket tutarına sıfırlanır; kullanılmayan kısım yanar.
+   * Satın alınan `kredi` bakiyesine dokunulmaz.
+   */
+  abonelikKredi?: number;
   sehir: string;
   /** @deprecated hizmetBolgeleri kullanın */
   hizmetIlceleri?: string[];

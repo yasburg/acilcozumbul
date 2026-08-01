@@ -12,6 +12,7 @@ import { talepBolge, talepSorunOzet } from "./talep-utils";
 import { teklifleriSirala } from "./teklif-siralama";
 import { demoRakipCekiciId } from "./demo-fixtures";
 import { musteriGosterimSureDk } from "./sorun-tipleri";
+import { cekiciToplamKredi } from "./kredi-bakiye";
 import type { Cekici, Talep } from "./types";
 
 function rotaKoordinatlari(talep: Talep) {
@@ -99,7 +100,7 @@ export function demoCekiciTalepGetJson(talep: Talep, cekici: Cekici) {
         hedefBolge: talep.hedefKonum?.adres.split(",").slice(-2).join(",").trim(),
       },
       ...rotaKoordinatlari(talep),
-      kredi: cekici.kredi,
+      kredi: cekiciToplamKredi(cekici),
       onayliCekici: Boolean(cekici.rozetAktif),
       demoModu: true,
     };
@@ -119,9 +120,9 @@ export function demoCekiciTalepGetJson(talep: Talep, cekici: Cekici) {
     return {
       id: talep.id,
       erisimYok: true,
-      kredi: cekici.kredi,
+      kredi: cekiciToplamKredi(cekici),
       mesaj:
-        !cekiciYeterliBildirimKredisi(cekici.kredi)
+        !cekiciYeterliBildirimKredisi(cekiciToplamKredi(cekici))
           ? "Krediniz yok. Demo modda 1 kredi ile katılabilirsiniz."
           : "Bu talep size henüz açılmadı. 1 kredi ile katılabilirsiniz (demo).",
       demoModu: true,
@@ -142,7 +143,7 @@ export function demoCekiciTalepGetJson(talep: Talep, cekici: Cekici) {
     fotografUrls: talep.fotografUrls,
     teklifUcretsiz: true,
     ...rotaKoordinatlari(talep),
-    kredi: cekici.kredi,
+    kredi: cekiciToplamKredi(cekici),
     onayliCekici: Boolean(cekici.rozetAktif),
     demoModu: true,
   };
@@ -239,7 +240,7 @@ export function demoMusteriTalepDurumJson(talep: Talep, cekiciAd?: string) {
 export function demoKatilMesaji(cekici: Cekici) {
   return {
     success: true,
-    kredi: cekici.kredi,
+    kredi: cekiciToplamKredi(cekici),
     demoModu: true,
     mesaj: "Demo: ihaleye katıldınız (kredi düşülmedi).",
   };
@@ -252,7 +253,7 @@ export function demoTeklifMesaji(
 ) {
   return {
     teklifId,
-    kredi: cekici.kredi,
+    kredi: cekiciToplamKredi(cekici),
     demoModu: true,
     mesaj: "Demo: Teklifiniz kaydedildi (gerçek veri değişmedi).",
     onizleme: {

@@ -18,6 +18,7 @@ import {
   sehirBeklemeMesaji,
 } from "@/lib/cekici-sehir-acilis";
 import { sehirKullanimAcikMiDb } from "@/lib/cekici-sehir-acilis-db";
+import { cekiciKrediDus, cekiciToplamKredi } from "@/lib/kredi-bakiye";
 
 /** Kredi ile ihaleye katıl (gizli talebi aç; SMS: premium OTP / standart toplu) */
 export async function POST(
@@ -75,19 +76,20 @@ export async function POST(
     return NextResponse.json({ success: true, zatenAcik: true });
   }
 
-  if (!cekiciYeterliBildirimKredisi(cekici.kredi, tutar)) {
+  const toplam = cekiciToplamKredi(cekici);
+  if (!cekiciYeterliBildirimKredisi(toplam, tutar)) {
     return NextResponse.json(
       {
         error: `İhaleye katılmak için en az ${tutar} kredi gerekir.`,
         yetersizKredi: true,
-        mevcutKredi: cekici.kredi,
+        mevcutKredi: toplam,
         gerekenKredi: tutar,
       },
       { status: 402 }
     );
   }
 
-  cekici.kredi -= tutar;
+  cekiciKrediDus(cekici, tutar);
   await updateCekici(cekici);
 
   talep.bildirilenCekiciIds = [
@@ -110,7 +112,7 @@ export async function POST(
 
   return NextResponse.json({
     success: true,
-    kredi: cekici.kredi,
+    kredi: cekiciToplamKredi(cekici),
     harcananKredi: tutar,
     premiumSms: cekiciPremiumSmsAktifMi(cekici),
     mesaj: cekiciPremiumSmsAktifMi(cekici)

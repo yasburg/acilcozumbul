@@ -60,6 +60,11 @@ export const SSS_MADDELERI = [
     cevap:
       "Platform il ve ilçe bazlı çalışır. Desteklenen illerde kayıtlı çekici, lastikçi ve anahtarcılar taleplere bölge tercihlerine göre yanıt verir.",
   },
+  {
+    soru: "Abonelik kredisi ay sonunda ne olur? Ek kredi alınırsa ne olur?",
+    cevap:
+      "Abonelik kredisi aylık dönem hakkıdır (paket + bonus birlikte). Yenilemede kullanılmayan abonelik kredisi ve bonus sıfırlanır; yeni ayın paket kredisi yüklenir. «Kredi satın al» ile aldığınız ekstra krediler kalıcıdır; abonelik yenilense veya iptal olsa da bakiyenizde kalır. Harcamada önce abonelik kredisi, sonra satın alınan kredi kullanılır.",
+  },
 ] as const;
 
 export function sayfaUrl(path = "/"): string {

@@ -6,6 +6,7 @@ import {
   krediPaketOdenecekTL,
   type KrediPaketKaynak,
 } from "@/lib/kredi-fiyat";
+import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 import { ensureSeedData } from "@/lib/seed";
 
 export async function POST(request: NextRequest) {
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     success: true,
     eklenenKredi: paket.kredi,
-    toplamKredi: cekici.kredi,
+    toplamKredi: cekiciToplamKredi(cekici),
     odeme: {
       tutar,
       paraBirimi: "TRY",

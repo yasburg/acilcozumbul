@@ -3,6 +3,7 @@ import {
   cekiciYeterliBildirimKredisi,
   PANEL_BILDIRIM_KREDI,
 } from "./ihale";
+import { cekiciKrediDus, cekiciToplamKredi } from "./kredi-bakiye";
 import { randomUUID } from "crypto";
 
 export type SmsAliciTipi = "cekici" | "musteri";
@@ -389,7 +390,7 @@ export async function sendSms(
       await logSmsKaydi(telefon, mesaj, meta, sonuc);
       return sonuc;
     }
-    if (krediDus && !cekiciYeterliBildirimKredisi(cekici.kredi, krediMiktar)) {
+    if (krediDus && !cekiciYeterliBildirimKredisi(cekiciToplamKredi(cekici), krediMiktar)) {
       const sonuc: SmsGonderimSonuc = {
         basarili: false,
         saglayici: "demo",
@@ -420,7 +421,7 @@ export async function sendSms(
   if (sonuc.basarili && krediDus && cekiciIdForKredi) {
     const cekici = await getCekiciById(cekiciIdForKredi);
     if (cekici) {
-      cekici.kredi -= krediMiktar;
+      cekiciKrediDus(cekici, krediMiktar);
       await updateCekici(cekici);
     }
   }

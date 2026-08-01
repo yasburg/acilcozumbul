@@ -28,6 +28,8 @@ type AbonelikOzet = {
 export default function KrediPage() {
   const router = useRouter();
   const [kredi, setKredi] = useState(0);
+  const [abonelikKredi, setAbonelikKredi] = useState(0);
+  const [satinAlinanKredi, setSatinAlinanKredi] = useState(0);
   const [kaynak, setKaynak] = useState<KrediPaketKaynak>("abonelik");
   const [seciliPaket, setSeciliPaket] = useState<KrediPaketTl>(999);
   const [loading, setLoading] = useState(false);
@@ -75,6 +77,8 @@ export default function KrediPage() {
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
         setKredi(d.kredi);
+        setAbonelikKredi(Number(d.abonelikKredi ?? 0));
+        setSatinAlinanKredi(Number(d.satinAlinanKredi ?? 0));
         if (d.faturaEposta) {
           setEposta(d.faturaEposta);
           void epostaDurumYukle(d.faturaEposta);
@@ -228,9 +232,19 @@ export default function KrediPage() {
 
   return (
     <MobileShell backHref="/cekici/panel?tab=hesabim" subtitle="Kredi / Abonelik">
-      <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 mb-6 flex justify-between items-center">
-        <span className="text-sm text-slate-600">Mevcut kredi</span>
-        <span className="text-2xl font-bold text-amber-600">{formatKredi(kredi)}</span>
+      <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 mb-6">
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-slate-600">Mevcut kredi</span>
+          <span className="text-2xl font-bold text-amber-600">
+            {formatKredi(kredi)}
+          </span>
+        </div>
+        {(abonelikKredi > 0 || satinAlinanKredi > 0) && (
+          <p className="text-[11px] text-slate-400 mt-1.5 leading-snug">
+            Abonelik: {formatKredi(abonelikKredi)} · Satın alınan:{" "}
+            {formatKredi(satinAlinanKredi)}
+          </p>
+        )}
       </div>
 
       {error && (
@@ -405,6 +419,13 @@ export default function KrediPage() {
             );
           })}
         </div>
+
+        {kaynak === "abonelik" && (
+          <p className="text-[11px] text-slate-400 leading-snug -mt-1">
+            Kullanılmayan abonelik kredisi (bonus dahil) ay yenilenince
+            sıfırlanır. «Kredi satın al» ile aldığınız ekstra krediler kalır.
+          </p>
+        )}
 
         <Card className="bg-slate-50">
           <div className="flex justify-between text-sm mt-2">

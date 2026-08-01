@@ -16,6 +16,7 @@ import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Talep } from "@/lib/types";
 import { demoTalepGetir, isDemoTalepId } from "@/lib/demo-oturum";
 import { demoCekiciTalepGetJson } from "@/lib/demo-responses";
+import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 import {
   sehirBeklemeMesaji,
 } from "@/lib/cekici-sehir-acilis";
@@ -147,7 +148,7 @@ export async function GET(
         hedefBolge: talep.hedefKonum?.adres.split(",").slice(-2).join(",").trim(),
       },
       ...rotaKoordinatlari(talep),
-      kredi: cekici.kredi,
+      kredi: cekiciToplamKredi(cekici),
       onayliCekici: Boolean(cekici.rozetAktif),
     });
   }
@@ -163,11 +164,12 @@ export async function GET(
 
   if (!cekiciTalebeBildirildiMi(talep, cekici.id)) {
     const tutar = cekiciBildirimKrediTutari(cekici);
+    const toplam = cekiciToplamKredi(cekici);
     return NextResponse.json({
       id: talep.id,
       erisimYok: true,
-      kredi: cekici.kredi,
-      mesaj: !cekiciYeterliBildirimKredisi(cekici.kredi, tutar)
+      kredi: toplam,
+      mesaj: !cekiciYeterliBildirimKredisi(toplam, tutar)
         ? `Krediniz yetersiz. Bildirim için en az ${tutar} kredi gerekir.`
         : `Bu talep henüz size açılmadı. Müşteriler sekmesinden ${tutar} kredi ile katılabilirsiniz.`,
     });
@@ -187,7 +189,7 @@ export async function GET(
     fotografUrls: talep.fotografUrls,
     teklifUcretsiz: true,
     ...rotaKoordinatlari(talep),
-    kredi: cekici.kredi,
+    kredi: cekiciToplamKredi(cekici),
     onayliCekici: Boolean(cekici.rozetAktif),
   });
 }

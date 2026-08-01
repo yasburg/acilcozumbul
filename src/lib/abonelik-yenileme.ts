@@ -14,6 +14,7 @@ import {
   type GarantiOrderTxn,
 } from "./garanti/orderlistinq";
 import { garantiYapilandirildi } from "./garanti/config";
+import { abonelikKrediSifirlaVeYukle } from "./kredi-bakiye";
 
 const GRACE_MS = 24 * 60 * 60 * 1000;
 const MAX_RETRY = 3;
@@ -68,7 +69,8 @@ async function yenilemeIsle(tx: GarantiOrderTxn): Promise<"ok" | "skip" | "fail"
   });
   if (!kaydedildi) return "skip";
 
-  cekici.kredi += kredi;
+  // Dönem hakkı yenilenir; satın alınan (kalıcı) krediye dokunulmaz
+  abonelikKrediSifirlaVeYukle(cekici, kredi);
   await updateCekici(cekici);
 
   await guncelleAbonelik(abonelik.id, {

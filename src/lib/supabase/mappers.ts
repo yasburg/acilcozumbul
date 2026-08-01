@@ -22,6 +22,7 @@ export type CekiciRow = {
   sifre: string | null;
   auth_user_id?: string | null;
   kredi: number;
+  abonelik_kredi?: number | null;
   sehir: string;
   hizmet_ilceleri: string[];
   hizmet_bolgeleri?: HizmetBolgeleri | null;
@@ -108,6 +109,7 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     sifre: r.sifre ?? "",
     authUserId: r.auth_user_id ?? undefined,
     kredi: Number(r.kredi),
+    abonelikKredi: Number(r.abonelik_kredi ?? 0),
     sehir: r.sehir,
     hizmetIlceleri: hizmetBolgeleriFlatten(hizmetBolgeleri),
     hizmetBolgeleri,
@@ -163,6 +165,7 @@ export function cekiciToRow(
     sifre: c.sifre || null,
     auth_user_id: c.authUserId ?? null,
     kredi: c.kredi,
+    abonelik_kredi: c.abonelikKredi ?? 0,
     sehir: c.sehir,
     hizmet_ilceleri: hizmetBolgeleriFlatten(bolgeler),
     hizmet_bolgeleri: bolgeler,

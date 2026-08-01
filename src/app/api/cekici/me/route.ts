@@ -6,6 +6,7 @@ import {
   cekiciKurulumIlerleme,
   cekiciProfilHazirMi,
 } from "@/lib/cekici-profil-hazir";
+import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 
 export async function GET() {
   await ensureSeedData();
@@ -22,7 +23,9 @@ export async function GET() {
     id: cekici.id,
     ad: cekici.ad,
     telefon: cekici.telefon,
-    kredi: cekici.kredi,
+    kredi: cekiciToplamKredi(cekici),
+    abonelikKredi: cekici.abonelikKredi ?? 0,
+    satinAlinanKredi: cekici.kredi,
     sehir: cekici.sehir,
     sehirKullanimAcik: await sehirKullanimAcikMiDb(cekici.sehir),
     hizmetModu: cekici.hizmetModu ?? "il_ilce",

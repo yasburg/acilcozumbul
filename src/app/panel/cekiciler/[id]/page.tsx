@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Card, Btn } from "@/components/ui";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 import { formatKredi } from "@/lib/talep-utils";
+import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 import type { CekiciPanelOzet } from "@/lib/panel";
 import type { BelgeDurum } from "@/lib/types";
 
@@ -179,7 +180,7 @@ export default function PanelCekiciDetayPage() {
           }
         />
         <Row label="Şehir" value={cekici.sehir} />
-        <Row label="Kredi" value={formatKredi(cekici.kredi)} />
+        <Row label="Kredi" value={formatKredi(cekiciToplamKredi(cekici))} />
         <Row label="Durum" value={cekici.aktif ? "Aktif" : "Pasif"} />
         <Row label="Belge durumu" value={belgeDurumEtiket(belgeDurum)} />
         <Row

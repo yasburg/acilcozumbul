@@ -12,6 +12,7 @@ import {
   telefonGecerliMi,
   telefonNormalize,
 } from "@/lib/telefon";
+import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 
 export async function POST(request: NextRequest) {
   await ensureSeedData();
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
   const response = NextResponse.json({
     id: cekici.id,
     ad: cekici.ad,
-    kredi: cekici.kredi,
+    kredi: cekiciToplamKredi(cekici),
   });
 
   response.cookies.set(

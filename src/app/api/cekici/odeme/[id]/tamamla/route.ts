@@ -22,6 +22,10 @@ import {
   guncelleBekleyenOdemeFatura,
   tamamlaOdeme,
 } from "@/lib/odeme";
+import {
+  abonelikKrediSifirlaVeYukle,
+  cekiciToplamKredi,
+} from "@/lib/kredi-bakiye";
 import { ensureSeedData } from "@/lib/seed";
 
 function sonKullanmaAyir(sonKullanma: string): { ay: string; yil: string } | null {
@@ -156,7 +160,11 @@ export async function POST(
     });
   }
 
-  guncelCekici.kredi += bekleyen.miktar;
+  if (bekleyen.odemeTipi === "abonelik") {
+    abonelikKrediSifirlaVeYukle(guncelCekici, bekleyen.miktar);
+  } else {
+    guncelCekici.kredi += bekleyen.miktar;
+  }
   await updateCekici(guncelCekici);
   await tamamlaOdeme(id);
 
@@ -215,7 +223,9 @@ export async function POST(
     success: true,
     odemeTipi: bekleyen.odemeTipi === "abonelik" ? "abonelik" : "kredi",
     eklenenKredi: bekleyen.miktar,
-    toplamKredi: guncelCekici.kredi,
+    toplamKredi: cekiciToplamKredi(guncelCekici),
+    abonelikKredi: guncelCekici.abonelikKredi ?? 0,
+    satinAlinanKredi: guncelCekici.kredi,
     abonelikId,
     referans,
     demo,
