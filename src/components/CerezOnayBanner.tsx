@@ -26,7 +26,7 @@ function terciheGoreSenkronize(tercih: "tumu" | "zorunlu") {
   metaPixelCerezSenkronize();
   tiktokPixelCerezSenkronize();
   if (tercih === "tumu") {
-    metaPixelPageView();
+    void metaPixelPageView();
     tiktokPixelPageView();
   }
 }

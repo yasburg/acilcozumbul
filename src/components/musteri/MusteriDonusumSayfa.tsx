@@ -929,6 +929,13 @@ function MusteriDonusumSayfaIcerik() {
       } catch {
         /* ignore */
       }
+      void import("@/lib/meta-pixel").then((m) =>
+        m.metaUserDataSakla({
+          phone: typeof data.telefon === "string" ? data.telefon : form.telefon,
+          firstName: form.ad,
+          lastName: form.soyad,
+        })
+      );
       setStep("bilgi");
     } catch (e) {
       const msg =

@@ -5,8 +5,13 @@ import { telefonNormalize } from "./telefon";
 export const META_PIXEL_ID =
   process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || "1552497653179792";
 
-/** Onay sayfası yedek CompleteRegistration için */
-export const META_KAYIT_USER_KEY = "acil_meta_kayit_user";
+/**
+ * Oturum boyunca Advanced Matching (PageView / Lead / kayıt).
+ * Eski anahtar ile uyumlu tutulur.
+ */
+export const META_USER_DATA_KEY = "acil_meta_user";
+/** @deprecated META_USER_DATA_KEY kullanın */
+export const META_KAYIT_USER_KEY = META_USER_DATA_KEY;
 
 export function metaPixelYapilandirildi(): boolean {
   return Boolean(META_PIXEL_ID);
@@ -103,6 +108,53 @@ export async function metaUserDataAyarla(
   fbqCagir("init", META_PIXEL_ID, matching);
 }
 
+function metaUserAlanBirlesik(
+  prev: MetaUserData,
+  next: MetaUserData
+): MetaUserData {
+  const out: MetaUserData = { ...prev };
+  for (const key of [
+    "phone",
+    "email",
+    "firstName",
+    "lastName",
+    "externalId",
+  ] as const) {
+    const v = next[key];
+    if (typeof v === "string" && v.trim()) out[key] = v.trim();
+  }
+  return out;
+}
+
+/** PageView ve dönüşümler için kullanıcı bilgisini oturumda tut */
+export function metaUserDataSakla(user: MetaUserData): void {
+  if (typeof window === "undefined") return;
+  try {
+    const onceki = metaUserDataOku() ?? {};
+    const birlesik = metaUserAlanBirlesik(onceki, user);
+    sessionStorage.setItem(META_USER_DATA_KEY, JSON.stringify(birlesik));
+  } catch {
+    /* private mode */
+  }
+}
+
+export function metaUserDataOku(): MetaUserData | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(META_USER_DATA_KEY);
+    if (!raw) return null;
+    const j = JSON.parse(raw) as MetaUserData;
+    return j && typeof j === "object" ? j : null;
+  } catch {
+    return null;
+  }
+}
+
+/** @deprecated metaUserDataSakla */
+export const metaKayitUserSakla = metaUserDataSakla;
+/** @deprecated metaUserDataOku */
+export const metaKayitUserOku = metaUserDataOku;
+
 /** Çerez tercihine göre Meta Pixel consent (grant / revoke) */
 export function metaPixelCerezSenkronize(): void {
   if (typeof window === "undefined" || !metaPixelYapilandirildi()) return;
@@ -115,12 +167,54 @@ export function metaPixelCerezSenkronize(): void {
   fbqCagir("consent", "revoke");
 }
 
-/** Analitik onayı varken PageView */
-export function metaPixelPageView(): void {
+/**
+ * Analitik onayı varken PageView.
+ * Saklı telefon/e-posta varsa Advanced Matching ile gönderilir.
+ */
+export async function metaPixelPageView(): Promise<void> {
   if (typeof window === "undefined") return;
   if (!metaPixelYapilandirildi()) return;
   if (!cerezAnalitikAktif()) return;
+  await metaUserDataAyarla(metaUserDataOku());
   fbqCagir("track", "PageView");
+}
+
+/**
+ * Girişli çekici bilgisini oturuma yazar (PageView AM için).
+ * /api/cekici/me — yalnızca çekici paneli yollarında çağırın.
+ */
+export async function metaCekiciOturumZenginlestir(): Promise<void> {
+  if (typeof window === "undefined") return;
+  if (!cerezAnalitikAktif()) return;
+  try {
+    const res = await fetch("/api/cekici/me", { credentials: "include" });
+    if (!res.ok) return;
+    const me = (await res.json()) as {
+      id?: string;
+      ad?: string;
+      telefon?: string;
+      faturaEposta?: string | null;
+      faturaEpostaDogrulandi?: boolean;
+    };
+    const adParca = String(me.ad ?? "")
+      .trim()
+      .split(/\s+/);
+    const firstName = adParca[0] || undefined;
+    const lastName =
+      adParca.length > 1 ? adParca.slice(1).join(" ") : undefined;
+    metaUserDataSakla({
+      phone: me.telefon,
+      email:
+        me.faturaEpostaDogrulandi && me.faturaEposta
+          ? me.faturaEposta
+          : undefined,
+      firstName,
+      lastName,
+      externalId: me.id,
+    });
+  } catch {
+    /* oturum yok / ağ */
+  }
 }
 
 /**
@@ -134,16 +228,20 @@ export async function metaPixelLead(params?: {
   firstName?: string | null;
   lastName?: string | null;
   externalId?: string | null;
+  email?: string | null;
 }): Promise<void> {
   if (typeof window === "undefined") return;
   if (!metaPixelYapilandirildi()) return;
   if (!cerezAnalitikAktif()) return;
-  await metaUserDataAyarla({
+  const user: MetaUserData = {
     phone: params?.phone,
+    email: params?.email,
     firstName: params?.firstName,
     lastName: params?.lastName,
     externalId: params?.externalId,
-  });
+  };
+  metaUserDataSakla(user);
+  await metaUserDataAyarla(user);
   fbqCagir("track", "Lead", {
     content_name: params?.content_name ?? "musteri_talep",
     value: params?.value ?? 1.0,
@@ -162,46 +260,29 @@ export async function metaPixelCompleteRegistration(params?: {
   firstName?: string | null;
   lastName?: string | null;
   externalId?: string | null;
+  email?: string | null;
 }): Promise<void> {
   if (typeof window === "undefined") return;
   if (!metaPixelYapilandirildi()) return;
   if (!cerezAnalitikAktif()) return;
-  await metaUserDataAyarla({
+  const user: MetaUserData = {
     phone: params?.phone,
+    email: params?.email,
     firstName: params?.firstName,
     lastName: params?.lastName,
     externalId: params?.externalId,
-  });
+  };
+  metaUserDataSakla(user);
+  await metaUserDataAyarla(user);
   fbqCagir("track", "CompleteRegistration", {
     content_name: params?.content_name ?? "cekici_kayit",
     status: params?.status ?? true,
   });
 }
 
-/** Onay sayfası yedek tetik için kullanıcı verisini sakla */
-export function metaKayitUserSakla(user: MetaUserData): void {
-  if (typeof window === "undefined") return;
-  try {
-    sessionStorage.setItem(META_KAYIT_USER_KEY, JSON.stringify(user));
-  } catch {
-    /* private mode */
-  }
-}
-
-export function metaKayitUserOku(): MetaUserData | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = sessionStorage.getItem(META_KAYIT_USER_KEY);
-    if (!raw) return null;
-    const j = JSON.parse(raw) as MetaUserData;
-    return j && typeof j === "object" ? j : null;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Head / Script için bootstrap: queue + init.
+ * PageView React tarafında (AM ile) atılır — çift sayım olmasın.
  * Varsayılan grant; yalnızca «zorunlu» ise revoke kalır.
  */
 export function metaPixelBootstrapInline(pixelId: string): string {
@@ -217,7 +298,6 @@ try{
     fbq('consent','revoke');
   } else {
     fbq('consent','grant');
-    fbq('track','PageView');
   }
 }catch(e){}
 `.trim();
