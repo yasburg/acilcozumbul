@@ -1,8 +1,8 @@
 diff --git a/node_modules/react-spin-prize/dist/SpinnerWheel.js b/node_modules/react-spin-prize/dist/SpinnerWheel.js
-index dcf0a3d..9f85154 100644
+index dcf0a3d..ca74152 100644
 --- a/node_modules/react-spin-prize/dist/SpinnerWheel.js
 +++ b/node_modules/react-spin-prize/dist/SpinnerWheel.js
-@@ -125,18 +125,14 @@ export const SpinnerWheel = ({ items, onSpinComplete, onButtonClick, spinning: e
+@@ -125,18 +125,16 @@ export const SpinnerWheel = ({ items, onSpinComplete, onButtonClick, spinning: e
              // Text position and rendering based on layout
              let textElement;
              if (textLayout === "horizontal") {
@@ -16,9 +16,11 @@ index dcf0a3d..9f85154 100644
 -                const endX = centerX + innerTextRadius * Math.cos(midAngle);
 -                const endY = centerY + innerTextRadius * Math.sin(midAngle);
 -                // Text path for horizontal text
-+                // Center → rim, mid-segment (angular midAngle + radial mid of band)
-+                const outerTextRadius = wheelRadius * 0.82;
-+                const innerTextRadius = wheelRadius * 0.38;
++                // Dilimin orta halkasında; orta butonun üstüne binmesin
++                const midR = wheelRadius * 0.65;
++                const half = wheelRadius * 0.16;
++                const innerTextRadius = midR - half;
++                const outerTextRadius = midR + half;
 +                const startX = centerX + innerTextRadius * Math.cos(midAngle);
 +                const startY = centerY + innerTextRadius * Math.sin(midAngle);
 +                const endX = centerX + outerTextRadius * Math.cos(midAngle);
@@ -28,3 +30,12 @@ index dcf0a3d..9f85154 100644
                  let displayLabel = item.label;
                  if (items.length > 30 && displayLabel.length > 6) {
                      displayLabel = displayLabel.substring(0, 5) + "...";
+@@ -150,7 +148,7 @@ export const SpinnerWheel = ({ items, onSpinComplete, onButtonClick, spinning: e
+                 else if (displayLabel.length > 12) {
+                     displayLabel = displayLabel.substring(0, 11) + "...";
+                 }
+-                textElement = (_jsxs(_Fragment, { children: [_jsx("defs", { children: _jsx("path", { id: textPathId, d: `M ${startX} ${startY} L ${endX} ${endY}` }) }), _jsx("text", { fill: getTextColor(index), fontSize: dynamicFontSize, fontWeight: "bold", style: { userSelect: "none", pointerEvents: "none" }, children: _jsx("textPath", { href: `#${textPathId}`, startOffset: "50%", textAnchor: "middle", children: displayLabel }) })] }));
++                textElement = (_jsxs(_Fragment, { children: [_jsx("defs", { children: _jsx("path", { id: textPathId, d: `M ${startX} ${startY} L ${endX} ${endY}` }) }), _jsx("text", { fill: getTextColor(index), fontSize: dynamicFontSize, fontWeight: "bold", dominantBaseline: "middle", style: { userSelect: "none", pointerEvents: "none" }, children: _jsx("textPath", { href: `#${textPathId}`, startOffset: "50%", textAnchor: "middle", children: displayLabel }) })] }));
+             }
+             else {
+                 // Radial layout (default): rotating text

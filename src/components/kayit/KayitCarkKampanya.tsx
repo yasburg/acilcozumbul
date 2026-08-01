@@ -344,7 +344,7 @@ export function KayitCarkKampanya({ funnelId, aktif }: Props) {
                     disabled={donuyor}
                     duration={reducedMotion.current ? 600 : 3200}
                     size={wheelSize}
-                    fontSize={22}
+                    fontSize={16}
                     borderWidth={8}
                     borderColor="#f59e0b"
                     buttonText="ÇEVİR"
@@ -352,8 +352,8 @@ export function KayitCarkKampanya({ funnelId, aktif }: Props) {
                     buttonTextColor="#ffffff"
                     buttonBorderColor="#ffffff"
                     buttonBorderWidth={3}
-                    buttonSize={Math.round(wheelSize * 0.135)}
-                    buttonFontSize={11}
+                    buttonSize={Math.round(wheelSize * 0.12)}
+                    buttonFontSize={10}
                     textLayout="horizontal"
                   />
                 </div>

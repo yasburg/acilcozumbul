@@ -20,13 +20,13 @@ export const CARK_DILIMLER: readonly CarkDilim[] = [
   { tip: 10, etiket: "10 SMS" },
   { tip: 50, etiket: "50 SMS" },
   { tip: 20, etiket: "20 SMS" },
-  { tip: 100, etiket: "100 SMS" },
+  { tip: 100, etiket: "100" },
   { tip: 10, etiket: "10 SMS" },
   { tip: "tekrar", etiket: "Tekrar" },
   { tip: 50, etiket: "50 SMS" },
   { tip: 20, etiket: "20 SMS" },
-  { tip: 200, etiket: "200 SMS" },
-  { tip: 100, etiket: "100 SMS" },
+  { tip: 200, etiket: "200" },
+  { tip: 100, etiket: "100" },
   { tip: 10, etiket: "10 SMS" },
 ] as const;
 
