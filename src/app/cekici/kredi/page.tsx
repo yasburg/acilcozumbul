@@ -390,6 +390,15 @@ export default function KrediPage() {
             ? "Minimum 499 TL · Her ay otomatik yenilenir (Garanti)"
             : "Minimum 499 TL · Tek seferlik yükleme · Teklif vermek ücretsiz"}
         </p>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 space-y-1">
+          <p className="text-sm text-slate-700 leading-snug">
+            1 kredi = yardım isteyen müşteriden 1 haber SMS’i
+          </p>
+          <p className="text-sm text-slate-600 leading-snug">
+            Krediniz yoksa işin detaylarını göremezsiniz. Teklif vermek
+            ücretsizdir.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {paketler.map((p) => {

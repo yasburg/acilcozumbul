@@ -98,7 +98,7 @@ function OnayIcerik() {
 
   useEffect(() => {
     if (!kullanimAcik || kalanSn > 0) return;
-    router.replace("/");
+    router.replace("/cekici/kredi");
   }, [kullanimAcik, kalanSn, router]);
 
   return (
@@ -141,8 +141,8 @@ function OnayIcerik() {
             </p>
           ) : kullanimAcik ? (
             <p className="text-sm text-emerald-950 leading-relaxed">
-              Şehriniz kullanıma açık. Ana sayfaya dönüp giriş yaparak paneli
-              kullanabilirsiniz.
+              Şehriniz kullanıma açık. Kredi / abonelik paketini seçerek hemen
+              başlayabilirsiniz.
             </p>
           ) : (
             <p className="text-sm text-amber-950 leading-relaxed">
@@ -157,11 +157,11 @@ function OnayIcerik() {
           <>
             <p className="text-center text-sm text-slate-500" role="status">
               {kalanSn > 0
-                ? `${kalanSn} sn içinde ana sayfaya yönlendirileceksiniz…`
+                ? `${kalanSn} sn içinde kredi sayfasına yönlendirileceksiniz…`
                 : "Yönlendiriliyor…"}
             </p>
-            <Btn type="button" onClick={() => router.replace("/")}>
-              Hemen ana sayfaya git
+            <Btn type="button" onClick={() => router.replace("/cekici/kredi")}>
+              Kredi paketlerine git
             </Btn>
           </>
         ) : (

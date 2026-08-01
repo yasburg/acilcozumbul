@@ -197,7 +197,7 @@ function KayitIcerik() {
 
   useEffect(() => {
     void cekiciFetch("/api/cekici/me").then((res) => {
-      if (res.ok) router.replace("/cekici/panel");
+      if (res.ok) router.replace("/cekici/kredi");
     });
   }, [router]);
 

@@ -67,7 +67,7 @@ export default function KayitKurulumPage() {
       }
       const d = await res.json().catch(() => ({}));
       if (d.profilHazir) {
-        router.replace("/cekici/panel");
+        router.replace("/cekici/kredi");
         return;
       }
       if (typeof d.isim === "string" && d.isim.trim()) setIsim(d.isim);
@@ -195,7 +195,7 @@ export default function KayitKurulumPage() {
   const yuzde = adim === 1 ? 40 : 75;
 
   return (
-    <MobileShell subtitle="Hesap kurulumu" backHref="/cekici/panel">
+    <MobileShell subtitle="Hesap kurulumu" backHref="/cekici/kredi">
       <div className="space-y-5 pb-8">
         <div>
           <p className="text-sm text-slate-500">İlerleme %{yuzde}</p>
