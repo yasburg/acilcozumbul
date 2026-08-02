@@ -35,7 +35,7 @@ function FaturalarIcerik() {
       const me = await cekiciFetch("/api/cekici/me");
       if (!me.ok) {
         router.replace(
-          `/cekici/giris?next=${encodeURIComponent("/cekici/faturalar")}`
+          `/cekici/giris?next=${encodeURIComponent("/cekici/faturalar")}&mesaj=fatura`
         );
         return;
       }

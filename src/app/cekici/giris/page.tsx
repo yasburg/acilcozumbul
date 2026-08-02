@@ -55,6 +55,16 @@ function GirisIcerik() {
       setBilgiBanner(
         "Telefonunuz zaten kayıtlı, giriş yapabilirsiniz."
       );
+      return;
+    }
+    const next = guvenliNext(searchParams.get("next"));
+    if (
+      searchParams.get("mesaj") === "fatura" ||
+      (next != null && next.startsWith("/fatura/"))
+    ) {
+      setBilgiBanner(
+        "Faturanızı görmek için hesabınıza giriş yapmanız gerekmektedir."
+      );
     }
   }, [searchParams]);
 

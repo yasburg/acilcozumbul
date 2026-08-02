@@ -29,7 +29,8 @@ export default async function FaturaDeepLinkPage({ params }: Props) {
 
   const cekici = await getCurrentCekici();
   if (!cekici) {
-    redirect(`/cekici/giris?next=${encodeURIComponent(faturaPath(token))}`);
+    const next = encodeURIComponent(faturaPath(token));
+    redirect(`/cekici/giris?next=${next}&mesaj=fatura`);
   }
 
   let kayit = null;
