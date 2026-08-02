@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 import { SpinnerWheel } from "react-spin-prize";
 import {
@@ -24,6 +31,18 @@ import {
   kayitFunnelOlayBirKez,
   kayitFunnelOlayGonder,
 } from "@/lib/kayit-funnel-client";
+import { cerezBannerGosterilmeli } from "@/lib/cerez-onay";
+
+function cerezBannerSubscribe(onStoreChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+  const handler = () => onStoreChange();
+  window.addEventListener("storage", handler);
+  window.addEventListener("acil-cerez-banner", handler);
+  return () => {
+    window.removeEventListener("storage", handler);
+    window.removeEventListener("acil-cerez-banner", handler);
+  };
+}
 
 type ModalAsama = "spin" | "tekrar" | "odul";
 
@@ -46,6 +65,11 @@ function dilimEtiketKisa(etiket: string): string {
 }
 
 export function KayitCarkKampanya({ funnelId, aktif }: Props) {
+  const cerezBannerAcik = useSyncExternalStore(
+    cerezBannerSubscribe,
+    cerezBannerGosterilmeli,
+    () => false
+  );
   const [mounted, setMounted] = useState(false);
   const [ikonHazir, setIkonHazir] = useState(false);
   const [ikonGitti, setIkonGitti] = useState(false);
@@ -247,16 +271,18 @@ export function KayitCarkKampanya({ funnelId, aktif }: Props) {
   if (!aktif || !mounted) return null;
 
   const ikonGorunur = ikonHazir && !ikonGitti;
+  // Çerez banner z-[100]; ikon altında kalırsa sağdaki “Ayarlar” tıklamayı yer.
+  const ikonBottom = cerezBannerAcik
+    ? "calc(5.75rem + env(safe-area-inset-bottom, 0px))"
+    : "calc(1.25rem + env(safe-area-inset-bottom, 0px))";
 
   const ui = (
     <>
       <div
-        className="fixed z-[80] right-3 transition-[transform,opacity] duration-500 ease-out"
+        className="fixed z-[110] right-3 transition-[transform,opacity,bottom] duration-500 ease-out"
         style={{
-          top: "70vh",
-          transform: ikonGorunur
-            ? "translateY(-50%) translateX(0)"
-            : "translateY(-50%) translateX(140%)",
+          bottom: ikonBottom,
+          transform: ikonGorunur ? "translateX(0)" : "translateX(140%)",
           opacity: ikonGorunur ? 1 : 0,
           pointerEvents: ikonGorunur ? "auto" : "none",
         }}
@@ -297,7 +323,7 @@ export function KayitCarkKampanya({ funnelId, aktif }: Props) {
 
       {modalAcik && (
         <div
-          className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="cark-baslik"

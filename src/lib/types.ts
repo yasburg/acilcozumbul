@@ -200,6 +200,8 @@ export interface Talep {
   anlasmaDurumu?: AnlasmaDurumu;
   /** Anlaşma tamamlandığında (memnuniyet süresi başlangıcı) */
   anlasildiAt?: string;
+  /** Kazanan çekici müşteri telefonuna ilk tıkladığında */
+  musteriArandiAt?: string;
   memnuniyetSmsGonderildi?: boolean;
   teklifler: Teklif[];
   haricTutulanCekiciIds?: string[];

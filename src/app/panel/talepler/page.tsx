@@ -319,7 +319,16 @@ export default function PanelTaleplerPage() {
       {!loading && gorunum === "liste" && (
         <>
           <div className="space-y-3">
-            {filtreliListe.map((t) => (
+            {filtreliListe.map((t) => {
+              const kazananTeklif =
+                t.teklifler?.find(
+                  (tk) =>
+                    tk.id === t.kazananTeklifId ||
+                    tk.cekiciId === t.kazananCekiciId
+                ) ?? null;
+              const teklifSecildi = Boolean(t.kazananCekiciId);
+              const arandi = Boolean(t.musteriArandiAt);
+              return (
               <Card key={t.id}>
                 <div className="flex flex-wrap justify-between gap-2">
                   <div>
@@ -329,7 +338,7 @@ export default function PanelTaleplerPage() {
                     <p className="text-sm text-slate-600">{t.telefon}</p>
                   </div>
                   <span className="text-xs font-medium uppercase tracking-wide text-amber-700 bg-amber-50 px-2 py-1 rounded-lg h-fit">
-                    {t.durum}
+                    {panelTalepDurumEtiketi(t.durum)}
                   </span>
                 </div>
                 <p className="text-sm text-slate-700 mt-2 line-clamp-2">
@@ -343,6 +352,34 @@ export default function PanelTaleplerPage() {
                   {new Date(t.olusturulma).toLocaleString("tr-TR")} ·{" "}
                   {t.teklifler?.length ?? 0} teklif
                 </p>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                  {teklifSecildi ? (
+                    <span className="rounded-lg bg-emerald-50 px-2 py-1 font-medium text-emerald-800">
+                      Teklif seçildi
+                      {kazananTeklif
+                        ? `: ${kazananTeklif.cekiciAd} · ${kazananTeklif.fiyat} TL`
+                        : ""}
+                    </span>
+                  ) : (
+                    <span className="rounded-lg bg-slate-100 px-2 py-1 font-medium text-slate-600">
+                      Teklif henüz seçilmedi
+                    </span>
+                  )}
+                  {teklifSecildi ? (
+                    arandi ? (
+                      <span className="rounded-lg bg-sky-50 px-2 py-1 font-medium text-sky-800">
+                        Çekici aradı
+                        {t.musteriArandiAt
+                          ? ` · ${new Date(t.musteriArandiAt).toLocaleString("tr-TR")}`
+                          : ""}
+                      </span>
+                    ) : (
+                      <span className="rounded-lg bg-orange-50 px-2 py-1 font-medium text-orange-800">
+                        Çekici henüz aramadı
+                      </span>
+                    )
+                  ) : null}
+                </div>
                 <div className="flex flex-wrap gap-3 mt-3 text-sm">
                   <Link
                     href={`/bekle/${t.id}`}
@@ -353,7 +390,8 @@ export default function PanelTaleplerPage() {
                   </Link>
                 </div>
               </Card>
-            ))}
+              );
+            })}
           </div>
 
           {sehirFiltre && filtreliListe.length === 0 && liste.length > 0 && (

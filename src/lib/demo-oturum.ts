@@ -402,6 +402,24 @@ export async function demoIslemTamamla(
   return t;
 }
 
+/** Kazanan çekici müşteri telefonuna tıkladı */
+export async function demoMusteriAra(
+  oturum: AktifDemoOturum,
+  talepId: string
+): Promise<Talep> {
+  const mevcut = demoTalepBul(oturum, talepId);
+  if (mevcut?.musteriArandiAt) return mevcut;
+  const yeni = await oturumGuncelle(oturum, (d) =>
+    talepGuncelle(d, talepId, (t) => ({
+      ...t,
+      musteriArandiAt: t.musteriArandiAt ?? new Date().toISOString(),
+    }))
+  );
+  const t = demoTalepBul(yeni, talepId);
+  if (!t) throw new Error("Talep bulunamadı.");
+  return t;
+}
+
 export async function demoSimuleOlay(
   oturumId: string,
   olay: DemoSimuleOlay

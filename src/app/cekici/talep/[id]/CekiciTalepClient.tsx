@@ -56,6 +56,7 @@ interface TalepDurum {
   aracModeli?: string;
   fotografUrls?: string[];
   onayliCekici?: boolean;
+  musteriArandiAt?: string;
 }
 
 export default function CekiciTalepClient() {
@@ -166,6 +167,24 @@ export default function CekiciTalepClient() {
     return () => clearInterval(interval);
   }, [yukle]);
 
+  async function musteriAraKaydet() {
+    try {
+      const res = await cekiciFetch(`/api/cekici/talep/${id}/ara`, {
+        method: "POST",
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as { musteriArandiAt?: string };
+      if (data.musteriArandiAt) {
+        setTalep((t) =>
+          t ? { ...t, musteriArandiAt: data.musteriArandiAt } : t
+        );
+      }
+      posthogOlayYakala("cekici_musteri_ara", { talep_id: id });
+    } catch {
+      /* arama yine açılsın */
+    }
+  }
+
   async function islemBitti() {
     setIslemBittiYukleniyor(true);
     setError("");
@@ -273,6 +292,8 @@ export default function CekiciTalepClient() {
 
   useKazananKonumPaylas(id, !!talep?.kazandim);
 
+  const isTamamlandi = talep?.durum === "anlaşıldı";
+
   return (
     <MobileShell
       showBrand={false}
@@ -283,6 +304,27 @@ export default function CekiciTalepClient() {
           : "Çekici Paneli"
       }
       headerBadge={demoAktif ? <DemoHeaderBadge /> : undefined}
+      footer={
+        talep?.kazandim && !loading ? (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(15,23,42,0.06)]">
+            <div className="mx-auto w-full max-w-lg space-y-2">
+              {isTamamlandi ? (
+                <Btn variant="secondary" disabled>
+                  İş tamamlandı
+                </Btn>
+              ) : (
+                <Btn
+                  variant="success"
+                  onClick={() => void islemBitti()}
+                  disabled={islemBittiYukleniyor}
+                >
+                  {islemBittiYukleniyor ? "Kaydediliyor…" : "İşi tamamladım"}
+                </Btn>
+              )}
+            </div>
+          </div>
+        ) : undefined
+      }
     >
       {loading && (
         <p className="text-center text-slate-500 py-12">Yükleniyor…</p>
@@ -529,7 +571,10 @@ export default function CekiciTalepClient() {
                   📞 {gizlilik === "tam" ? "Telefon gizli" : "Telefon maskeli"}
                 </Btn>
               ) : (
-                <a href={telefonHref}>
+                <a
+                  href={telefonHref}
+                  onClick={() => void musteriAraKaydet()}
+                >
                   <Btn variant="success">📞 Müşteriye Ara</Btn>
                 </a>
               )}
@@ -541,16 +586,8 @@ export default function CekiciTalepClient() {
                   haritaButonu
                 />
               )}
-              <Btn
-                variant="success"
-                onClick={() => void islemBitti()}
-                disabled={islemBittiYukleniyor}
-              >
-                {islemBittiYukleniyor ? "Kaydediliyor…" : "✓ İşlem bitti"}
-              </Btn>
-              <p className="text-xs text-center text-slate-500 -mt-2">
-                İşi bitirdiğinizde işaretleyin; panele dönersiniz.
-              </p>
+              {/* Sticky footer: İşi tamamladım */}
+              <div className="h-24" aria-hidden />
             </>
           )}
 

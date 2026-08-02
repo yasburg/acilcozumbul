@@ -99,6 +99,7 @@ export async function GET(
       fotografUrls: talep.fotografUrls,
       olusturulma: talep.olusturulma,
       benimTeklif: benimTeklifim,
+      musteriArandiAt: talep.musteriArandiAt,
     });
   }
 

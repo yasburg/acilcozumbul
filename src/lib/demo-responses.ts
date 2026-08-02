@@ -48,6 +48,7 @@ export function demoCekiciTalepGetJson(talep: Talep, cekici: Cekici) {
       fotografUrls: talep.fotografUrls,
       olusturulma: talep.olusturulma,
       benimTeklif: benimTeklifim,
+      musteriArandiAt: talep.musteriArandiAt,
       demoModu: true,
     };
   }
