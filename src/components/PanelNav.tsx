@@ -22,6 +22,7 @@ const LINKS: {
     sayac: "profilFoto",
   },
   { href: "/panel/talepler", label: "Talepler", sayac: "talep" },
+  { href: "/panel/talep-analiz", label: "Talep analizi" },
   { href: "/panel/sms", label: "SMS Sağlık", exact: true },
   { href: "/panel/sms/toplu", label: "Toplu SMS" },
   { href: "/panel/sms/sablonlar", label: "SMS şablonları" },
