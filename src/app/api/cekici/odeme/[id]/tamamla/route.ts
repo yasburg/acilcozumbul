@@ -4,7 +4,6 @@ import {
   olusturCekiciAbonelik,
 } from "@/lib/abonelik-db";
 import { getCurrentCekici } from "@/lib/auth";
-import { cekiciEpostaDogrulandiMi } from "@/lib/cekici-email-otp";
 import { getCekiciById, updateCekici } from "@/lib/db";
 import { garantiYapilandirildi } from "@/lib/garanti/config";
 import {
@@ -72,13 +71,6 @@ export async function POST(
     return NextResponse.json({ error: faturaSonuc.hata }, { status: 400 });
   }
 
-  if (!(await cekiciEpostaDogrulandiMi(cekici.id, faturaSonuc.data.faturaEposta))) {
-    return NextResponse.json(
-      { error: "Fatura e-postası doğrulanmamış." },
-      { status: 403 }
-    );
-  }
-
   bekleyen =
     (await guncelleBekleyenOdemeFatura(id, cekici.id, faturaSonuc.data)) ??
     bekleyen;
@@ -117,7 +109,7 @@ export async function POST(
       expiryYear: sk.yil,
       cvv: String(cvv),
       clientIp,
-      email: faturaSonuc.data.faturaEposta,
+      email: faturaSonuc.data.faturaEposta || undefined,
       recurring:
         bekleyen.odemeTipi === "abonelik" ? aylikRecurringOpts() : undefined,
     });
@@ -201,7 +193,7 @@ export async function POST(
     tutar: bekleyen.tutar,
     listeFiyati: bekleyen.listeFiyati,
     paketTl: bekleyen.paketTl ?? bekleyen.listeFiyati ?? bekleyen.tutar,
-    faturaEposta: faturaSonuc.data.faturaEposta,
+    faturaEposta: faturaSonuc.data.faturaEposta ?? "",
     faturaAdres: faturaSonuc.data.faturaAdres,
     faturaTcKimlik: faturaSonuc.data.faturaTcKimlik,
     kurumsal: faturaSonuc.data.kurumsal,

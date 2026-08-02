@@ -8,8 +8,10 @@ export default function robots(): MetadataRoute.Robots {
     "/cekici/panel",
     "/cekici/ayarlar",
     "/cekici/kredi",
+    "/cekici/faturalar",
     "/cekici/odeme/",
     "/cekici/talep/",
+    "/fatura",
     "/bekle/",
     "/demo/",
   ];

@@ -30,11 +30,13 @@ const LINKS: {
   { href: "/panel/kurulum-sms", label: "Kurulum takip" },
   { href: "/panel/sehir-acilis", label: "Şehir açılış" },
   { href: "/panel/kredi-odemeler", label: "Kredi ödemeleri" },
+  { href: "/panel/faturalar", label: "Faturalar" },
   { href: "/panel/degerlendirmeler", label: "Değerlendirmeler" },
   { href: "/panel/davetler", label: "Davet kodları" },
   { href: "/panel/demo", label: "Demo" },
   { href: "/panel/kampanyalar", label: "Kampanyalar" },
   { href: "/panel/kayit-funnels", label: "Kayıt funnels" },
+  { href: "/panel/musteri-funnels", label: "Müşteri funnels" },
   { href: "/panel/link-haritasi", label: "Link haritası" },
 ];
 

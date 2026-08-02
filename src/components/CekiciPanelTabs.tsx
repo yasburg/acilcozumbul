@@ -899,6 +899,14 @@ export default function CekiciPanelTabs() {
                 </Btn>
               </Link>
             </div>
+            <p className="mt-2">
+              <Link
+                href="/cekici/faturalar"
+                className="text-sm font-medium text-amber-700 underline underline-offset-2"
+              >
+                Faturalarım
+              </Link>
+            </p>
             <p className="text-sm text-slate-500 mt-2">
               {adGoster(cekici.ad, hesapSeviye)} · {cekici.sehir}
             </p>
