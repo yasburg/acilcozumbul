@@ -442,16 +442,43 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     return [];
   }
 
+  function wizardAdimOlay(
+    hedef: Adim
+  ): "form_adim_1" | "form_adim_2" | "form_adim_3" | null {
+    switch (hedef) {
+      case "is":
+      case "is_coklu":
+        return "form_adim_1";
+      case "sehir":
+      case "bolge":
+      case "ilce":
+        return "form_adim_2";
+      case "telefon":
+      case "otp":
+        return "form_adim_3";
+      default:
+        return null;
+    }
+  }
+
+  /** İleri adım — huni olaylarını bir kez yazar (geri gitmede setAdim kullan) */
+  function adimaIlerle(yeni: Adim) {
+    setAdim(yeni);
+    const olay = wizardAdimOlay(yeni);
+    if (olay) kayitFunnelOlayBirKez(funnel.id, olay);
+  }
+
   function hizmetSec(id: Exclude<KayitHizmetOnsecim, null>) {
     setHizmet(id);
     void kayitFunnelOlayGonder(funnel.id, "cta_kayit_basla", {
       meta: { hizmet: id },
     });
+    kayitFunnelOlayBirKez(funnel.id, "form_adim_1");
     if (id === "birden_fazla") {
       setAdim("is_coklu");
       return;
     }
-    setAdim("sehir");
+    adimaIlerle("sehir");
   }
 
   function geri() {
@@ -509,7 +536,7 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
       if (d.gelistirmeKodu) {
         setMesaj((m) => `${m} (geliştirme: ${d.gelistirmeKodu})`);
       }
-      setAdim("otp");
+      adimaIlerle("otp");
       setOtp("");
       sonOtpDeneme.current = "";
     } catch (e) {
@@ -814,7 +841,7 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
             </div>
             <Btn
               disabled={cokluSorunlar.length === 0}
-              onClick={() => setAdim("sehir")}
+              onClick={() => adimaIlerle("sehir")}
             >
               Devam et
             </Btn>
@@ -934,11 +961,11 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
             <Btn
               disabled={!sehir || sehirAramaAcik}
               onClick={() => {
-                if (sehir === ISTANBUL_IL) setAdim("bolge");
+                if (sehir === ISTANBUL_IL) adimaIlerle("bolge");
                 else {
                   setYaka(null);
                   setIlceler([]);
-                  setAdim("telefon");
+                  adimaIlerle("telefon");
                 }
               }}
             >
@@ -971,10 +998,10 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                   setYaka(id);
                   if (id === "belirli") {
                     setIlceler([]);
-                    setAdim("ilce");
+                    adimaIlerle("ilce");
                   } else {
                     setIlceler(yakaIlceleri(id));
-                    setAdim("telefon");
+                    adimaIlerle("telefon");
                   }
                 }}
               />
@@ -1003,7 +1030,7 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
             />
             <Btn
               disabled={ilceler.length === 0}
-              onClick={() => setAdim("telefon")}
+              onClick={() => adimaIlerle("telefon")}
             >
               Devam et
             </Btn>

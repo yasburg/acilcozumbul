@@ -20,6 +20,9 @@ export const KAYIT_FUNNEL_OLAY_SABIT = [
   "kurulum_2",
   "kurulum_3",
   "panel_hazir",
+  "form_adim_1",
+  "form_adim_2",
+  "form_adim_3",
   "wheel_icon_viewed",
   "wheel_icon_clicked",
   "wheel_auto_opened",
@@ -167,8 +170,23 @@ export const KAYIT_FUNNEL_HUNI_ADIMLARI = [
   { id: "goruldu", label: "Görülme", olaylar: ["goruldu"] },
   {
     id: "form_etkilesim",
-    label: "Form etkileşim",
-    olaylar: [] as string[], // field_filled_* dinamik
+    label: "İlk etkileşim",
+    olaylar: [] as string[], // özel eşleşme: field_* / form_adim_* / cta / telefon
+  },
+  {
+    id: "form_adim_1",
+    label: "Adım 1 · Hizmet",
+    olaylar: ["form_adim_1"],
+  },
+  {
+    id: "form_adim_2",
+    label: "Adım 2 · Şehir/bölge",
+    olaylar: ["form_adim_2"],
+  },
+  {
+    id: "form_adim_3",
+    label: "Adım 3 · Telefon",
+    olaylar: ["form_adim_3"],
   },
   { id: "otp_gonder", label: "OTP gönder", olaylar: ["otp_gonder"] },
   { id: "otp_ok", label: "OTP doğrula", olaylar: ["otp_ok"] },
@@ -193,13 +211,18 @@ export type KayitFunnelOlaySatir = {
 function sessionOlayEslesir(
   olaylar: Set<string>,
   adimOlaylari: readonly string[],
-  formEtkilesim: boolean
+  ilkEtkilesim: boolean
 ): boolean {
-  if (formEtkilesim) {
+  if (ilkEtkilesim) {
     for (const o of olaylar) {
       if (o.startsWith("field_filled_")) return true;
       if (o.startsWith("field_focus_")) return true;
+      if (o.startsWith("form_adim_")) return true;
       if (o === "telefon_focus") return true;
+      if (o === "cta_kayit_basla") return true;
+      if (o === "yasal_onay_tik") return true;
+      if (o === "wheel_icon_clicked") return true;
+      if (o === "wheel_spin_started") return true;
     }
     return false;
   }

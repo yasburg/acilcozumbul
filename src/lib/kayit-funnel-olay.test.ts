@@ -14,6 +14,9 @@ describe("kayit-funnel-olay allowlist", () => {
     expect(kayitFunnelOlayMi("goruldu")).toBe(true);
     expect(kayitFunnelOlayMi("cta_kayit_basla")).toBe(true);
     expect(kayitFunnelOlayMi("btn_otp_gonder")).toBe(true);
+    expect(kayitFunnelOlayMi("form_adim_1")).toBe(true);
+    expect(kayitFunnelOlayMi("form_adim_2")).toBe(true);
+    expect(kayitFunnelOlayMi("form_adim_3")).toBe(true);
     expect(kayitFunnelOlayMi("field_focus_ad")).toBe(true);
     expect(kayitFunnelOlayMi("field_filled_telefon")).toBe(true);
     expect(kayitFunnelOlayMi("field_filled_xyz")).toBe(false);
@@ -51,25 +54,52 @@ describe("kayitFunnelSessionHuniHesapla", () => {
     });
     expect(huni[1]).toMatchObject({
       adim: "form_etkilesim",
+      label: "İlk etkileşim",
       sessionSayisi: 2,
       oncekiOran: 1,
     });
-    expect(huni[2]!.sessionSayisi).toBe(2);
-    expect(huni[3]!.sessionSayisi).toBe(1);
-    expect(huni[4]!.sessionSayisi).toBe(1);
-    expect(huni[5]!.sessionSayisi).toBe(1);
+    // form_adim_1..3 phone-first'te yok → 0
+    expect(huni[2]).toMatchObject({ adim: "form_adim_1", sessionSayisi: 0 });
+    expect(huni[3]).toMatchObject({ adim: "form_adim_2", sessionSayisi: 0 });
+    expect(huni[4]).toMatchObject({ adim: "form_adim_3", sessionSayisi: 0 });
+    expect(huni[5]!.sessionSayisi).toBe(2); // otp_gonder
+    expect(huni[6]!.sessionSayisi).toBe(1); // otp_ok
+    expect(huni[7]!.sessionSayisi).toBe(1); // hesap
+    expect(huni[8]!.sessionSayisi).toBe(1); // panel_hazir
     expect(kayitFunnelBenzersizSession(rows)).toBe(2);
   });
 
-  it("telefon_focus form etkileşim sayılır", () => {
+  it("telefon_focus ilk etkileşim sayılır", () => {
     const huni = kayitFunnelSessionHuniHesapla([
       { funnel: "b", olay: "goruldu", session_id: "s1" },
       { funnel: "b", olay: "telefon_focus", session_id: "s1" },
     ]);
     expect(huni[1]).toMatchObject({
       adim: "form_etkilesim",
+      label: "İlk etkileşim",
       sessionSayisi: 1,
     });
+  });
+
+  it("wizard form_adim olaylarıyla adım hunisini doldurur", () => {
+    const huni = kayitFunnelSessionHuniHesapla([
+      { funnel: "c", olay: "goruldu", session_id: "s1" },
+      { funnel: "c", olay: "form_adim_1", session_id: "s1" },
+      { funnel: "c", olay: "form_adim_2", session_id: "s1" },
+      { funnel: "c", olay: "form_adim_3", session_id: "s1" },
+      { funnel: "c", olay: "otp_gonder", session_id: "s1" },
+      { funnel: "c", olay: "goruldu", session_id: "s2" },
+      { funnel: "c", olay: "cta_kayit_basla", session_id: "s2" },
+      { funnel: "c", olay: "form_adim_1", session_id: "s2" },
+    ]);
+    expect(huni[1]).toMatchObject({
+      adim: "form_etkilesim",
+      sessionSayisi: 2,
+    });
+    expect(huni[2]).toMatchObject({ adim: "form_adim_1", sessionSayisi: 2 });
+    expect(huni[3]).toMatchObject({ adim: "form_adim_2", sessionSayisi: 1 });
+    expect(huni[4]).toMatchObject({ adim: "form_adim_3", sessionSayisi: 1 });
+    expect(huni[5]).toMatchObject({ adim: "otp_gonder", sessionSayisi: 1 });
   });
 });
 

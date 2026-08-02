@@ -62,9 +62,12 @@ function gunEksi(n: number): string {
 const HUNI_ADIM_RENKLERI = [
   "#c45c5c",
   "#d4a017",
+  "#e8a54b",
+  "#c9852e",
   "#5ba3d9",
   "#4a6fa5",
   "#3d8b7a",
+  "#2f6b5f",
   "#6b7c8a",
 ] as const;
 
