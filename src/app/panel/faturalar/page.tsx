@@ -59,7 +59,7 @@ export default function PanelFaturalarPage() {
 
   const filtreli = useMemo(() => {
     const q = ara.trim().toLowerCase();
-    if (!q) return cekiciler.slice(0, 40);
+    if (!q) return [];
     return cekiciler
       .filter(
         (c) =>
@@ -70,6 +70,12 @@ export default function PanelFaturalarPage() {
   }, [ara, cekiciler]);
 
   const secili = cekiciler.find((c) => c.id === seciliId) ?? null;
+
+  function secimiTemizle() {
+    setSeciliId("");
+    setAra("");
+    setHata("");
+  }
 
   async function gonder(e: React.FormEvent) {
     e.preventDefault();
@@ -127,57 +133,81 @@ export default function PanelFaturalarPage() {
 
       <Card>
         <form onSubmit={(e) => void gonder(e)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Çekici ara
-            </label>
-            <input
-              type="search"
-              value={ara}
-              onChange={(e) => setAra(e.target.value)}
-              placeholder="Ad veya telefon"
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
-            />
-          </div>
-
-          <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100">
-            {loading && (
-              <p className="px-3 py-2 text-sm text-slate-500">Yükleniyor…</p>
-            )}
-            {!loading && filtreli.length === 0 && (
-              <p className="px-3 py-2 text-sm text-slate-500">Sonuç yok.</p>
-            )}
-            {filtreli.map((c) => {
-              const aktif = c.id === seciliId;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setSeciliId(c.id)}
-                  className={`w-full text-left px-3 py-2.5 text-sm transition ${
-                    aktif
-                      ? "bg-amber-50 text-amber-900"
-                      : "hover:bg-slate-50 text-slate-800"
-                  }`}
-                >
-                  <span className="font-medium">{c.ad}</span>
-                  <span className="text-slate-500 ml-2">{c.telefon}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {secili && (
-            <p className="text-sm text-slate-600">
-              Seçili:{" "}
-              <Link
-                href={`/panel/cekiciler/${secili.id}`}
-                className="font-semibold text-amber-700 underline underline-offset-2"
+          {secili ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="text-sm min-w-0">
+                <p className="text-xs font-medium uppercase tracking-wide text-amber-800/70">
+                  Seçili çekici
+                </p>
+                <p className="font-semibold text-slate-900 truncate">
+                  <Link
+                    href={`/panel/cekiciler/${secili.id}`}
+                    className="text-amber-800 underline underline-offset-2"
+                  >
+                    {secili.ad}
+                  </Link>
+                  <span className="text-slate-600 font-normal">
+                    {" "}
+                    · {secili.telefon}
+                  </span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={secimiTemizle}
+                className="text-sm font-medium text-slate-600 hover:text-slate-900 underline underline-offset-2 shrink-0"
               >
-                {secili.ad}
-              </Link>{" "}
-              · {secili.telefon}
-            </p>
+                Değiştir
+              </button>
+            </div>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Çekici ara
+                </label>
+                <input
+                  type="search"
+                  value={ara}
+                  onChange={(e) => setAra(e.target.value)}
+                  placeholder="Ad veya telefon"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
+                  autoComplete="off"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Tek bir hesap seçilir; fatura yalnızca o çekiciye gider.
+                </p>
+              </div>
+
+              {(loading || ara.trim()) && (
+                <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100">
+                  {loading && (
+                    <p className="px-3 py-2 text-sm text-slate-500">
+                      Yükleniyor…
+                    </p>
+                  )}
+                  {!loading && filtreli.length === 0 && (
+                    <p className="px-3 py-2 text-sm text-slate-500">
+                      Sonuç yok.
+                    </p>
+                  )}
+                  {filtreli.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        setSeciliId(c.id);
+                        setAra("");
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-sm transition hover:bg-slate-50 text-slate-800"
+                    >
+                      <span className="font-medium">{c.ad}</span>
+                      <span className="text-slate-500 ml-2">{c.telefon}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           <div>
