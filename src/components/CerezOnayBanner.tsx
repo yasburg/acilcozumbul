@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   cerezBannerGosterilmeli,
   cerezManuelSilmeSenkronize,
@@ -20,6 +21,11 @@ import {
 } from "@/lib/tiktok-pixel";
 
 type Gorunum = "ozet" | "ayarlar" | "onay";
+
+function kayitCYoluMu(path: string | null): boolean {
+  if (!path) return false;
+  return path === "/c" || path.startsWith("/c?") || path === "/kayit/c";
+}
 
 function terciheGoreSenkronize(tercih: "tumu" | "zorunlu") {
   posthogCerezSenkronize();
@@ -111,6 +117,8 @@ const dugmeSinif =
   "min-h-[32px] flex-1 rounded-md border border-slate-300 bg-white text-slate-800 text-xs font-semibold px-2 py-1.5 hover:bg-slate-50 touch-manipulation";
 
 export function CerezOnayBanner() {
+  const pathname = usePathname();
+  const altta = kayitCYoluMu(pathname);
   const gosterilmeli = useSyncExternalStore(
     bannerSubscribe,
     bannerSnapshot,
@@ -136,7 +144,9 @@ export function CerezOnayBanner() {
       setGorunum(mevcut != null ? "ayarlar" : "ozet");
       setZorlaAcik(true);
       setGoster(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (!kayitCYoluMu(window.location.pathname)) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     };
     window.addEventListener("acil-cerez-banner-ac", ac);
     return () => window.removeEventListener("acil-cerez-banner-ac", ac);
@@ -152,12 +162,22 @@ export function CerezOnayBanner() {
 
   return (
     <div
-      className="fixed inset-x-0 top-0 z-[100] pointer-events-none"
+      className={`fixed inset-x-0 z-[100] pointer-events-none ${
+        altta
+          ? "bottom-0 pb-[env(safe-area-inset-bottom)]"
+          : "top-0"
+      }`}
       role="dialog"
       aria-labelledby="cerez-banner-baslik"
       aria-describedby="cerez-banner-aciklama"
     >
-      <div className="pointer-events-auto max-w-lg mx-auto border-b border-slate-200 bg-white/95 backdrop-blur-sm px-3 py-1.5 shadow-[0_2px_12px_rgba(15,23,42,0.06)]">
+      <div
+        className={`pointer-events-auto max-w-lg mx-auto bg-white/95 backdrop-blur-sm px-3 py-1.5 ${
+          altta
+            ? "border-t border-slate-200 shadow-[0_-2px_12px_rgba(15,23,42,0.08)]"
+            : "border-b border-slate-200 shadow-[0_2px_12px_rgba(15,23,42,0.06)]"
+        }`}
+      >
         {gorunum === "ozet" ? (
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <p
