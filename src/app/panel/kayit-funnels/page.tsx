@@ -389,7 +389,7 @@ export default function PanelKayitFunnelsPage() {
   const [ozet, setOzet] = useState<PanelOzet | null>(null);
   const [huni, setHuni] = useState<HuniAdim[]>([]);
   const [karsilastirma, setKarsilastirma] = useState<
-    { funnel: string; adimlar: HuniAdim[] }[]
+    { funnel: string; tip?: string; adimlar: HuniAdim[] }[]
   >([]);
   const [olayHacmi, setOlayHacmi] = useState<OlayHacmi[]>([]);
   const [gunluk, setGunluk] = useState<Gunluk[]>([]);
@@ -475,6 +475,14 @@ export default function PanelKayitFunnelsPage() {
           <h1 className="text-xl font-bold text-slate-900">Kayıt funnelleri</h1>
           <p className="text-sm text-slate-500 mt-1">
             Session hunisi, A/B karşılaştırma ve olay hacmi.
+            {" "}
+            <span className="text-amber-800">
+              `/kayit/*` ve kısa harf linkleri noindex’tir; public SEO sayfası{" "}
+              <Link href="/hizmet-veren" className="underline">
+                /hizmet-veren
+              </Link>
+              .
+            </span>
           </p>
         </div>
         <button
@@ -598,10 +606,11 @@ export default function PanelKayitFunnelsPage() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-stretch">
           <Card className="space-y-2 min-w-0">
             <h2 className="text-sm font-semibold text-slate-900">
-              Session hunisi
+              Session hunisi (ortak adımlar)
             </h2>
             <p className="text-xs text-slate-500">
-              Seçili funnellerde unique session adım geçişi (yatay).
+              Seçili funnellerde ortak olaylar: görülme → etkileşim → OTP → hesap
+              → kurulum. Tip’e özel adımlar aşağıdaki karşılaştırmada.
             </p>
             <HuniSvg adimlar={huni} yon="yatay" />
           </Card>
@@ -617,13 +626,22 @@ export default function PanelKayitFunnelsPage() {
       {!yukleniyor && !hata && karsilastirmaFunneller.length > 0 && (
         <Card className="space-y-4">
           <h2 className="text-sm font-semibold text-slate-900">
-            A/B karşılaştırması
+            Funnel karşılaştırması (tip bazlı)
           </h2>
+          <p className="text-xs text-slate-500 -mt-2">
+            A: kontrol · B: phone-first · C: seçim wizard — ortak OTP/hesap
+            olayları aynı; orta adımlar tip’e özel.
+          </p>
           <div className="grid sm:grid-cols-2 gap-4">
             {karsilastirmaFunneller.map((k) => (
               <div key={k.funnel} className="space-y-1">
                 <p className="text-xs font-bold uppercase text-slate-600">
                   Funnel {k.funnel}
+                  {k.tip ? (
+                    <span className="ml-1.5 font-normal normal-case text-slate-400">
+                      ({k.tip})
+                    </span>
+                  ) : null}
                 </p>
                 <HuniSvg adimlar={k.adimlar} />
               </div>

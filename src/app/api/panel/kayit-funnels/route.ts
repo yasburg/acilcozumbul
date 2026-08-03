@@ -4,6 +4,7 @@ import { panelEpostaIzinli } from "@/lib/supabase/env";
 import { getSupabaseAdmin, supabaseDbAktif } from "@/lib/supabase/admin";
 import {
   kayitFunnelAktifListe,
+  kayitFunnelGetir,
   kayitFunnelMi,
   kayitFunnelYolu,
   type KayitFunnelId,
@@ -123,13 +124,18 @@ export async function GET(request: NextRequest) {
   }));
   const liste = kayitFunnelOzetHesapla(tumTarihRows, tumTanimlar);
 
-  const huni = kayitFunnelSessionHuniHesapla(rows);
-  const karsilastirma = funnels.map((funnel) => ({
-    funnel,
-    adimlar: kayitFunnelSessionHuniHesapla(
-      rows.filter((r) => r.funnel === funnel)
-    ),
-  }));
+  const huni = kayitFunnelSessionHuniHesapla(rows, "ortak");
+  const karsilastirma = funnels.map((funnel) => {
+    const tip = kayitFunnelGetir(funnel)?.tip ?? "ortak";
+    return {
+      funnel,
+      tip,
+      adimlar: kayitFunnelSessionHuniHesapla(
+        rows.filter((r) => r.funnel === funnel),
+        tip
+      ),
+    };
+  });
 
   const session = kayitFunnelBenzersizSession(rows);
   const goruldu = rows.filter((r) => r.olay === "goruldu").length;

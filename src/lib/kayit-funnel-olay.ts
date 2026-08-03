@@ -1,5 +1,9 @@
 import { getSupabaseAdmin, supabaseDbAktif } from "./supabase/admin";
-import { kayitFunnelMi, type KayitFunnelId } from "./kayit-funnel";
+import {
+  kayitFunnelMi,
+  type KayitFunnelId,
+  type KayitFunnelTip,
+} from "./kayit-funnel";
 
 /** Sabit dönüşüm / kurulum olayları */
 export const KAYIT_FUNNEL_OLAY_SABIT = [
@@ -165,34 +169,94 @@ export function kayitFunnelOzetHesapla(
   });
 }
 
-/** Ortak huni adımları (session en az bir eşleşen olay) */
-export const KAYIT_FUNNEL_HUNI_ADIMLARI = [
+/** Ortak huni adımları — tüm tiplerde aynı olay adları */
+export const KAYIT_FUNNEL_HUNI_ORTAK_BAS = [
   { id: "goruldu", label: "Görülme", olaylar: ["goruldu"] },
   {
     id: "form_etkilesim",
     label: "İlk etkileşim",
-    olaylar: [] as string[], // özel eşleşme: field_* / form_adim_* / cta / telefon
+    olaylar: [] as string[], // özel: field_* / form_adim_* / cta / telefon
   },
-  {
-    id: "form_adim_1",
-    label: "Adım 1 · Hizmet",
-    olaylar: ["form_adim_1"],
-  },
-  {
-    id: "form_adim_2",
-    label: "Adım 2 · Şehir/bölge",
-    olaylar: ["form_adim_2"],
-  },
-  {
-    id: "form_adim_3",
-    label: "Adım 3 · Telefon",
-    olaylar: ["form_adim_3"],
-  },
+] as const;
+
+export const KAYIT_FUNNEL_HUNI_ORTAK_SON = [
   { id: "otp_gonder", label: "OTP gönder", olaylar: ["otp_gonder"] },
   { id: "otp_ok", label: "OTP doğrula", olaylar: ["otp_ok"] },
   { id: "hesap", label: "Hesap", olaylar: ["hesap"] },
   { id: "panel_hazir", label: "Kurulum hazır", olaylar: ["panel_hazir"] },
 ] as const;
+
+/** Tip’e özel orta adımlar (ortak olay isimleriyle) */
+const KAYIT_FUNNEL_HUNI_ORTA: Record<
+  KayitFunnelTip,
+  readonly { id: string; label: string; olaylar: readonly string[] }[]
+> = {
+  /** A — uzun form: CTA + telefon alanı */
+  kontrol: [
+    {
+      id: "cta_kayit_basla",
+      label: "Kayıt başla",
+      olaylar: ["cta_kayit_basla"],
+    },
+    {
+      id: "telefon",
+      label: "Telefon",
+      olaylar: ["field_filled_telefon", "field_focus_telefon"],
+    },
+  ],
+  /** B/D/E — phone-first: telefon odağı */
+  phone_first: [
+    {
+      id: "telefon_focus",
+      label: "Telefon",
+      olaylar: ["telefon_focus"],
+    },
+  ],
+  /** C — seçim wizard: hizmet → bölge → telefon */
+  secim_wizard: [
+    {
+      id: "form_adim_1",
+      label: "Adım 1 · Hizmet",
+      olaylar: ["form_adim_1"],
+    },
+    {
+      id: "form_adim_2",
+      label: "Adım 2 · Şehir/bölge",
+      olaylar: ["form_adim_2"],
+    },
+    {
+      id: "form_adim_3",
+      label: "Adım 3 · Telefon",
+      olaylar: ["form_adim_3"],
+    },
+  ],
+};
+
+export type KayitFunnelHuniAdimTanim = {
+  id: string;
+  label: string;
+  olaylar: readonly string[];
+};
+
+/** Tip’e göre huni adımları (A/B/C kendi bazında; ortak adımlar aynı olay) */
+export function kayitFunnelHuniAdimlari(
+  tip: KayitFunnelTip | "ortak" = "ortak"
+): KayitFunnelHuniAdimTanim[] {
+  if (tip === "ortak") {
+    return [...KAYIT_FUNNEL_HUNI_ORTAK_BAS, ...KAYIT_FUNNEL_HUNI_ORTAK_SON];
+  }
+  return [
+    ...KAYIT_FUNNEL_HUNI_ORTAK_BAS,
+    ...KAYIT_FUNNEL_HUNI_ORTA[tip],
+    ...KAYIT_FUNNEL_HUNI_ORTAK_SON,
+  ];
+}
+
+/**
+ * @deprecated Tip bilmeden çağırma — `kayitFunnelHuniAdimlari(tip)` kullan.
+ * Geriye uyum: wizard adımlı tam liste (yanlışlıkla B’de 0 gösterir).
+ */
+export const KAYIT_FUNNEL_HUNI_ADIMLARI = kayitFunnelHuniAdimlari("secim_wizard");
 
 export type KayitFunnelHuniAdim = {
   adim: string;
@@ -231,7 +295,8 @@ function sessionOlayEslesir(
 
 /** Unique session_id ile huni (session_id null olanlar sayılmaz) */
 export function kayitFunnelSessionHuniHesapla(
-  rows: KayitFunnelOlaySatir[]
+  rows: KayitFunnelOlaySatir[],
+  tip: KayitFunnelTip | "ortak" = "ortak"
 ): KayitFunnelHuniAdim[] {
   const bySession = new Map<string, Set<string>>();
   for (const r of rows) {
@@ -241,7 +306,8 @@ export function kayitFunnelSessionHuniHesapla(
     bySession.get(sid)!.add(String(r.olay));
   }
 
-  const adimlar = KAYIT_FUNNEL_HUNI_ADIMLARI.map((a) => {
+  const huniAdimlari = kayitFunnelHuniAdimlari(tip);
+  const adimlar = huniAdimlari.map((a) => {
     let n = 0;
     const form = a.id === "form_etkilesim";
     for (const olaylar of bySession.values()) {
