@@ -15,8 +15,8 @@
     "semantic_hash": ""
   },
   "next.config.ts": {
-    "mtime": 1785710991.2460463,
-    "ast_hash": "9f8b79b48d7aee02c9f86ff2bbb365c0",
+    "mtime": 1785870340.7305498,
+    "ast_hash": "8a7c354d68fc0ac7be750c06957b7b51",
     "semantic_hash": ""
   },
   "package.json": {
@@ -600,8 +600,8 @@
     "semantic_hash": ""
   },
   "src/app/robots.ts": {
-    "mtime": 1785710978.7861972,
-    "ast_hash": "1fd8c85a6d165d44817898dd855bd684",
+    "mtime": 1785870337.324503,
+    "ast_hash": "6a5a186c8bbd3e8889ef27082111a578",
     "semantic_hash": ""
   },
   "src/app/sitemap.ts": {
@@ -2855,8 +2855,8 @@
     "semantic_hash": ""
   },
   "src/app/robots.test.ts": {
-    "mtime": 1785710992.9158492,
-    "ast_hash": "eec9c70cafabbabe63ed301744dede68",
+    "mtime": 1785870353.843785,
+    "ast_hash": "554beae80b785835e7ac5914682f7b21",
     "semantic_hash": ""
   },
   "supabase/migrations/052_fatura_link_odeme_opsiyonel.sql": {
@@ -3132,6 +3132,11 @@
   "public/icons/arac-tipi/suv.png": {
     "mtime": 1785839841.2501552,
     "ast_hash": "fe0e800869ffca9b24f28bf621fb289f",
+    "semantic_hash": ""
+  },
+  "docs/staging.md": {
+    "mtime": 1785870501.3698564,
+    "ast_hash": "42a7a1d3bda23cde035284cbc6986006",
     "semantic_hash": ""
   }
 }

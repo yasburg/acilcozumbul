@@ -14,7 +14,12 @@ const nextConfig: NextConfig = {
       key: "X-Robots-Tag",
       value: "noindex, nofollow",
     };
+    const stagingNoindex =
+      process.env.NEXT_PUBLIC_APP_ENV === "staging"
+        ? [{ source: "/:path*", headers: [noindex] }]
+        : [];
     return [
+      ...stagingNoindex,
       {
         source: "/acilcozumbul-logo-yazili-header.webp",
         headers: [

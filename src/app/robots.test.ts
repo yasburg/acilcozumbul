@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import robots from "./robots";
 
 function tumDisallow(): string[] {
@@ -28,5 +28,20 @@ describe("robots", () => {
     expect(disallow).toContain("/demo/");
     expect(disallow).toContain("/cekici/giris");
     expect(disallow).toContain("/cekici/kayit");
+  });
+
+  it("staging ortamında tüm siteyi disallow eder", async () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_ENV", "staging");
+    vi.resetModules();
+    const { default: robotsStaging } = await import("./robots");
+    const r = robotsStaging();
+    const rules = Array.isArray(r.rules) ? r.rules : [r.rules];
+    const disallow = rules.flatMap((rule) => {
+      const d = rule.disallow;
+      if (!d) return [];
+      return Array.isArray(d) ? d : [d];
+    });
+    expect(disallow).toContain("/");
+    vi.unstubAllEnvs();
   });
 });
