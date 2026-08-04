@@ -33,3 +33,15 @@ export async function listeleKrediOdemeler(): Promise<KrediOdeme[]> {
   if (error) throw error;
   return (data as KrediOdemeRow[]).map(krediOdemeFromRow);
 }
+
+export async function listeleKrediOdemelerSince(
+  sinceIso: string
+): Promise<KrediOdeme[]> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("kredi_odemeler")
+    .select("*")
+    .gte("olusturulma", sinceIso)
+    .order("olusturulma", { ascending: false });
+  if (error) throw error;
+  return (data as KrediOdemeRow[]).map(krediOdemeFromRow);
+}

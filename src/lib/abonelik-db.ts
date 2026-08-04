@@ -143,6 +143,43 @@ export async function abonelikIslemVarMi(eventId: string): Promise<boolean> {
   return Boolean(data);
 }
 
+export type AbonelikIslemSatir = {
+  tip: AbonelikIslemTip;
+  tutarTl: number;
+  kredi: number;
+  garantiOrderId?: string;
+  createdAt: string;
+};
+
+/** Panel özet — abonelik tahsilatları (created / renewal vb.) */
+export async function listeleAbonelikIslemleriSince(
+  sinceIso: string
+): Promise<AbonelikIslemSatir[]> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("abonelik_islem")
+    .select("tip, tutar_tl, kredi, garanti_order_id, created_at")
+    .gte("created_at", sinceIso)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (
+    (data as
+      | {
+          tip: string;
+          tutar_tl: number;
+          kredi: number;
+          garanti_order_id?: string | null;
+          created_at: string;
+        }[]
+      | null) ?? []
+  ).map((r) => ({
+    tip: r.tip as AbonelikIslemTip,
+    tutarTl: Number(r.tutar_tl),
+    kredi: Number(r.kredi),
+    garantiOrderId: r.garanti_order_id ?? undefined,
+    createdAt: r.created_at,
+  }));
+}
+
 export async function guncelleAbonelik(
   id: string,
   patch: Partial<{

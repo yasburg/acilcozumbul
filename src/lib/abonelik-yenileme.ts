@@ -20,6 +20,7 @@ import {
   abonelikKrediSifirlaVeYukle,
   abonelikKrediYak,
 } from "./kredi-bakiye";
+import { adminOdemeSmsGonder } from "./admin-odeme-sms";
 import type { CekiciAbonelik } from "./types";
 
 const GRACE_MS = 24 * 60 * 60 * 1000;
@@ -119,6 +120,12 @@ async function yenilemeIsle(tx: GarantiOrderTxn): Promise<"ok" | "skip" | "fail"
     renewsAt: abonelikRenewsAtHesapla(),
     retryCount: 0,
     nextRetryAt: null,
+  });
+
+  void adminOdemeSmsGonder({
+    tip: "abonelik_yenileme",
+    tutarTl: Number(tx.authAmount) / 100,
+    cekiciAd: cekici.ad,
   });
 
   return "ok";

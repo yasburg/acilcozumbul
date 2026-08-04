@@ -10,6 +10,7 @@ import { KullaniciSayisiGrafik } from "@/components/panel/KullaniciSayisiGrafik"
 import { supabaseYapilandirmaHataMesaji } from "@/lib/supabase/env";
 import type { HizmetVerenSayimOzet } from "@/lib/hizmet-veren-sayim";
 import type { CekiciKayitGunNokta } from "@/lib/cekici-kayit-serisi";
+import type { PanelGelirOzet } from "@/lib/panel-gelir-ozet";
 
 interface Ozet {
   cekiciSayisi: number;
@@ -35,6 +36,7 @@ interface Ozet {
   };
   hizmetVerenler?: HizmetVerenSayimOzet;
   kullaniciSerisi?: CekiciKayitGunNokta[];
+  gelir?: PanelGelirOzet;
 }
 
 function hataMesajiFromParam(hata: string | null): string {
@@ -46,6 +48,30 @@ function hataMesajiFromParam(hata: string | null): string {
   }
   if (hata === "yetkisiz") return "Bu e-postanın panele erişim yetkisi yok.";
   return "";
+}
+
+function ayEtiketi(ay: string): string {
+  const [y, m] = ay.split("-").map(Number);
+  if (!y || !m) return ay;
+  const d = new Date(Date.UTC(y, m - 1, 1));
+  return d.toLocaleDateString("tr-TR", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function paketDagilimMetni(
+  dagilim: { paketTl: number; adet: number }[]
+): string | undefined {
+  if (!dagilim.length) return undefined;
+  return dagilim
+    .map((p) => `${p.adet}×${p.paketTl.toLocaleString("tr-TR")} ₺`)
+    .join(" · ");
+}
+
+function tl(n: number): string {
+  return `${Math.round(n).toLocaleString("tr-TR")} ₺`;
 }
 
 function PanelIcerik() {
@@ -112,6 +138,9 @@ function PanelIcerik() {
     return <p className="text-red-600 text-sm">Özet yüklenemedi.</p>;
   }
 
+  const gelir = ozet.gelir;
+  const ayAdi = gelir ? ayEtiketi(gelir.ay) : "";
+
   const kartlar = [
     {
       label: "Kayıtlı çekici",
@@ -175,6 +204,60 @@ function PanelIcerik() {
           Kullanıcı ve talep verilerine buradan ulaşın.
         </p>
       </div>
+
+      {gelir && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card className="bg-slate-50 border-slate-200">
+            <p className="text-sm text-slate-600">
+              Aylık alınan paketler
+              {ayAdi ? ` · ${ayAdi}` : ""}
+            </p>
+            <p className="text-3xl font-bold mt-1 text-slate-900 tabular-nums">
+              {gelir.aylikPaketler.adet}
+              <span className="text-lg font-semibold text-slate-600 ml-2">
+                paket
+              </span>
+            </p>
+            <p className="text-sm font-medium text-slate-700 mt-1 tabular-nums">
+              {tl(gelir.aylikPaketler.tutarTl)}
+              {gelir.aylikPaketler.kredi > 0
+                ? ` · ${gelir.aylikPaketler.kredi.toLocaleString("tr-TR")} kredi`
+                : ""}
+            </p>
+            {paketDagilimMetni(gelir.aylikPaketler.paketDagilim) && (
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                {paketDagilimMetni(gelir.aylikPaketler.paketDagilim)}
+              </p>
+            )}
+          </Card>
+
+          <Link href="/panel/kredi-odemeler">
+            <Card className="bg-amber-50 border-amber-200 hover:border-amber-400 transition h-full">
+              <p className="text-sm text-amber-800/80">
+                Bu ay alınan krediler
+                {ayAdi ? ` · ${ayAdi}` : ""}
+              </p>
+              <p className="text-3xl font-bold mt-1 text-amber-900 tabular-nums">
+                {gelir.satinAlinanKrediler.kredi.toLocaleString("tr-TR")}
+                <span className="text-lg font-semibold text-amber-700 ml-2">
+                  kredi
+                </span>
+              </p>
+              <p className="text-sm font-medium text-amber-800 mt-1 tabular-nums">
+                {tl(gelir.satinAlinanKrediler.tutarTl)}
+                {gelir.satinAlinanKrediler.adet > 0
+                  ? ` · ${gelir.satinAlinanKrediler.adet} işlem`
+                  : ""}
+              </p>
+              {paketDagilimMetni(gelir.satinAlinanKrediler.paketDagilim) && (
+                <p className="text-xs text-amber-700/80 mt-2 leading-relaxed">
+                  {paketDagilimMetni(gelir.satinAlinanKrediler.paketDagilim)}
+                </p>
+              )}
+            </Card>
+          </Link>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kartlar.map((k) => (

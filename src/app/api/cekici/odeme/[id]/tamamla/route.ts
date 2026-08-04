@@ -26,6 +26,7 @@ import {
   cekiciToplamKredi,
 } from "@/lib/kredi-bakiye";
 import { ensureSeedData } from "@/lib/seed";
+import { adminOdemeSmsGonder } from "@/lib/admin-odeme-sms";
 
 function sonKullanmaAyir(sonKullanma: string): { ay: string; yil: string } | null {
   const temiz = sonKullanma.replace(/\s/g, "");
@@ -210,6 +211,12 @@ export async function POST(
   } catch (e) {
     console.error("[kredi-hatirlatma] yukleme bagla", e);
   }
+
+  void adminOdemeSmsGonder({
+    tip: bekleyen.odemeTipi === "abonelik" ? "abonelik" : "kredi",
+    tutarTl: bekleyen.tutar,
+    cekiciAd: guncelCekici.ad,
+  });
 
   return NextResponse.json({
     success: true,
