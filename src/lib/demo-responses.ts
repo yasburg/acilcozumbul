@@ -11,7 +11,7 @@ import {
 import { talepBolge, talepSorunOzet } from "./talep-utils";
 import { teklifleriSirala } from "./teklif-siralama";
 import { demoRakipCekiciId } from "./demo-fixtures";
-import { musteriGosterimSureDk } from "./sorun-tipleri";
+import { musteriTeklifSureKirilim, sorunHedefKonumGerekliMi } from "./sorun-tipleri";
 import { cekiciToplamKredi } from "./kredi-bakiye";
 import type { Cekici, Talep } from "./types";
 
@@ -162,9 +162,17 @@ const DEMO_PUAN = {
 
 export function demoMusteriTekliflerJson(talep: Talep) {
   const aktif = aktifTeklifler(talep);
+  const hedefGerekli = sorunHedefKonumGerekliMi(talep.sorunTipi);
+  const hedefBilinmiyor = Boolean(talep.hedefBilinmiyor);
   const tekliflerHam = aktif.map((t) => {
     const fiyatDegisti = false;
     const rakip = t.cekiciId === demoRakipCekiciId();
+    const sureler = musteriTeklifSureKirilim({
+      tahminiSureDk: t.tahminiSureDk,
+      hedefGerekli,
+      hedefBilinmiyor,
+      cekmeSureDk: null,
+    });
     return {
       id: t.id,
       cekiciAd:
@@ -176,10 +184,12 @@ export function demoMusteriTekliflerJson(talep: Talep) {
       ilkFiyat: t.ilkFiyat ?? t.fiyat,
       fiyatDegisti,
       secilebilir: !fiyatDegisti,
-      tahminiSureDk: musteriGosterimSureDk(
-        t.tahminiSureDk,
-        talep.hedefBilinmiyor
-      ),
+      gelisSureDk: sureler.gelisDk,
+      cekmeSureDk: sureler.cekmeDk,
+      tahminiSureDk:
+        sureler.cekmeDk != null
+          ? sureler.gelisDk + sureler.cekmeDk
+          : sureler.gelisDk,
       mesaj: t.mesaj,
       tarih: t.tarih,
       onayliCekici: rakip ? false : DEMO_PUAN.onayliCekici,
@@ -200,7 +210,7 @@ export function demoMusteriTekliflerJson(talep: Talep) {
     kazananSecildi: !!talep.kazananCekiciId,
     durum: talep.durum,
     hedefKonum: talep.hedefKonum,
-    hedefBilinmiyor: Boolean(talep.hedefBilinmiyor),
+    hedefBilinmiyor,
     demoModu: true,
   };
 }

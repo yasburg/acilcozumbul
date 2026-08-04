@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!f || !f.aktif) return { title: "Kayıt" };
   return {
     title: f.baslik.slice(0, 60),
-    robots: { index: true, follow: true },
+    robots: { index: false, follow: false },
   };
 }
 

@@ -108,6 +108,39 @@ export function sorunHedefKonumGerekliMi(sorunTipi?: string): boolean {
 /** Hedef «bilmiyorum» seçilince müşteriye gösterilen sürelere eklenen dk */
 export const HEDEF_BILINMIYOR_EK_SURE_DK = 30;
 
+/**
+ * Müşteri teklif kartı: yanına varış vs çekilecek yere gidiş.
+ * Çekici tek `tahminiSureDk` girer; rota paneli çoğu zaman toplamı yazar.
+ * Hedef süresi biliniyorsa ve tahmini > çekme ise tahmini toplam kabul edilir.
+ */
+export function musteriTeklifSureKirilim(opts: {
+  tahminiSureDk: number;
+  hedefGerekli: boolean;
+  hedefBilinmiyor?: boolean;
+  /** Müşteri → hedef sürüş dk (hesaplandıysa) */
+  cekmeSureDk?: number | null;
+}): { gelisDk: number; cekmeDk: number | null } {
+  const tahmini = Math.max(1, Math.round(opts.tahminiSureDk) || 1);
+  if (!opts.hedefGerekli) {
+    return { gelisDk: tahmini, cekmeDk: null };
+  }
+  if (opts.hedefBilinmiyor) {
+    return { gelisDk: tahmini, cekmeDk: HEDEF_BILINMIYOR_EK_SURE_DK };
+  }
+  const cekme =
+    opts.cekmeSureDk != null && opts.cekmeSureDk > 0
+      ? Math.max(1, Math.round(opts.cekmeSureDk))
+      : null;
+  if (cekme == null) {
+    return { gelisDk: tahmini, cekmeDk: null };
+  }
+  if (tahmini > cekme) {
+    return { gelisDk: tahmini - cekme, cekmeDk: cekme };
+  }
+  return { gelisDk: tahmini, cekmeDk: cekme };
+}
+
+/** @deprecated Tercihen musteriTeklifSureKirilim — tek sayıya birleşik süre */
 export function musteriGosterimSureDk(
   tahminiSureDk: number,
   hedefBilinmiyor?: boolean

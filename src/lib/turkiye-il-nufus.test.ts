@@ -3,6 +3,8 @@ import {
   sehirYolYardimTalepMetni,
   sehirYolYardimTalepTahmini,
   sehirdeYazi,
+  enBuyukIller,
+  illerSecimSirasi,
 } from "./turkiye-il-nufus";
 
 describe("turkiye-il-nufus", () => {
@@ -22,5 +24,37 @@ describe("turkiye-il-nufus", () => {
     const m = sehirYolYardimTalepMetni("İstanbul");
     expect(m).toMatch(/^İstanbul’da günde yaklaşık /);
     expect(m).toMatch(/yol yardım talebi oluyor\.$/);
+  });
+
+  it("en büyük 5 il nüfus sırası", () => {
+    expect(enBuyukIller(5)).toEqual([
+      "İstanbul",
+      "Ankara",
+      "İzmir",
+      "Bursa",
+      "Antalya",
+    ]);
+  });
+
+  it("seçim listesinde büyük iller üstte, kalanlar alfabetik", () => {
+    expect(
+      illerSecimSirasi([
+        "Zonguldak",
+        "Adana",
+        "İzmir",
+        "Ankara",
+        "Bursa",
+        "Antalya",
+        "İstanbul",
+      ])
+    ).toEqual([
+      "İstanbul",
+      "Ankara",
+      "İzmir",
+      "Bursa",
+      "Antalya",
+      "Adana",
+      "Zonguldak",
+    ]);
   });
 });

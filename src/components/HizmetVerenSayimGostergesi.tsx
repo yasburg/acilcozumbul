@@ -7,6 +7,7 @@ import {
   type HizmetVerenSayimOzet,
 } from "@/lib/hizmet-veren-sayim";
 import { gecerliSorunTipi } from "@/lib/sorun-tipleri";
+import { sehirdeYazi } from "@/lib/turkiye-il-nufus";
 
 function useAnimatedNumber(hedef: number, sureMs = 450): number {
   const [gorunen, setGorunen] = useState(hedef);
@@ -47,6 +48,8 @@ interface HizmetVerenSayimGostergesiProps {
   yukleniyor?: boolean;
   /** Seçili hizmet tipi — yoksa tüm platform özeti */
   sorunTipi?: string | null;
+  /** Seçili şehir — yoksa şehir öneki gösterilmez */
+  sehirAd?: string | null;
   /** Header / ince bant */
   compact?: boolean;
 }
@@ -55,6 +58,7 @@ export function HizmetVerenSayimGostergesi({
   ozet,
   yukleniyor,
   sorunTipi,
+  sehirAd,
   compact = false,
 }: HizmetVerenSayimGostergesiProps) {
   const hizmetSecili =
@@ -64,12 +68,13 @@ export function HizmetVerenSayimGostergesi({
       ? hizmetVerenSatirBul(ozet, hizmetSecili)
       : undefined;
 
-  /** Kayıtlı (aktif hesap) — gerçek zamanlı «online» iddiası yok */
-  const kayitli = hizmetSecili
+  const aktif = hizmetSecili
     ? (satir?.aktif ?? 0)
     : (ozet?.benzersizAktif ?? 0);
-  const animSayi = useAnimatedNumber(kayitli);
+  const animSayi = useAnimatedNumber(aktif);
   const meslek = hizmetSecili ? hizmetVerenEtiket(hizmetSecili) : null;
+  const birim = meslek ?? "firma";
+  const sehirOnEk = sehirAd?.trim() ? `${sehirdeYazi(sehirAd.trim())} ` : "";
 
   if (yukleniyor && !ozet) {
     return (
@@ -79,12 +84,12 @@ export function HizmetVerenSayimGostergesi({
           compact ? "text-[11px] leading-tight py-0" : "text-xs py-0.5",
         ].join(" ")}
       >
-        Hizmet verenler yükleniyor…
+        Firmalar yükleniyor…
       </p>
     );
   }
 
-  if (kayitli === 0) {
+  if (aktif === 0) {
     return (
       <p
         className={[
@@ -92,14 +97,12 @@ export function HizmetVerenSayimGostergesi({
           compact ? "text-[11px] leading-tight py-0" : "text-xs py-0.5",
         ].join(" ")}
       >
-        Kayıtlı hizmet veren yok
+        Aktif firma yok
       </p>
     );
   }
 
-  const metin = meslek
-    ? `İstanbul’da ${animSayi} kayıtlı ${meslek}`
-    : `İstanbul’da ${animSayi} kayıtlı hizmet veren`;
+  const metin = `${sehirOnEk}${animSayi} aktif ${birim}`;
 
   return (
     <div
@@ -119,11 +122,11 @@ export function HizmetVerenSayimGostergesi({
           compact ? "text-[11px]" : "text-xs",
         ].join(" ")}
       >
-        İstanbul’da{" "}
+        {sehirOnEk}
         <span className="font-bold tabular-nums text-emerald-700">
           {animSayi}
         </span>{" "}
-        kayıtlı {meslek ?? "hizmet veren"}
+        aktif {birim}
       </p>
       <span className="sr-only">{metin}</span>
     </div>

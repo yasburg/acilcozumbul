@@ -197,7 +197,7 @@ function GirisIcerik() {
   }
 
   return (
-    <MobileShell subtitle="Üye girişi">
+    <MobileShell subtitle="Firma girişi">
       {searchParams.get("mesaj") === "hesap-silindi" && (
         <Card className="border-emerald-200 bg-emerald-50 mb-4">
           <p className="text-emerald-800 text-sm">
@@ -287,16 +287,6 @@ function GirisIcerik() {
           onChange={(e) => setTelefon(e.target.value)}
         />
 
-        <label className="flex items-center gap-2.5 text-sm text-slate-700 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            className="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
-            checked={beniAnimsa}
-            onChange={(e) => setBeniAnimsa(e.target.checked)}
-          />
-          <span>Beni bu cihazda anımsa</span>
-        </label>
-
         {!otpMod ? (
           <>
             <SifreAlani
@@ -305,10 +295,19 @@ function GirisIcerik() {
               value={sifre}
               onChange={(e) => setSifre(e.target.value)}
             />
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between gap-3">
+              <label className="flex min-w-0 items-center gap-2.5 text-sm text-slate-700 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 shrink-0 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                  checked={beniAnimsa}
+                  onChange={(e) => setBeniAnimsa(e.target.checked)}
+                />
+                <span>Beni bu cihazda anımsa</span>
+              </label>
               <Link
                 href="/cekici/sifremi-unuttum"
-                className="text-sm text-amber-600 font-medium"
+                className="shrink-0 text-sm text-amber-600 font-medium"
               >
                 Şifremi unuttum
               </Link>
@@ -318,14 +317,34 @@ function GirisIcerik() {
             </Btn>
           </>
         ) : !otpAsama ? (
-          <Btn
-            onClick={() => void otpKodGonder()}
-            disabled={loading || telefon.trim().length < 10}
-          >
-            {loading ? "Gönderiliyor…" : "SMS kodu gönder"}
-          </Btn>
+          <>
+            <label className="flex items-center gap-2.5 text-sm text-slate-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                checked={beniAnimsa}
+                onChange={(e) => setBeniAnimsa(e.target.checked)}
+              />
+              <span>Beni bu cihazda anımsa</span>
+            </label>
+            <Btn
+              onClick={() => void otpKodGonder()}
+              disabled={loading || telefon.trim().length < 10}
+            >
+              {loading ? "Gönderiliyor…" : "SMS kodu gönder"}
+            </Btn>
+          </>
         ) : (
           <>
+            <label className="flex items-center gap-2.5 text-sm text-slate-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                checked={beniAnimsa}
+                onChange={(e) => setBeniAnimsa(e.target.checked)}
+              />
+              <span>Beni bu cihazda anımsa</span>
+            </label>
             <Field
               label="SMS kodu"
               inputMode="numeric"

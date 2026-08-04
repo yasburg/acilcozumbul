@@ -40,7 +40,10 @@ interface TeklifOzet {
   fiyatDegisti: boolean;
   secilebilir: boolean;
   tahminiSureDk: number;
+  gelisSureDk?: number;
+  cekmeSureDk?: number | null;
   mesaj?: string;
+  tarih?: string;
   tercihPuani: number | null;
   tercihYuzde: number | null;
   hizmetPuani: number | null;
@@ -49,6 +52,20 @@ interface TeklifOzet {
   fiyatGarantiYuzde: number;
   onayliCekici?: boolean;
   profilFotoUrl?: string | null;
+}
+
+/** Teklifin ne kadar önce geldiği (küçük etiket) */
+function teklifNeKadarOnce(tarih: string | undefined, simdiMs: number): string | null {
+  if (!tarih) return null;
+  const t = new Date(tarih).getTime();
+  if (Number.isNaN(t)) return null;
+  const sn = Math.max(0, Math.floor((simdiMs - t) / 1000));
+  if (sn < 45) return "Az önce";
+  const dk = Math.floor(sn / 60);
+  if (dk < 60) return `${dk} dk önce`;
+  const sa = Math.floor(dk / 60);
+  if (sa < 24) return `${sa} sa önce`;
+  return `${Math.floor(sa / 24)} g önce`;
 }
 
 const demoHeaderBadge = <DemoHeaderBadge />;
@@ -87,6 +104,7 @@ function BekleIcerik() {
   const [headerYukseklik, setHeaderYukseklik] = useState(78);
   const [durum, setDurum] = useState<Durum>("ihale_bekliyor");
   const [teklifler, setTeklifler] = useState<TeklifOzet[]>([]);
+  const [simdiMs, setSimdiMs] = useState(() => Date.now());
   const [cekiciAd, setCekiciAd] = useState<string | null>(null);
   const [cekiciProfilFotoUrl, setCekiciProfilFotoUrl] = useState<string | null>(
     null
@@ -134,6 +152,12 @@ function BekleIcerik() {
     const t = setTimeout(() => setTeklifBanner(null), 8000);
     return () => clearTimeout(t);
   }, [teklifBanner]);
+
+  useEffect(() => {
+    if (teklifler.length === 0) return;
+    const t = setInterval(() => setSimdiMs(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, [teklifler.length]);
 
   useEffect(() => {
     if (!demoParam) {
@@ -702,7 +726,11 @@ function BekleIcerik() {
           )}
 
           <div className="space-y-3">
-            {teklifleriSirala(teklifler).map((t) => (
+            {teklifleriSirala(teklifler).map((t) => {
+              const geldiOnce = teklifNeKadarOnce(t.tarih, simdiMs);
+              const gelisDk = t.gelisSureDk ?? t.tahminiSureDk;
+              const cekmeDk = t.cekmeSureDk ?? null;
+              return (
                 <Card
                   key={t.id}
                   className={`border-slate-200 overflow-hidden ${
@@ -760,10 +788,28 @@ function BekleIcerik() {
                           ⚠️ İlk teklif {t.ilkFiyat} TL idi — fiyat değiştirildi
                         </p>
                       )}
-                      <p className="text-xs text-slate-500 mt-1">
-                        Tahmini ~{t.tahminiSureDk} dk
-                        {hedefBilinmiyor ? " (hedef +30 dk dahil)" : ""}
-                      </p>
+                      <div className="mt-1 space-y-0.5 text-xs text-slate-500">
+                        <p>
+                          Yanınıza ~{gelisDk} dk
+                          {geldiOnce ? (
+                            <span className="text-slate-400">
+                              {" "}
+                              · {geldiOnce}
+                            </span>
+                          ) : null}
+                        </p>
+                        {cekmeDk != null ? (
+                          <p>
+                            Çekilecek yere ~{cekmeDk} dk
+                            {hedefBilinmiyor ? (
+                              <span className="text-slate-400">
+                                {" "}
+                                · hedef belirsiz
+                              </span>
+                            ) : null}
+                          </p>
+                        ) : null}
+                      </div>
                       {t.mesaj?.trim() && (
                         <p className="text-sm text-slate-600 mt-2 leading-relaxed">
                           {t.mesaj}
@@ -787,7 +833,8 @@ function BekleIcerik() {
                     )}
                   </div>
                 </Card>
-              ))}
+              );
+            })}
           </div>
 
           <Card>

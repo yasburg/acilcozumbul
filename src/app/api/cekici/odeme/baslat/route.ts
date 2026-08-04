@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAktifAbonelik } from "@/lib/abonelik-db";
 import { getCurrentCekici } from "@/lib/auth";
-import { cekiciEpostaDogrulandiMi } from "@/lib/cekici-email-otp";
-import { epostaNormalize } from "@/lib/eposta";
+import { epostaGecerliMi, epostaNormalize } from "@/lib/eposta";
 import { garantiYapilandirildi } from "@/lib/garanti/config";
 import {
   krediPaketBul,
@@ -27,9 +26,14 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const paketTl = Number(body.paketTl ?? body.miktar);
   const kaynak = kaynakOku(body.kaynak);
-  const eposta = epostaNormalize(
-    String(body.eposta ?? cekici.faturaEposta ?? "")
-  );
+  const epostaHam = String(body.eposta ?? cekici.faturaEposta ?? "").trim();
+  if (epostaHam && !epostaGecerliMi(epostaHam)) {
+    return NextResponse.json(
+      { error: "Geçerli bir fatura e-postası girin." },
+      { status: 400 }
+    );
+  }
+  const eposta = epostaHam ? epostaNormalize(epostaHam) : "";
 
   if (!kaynak) {
     return NextResponse.json(
@@ -56,13 +60,6 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
-  }
-
-  if (!(await cekiciEpostaDogrulandiMi(cekici.id, eposta))) {
-    return NextResponse.json(
-      { error: "Ödeme için e-posta adresinizi doğrulayın." },
-      { status: 403 }
-    );
   }
 
   const odeme = await olusturBekleyenOdeme(cekici.id, paketTl, eposta, kaynak);

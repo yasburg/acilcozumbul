@@ -6,7 +6,12 @@ import { ensureSeedData } from "@/lib/seed";
 import { aktifTeklifler, ihaleAcikMi } from "@/lib/ihale";
 import { demoTalepGetir, isDemoTalepId } from "@/lib/demo-oturum";
 import { demoMusteriTekliflerJson } from "@/lib/demo-responses";
-import { musteriGosterimSureDk } from "@/lib/sorun-tipleri";
+import {
+  musteriTeklifSureKirilim,
+  sorunHedefKonumGerekliMi,
+} from "@/lib/sorun-tipleri";
+import { koordinatGecerli } from "@/lib/koordinat";
+import { surusSuresiDk } from "@/lib/google-maps";
 
 export async function GET(
   request: NextRequest,
@@ -32,6 +37,23 @@ export async function GET(
     return NextResponse.json({ error: "Talep bulunamadı." }, { status: 404 });
   }
 
+  const hedefGerekli = sorunHedefKonumGerekliMi(talep.sorunTipi);
+  const hedefBilinmiyor = Boolean(talep.hedefBilinmiyor);
+  let cekmeHesapDk: number | null = null;
+  if (
+    hedefGerekli &&
+    !hedefBilinmiyor &&
+    talep.hedefKonum &&
+    koordinatGecerli(talep.hedefKonum) &&
+    koordinatGecerli(talep.konum)
+  ) {
+    const sure = await surusSuresiDk(
+      { lat: talep.konum.lat, lng: talep.konum.lng },
+      { lat: talep.hedefKonum.lat, lng: talep.hedefKonum.lng }
+    );
+    if (sure.dk != null) cekmeHesapDk = sure.dk;
+  }
+
   const aktif = aktifTeklifler(talep);
   const puanMap = await cekiciPuanOzetleri(aktif.map((t) => t.cekiciId));
   const cekiciCache = new Map<
@@ -54,6 +76,12 @@ export async function GET(
         } as const);
       const fiyatDegisti = teklifFiyatDegistiMi(t);
       const ilkFiyat = t.ilkFiyat ?? t.fiyat;
+      const sureler = musteriTeklifSureKirilim({
+        tahminiSureDk: t.tahminiSureDk,
+        hedefGerekli,
+        hedefBilinmiyor,
+        cekmeSureDk: cekmeHesapDk,
+      });
 
       let meta = cekiciCache.get(t.cekiciId);
       if (!meta) {
@@ -79,10 +107,12 @@ export async function GET(
         ilkFiyat,
         fiyatDegisti,
         secilebilir: !fiyatDegisti,
-        tahminiSureDk: musteriGosterimSureDk(
-          t.tahminiSureDk,
-          talep.hedefBilinmiyor
-        ),
+        gelisSureDk: sureler.gelisDk,
+        cekmeSureDk: sureler.cekmeDk,
+        tahminiSureDk:
+          sureler.cekmeDk != null
+            ? sureler.gelisDk + sureler.cekmeDk
+            : sureler.gelisDk,
         mesaj: t.mesaj,
         tarih: t.tarih,
         onayliCekici: meta.onayliCekici,
@@ -107,6 +137,6 @@ export async function GET(
     kazananSecildi: !!talep.kazananCekiciId,
     durum: talep.durum,
     hedefKonum: talep.hedefKonum,
-    hedefBilinmiyor: Boolean(talep.hedefBilinmiyor),
+    hedefBilinmiyor,
   });
 }

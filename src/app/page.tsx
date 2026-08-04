@@ -5,18 +5,24 @@ import {
   faqJsonLd,
   organizationJsonLd,
   sayfaMetadata,
-  SEO_ACIKLAMA,
-  SEO_BASLIK,
   serviceJsonLd,
   webSiteJsonLd,
 } from "@/lib/seo";
+import {
+  ANA_SAYFA_HERO,
+  anaSayfaSeoIcerik,
+  anaSayfaSehirBaglantilari,
+} from "@/lib/seo-icerik";
 
 /** Anonim HTML cache’lenebilir; oturum yönlendirmesi client’ta */
 export const dynamic = "force-static";
 
+const anaSayfaIcerik = anaSayfaSeoIcerik();
+const sehirBaglantilari = anaSayfaSehirBaglantilari();
+
 export const metadata = sayfaMetadata({
-  title: SEO_BASLIK,
-  description: SEO_ACIKLAMA,
+  title: ANA_SAYFA_HERO,
+  description: anaSayfaIcerik.description,
   path: "/",
   absoluteTitle: true,
 });
@@ -29,11 +35,17 @@ export default function HomePage() {
           organizationJsonLd(),
           webSiteJsonLd(),
           serviceJsonLd(),
-          faqJsonLd(),
+          faqJsonLd(anaSayfaIcerik.faq),
         ]}
       />
       <CekiciOturumYonlendir />
-      <MusteriAnaSayfa />
+      <MusteriAnaSayfa
+        funnelId="a"
+        seoIcerik={anaSayfaIcerik}
+        seoHeroBaslik={ANA_SAYFA_HERO}
+        seoBaglantilar={sehirBaglantilari}
+        seoBolgeLinkleri={sehirBaglantilari}
+      />
     </>
   );
 }

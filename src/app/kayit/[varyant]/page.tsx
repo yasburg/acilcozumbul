@@ -10,10 +10,12 @@ type Props = { params: Promise<{ varyant: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { varyant } = await params;
   const f = kayitFunnelGetir(String(varyant ?? "").toLowerCase());
-  if (!f || !f.aktif) return { title: "Kayıt" };
+  if (!f || !f.aktif) {
+    return { title: "Kayıt", robots: { index: false, follow: false } };
+  }
   return {
     title: f.tip === "kontrol" ? "Hizmet veren kaydı" : f.baslik.slice(0, 60),
-    robots: { index: true, follow: true },
+    robots: { index: false, follow: false },
   };
 }
 

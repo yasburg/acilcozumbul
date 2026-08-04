@@ -32,7 +32,7 @@ export async function olusturBekleyenOdeme(
     odemeTipi: kaynak === "abonelik" ? "abonelik" : "kredi",
     olusturulma: new Date().toISOString(),
     durum: "bekliyor",
-    faturaEposta: faturaEposta.toLowerCase(),
+    faturaEposta: faturaEposta ? faturaEposta.toLowerCase() : undefined,
   };
   const { error } = await getSupabaseAdmin()
     .from("odeme_bekleyen")
@@ -54,7 +54,7 @@ export async function olusturBekleyenRozetOdeme(
     odemeTipi: "rozet",
     olusturulma: new Date().toISOString(),
     durum: "bekliyor",
-    faturaEposta: faturaEposta.toLowerCase(),
+    faturaEposta: faturaEposta ? faturaEposta.toLowerCase() : undefined,
   };
   const { error } = await getSupabaseAdmin()
     .from("odeme_bekleyen")
@@ -78,7 +78,7 @@ export async function guncelleBekleyenOdemeFatura(
   const { error } = await getSupabaseAdmin()
     .from("odeme_bekleyen")
     .update({
-      fatura_eposta: guncel.faturaEposta,
+      fatura_eposta: guncel.faturaEposta ?? null,
       fatura_adres: guncel.faturaAdres ?? null,
       fatura_tc_kimlik: guncel.faturaTcKimlik ?? null,
       kurumsal: guncel.kurumsal ?? false,

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
-import { cekiciEpostaDogrulandiMi } from "@/lib/cekici-email-otp";
-import { epostaNormalize } from "@/lib/eposta";
+import { epostaGecerliMi, epostaNormalize } from "@/lib/eposta";
 import { garantiYapilandirildi } from "@/lib/garanti/config";
 import { olusturBekleyenRozetOdeme } from "@/lib/odeme";
 import {
@@ -38,14 +37,14 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const eposta = epostaNormalize(String(body.eposta ?? cekici.faturaEposta ?? ""));
-
-  if (!(await cekiciEpostaDogrulandiMi(cekici.id, eposta))) {
+  const epostaHam = String(body.eposta ?? cekici.faturaEposta ?? "").trim();
+  if (epostaHam && !epostaGecerliMi(epostaHam)) {
     return NextResponse.json(
-      { error: "Ödeme için fatura e-postanızı doğrulayın (kredi sayfasından)." },
-      { status: 403 }
+      { error: "Geçerli bir fatura e-postası girin." },
+      { status: 400 }
     );
   }
+  const eposta = epostaHam ? epostaNormalize(epostaHam) : "";
 
   const odeme = await olusturBekleyenRozetOdeme(cekici.id, eposta);
 

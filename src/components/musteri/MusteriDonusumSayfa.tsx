@@ -50,9 +50,13 @@ import {
   posthogOlayYakala,
 } from "@/lib/posthog-client";
 import {
-  musteriFunnelKaydet,
   musteriFunnelOlay,
+  type MusteriFunnelId,
 } from "@/lib/musteri-funnel";
+import {
+  musteriFunnelOlayBirKez,
+  musteriFunnelOlayGonder,
+} from "@/lib/musteri-funnel-client";
 import { gtagAdsAnaSayfaGoruntulemeDonusumu, gtagAdsFiyatTeklifiDonusumu } from "@/lib/gtag";
 import { metaPixelLead } from "@/lib/meta-pixel";
 import {
@@ -154,18 +158,13 @@ type Step = "bilgi" | "sorun" | "hedef";
 const STEP_SIRA: Step[] = ["sorun", "hedef", "bilgi"];
 const OTP_BEKLEYEN_KEY = "acilcozum_otp_bekleyen";
 const ADIM_OLAYLARI: Partial<Record<Step, string>> = {
-  sorun: "adim_sorun",
-  bilgi: "adim_bilgi",
-  hedef: "adim_hedef",
+  bilgi: "form_adim_bilgi",
+  hedef: "form_adim_hedef",
 };
 
-function funnelKaydet(
-  olay: string,
-  telefon?: string,
-  posthogProps?: Record<string, unknown>
-) {
-  musteriFunnelKaydet(olay, telefon, posthogProps);
-}
+type MusteriDonusumSayfaProps = {
+  funnelId?: MusteriFunnelId;
+};
 
 function sorunProps(sorunTipi: string): Record<string, unknown> {
   return sorunTipi ? { sorun_tipi: sorunTipi } : {};
@@ -184,7 +183,9 @@ function kayitliAdSoyadUygula(
   };
 }
 
-export default function MusteriDonusumSayfa() {
+export default function MusteriDonusumSayfa({
+  funnelId = "b",
+}: MusteriDonusumSayfaProps) {
   return (
     <Suspense
       fallback={
@@ -193,12 +194,16 @@ export default function MusteriDonusumSayfa() {
         </MobileShell>
       }
     >
-      <MusteriDonusumSayfaIcerik />
+      <MusteriDonusumSayfaIcerik funnelId={funnelId} />
     </Suspense>
   );
 }
 
-function MusteriDonusumSayfaIcerik() {
+function MusteriDonusumSayfaIcerik({
+  funnelId,
+}: {
+  funnelId: MusteriFunnelId;
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [step, setStep] = useState<Step>("sorun");
@@ -305,8 +310,10 @@ function MusteriDonusumSayfaIcerik() {
   useEffect(() => {
     setGpsGuvenli(konumGuvenliMi());
     posthogKampanyaKaydet();
-    funnelKaydet("form_basla");
-    musteriFunnelOlay("request_page_view");
+    musteriFunnelOlayBirKez(funnelId, "goruldu", {
+      props: { content_name: "musteri_donusum" },
+    });
+    musteriFunnelOlay("request_page_view", { funnel: funnelId });
     tiktokPixelViewContent({
       content_id: "musteri_talep",
       content_name: "musteri_ana_sayfa",
@@ -315,7 +322,7 @@ function MusteriDonusumSayfaIcerik() {
     const onCerez = () => gtagAdsAnaSayfaGoruntulemeDonusumu();
     window.addEventListener("acil-cerez-banner", onCerez);
     return () => window.removeEventListener("acil-cerez-banner", onCerez);
-  }, []);
+  }, [funnelId]);
 
   useEffect(() => {
     if (hizmetUygulandi.current) return;
@@ -334,8 +341,17 @@ function MusteriDonusumSayfaIcerik() {
     musteriFunnelOlay("service_selected", {
       sorun_tipi: tip,
       kaynak: searchParams.get("sorun") ? "sorun_query" : "hizmet_query",
+      funnel: funnelId,
     });
-  }, [searchParams]);
+    musteriFunnelOlayBirKez(funnelId, "service_selected", {
+      props: { sorun_tipi: tip },
+      analitik: false,
+    });
+    musteriFunnelOlayBirKez(funnelId, "form_adim_sorun", {
+      props: { sorun_tipi: tip },
+      analitik: false,
+    });
+  }, [searchParams, funnelId]);
 
   useEffect(() => {
     const tip = hizmetKaydirTip.current;
@@ -353,10 +369,12 @@ function MusteriDonusumSayfaIcerik() {
   useEffect(() => {
     const olay = ADIM_OLAYLARI[step];
     if (!olay) return;
-    posthogOlayYakala(olay, sorunProps(form.sorunTipi));
+    musteriFunnelOlayBirKez(funnelId, olay, {
+      props: sorunProps(form.sorunTipi),
+    });
     // yalnızca adım değişince; sorunTipi o anki değeri taşır
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
+  }, [step, funnelId]);
 
   /** Adım 2+ parçalarını sorun seçiminden sonra ısıt (foto / konum yardım) */
   useEffect(() => {
@@ -856,6 +874,11 @@ function MusteriDonusumSayfaIcerik() {
       if (data.smsGonderildi || data.gelistirmeKodu) {
         posthogOlayYakala("otp_gonder", sorunProps(form.sorunTipi));
         musteriFunnelOlay("otp_sent", sorunProps(form.sorunTipi));
+        void musteriFunnelOlayGonder(funnelId, "otp_gonder", {
+          telefon: form.telefon,
+          props: sorunProps(form.sorunTipi),
+          analitik: false,
+        });
       }
 
       if (!data.smsGonderildi && !data.gelistirmeKodu) {
@@ -924,6 +947,11 @@ function MusteriDonusumSayfaIcerik() {
       }));
       posthogOlayYakala("otp_dogrulandi", sorunProps(form.sorunTipi));
       musteriFunnelOlay("otp_verified", sorunProps(form.sorunTipi));
+      void musteriFunnelOlayGonder(funnelId, "otp_dogrulandi", {
+        telefon: form.telefon,
+        props: sorunProps(form.sorunTipi),
+        analitik: false,
+      });
       try {
         sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
       } catch {
@@ -1697,13 +1725,14 @@ function MusteriDonusumSayfaIcerik() {
         sorun_tipi: form.sorunTipi,
         bildirilen_sayisi: data.bildirilenSayisi ?? 0,
       });
-      gtagAdsFiyatTeklifiDonusumu({
-        transactionId: typeof data.id === "string" ? data.id : String(data.id ?? ""),
-        user: {
-          phone: form.telefon,
-          firstName: form.ad,
-          lastName: form.soyad,
+      void musteriFunnelOlayGonder(funnelId, "talep_olustur", {
+        telefon: form.telefon,
+        talepId: typeof data.id === "string" ? data.id : String(data.id ?? ""),
+        props: {
+          sorun_tipi: form.sorunTipi,
+          bildirilen_sayisi: data.bildirilenSayisi ?? 0,
         },
+        analitik: false,
       });
       /* Meta + TikTok Lead: bekle sayfasına gitmeden önce + bir kez (bekle yedek) */
       try {
@@ -1745,8 +1774,17 @@ function MusteriDonusumSayfaIcerik() {
           phone: form.telefon,
         });
       }
-      /* Tam sayfa: Pixel Helper / PageView için soft navigate kullanma */
-      window.location.assign(`/bekle/${data.id}`);
+      /* Google Ads «Tıklama» snippet: conversion → event_callback → /bekle */
+      gtagAdsFiyatTeklifiDonusumu({
+        transactionId:
+          typeof data.id === "string" ? data.id : String(data.id ?? ""),
+        user: {
+          phone: form.telefon,
+          firstName: form.ad,
+          lastName: form.soyad,
+        },
+        url: `/bekle/${data.id}`,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Talep gönderilemedi.");
     } finally {
@@ -1956,6 +1994,14 @@ function MusteriDonusumSayfaIcerik() {
               update("sorunTipi", id);
               posthogOlayYakala("sorun_secildi", { sorun_tipi: id });
               musteriFunnelOlay("service_selected", { sorun_tipi: id });
+              musteriFunnelOlayBirKez(funnelId, "service_selected", {
+                props: { sorun_tipi: id },
+                analitik: false,
+              });
+              musteriFunnelOlayBirKez(funnelId, "form_adim_sorun", {
+                props: { sorun_tipi: id },
+                analitik: false,
+              });
               const label = sorunTipiBul(id)?.label ?? id;
               tiktokPixelSearch({
                 search_string: label,

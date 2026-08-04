@@ -7,11 +7,10 @@
 ## Ana sayfalar
 
 - [Ana sayfa — müşteri talep](https://www.acilcozumbul.com/): Yolda kalan sürücü sorun tipini seçer, telefon doğrular, konum paylaşır ve yakındaki tekliflerden birini seçer.
-- [Hizmet veren kaydı](https://www.acilcozumbul.com/cekici/kayit): Çekici, lastikçi veya anahtarcı ücretsiz kayıt olur ve bölge taleplerine teklif verir.
-- [Hizmet veren kaydı (SMS A)](https://www.acilcozumbul.com/kayit/a): Alternatif kayıt hunisi.
-- [Hizmet veren kaydı (SMS B)](https://www.acilcozumbul.com/kayit/b): Alternatif kayıt hunisi.
-- [Hizmet veren girişi](https://www.acilcozumbul.com/cekici/giris): Onaylı hizmet veren paneline giriş.
-- [Sitemap](https://www.acilcozumbul.com/sitemap.xml): Genel erişime açık sayfaların XML listesi.
+- [İstanbul yol yardım](https://www.acilcozumbul.com/istanbul): İstanbul şehir hub; hizmet ve ilçe sayfalarına bağlantılar.
+- [İstanbul çekici](https://www.acilcozumbul.com/istanbul/cekici): İstanbul geneli çekici teklifi.
+- [Hizmet veren ol](https://www.acilcozumbul.com/hizmet-veren): Çekici, lastikçi veya anahtarcı kayıt bilgisi (SEO). Kayıt formu ayrıdır.
+- [Sitemap](https://www.acilcozumbul.com/sitemap.xml): İndekslenebilir sayfaların XML listesi.
 
 ## Yasal
 
@@ -21,8 +20,6 @@
 - [İptal ve İade](https://www.acilcozumbul.com/iptal-ve-iade): İptal ve iade koşulları.
 - [Mesafeli Hizmet Sözleşmesi](https://www.acilcozumbul.com/mesafeli-hizmet-sozlesmesi): Mesafeli satış / hizmet sözleşmesi.
 
-## Optional
+## Not
 
-- [Hizmet veren kaydı (varyant C)](https://www.acilcozumbul.com/kayit/c): Alternatif kayıt hunisi.
-- [Hizmet veren kaydı (varyant D)](https://www.acilcozumbul.com/kayit/d): Alternatif kayıt hunisi.
-- [Şifremi unuttum](https://www.acilcozumbul.com/cekici/sifremi-unuttum): Hizmet veren şifre sıfırlama.
+A/B funnel (`/a`, `/b`, `/kayit/*`, `/sms50*`) ve işlem sayfaları (`/talep-olustur`, `/bekle/*`, paneller) indekslenmez. Hizmet veren kimliği, plaka veya müşteri konumu public SEO sayfalarında yayınlanmaz.

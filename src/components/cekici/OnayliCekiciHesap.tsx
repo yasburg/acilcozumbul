@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Btn, Card } from "@/components/ui";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
@@ -264,10 +263,7 @@ export function OnayliCekiciHesap() {
               {odemeBaslatiyor ? "Yönlendiriliyor…" : "Rozeti satın al"}
             </Btn>
             <p className="text-xs text-slate-500">
-              Fatura e-postanız kredi ödemesinde doğrulanmış olmalıdır.{" "}
-              <Link href="/cekici/kredi" className="text-amber-700 underline">
-                Kredi / e-posta doğrulama
-              </Link>
+              Ödeme adımında fatura bilgilerinizi girebilirsiniz.
             </p>
           </>
         )}

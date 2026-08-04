@@ -163,7 +163,7 @@ export interface Cekici {
 }
 
 export type OdemeFatura = {
-  faturaEposta: string;
+  faturaEposta?: string;
   faturaAdres?: string;
   faturaTcKimlik?: string;
   kurumsal: boolean;
@@ -261,7 +261,7 @@ export interface KrediOdeme {
   tutar: number;
   listeFiyati?: number;
   paketTl: number;
-  faturaEposta: string;
+  faturaEposta?: string;
   faturaAdres?: string;
   faturaTcKimlik?: string;
   kurumsal: boolean;

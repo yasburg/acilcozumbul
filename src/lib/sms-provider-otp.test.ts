@@ -1,7 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { OTP_SMS_MAX_LEN, otpMesajAscii } from "./sms-provider";
+import {
+  OTP_SMS_MAX_LEN,
+  fetchHataMesaji,
+  otpMesajAscii,
+} from "./sms-provider";
 import { cekiciTalepSmsMetni } from "./sms";
 import { cekiciFixture, talepFixture } from "@/test/fixtures";
+
+describe("fetchHataMesaji", () => {
+  it("cause.code ve cause.message ekler", () => {
+    const cause = Object.assign(new Error("Connect Timeout Error"), {
+      code: "UND_ERR_CONNECT_TIMEOUT",
+    });
+    const err = new Error("fetch failed", { cause });
+    expect(fetchHataMesaji(err)).toBe(
+      "fetch failed: UND_ERR_CONNECT_TIMEOUT Connect Timeout Error"
+    );
+  });
+
+  it("cause yoksa yalnızca message döner", () => {
+    expect(fetchHataMesaji(new Error("fetch failed"))).toBe("fetch failed");
+  });
+
+  it("Error olmayan değerleri stringler", () => {
+    expect(fetchHataMesaji("kopuk")).toBe("kopuk");
+  });
+});
 
 describe("otpMesajAscii", () => {
   it("Türkçe karakterleri ASCII yapar", () => {

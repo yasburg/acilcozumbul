@@ -5,7 +5,7 @@ export function faturaAlanlariniDogrula(
   f: Partial<OdemeFatura> & { faturaEposta?: string }
 ): { ok: true; data: OdemeFatura } | { ok: false; hata: string } {
   const eposta = (f.faturaEposta ?? "").trim();
-  if (!epostaGecerliMi(eposta)) {
+  if (eposta && !epostaGecerliMi(eposta)) {
     return { ok: false, hata: "Geçerli bir fatura e-postası girin." };
   }
 
@@ -32,7 +32,7 @@ export function faturaAlanlariniDogrula(
   return {
     ok: true,
     data: {
-      faturaEposta: eposta.toLowerCase(),
+      faturaEposta: eposta ? eposta.toLowerCase() : undefined,
       faturaAdres: f.faturaAdres?.trim() || undefined,
       faturaTcKimlik: tc || undefined,
       kurumsal,

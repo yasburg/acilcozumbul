@@ -107,7 +107,11 @@ export default function PanelLinkHaritasiPage() {
         <p className="text-sm text-slate-500 mt-1">
           Kısa SMS linklerinin (`/sms50a` … `/sms50z`) hangi kayıt sayfasına
           gittiği ve kampanya kodunun nasıl eklendiği. Hedef kayıt sütunundan
-          değiştirebilirsiniz.
+          değiştirebilirsiniz.{" "}
+          <span className="text-amber-800">
+            SMS50 ve kayıt hedefleri noindex’tir (kampanya/test); indekslenen HV
+            sayfası /hizmet-veren.
+          </span>
         </p>
       </div>
 

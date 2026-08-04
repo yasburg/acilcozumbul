@@ -14,6 +14,7 @@ export type MusteriFormAlanlari = {
   hedefAdres: string;
   sorunTipi: string;
   sorunDetay: string;
+  aracTipi: string;
   aracModeli: string;
 };
 
@@ -86,6 +87,7 @@ function formDogrula(raw: unknown): MusteriFormAlanlari | null {
     hedefAdres: metin(f.hedefAdres),
     sorunTipi: metin(f.sorunTipi),
     sorunDetay: metin(f.sorunDetay),
+    aracTipi: metin(f.aracTipi),
     aracModeli: metin(f.aracModeli),
   };
 }

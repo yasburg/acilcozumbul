@@ -12,7 +12,10 @@ export const GA_MEASUREMENT_ID =
 export const GOOGLE_ADS_ID =
   process.env.NEXT_PUBLIC_GOOGLE_ADS_ID?.trim() || "AW-18328392362";
 
-/** «Fiyat teklifi isteyin ACB» — müşteri talep formu tamamlanınca */
+/**
+ * «Fiyat teklifi isteyin ACB» — müşteri «Ücretsiz teklif iste» başarılı olunca.
+ * Ads arayüzündeki Sayfa yükleme / Tıklama aynı send_to; biz Tıklama (event_callback) kullanırız.
+ */
 export const GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI =
   process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL?.trim() ||
   "AW-18328392362/Msc0CNjLnNMcEKql1KNE";
@@ -282,28 +285,60 @@ export function gtagAdsAnaSayfaGoruntulemeDonusumu(): void {
 
 /**
  * Müşteri talep formu başarıyla gönderildiğinde Google Ads dönüşümü.
+ * Google Ads «Tıklama» snippet’i (`gtag_report_conversion`) ile aynı olay:
+ * event_callback sonrası url’ye gider (sayfa yükleme snippet’i değil).
  * transaction_id: talep id — yenileme / geri dönüşte mükerrer sayımı önler.
  * Enhanced conversions: telefon / ad ile user_data.
- * gtag config hazır olana kadar bekler (lazy yükleme).
  */
 export function gtagAdsFiyatTeklifiDonusumu(opts: {
   transactionId: string;
   user?: GtagUserData;
+  /** Conversion sonrası yönlendirme (tıklama snippet’indeki url) */
+  url?: string;
 }): void {
   if (typeof window === "undefined") return;
-  if (!GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI) return;
-  if (!cerezAnalitikAktif()) return;
+
   const tx = opts.transactionId.trim();
-  if (!tx) return;
+  const url = opts.url?.trim();
+
+  const yonlendir = () => {
+    if (url) window.location.assign(url);
+  };
+
+  if (!GOOGLE_ADS_DONUSUM_FIYAT_TEKLIFI || !cerezAnalitikAktif() || !tx) {
+    yonlendir();
+    return;
+  }
+
   const key = `${GA_FIYAT_TEKLIFI_PREFIX}${tx}`;
   try {
-    if (sessionStorage.getItem(key) === "1") return;
+    if (sessionStorage.getItem(key) === "1") {
+      yonlendir();
+      return;
+    }
   } catch {
     /* private mode */
   }
+
+  let bitti = false;
+  const bitir = () => {
+    if (bitti) return;
+    bitti = true;
+    yonlendir();
+  };
+
+  /* gtag/adblocker gecikirse kullanıcı takılmasın */
+  const guvenlikMs = url ? 2000 : 0;
+  const guvenlikTimer =
+    guvenlikMs > 0 ? window.setTimeout(bitir, guvenlikMs) : 0;
+
   gtagHazirOlunca(() => {
     try {
-      if (sessionStorage.getItem(key) === "1") return;
+      if (sessionStorage.getItem(key) === "1") {
+        if (guvenlikTimer) window.clearTimeout(guvenlikTimer);
+        bitir();
+        return;
+      }
       sessionStorage.setItem(key, "1");
     } catch {
       /* ignore */
@@ -314,8 +349,35 @@ export function gtagAdsFiyatTeklifiDonusumu(opts: {
       value: 1.0,
       currency: "TRY",
       transaction_id: tx,
+      ...(url
+        ? {
+            event_callback: () => {
+              if (guvenlikTimer) window.clearTimeout(guvenlikTimer);
+              bitir();
+            },
+          }
+        : {}),
     });
+    if (!url) {
+      if (guvenlikTimer) window.clearTimeout(guvenlikTimer);
+    }
   });
+}
+
+/**
+ * Google Ads tıklama snippet’indeki `gtag_report_conversion` eşdeğeri.
+ * Başarılı talep sonrası son CTA akışından çağrılır; false döner (default nav engeli).
+ */
+export function gtagReportFiyatTeklifiConversion(
+  url: string | undefined,
+  opts: { transactionId: string; user?: GtagUserData }
+): boolean {
+  gtagAdsFiyatTeklifiDonusumu({
+    transactionId: opts.transactionId,
+    user: opts.user,
+    url,
+  });
+  return false;
 }
 
 /**

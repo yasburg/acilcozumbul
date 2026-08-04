@@ -22,6 +22,8 @@ interface MobileShellProps {
   onBrandClick?: () => void;
   /** Logo sağında küçük aksiyon (ör. Giriş) */
   headerEnd?: React.ReactNode;
+  /** Ana satırın altında tam genişlik (ör. progress bar) */
+  headerBottom?: React.ReactNode;
   /** İlk ekranda daha alçak header */
   headerCompact?: boolean;
   footer?: React.ReactNode;
@@ -40,6 +42,7 @@ export function MobileShell({
   headerCenter,
   onBrandClick,
   headerEnd,
+  headerBottom,
   headerCompact = false,
   footer,
 }: MobileShellProps) {
@@ -82,8 +85,8 @@ export function MobileShell({
       className={`w-auto shrink-0 object-contain ${
         brandAlign === "right"
           ? "h-[3.9rem] max-w-[min(280px,70vw)] object-right"
-          : headerCompact
-            ? "h-9 max-w-[min(160px,48vw)] object-left"
+          : headerCompact || headerEnd
+            ? "h-9 max-w-[min(140px,42vw)] object-left"
             : "h-12 max-w-[min(200px,55vw)] object-left"
       }`}
     />
@@ -112,54 +115,82 @@ export function MobileShell({
                 ) : null)}
             </div>
             {headerBadge}
+            {headerEnd ? (
+              <div className="relative z-10 shrink-0 flex items-center gap-2">
+                {headerEnd}
+              </div>
+            ) : null}
             <div className="shrink-0">{logo}</div>
           </div>
         ) : (
           <div
             className={[
-              "flex items-center max-w-lg mx-auto",
-              headerCompact ? "min-h-9" : "min-h-[3.9rem]",
-              subtitleAlign === "right"
+              "relative flex items-center max-w-lg mx-auto",
+              headerCompact ? "min-h-9" : "min-h-[3.25rem]",
+              subtitleAlign === "right" || headerEnd
                 ? "justify-between gap-2"
-                : "relative",
+                : "",
             ].join(" ")}
           >
             <div
               className={[
                 "flex items-center gap-1.5",
-                subtitleAlign === "center"
-                  ? "relative z-10"
-                  : "min-w-0 shrink-0",
+                "relative z-10 shrink-0",
               ].join(" ")}
             >
               {geriDugmesi}
               {logo}
             </div>
-            {subtitle && subtitleAlign !== "right" && (
-              <div className="pointer-events-none absolute inset-x-0 flex flex-col items-center justify-center gap-0.5 px-24 sm:px-28">
-                {headerBadge}
-                <p className="text-[14.3px] leading-snug font-medium text-slate-600 line-clamp-3 text-center">
-                  {subtitle}
-                </p>
-              </div>
-            )}
-            {!subtitle && headerBadge && subtitleAlign === "center" && (
-              <div className="pointer-events-none absolute inset-x-0 flex justify-center px-24 sm:px-28">
-                {headerBadge}
-              </div>
-            )}
-            {subtitle && subtitleAlign === "right" && !headerEnd && (
-              <p className="max-w-[46%] shrink-0 text-right text-[14.3px] leading-snug font-medium text-slate-600 line-clamp-3">
-                {subtitle}
-              </p>
-            )}
             {headerEnd ? (
-              <div className="relative z-10 ml-auto shrink-0 flex items-center gap-2">
-                {headerEnd}
-              </div>
-            ) : null}
+              <>
+                {(headerBadge ||
+                  (subtitle && subtitleAlign !== "right")) && (
+                  <div className="min-w-0 flex-1 flex flex-col items-center justify-center gap-0.5 px-1">
+                    {headerBadge ? (
+                      <div className="w-full max-w-[11rem] sm:max-w-[14rem]">
+                        {headerBadge}
+                      </div>
+                    ) : null}
+                    {subtitle && subtitleAlign !== "right" ? (
+                      <p className="text-[14.3px] leading-snug font-medium text-slate-600 line-clamp-3 text-center">
+                        {subtitle}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+                <div className="relative z-10 shrink-0 flex items-center gap-2">
+                  {headerEnd}
+                </div>
+              </>
+            ) : (
+              <>
+                {(headerBadge ||
+                  (subtitle && subtitleAlign !== "right")) && (
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-[5.75rem] sm:px-28">
+                    {headerBadge ? (
+                      <div className="pointer-events-auto w-full max-w-[13.5rem] sm:max-w-[15rem]">
+                        {headerBadge}
+                      </div>
+                    ) : null}
+                    {subtitle && subtitleAlign !== "right" ? (
+                      <p className="text-[14.3px] leading-snug font-medium text-slate-600 line-clamp-3 text-center">
+                        {subtitle}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+                {subtitle && subtitleAlign === "right" && (
+                  <p className="max-w-[46%] shrink-0 text-right text-[14.3px] leading-snug font-medium text-slate-600 line-clamp-3">
+                    {subtitle}
+                  </p>
+                )}
+              </>
+            )}
           </div>
         )}
+        {headerBottom ? (
+          <div className="max-w-lg mx-auto w-full pt-1.5">{headerBottom}</div>
+        ) : null}
       </header>
       <main
         className={[

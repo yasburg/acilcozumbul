@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
-import { cekiciEpostaDogrulandiMi } from "@/lib/cekici-email-otp";
 import { faturaAlanlariniDogrula } from "@/lib/odeme-fatura";
 import { guncelleBekleyenOdemeFatura } from "@/lib/odeme";
 
@@ -19,17 +18,6 @@ export async function PATCH(
 
   if (!faturaSonuc.ok) {
     return NextResponse.json({ error: faturaSonuc.hata }, { status: 400 });
-  }
-
-  const dogrulandi = await cekiciEpostaDogrulandiMi(
-    cekici.id,
-    faturaSonuc.data.faturaEposta
-  );
-  if (!dogrulandi) {
-    return NextResponse.json(
-      { error: "Önce fatura e-postasını doğrulayın." },
-      { status: 403 }
-    );
   }
 
   const guncel = await guncelleBekleyenOdemeFatura(

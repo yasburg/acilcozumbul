@@ -5,11 +5,15 @@ import { chromeAc, chromeAcUrl } from "@/lib/konum-client";
 import { Btn } from "@/components/ui";
 
 interface ChromeAcSecenegiProps {
-  /** Vurgulu (izin reddedildi) veya sade yardımcı satır */
+  /** Vurgulu (izin reddedildi / konum başarısız) */
   vurgulu?: boolean;
   className?: string;
 }
 
+/**
+ * Konum alınamayınca gösterilir — başka tarayıcı / Chrome önerisi.
+ * Proaktif olarak her zaman gösterilmez.
+ */
 export function ChromeAcSecenegi({
   vurgulu = false,
   className = "",
@@ -17,38 +21,42 @@ export function ChromeAcSecenegi({
   const linkVar = useMemo(() => chromeAcUrl() !== null, []);
   const [tiklandi, setTiklandi] = useState(false);
 
-  if (!linkVar) return null;
-
   return (
-    <div className={className}>
-      {vurgulu ? (
-        <Btn
-          type="button"
-          variant="secondary"
-          className="!py-3 text-sm"
-          onClick={() => {
-            setTiklandi(true);
-            chromeAc();
-          }}
-        >
-          Chrome’da aç
-        </Btn>
-      ) : (
-        <button
-          type="button"
-          onClick={() => {
-            setTiklandi(true);
-            chromeAc();
-          }}
-          className="w-full text-sm text-slate-600 font-medium underline py-1"
-        >
-          Konum çalışmıyorsa Chrome’da aç
-        </button>
-      )}
+    <div className={`space-y-2 ${className}`}>
+      <p className="text-sm text-slate-600 leading-snug text-center">
+        Konum alınamadı. Başka bir tarayıcıda (ör. Chrome veya Safari) tekrar
+        deneyin; olmazsa şehri ve ilçeyi seçerek devam edebilirsiniz.
+      </p>
+      {linkVar ? (
+        vurgulu ? (
+          <Btn
+            type="button"
+            variant="secondary"
+            className="!py-3 text-sm"
+            onClick={() => {
+              setTiklandi(true);
+              chromeAc();
+            }}
+          >
+            Chrome’da aç
+          </Btn>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setTiklandi(true);
+              chromeAc();
+            }}
+            className="w-full text-sm text-amber-700 font-medium underline py-1"
+          >
+            Chrome’da dene
+          </button>
+        )
+      ) : null}
       {tiklandi && (
-        <p className="text-xs text-slate-500 mt-2 leading-relaxed text-center">
-          Chrome açılmazsa App Store / Play Store’dan Chrome’u yükleyip bu
-          sayfayı orada açın. Adresi elle yazarak da devam edebilirsiniz.
+        <p className="text-xs text-slate-500 leading-relaxed text-center">
+          Chrome açılmazsa App Store / Play Store’dan yükleyip bu sayfayı orada
+          açın.
         </p>
       )}
     </div>

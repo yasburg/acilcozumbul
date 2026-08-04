@@ -12,7 +12,7 @@ interface SorunSecimiProps {
   onDetayChange: (detay: string) => void;
   /** Yalnızca sorun tipi seçimi (detay alanları gizlenir) */
   sadeceTipSecimi?: boolean;
-  /** Seçili kutunun altında Devam Et */
+  /** Seçili kutunun altında / sağında Devam Et */
   onDevam?: () => void;
   devamDisabled?: boolean;
   devamIcerik?: ReactNode;
@@ -41,6 +41,9 @@ export function SorunSecimi({
 }: SorunSecimiProps) {
   const kartPy = kompaktKart ? "py-2.5 px-3.5" : "py-3 px-4";
   const gap = kompaktKart ? "gap-1" : "gap-1.5";
+  const altIcerikVar = !!(konumIcerik || konumAdres?.trim());
+  /** Konum detayı yoksa Devam Et seçili satırın sağında */
+  const devamSagda = sadeceTipSecimi && !!onDevam && !altIcerikVar;
 
   return (
     <div className={kompaktKart ? "space-y-2.5" : "space-y-4"}>
@@ -49,6 +52,36 @@ export function SorunSecimi({
         {SORUN_TIPLERI.map((tip) => {
           const secili = seciliTip === tip.id;
           const seciliKutu = secili && sadeceTipSecimi;
+
+          if (seciliKutu && devamSagda) {
+            return (
+              <div
+                key={tip.id}
+                data-sorun-id={tip.id}
+                className={`rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-500/25 overflow-hidden scroll-mt-24 flex items-center gap-2 ${kartPy}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => onTipSec(tip.id)}
+                  className="min-w-0 flex-1 text-left flex items-center gap-2.5"
+                >
+                  <span className="text-lg shrink-0">{tip.icon}</span>
+                  <span className="font-medium text-sm flex-1 min-w-0 text-amber-900">
+                    {tip.label}
+                  </span>
+                </button>
+                <Btn
+                  type="button"
+                  id="sorun-devam-et"
+                  className="!w-auto !min-h-0 shrink-0 !rounded-lg !px-3.5 !py-2 !text-sm"
+                  onClick={onDevam}
+                  disabled={devamDisabled}
+                >
+                  {devamIcerik ?? "Devam Et"}
+                </Btn>
+              </div>
+            );
+          }
 
           if (seciliKutu) {
             return (

@@ -330,6 +330,22 @@ export default function OdemePage() {
           ? "Güvenli Ödeme — Garanti Sanal POS"
           : "Güvenli Ödeme — Sanal POS (Demo)"
       }
+      footer={
+        !odemeAnimasyon ? (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(15,23,42,0.06)]">
+            <div className="mx-auto w-full max-w-lg">
+              <Btn
+                type="submit"
+                form="odeme-form"
+                className="w-full min-h-[48px] text-base bg-amber-600 hover:bg-amber-700"
+                disabled={loading}
+              >
+                {loading ? "İşleniyor…" : "Ödeme Yap"}
+              </Btn>
+            </div>
+          </div>
+        ) : undefined
+      }
     >
       {odemeAnimasyon && (
         <OdemeIslemAnimasyon aktifAdim={animasyonAdim} adimlar={odemeAdimlari} />
@@ -382,7 +398,7 @@ export default function OdemePage() {
         </Card>
       )}
 
-      <form onSubmit={odemeYap} className="space-y-4">
+      <form id="odeme-form" onSubmit={odemeYap} className="space-y-4 pb-8">
         <Card>
           <p className="text-sm font-medium text-slate-800 mb-3">Kart bilgileri</p>
           <Field
@@ -437,13 +453,6 @@ export default function OdemePage() {
             İletişim bilgileri
           </p>
           <Field
-            label="E-posta"
-            type="email"
-            value={eposta}
-            onChange={() => {}}
-            disabled
-          />
-          <Field
             label="Telefon"
             type="tel"
             value={telefon}
@@ -451,7 +460,7 @@ export default function OdemePage() {
             disabled
           />
           <p className="text-xs text-slate-500 mt-2">
-            E-posta ödeme öncesi doğrulandı. Telefon hesabınızdaki kayıtlı numaradır.
+            Telefon hesabınızdaki kayıtlı numaradır.
           </p>
         </Card>
 
@@ -459,6 +468,14 @@ export default function OdemePage() {
           <p className="text-sm font-medium text-slate-800 mb-3">
             Fatura bilgileri
           </p>
+          <Field
+            label="Fatura e-postası (isteğe bağlı)"
+            type="email"
+            placeholder="ornek@firma.com"
+            value={eposta}
+            onChange={(e) => setEposta(e.target.value)}
+            disabled={loading}
+          />
           <Field
             label="TC kimlik no (isteğe bağlı)"
             placeholder="11 hane"
@@ -521,10 +538,6 @@ export default function OdemePage() {
             </p>
           </Card>
         )}
-
-        <Btn type="submit" disabled={loading || odemeAnimasyon}>
-          {loading ? "İşleniyor…" : "Ödeme Yap"}
-        </Btn>
       </form>
     </MobileShell>
   );

@@ -26,6 +26,7 @@ function bosTaslak(
       hedefAdres: "",
       sorunTipi: "",
       sorunDetay: "",
+      aracTipi: "",
       aracModeli: "",
     },
     yasalOnay: false,

@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   ],
   skipTrailingSlashRedirect: true,
   async headers() {
+    const noindex = {
+      key: "X-Robots-Tag",
+      value: "noindex, nofollow",
+    };
     return [
       {
         source: "/acilcozumbul-logo-yazili-header.webp",
@@ -38,6 +42,17 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      { source: "/a", headers: [noindex] },
+      { source: "/b", headers: [noindex] },
+      { source: "/kayit/:path*", headers: [noindex] },
+      { source: "/talep-olustur", headers: [noindex] },
+      { source: "/bekle/:path*", headers: [noindex] },
+      { source: "/demo/:path*", headers: [noindex] },
+      { source: "/sms50/:path*", headers: [noindex] },
+      { source: "/panel/:path*", headers: [noindex] },
+      { source: "/cekici/panel/:path*", headers: [noindex] },
+      { source: "/cekici/giris", headers: [noindex] },
+      { source: "/cekici/kayit/:path*", headers: [noindex] },
     ];
   },
   async redirects() {
@@ -52,13 +67,19 @@ const nextConfig: NextConfig = {
         destination: "/kayit/a",
         permanent: false,
       },
+      /** Canonical: slash’sız URL */
+      {
+        source: "/:path+/",
+        destination: "/:path+",
+        permanent: true,
+      },
     ];
   },
   async rewrites() {
     return [
       {
-        /* /a,/c…/z → /kayit/:funnel — /b müşteri dönüşüm landing (app/b) */
-        source: "/:funnel([a-z])",
+        /* /c…/z → /kayit/:funnel — /a,/b müşteri anasayfa funnels (app/a, app/b) */
+        source: "/:funnel([c-z])",
         destination: "/kayit/:funnel",
       },
       {

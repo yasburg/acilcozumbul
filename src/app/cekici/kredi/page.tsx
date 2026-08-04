@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
-import { Btn, Card, Field } from "@/components/ui";
+import { Btn, Card } from "@/components/ui";
 import {
   ABONELIK_PAKETLERI,
   KREDI_SATIN_AL_PAKETLERI,
@@ -28,42 +28,19 @@ type AbonelikOzet = {
 export default function KrediPage() {
   const router = useRouter();
   const [kredi, setKredi] = useState(0);
-  const [abonelikKredi, setAbonelikKredi] = useState(0);
-  const [satinAlinanKredi, setSatinAlinanKredi] = useState(0);
   const [kaynak, setKaynak] = useState<KrediPaketKaynak>("abonelik");
   const [seciliPaket, setSeciliPaket] = useState<KrediPaketTl>(999);
   const [loading, setLoading] = useState(false);
   const [iptalYukleniyor, setIptalYukleniyor] = useState(false);
   const [error, setError] = useState("");
   const [abonelik, setAbonelik] = useState<AbonelikOzet | null>(null);
-
   const [eposta, setEposta] = useState("");
-  const [kod, setKod] = useState("");
-  const [epostaDogrulandi, setEpostaDogrulandi] = useState(false);
-  const [otpBekliyor, setOtpBekliyor] = useState(false);
-  const [yenidenSn, setYenidenSn] = useState(0);
-  const [gelistirmeKodu, setGelistirmeKodu] = useState<string>();
-  const [otpYukleniyor, setOtpYukleniyor] = useState(false);
 
   const paketler = krediPaketListesi(kaynak);
   const paket = paketler.find((p) => p.tutarTL === seciliPaket) ?? paketler[1]!;
   const odenecek = krediPaketOdenecekTL(paket);
   const aktifAbonelikVar =
     abonelik?.status === "active" || abonelik?.status === "past_due";
-
-  const epostaDurumYukle = useCallback(async (mail: string) => {
-    if (!mail.trim()) return;
-    const res = await cekiciFetch(
-      `/api/cekici/odeme/eposta/durum?eposta=${encodeURIComponent(mail)}`
-    );
-    if (!res.ok) return;
-    const d = await res.json();
-    setEpostaDogrulandi(Boolean(d.dogrulandi));
-    setOtpBekliyor(Boolean(d.bekliyor));
-    setYenidenSn(d.yenidenGonderSn ?? 0);
-    setGelistirmeKodu(d.gelistirmeKodu);
-    if (d.kayitliEposta && !mail) setEposta(d.kayitliEposta);
-  }, []);
 
   const abonelikYukle = useCallback(async () => {
     const res = await cekiciFetch("/api/cekici/abonelik");
@@ -77,87 +54,13 @@ export default function KrediPage() {
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
         setKredi(d.kredi);
-        setAbonelikKredi(Number(d.abonelikKredi ?? 0));
-        setSatinAlinanKredi(Number(d.satinAlinanKredi ?? 0));
-        if (d.faturaEposta) {
-          setEposta(d.faturaEposta);
-          void epostaDurumYukle(d.faturaEposta);
-        }
+        if (d.faturaEposta) setEposta(d.faturaEposta);
       })
       .catch(() => router.push("/cekici/giris"));
     void abonelikYukle();
-  }, [router, epostaDurumYukle, abonelikYukle]);
-
-  useEffect(() => {
-    if (yenidenSn <= 0 || epostaDogrulandi) return;
-    const t = setInterval(() => setYenidenSn((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(t);
-  }, [yenidenSn, epostaDogrulandi]);
-
-  async function kodGonder() {
-    setOtpYukleniyor(true);
-    setError("");
-    try {
-      const res = await cekiciFetch("/api/cekici/odeme/eposta/gonder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eposta }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setOtpBekliyor(true);
-      setYenidenSn(data.yenidenGonderSn ?? 60);
-      setGelistirmeKodu(data.gelistirmeKodu);
-      posthogOlayYakala("cekici_eposta_otp_gonder", {
-        rol: "cekici",
-        kaynak: "kredi",
-      });
-      if (data.demo) {
-        setError("Demo: e-posta konsola yazıldı (RESEND_API_KEY yok).");
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Kod gönderilemedi.");
-    } finally {
-      setOtpYukleniyor(false);
-    }
-  }
-
-  async function kodDogrula() {
-    setOtpYukleniyor(true);
-    setError("");
-    try {
-      const res = await cekiciFetch("/api/cekici/odeme/eposta/dogrula", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eposta, kod }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setEpostaDogrulandi(true);
-      setOtpBekliyor(false);
-      setKod("");
-      posthogOlayYakala("cekici_eposta_dogrulandi", {
-        rol: "cekici",
-        kaynak: "kredi",
-      });
-    } catch (e) {
-      const hata = e instanceof Error ? e.message : "Doğrulama başarısız.";
-      posthogOlayYakala("cekici_eposta_dogrulama_basarisiz", {
-        rol: "cekici",
-        kaynak: "kredi",
-        hata,
-      });
-      setError(hata);
-    } finally {
-      setOtpYukleniyor(false);
-    }
-  }
+  }, [router, abonelikYukle]);
 
   async function odemeyeGit() {
-    if (!epostaDogrulandi) {
-      setError("Ödeme için önce e-posta adresinizi doğrulayın.");
-      return;
-    }
     if (kaynak === "abonelik" && aktifAbonelikVar) {
       setError("Zaten aktif bir aboneliğiniz var.");
       return;
@@ -168,7 +71,11 @@ export default function KrediPage() {
       const res = await cekiciFetch("/api/cekici/odeme/baslat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paketTl: paket.tutarTL, eposta, kaynak }),
+        body: JSON.stringify({
+          paketTl: paket.tutarTL,
+          ...(eposta.trim() ? { eposta } : {}),
+          kaynak,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -180,7 +87,7 @@ export default function KrediPage() {
       });
       gtagAdsKrediSepeteEklemeDonusumu({
         value: Number(data.tutar) || odenecek,
-        user: { email: eposta },
+        user: eposta.trim() ? { email: eposta } : undefined,
       });
       sessionStorage.setItem(
         `odeme-${data.odemeId}`,
@@ -190,7 +97,7 @@ export default function KrediPage() {
           listeFiyati: data.listeFiyati ?? paket.tutarTL,
           garantiAktif: data.garantiAktif,
           odemeTipi: data.odemeTipi,
-          eposta,
+          eposta: eposta.trim() || undefined,
         })
       );
       router.push(`/cekici/odeme/${data.odemeId}`);
@@ -222,8 +129,6 @@ export default function KrediPage() {
       if (me.ok) {
         const d = await me.json();
         setKredi(d.kredi);
-        setAbonelikKredi(Number(d.abonelikKredi ?? 0));
-        setSatinAlinanKredi(Number(d.satinAlinanKredi ?? 0));
       }
       posthogOlayYakala("cekici_abonelik_iptal", { rol: "cekici" });
     } catch (e) {
@@ -242,22 +147,18 @@ export default function KrediPage() {
   }
 
   return (
-    <MobileShell backHref="/cekici/panel?tab=hesabim" subtitle="Kredi / Abonelik">
-      <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 mb-6">
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-slate-600">Mevcut kredi</span>
-          <span className="text-2xl font-bold text-amber-600">
+    <MobileShell
+      backHref="/cekici/panel?tab=hesabim"
+      subtitle="Kredi / Abonelik"
+      headerEnd={
+        <p className="text-right leading-tight">
+          <span className="block text-[10px] text-slate-400">Kredi</span>
+          <span className="text-sm font-semibold tabular-nums text-amber-700">
             {formatKredi(kredi)}
           </span>
-        </div>
-        {(abonelikKredi > 0 || satinAlinanKredi > 0) && (
-          <p className="text-[11px] text-slate-400 mt-1.5 leading-snug">
-            Abonelik: {formatKredi(abonelikKredi)} · Satın alınan:{" "}
-            {formatKredi(satinAlinanKredi)}
-          </p>
-        )}
-      </div>
-
+        </p>
+      }
+    >
       {error && (
         <Card className="border-red-200 bg-red-50 mb-4">
           <p className="text-red-700 text-sm">{error}</p>
@@ -313,76 +214,6 @@ export default function KrediPage() {
             </button>
           ))}
         </div>
-
-        {epostaDogrulandi ? (
-          <p className="text-sm text-emerald-800">
-            e-posta: {eposta} · E-posta doğrulandı
-          </p>
-        ) : (
-          <Card>
-            <p className="text-sm font-medium text-slate-800 mb-3">
-              Fatura e-postası (zorunlu)
-            </p>
-            <p className="text-xs text-slate-500 mb-3">
-              Ödeme öncesi doğrulama gerekir. Fatura bu adrese iletilecektir.
-            </p>
-            <Field
-              label="E-posta"
-              type="email"
-              placeholder="ornek@firma.com"
-              value={eposta}
-              onChange={(e) => {
-                setEposta(e.target.value);
-                setEpostaDogrulandi(false);
-                setOtpBekliyor(false);
-              }}
-            />
-            <div className="mt-3 space-y-2">
-              {!otpBekliyor ? (
-                <Btn
-                  type="button"
-                  variant="secondary"
-                  onClick={() => void kodGonder()}
-                  disabled={otpYukleniyor || !eposta.trim()}
-                >
-                  {otpYukleniyor ? "Gönderiliyor…" : "Doğrulama kodu gönder"}
-                </Btn>
-              ) : (
-                <>
-                  <Field
-                    label="6 haneli kod"
-                    placeholder="123456"
-                    value={kod}
-                    onChange={(e) => setKod(e.target.value)}
-                    inputMode="numeric"
-                  />
-                  {gelistirmeKodu && (
-                    <p className="text-xs text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
-                      Geliştirme kodu: <strong>{gelistirmeKodu}</strong>
-                    </p>
-                  )}
-                  <Btn
-                    type="button"
-                    onClick={() => void kodDogrula()}
-                    disabled={otpYukleniyor || kod.length < 6}
-                  >
-                    {otpYukleniyor ? "Kontrol…" : "E-postayı doğrula"}
-                  </Btn>
-                  <button
-                    type="button"
-                    disabled={yenidenSn > 0 || otpYukleniyor}
-                    onClick={() => void kodGonder()}
-                    className="text-xs text-amber-700 underline w-full text-center disabled:opacity-50"
-                  >
-                    {yenidenSn > 0
-                      ? `Yeni kod (${yenidenSn}s)`
-                      : "Kodu tekrar gönder"}
-                  </button>
-                </>
-              )}
-            </div>
-          </Card>
-        )}
 
         <p className="text-sm font-medium text-slate-700">Paket seçin</p>
         <p className="text-xs text-slate-500 -mt-2">
@@ -441,11 +272,16 @@ export default function KrediPage() {
         </div>
 
         {kaynak === "abonelik" && (
-          <p className="text-[11px] text-slate-400 leading-snug -mt-1">
-            Kullanılmayan abonelik kredisi (bonus dahil) ay yenilenince veya
-            iptal sonrası dönem bitince sıfırlanır. «Kredi satın al» ile
-            aldığınız ekstra krediler kalır.
-          </p>
+          <>
+            <p className="text-sm font-medium text-slate-700 text-center -mt-1">
+              Aboneliği istediğiniz zaman iptal edebilirsiniz.
+            </p>
+            <p className="text-[11px] text-slate-400 leading-snug">
+              Kullanılmayan abonelik kredisi (bonus dahil) ay yenilenince veya
+              iptal sonrası dönem bitince sıfırlanır. «Kredi satın al» ile
+              aldığınız ekstra krediler kalır.
+            </p>
+          </>
         )}
 
         <Card className="bg-slate-50">
@@ -455,21 +291,9 @@ export default function KrediPage() {
           </div>
         </Card>
 
-        {!epostaDogrulandi && (
-          <Card className="border-amber-300 bg-amber-50">
-            <p className="text-sm text-amber-950 leading-relaxed">
-              Ödeme yapmak için e-posta adresinizi doğrulamanız gerekiyor.
-            </p>
-          </Card>
-        )}
-
         <Btn
           onClick={odemeyeGit}
-          disabled={
-            loading ||
-            !epostaDogrulandi ||
-            (kaynak === "abonelik" && aktifAbonelikVar)
-          }
+          disabled={loading || (kaynak === "abonelik" && aktifAbonelikVar)}
         >
           {loading
             ? "Yönlendiriliyor…"

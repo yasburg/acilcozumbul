@@ -6,7 +6,14 @@ import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { SorunSecimi } from "@/components/SorunSecimi";
-import { Btn, Field, Card, Spinner, TextArea } from "@/components/ui";
+import { AnaSayfaOzellikSeridi } from "@/components/AnaSayfaOzellikSeridi";
+import { AnaSayfaFiyatHesaplamaTeaser } from "@/components/AnaSayfaFiyatHesaplamaTeaser";
+import { AnaSayfaHizmetVerCta } from "@/components/AnaSayfaHizmetVerCta";
+import { AnaSayfaHizliBaglantilar } from "@/components/AnaSayfaHizliBaglantilar";
+import { Btn, Field, Card, Spinner, TextArea, SelectField } from "@/components/ui";
+import { KULLANIMA_ACIK_ILLER } from "@/lib/cekici-sehir-acilis";
+import { ilceListesi } from "@/lib/il-ilce";
+import { illerSecimSirasi, sehirdeYazi } from "@/lib/turkiye-il-nufus";
 import {
   hizmetQuerydenSorunTipi,
   sorunAracModeliAlaniGoster,
@@ -19,6 +26,8 @@ import {
   sorunTipiBul,
   HEDEF_BILINMIYOR_EK_SURE_DK,
 } from "@/lib/sorun-tipleri";
+import { ARAC_TIPLERI, aracModeliMetniOlustur } from "@/lib/arac-tipi";
+import { AracTipiIkon } from "@/components/AracTipiIkon";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import { ChromeAcSecenegi } from "@/components/ChromeAcSecenegi";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
@@ -44,6 +53,20 @@ import { googleMapsYapilandirildi } from "@/lib/google-maps";
 import type { KonumOneri } from "@/lib/hedef-oneri-data";
 import { otoTamirAramaSorgusu } from "@/lib/hedef-oneri-data";
 import { parseIlIlce } from "@/lib/konum-parse";
+import { seoIlceGetir, seoSehirGetir } from "@/lib/seo-geo";
+import {
+  anaSayfaSehirBaglantilari,
+  anaSayfaSeoIcerik,
+  ISTANBUL_IL,
+  seoBolgeBaglantilari,
+  type SeoLandingIcerik,
+} from "@/lib/seo-icerik";
+import {
+  ISTANBUL_ANA_HERO,
+  SehirSeoIcerikBolumu,
+} from "@/components/seo/SehirSeoIcerikBolumu";
+import { seoHizmetListesi } from "@/lib/seo-hizmetler";
+import { musteriKonumYolu } from "@/lib/seo-talep";
 import type { HedefOneriKaynak } from "@/lib/konum-oneri";
 import {
   posthogKampanyaKaydet,
@@ -65,7 +88,13 @@ import {
   musteriFormTaslakKaydet,
   musteriFormTaslakOku,
   musteriFormTaslakSil,
+  type MusteriFormAlanlari,
 } from "@/lib/musteri-form-taslak";
+import type { MusteriFunnelId } from "@/lib/musteri-funnel";
+import {
+  musteriFunnelOlayBirKez,
+  musteriFunnelOlayGonder,
+} from "@/lib/musteri-funnel-client";
 
 const HedefOneriHarita = dynamic(
   () =>
@@ -112,14 +141,6 @@ const HizmetVerenSayimAlani = dynamic(
   }
 );
 
-const SssBolumu = dynamic(
-  () =>
-    import("@/components/seo/SssBolumu").then((m) => ({
-      default: m.SssBolumu,
-    })),
-  { ssr: true }
-);
-
 const ArizaFotografAlani = dynamic(
   () =>
     import("@/components/ArizaFotografAlani").then((m) => ({
@@ -133,40 +154,32 @@ const ArizaFotografAlani = dynamic(
   }
 );
 
-const KonumIzniYardim = dynamic(
-  () =>
-    import("@/components/KonumIzniYardim").then((m) => ({
-      default: m.KonumIzniYardim,
-    })),
-  {
-    ssr: false,
-    loading: () => <div className="min-h-[3rem]" aria-hidden />,
-  }
-);
-
 type Step = "bilgi" | "konum" | "sorun" | "detay" | "hedef";
 
-const STEP_SIRA: Step[] = ["sorun", "bilgi", "konum", "detay", "hedef"];
+/** Konum (şehir/ilçe) → sorun → telefon → detay → hedef */
+const STEP_SIRA: Step[] = ["konum", "sorun", "bilgi", "detay", "hedef"];
 const OTP_BEKLEYEN_KEY = "acilcozum_otp_bekleyen";
 const ADIM_OLAYLARI: Partial<Record<Step, string>> = {
-  bilgi: "adim_bilgi",
-  konum: "adim_konum",
-  detay: "adim_detay",
-  hedef: "adim_hedef",
+  sorun: "form_adim_sorun",
+  bilgi: "form_adim_bilgi",
+  konum: "form_adim_konum",
+  detay: "form_adim_detay",
+  hedef: "form_adim_hedef",
 };
 
-function funnelKaydet(
-  olay: string,
-  telefon?: string,
-  posthogProps?: Record<string, unknown>
-) {
-  void fetch("/api/musteri/funnel", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ olay, telefon }),
-  });
-  posthogOlayYakala(olay, posthogProps);
-}
+type MusteriAnaSayfaProps = {
+  funnelId?: MusteriFunnelId;
+  /** Örn. `/istanbul` — şehir filtresi önceden seçili */
+  varsayilanSehir?: string;
+  /** Örn. `/istanbul/bayrampasa` — ilçe önceden seçili */
+  varsayilanIlce?: string;
+  /** Form altı SEO gövdesi (sunucudan) */
+  seoIcerik?: SeoLandingIcerik;
+  seoHeroBaslik?: string;
+  seoSehirAd?: string;
+  seoBaglantilar?: { ad: string; href: string }[];
+  seoBolgeLinkleri?: { ad: string; href: string }[];
+};
 
 function sorunProps(sorunTipi: string): Record<string, unknown> {
   return sorunTipi ? { sorun_tipi: sorunTipi } : {};
@@ -185,7 +198,16 @@ function kayitliAdSoyadUygula(
   };
 }
 
-export default function MusteriAnaSayfa() {
+export default function MusteriAnaSayfa({
+  funnelId = "a",
+  varsayilanSehir,
+  varsayilanIlce,
+  seoIcerik,
+  seoHeroBaslik,
+  seoSehirAd,
+  seoBaglantilar,
+  seoBolgeLinkleri,
+}: MusteriAnaSayfaProps) {
   return (
     <Suspense
       fallback={
@@ -194,15 +216,47 @@ export default function MusteriAnaSayfa() {
         </MobileShell>
       }
     >
-      <MusteriAnaSayfaIcerik />
+      <MusteriAnaSayfaIcerik
+        funnelId={funnelId}
+        varsayilanSehir={varsayilanSehir}
+        varsayilanIlce={varsayilanIlce}
+        seoIcerik={seoIcerik}
+        seoHeroBaslik={seoHeroBaslik}
+        seoSehirAd={seoSehirAd}
+        seoBaglantilar={seoBaglantilar}
+        seoBolgeLinkleri={seoBolgeLinkleri}
+      />
     </Suspense>
   );
 }
 
-function MusteriAnaSayfaIcerik() {
+function MusteriAnaSayfaIcerik({
+  funnelId,
+  varsayilanSehir,
+  varsayilanIlce,
+  seoIcerik: seoIcerikProp,
+  seoHeroBaslik,
+  seoSehirAd,
+  seoBaglantilar,
+  seoBolgeLinkleri,
+}: {
+  funnelId: MusteriFunnelId;
+  varsayilanSehir?: string;
+  varsayilanIlce?: string;
+  seoIcerik?: SeoLandingIcerik;
+  seoHeroBaslik?: string;
+  seoSehirAd?: string;
+  seoBaglantilar?: { ad: string; href: string }[];
+  seoBolgeLinkleri?: { ad: string; href: string }[];
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [step, setStep] = useState<Step>("sorun");
+  const [step, setStep] = useState<Step>("konum");
+  const [seciliSehir, setSeciliSehir] = useState(varsayilanSehir ?? "");
+  const [seciliIlce, setSeciliIlce] = useState(varsayilanIlce ?? "");
+  const [acikIller, setAcikIller] = useState<string[]>([
+    ...KULLANIMA_ACIK_ILLER,
+  ]);
   const hizmetUygulandi = useRef(false);
   const hizmetKaydirTip = useRef<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -210,7 +264,10 @@ function MusteriAnaSayfaIcerik() {
   const [bilgiMesaj, setBilgiMesaj] = useState("");
   const [gpsYukleniyor, setGpsYukleniyor] = useState(false);
   const [adresGeocodeYukleniyor, setAdresGeocodeYukleniyor] = useState(false);
+  const [konumIzniToast, setKonumIzniToast] = useState<string | null>(null);
+  const [konumToastTop, setKonumToastTop] = useState(56);
   const gpsIstekRef = useRef(0);
+  const konumToastTimerRef = useRef<number | null>(null);
   const [oneriYukleniyor, setOneriYukleniyor] = useState(false);
   const [oneriler, setOneriler] = useState<KonumOneri[]>([]);
   const [oneriKaynak, setOneriKaynak] = useState<HedefOneriKaynak | null>(
@@ -228,11 +285,11 @@ function MusteriAnaSayfaIcerik() {
   const [gpsGuvenli, setGpsGuvenli] = useState(false);
   const [konumIzni, setKonumIzni] = useState<KonumIzniDurumu>("unknown");
   const [konumIzniBekleniyor, setKonumIzniBekleniyor] = useState(false);
+  const [konumBasarisiz, setKonumBasarisiz] = useState(false);
   const konumIsimRef = useRef<HTMLDivElement>(null);
   const aracModeliRef = useRef<HTMLDivElement>(null);
   const fotografRef = useRef<HTMLDivElement>(null);
-  const arizaAdresRef = useRef<HTMLInputElement>(null);
-  const konumGpsIlkDeneme = useRef(false);
+  const yasalOnayRef = useRef<HTMLDivElement>(null);
   const stepRef = useRef<Step>("sorun");
   const formLatRef = useRef(0);
   const gpsYukleniyorRef = useRef(false);
@@ -265,6 +322,7 @@ function MusteriAnaSayfaIcerik() {
     hedefAdres: "",
     sorunTipi: "",
     sorunDetay: "",
+    aracTipi: "",
     aracModeli: "",
   });
   const [fotografOnizleme, setFotografOnizleme] = useState<string | null>(null);
@@ -275,7 +333,7 @@ function MusteriAnaSayfaIcerik() {
   const [hedefAramaMetni, setHedefAramaMetni] = useState("");
   const [taslakHazir, setTaslakHazir] = useState(false);
   const taslakAnlikRef = useRef({
-    step: "sorun" as Step,
+    step: "konum" as Step,
     form,
     yasalOnay: false,
     fotografOnizleme: null as string | null,
@@ -293,6 +351,11 @@ function MusteriAnaSayfaIcerik() {
       setFotografOnizleme(t.fotografOnizleme);
       setFotografData(t.fotografData);
       setHedefBilinmiyor(t.hedefBilinmiyor === true);
+      if (t.form.adres) {
+        const { il, ilce } = parseIlIlce(t.form.adres);
+        if (il) setSeciliSehir(il);
+        if (ilce) setSeciliIlce(ilce);
+      }
     }
     setTaslakHazir(true);
   }, []);
@@ -300,7 +363,9 @@ function MusteriAnaSayfaIcerik() {
   useEffect(() => {
     setGpsGuvenli(konumGuvenliMi());
     posthogKampanyaKaydet();
-    funnelKaydet("form_basla");
+    musteriFunnelOlayBirKez(funnelId, "goruldu", {
+      props: { content_name: "musteri_ana_sayfa" },
+    });
     tiktokPixelViewContent({
       content_id: "musteri_talep",
       content_name: "musteri_ana_sayfa",
@@ -309,7 +374,40 @@ function MusteriAnaSayfaIcerik() {
     const onCerez = () => gtagAdsAnaSayfaGoruntulemeDonusumu();
     window.addEventListener("acil-cerez-banner", onCerez);
     return () => window.removeEventListener("acil-cerez-banner", onCerez);
+  }, [funnelId]);
+
+  useEffect(() => {
+    let iptal = false;
+    (async () => {
+      try {
+        const r = await fetch("/api/sehir-acilis");
+        const j = (await r.json().catch(() => ({}))) as {
+          acikIller?: string[];
+        };
+        if (!iptal && Array.isArray(j.acikIller) && j.acikIller.length > 0) {
+          setAcikIller(j.acikIller);
+        }
+      } catch {
+        /* fallback */
+      }
+    })();
+    return () => {
+      iptal = true;
+    };
   }, []);
+
+  useEffect(() => {
+    const qSehir = searchParams.get("sehir")?.trim().toLowerCase();
+    const qIlce = searchParams.get("ilce")?.trim().toLowerCase();
+    if (!qSehir) return;
+    const sehir = seoSehirGetir(qSehir);
+    if (!sehir) return;
+    setSeciliSehir(sehir.ad);
+    if (qIlce) {
+      const ilce = seoIlceGetir(qSehir, qIlce);
+      if (ilce) setSeciliIlce(ilce.ad);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (hizmetUygulandi.current) return;
@@ -320,12 +418,22 @@ function MusteriAnaSayfaIcerik() {
     hizmetUygulandi.current = true;
     hizmetKaydirTip.current = tip;
     setForm((f) => ({ ...f, sorunTipi: tip }));
-    setStep("sorun");
+    /* Konum adımı önce; sorun tipi önceden seçili kalır */
     posthogOlayYakala("sorun_secildi", {
       sorun_tipi: tip,
       kaynak: searchParams.get("sorun") ? "sorun_query" : "hizmet_query",
     });
-  }, [searchParams]);
+    musteriFunnelOlayBirKez(funnelId, "service_selected", {
+      props: {
+        sorun_tipi: tip,
+        kaynak: searchParams.get("sorun") ? "sorun_query" : "hizmet_query",
+      },
+    });
+    musteriFunnelOlayBirKez(funnelId, "form_adim_sorun", {
+      props: { sorun_tipi: tip },
+      analitik: false,
+    });
+  }, [searchParams, funnelId]);
 
   useEffect(() => {
     const tip = hizmetKaydirTip.current;
@@ -343,17 +451,26 @@ function MusteriAnaSayfaIcerik() {
   useEffect(() => {
     const olay = ADIM_OLAYLARI[step];
     if (!olay) return;
-    posthogOlayYakala(olay, sorunProps(form.sorunTipi));
+    musteriFunnelOlayBirKez(funnelId, olay, {
+      props: sorunProps(form.sorunTipi),
+    });
     // yalnızca adım değişince; sorunTipi o anki değeri taşır
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
+  }, [step, funnelId]);
 
-  /** Adım 2+ parçalarını sorun seçiminden sonra ısıt (foto / konum yardım) */
+  /** Adım 2+ parçalarını sorun seçiminden sonra ısıt (foto) */
   useEffect(() => {
     if (step === "sorun") return;
     void import("@/components/ArizaFotografAlani");
-    void import("@/components/KonumIzniYardim");
   }, [step]);
+
+  useEffect(() => {
+    return () => {
+      if (konumToastTimerRef.current != null) {
+        window.clearTimeout(konumToastTimerRef.current);
+      }
+    };
+  }, []);
 
   stepRef.current = step;
   formLatRef.current = form.lat;
@@ -457,41 +574,8 @@ function MusteriAnaSayfaIcerik() {
       } else {
         setKonumIzni(izin);
       }
-      if (
-        stepRef.current === "konum" &&
-        izin === "granted" &&
-        !formLatRef.current &&
-        !gpsYukleniyorRef.current
-      ) {
-        void konumAl(false);
-      }
     });
   }, [step]);
-
-  useEffect(() => {
-    if (step !== "konum") {
-      konumGpsIlkDeneme.current = false;
-      return;
-    }
-    if (konumGpsIlkDeneme.current || !konumGuvenliMi()) return;
-    if (form.lat && form.lng) return;
-
-    konumGpsIlkDeneme.current = true;
-    void konumAl(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca konum adımına girildiğinde
-  }, [step]);
-
-  useEffect(() => {
-    if (step !== "konum" || gpsYukleniyor) return;
-    if (form.lat && form.lng) {
-      setArizaAdresDuzenle(false);
-      return;
-    }
-    if (!konumGpsIlkDeneme.current) return;
-    window.requestAnimationFrame(() => {
-      arizaAdresRef.current?.focus({ preventScroll: true });
-    });
-  }, [step, gpsYukleniyor, form.lat, form.lng]);
 
   useEffect(() => {
     if (!telefonDogrulandi) return;
@@ -640,7 +724,7 @@ function MusteriAnaSayfaIcerik() {
 
   function adSoyadKaydet() {
     if (!telefonDogrulandi) return;
-    musteriProfilKaydet(form.telefon, form.ad, form.soyad);
+    musteriProfilKaydet(form.telefon, form.ad, form.soyad.trim() || "-");
   }
 
   function update(field: string, value: string | number) {
@@ -674,10 +758,25 @@ function MusteriAnaSayfaIcerik() {
     });
   }
 
+  function konumSecimiHazir(): boolean {
+    return (
+      !!form.adres.trim() ||
+      (!!form.lat && !!form.lng) ||
+      (!!seciliSehir && !!seciliIlce)
+    );
+  }
+
   function adimGit(hedef: Step) {
     const hedefIdx = STEP_SIRA.indexOf(hedef);
+    const konumIdx = STEP_SIRA.indexOf("konum");
     const sorunIdx = STEP_SIRA.indexOf("sorun");
     const bilgiIdx = STEP_SIRA.indexOf("bilgi");
+
+    if (hedefIdx > konumIdx && !konumSecimiHazir()) {
+      setError("Önce otomatik konum alın veya şehir ve ilçe seçin.");
+      setStep("konum");
+      return;
+    }
 
     if (hedefIdx > sorunIdx) {
       if (!form.sorunTipi) {
@@ -698,6 +797,27 @@ function MusteriAnaSayfaIcerik() {
       setKodGirisAcik(true);
       setStep("bilgi");
       return;
+    }
+
+    /* Konum adımından çıkarken URL’yi şehir/ilçe ile senkronize et */
+    if (step === "konum" && hedef !== "konum" && seciliSehir) {
+      const yol = musteriKonumYolu(seciliSehir, seciliIlce || null);
+      musteriFormTaslakKaydet({
+        v: 1,
+        step: hedef,
+        form,
+        yasalOnay,
+        fotografOnizleme,
+        fotografData,
+        hedefBilinmiyor,
+      });
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname !== yol
+      ) {
+        router.push(yol);
+        return;
+      }
     }
 
     setStep(hedef);
@@ -749,11 +869,23 @@ function MusteriAnaSayfaIcerik() {
           ? "Devam etmek için zorunlu alanları doldurun."
           : mesajlar.yasalOnay || mesajlar.telefon
       );
+      if (mesajlar.yasalOnay) {
+        yasalOnayaKaydir();
+      }
       return false;
     }
 
     setBilgiAlanMesajlari({ yasalOnay: "", telefon: "" });
     return true;
+  }
+
+  function yasalOnayaKaydir() {
+    window.setTimeout(() => {
+      yasalOnayRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 50);
   }
 
   async function kodGonder() {
@@ -808,15 +940,12 @@ function MusteriAnaSayfaIcerik() {
             f
           ),
         }));
-        setBilgiMesaj(
-          data.mesaj ?? "Bu numara bugün doğrulanmış. Tekrar SMS gerekmez."
-        );
+        setBilgiMesaj("Telefon doğrulandı. Hitap edebilmek adına adınızı giriniz.");
         try {
           sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
         } catch {
           /* ignore */
         }
-        setStep("konum");
         return;
       }
 
@@ -851,6 +980,11 @@ function MusteriAnaSayfaIcerik() {
 
       if (data.smsGonderildi || data.gelistirmeKodu) {
         posthogOlayYakala("otp_gonder", sorunProps(form.sorunTipi));
+        void musteriFunnelOlayGonder(funnelId, "otp_gonder", {
+          telefon: form.telefon,
+          props: sorunProps(form.sorunTipi),
+          analitik: false,
+        });
       }
 
       if (!data.smsGonderildi && !data.gelistirmeKodu) {
@@ -917,6 +1051,11 @@ function MusteriAnaSayfaIcerik() {
         ),
       }));
       posthogOlayYakala("otp_dogrulandi", sorunProps(form.sorunTipi));
+      void musteriFunnelOlayGonder(funnelId, "otp_dogrulandi", {
+        telefon: form.telefon,
+        props: sorunProps(form.sorunTipi),
+        analitik: false,
+      });
       try {
         sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
       } catch {
@@ -929,7 +1068,8 @@ function MusteriAnaSayfaIcerik() {
           lastName: form.soyad,
         })
       );
-      setStep("konum");
+      setBilgiMesaj("Telefon doğrulandı. Hitap edebilmek adına adınızı giriniz.");
+      /* bilgi adımında kal — isim */
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "Doğrulama kodu doğrulanamadı.";
@@ -962,6 +1102,9 @@ function MusteriAnaSayfaIcerik() {
         lng,
         adres,
       }));
+      const { il, ilce } = parseIlIlce(adres);
+      if (il) setSeciliSehir(il);
+      if (ilce) setSeciliIlce(ilce);
     }
   }
 
@@ -971,14 +1114,31 @@ function MusteriAnaSayfaIcerik() {
     setKonumIzniBekleniyor(false);
   }
 
+  function konumIzniToastGoster(mesaj: string) {
+    const header = document.getElementById("app-shell-header");
+    if (header) {
+      setKonumToastTop(Math.round(header.getBoundingClientRect().bottom) + 6);
+    }
+    setKonumIzniToast(mesaj);
+    if (konumToastTimerRef.current != null) {
+      window.clearTimeout(konumToastTimerRef.current);
+    }
+    konumToastTimerRef.current = window.setTimeout(() => {
+      setKonumIzniToast(null);
+      konumToastTimerRef.current = null;
+    }, 5000);
+  }
+
   async function konumAl(hedef = false) {
     const istekId = ++gpsIstekRef.current;
     setGpsYukleniyor(true);
     setError("");
     setKonumIzniBekleniyor(false);
+    setKonumBasarisiz(false);
 
     if (!navigator.geolocation) {
       setError("Tarayıcınız konum desteklemiyor. Adresi elle yazın.");
+      setKonumBasarisiz(true);
       if (gpsIstekRef.current === istekId) setGpsYukleniyor(false);
       return;
     }
@@ -988,6 +1148,7 @@ function MusteriAnaSayfaIcerik() {
       setError(
         "GPS için https:// adresi gerekli. Yukarıdaki «HTTPS ile aç» butonunu kullanın veya adresi aşağıya yazın."
       );
+      setKonumBasarisiz(true);
       if (gpsIstekRef.current === istekId) setGpsYukleniyor(false);
       return;
     }
@@ -1007,12 +1168,42 @@ function MusteriAnaSayfaIcerik() {
       await konumKaydet(latitude, longitude, adres, hedef);
       if (!hedef) {
         setArizaAdresDuzenle(false);
-        setBilgiMesaj("✓ GPS konumu alındı. Ad ve soyadı kontrol edip «Devam Et»e basın.");
+        setError("");
+        setBilgiMesaj("");
+        setKonumBasarisiz(false);
+        const { il, ilce } = parseIlIlce(adres);
+        if (il) setSeciliSehir(il);
+        if (ilce) setSeciliIlce(ilce);
+        const sonrakiForm: MusteriFormAlanlari = {
+          ...form,
+          lat: latitude,
+          lng: longitude,
+          adres,
+        };
+        musteriFormTaslakKaydet({
+          v: 1,
+          step: "sorun",
+          form: sonrakiForm,
+          yasalOnay,
+          fotografOnizleme,
+          fotografData,
+          hedefBilinmiyor,
+        });
+        const yol = musteriKonumYolu(il, ilce);
+        if (
+          typeof window !== "undefined" &&
+          window.location.pathname !== yol
+        ) {
+          router.replace(yol);
+        } else {
+          setStep("sorun");
+        }
       }
       setKonumIzni("granted");
       setKonumIzniBekleniyor(false);
     } catch (e) {
       if (gpsIstekRef.current !== istekId) return;
+      setKonumBasarisiz(true);
       const code =
         e && typeof e === "object" && "code" in e
           ? (e as GeolocationPositionError).code
@@ -1020,19 +1211,18 @@ function MusteriAnaSayfaIcerik() {
       if (code === 1) {
         setKonumIzni("denied");
         setKonumIzniBekleniyor(false);
+        konumIzniToastGoster(
+          "Konum izni verilmedi veya reddedildi. Ayarlar’dan açabilirsiniz."
+        );
+      } else {
+        setError(konumHataMesaji(code));
       }
-      setError(konumHataMesaji(code));
     } finally {
       if (gpsIstekRef.current === istekId) {
         setGpsYukleniyor(false);
         setKonumIzniBekleniyor(false);
       }
     }
-  }
-
-  async function konumIzniYenile() {
-    setError("");
-    await konumAl(false);
   }
 
   async function yaklasikKonumAl(hedef = false) {
@@ -1509,11 +1699,13 @@ function MusteriAnaSayfaIcerik() {
       setStep("bilgi");
       return;
     }
-    if (!form.ad?.trim() || !form.soyad?.trim() || !form.telefon) {
-      setError("Ad ve soyad zorunludur (arıza konumu adımında).");
-      setStep("konum");
+    if (!form.ad?.trim() || !form.telefon) {
+      setError("İsminizi girin.");
+      setStep("bilgi");
       return;
     }
+    const musteriAd = form.ad.trim();
+    const musteriSoyad = form.soyad.trim() || "-";
     if (!form.adres) {
       setError("Arıza konumu gerekli.");
       setStep("konum");
@@ -1557,8 +1749,8 @@ function MusteriAnaSayfaIcerik() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ad: form.ad,
-          soyad: form.soyad,
+          ad: musteriAd,
+          soyad: musteriSoyad,
           telefon: form.telefon,
           konum: { lat: form.lat, lng: form.lng, adres: form.adres },
           ...(hedefBilinmiyor ? { hedefBilinmiyor: true } : {}),
@@ -1573,7 +1765,7 @@ function MusteriAnaSayfaIcerik() {
             : {}),
           sorunTipi: form.sorunTipi,
           sorunDetay: form.sorunDetay,
-          aracModeli: form.aracModeli.trim() || undefined,
+          aracModeli: aracModeliMetniOlustur(form.aracTipi, form.aracModeli),
           fotograf: fotografData || undefined,
           sorun: sorunMetniOlustur(form.sorunTipi, form.sorunDetay),
         }),
@@ -1581,18 +1773,19 @@ function MusteriAnaSayfaIcerik() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Bir hata oluştu.");
       musteriFormTaslakSil();
-      musteriProfilKaydet(form.telefon, form.ad, form.soyad);
+      musteriProfilKaydet(form.telefon, musteriAd, musteriSoyad);
       posthogOlayYakala("talep_olustur", {
         sorun_tipi: form.sorunTipi,
         bildirilen_sayisi: data.bildirilenSayisi ?? 0,
       });
-      gtagAdsFiyatTeklifiDonusumu({
-        transactionId: typeof data.id === "string" ? data.id : String(data.id ?? ""),
-        user: {
-          phone: form.telefon,
-          firstName: form.ad,
-          lastName: form.soyad,
+      void musteriFunnelOlayGonder(funnelId, "talep_olustur", {
+        telefon: form.telefon,
+        talepId: typeof data.id === "string" ? data.id : String(data.id ?? ""),
+        props: {
+          sorun_tipi: form.sorunTipi,
+          bildirilen_sayisi: data.bildirilenSayisi ?? 0,
         },
+        analitik: false,
       });
       /* Meta + TikTok Lead: bekle sayfasına gitmeden önce + bir kez (bekle yedek) */
       try {
@@ -1601,8 +1794,8 @@ function MusteriAnaSayfaIcerik() {
           metaPixelLead({
             content_name: form.sorunTipi || "musteri_talep",
             phone: form.telefon,
-            firstName: form.ad,
-            lastName: form.soyad,
+            firstName: musteriAd,
+            lastName: musteriSoyad === "-" ? "" : musteriSoyad,
             externalId:
               typeof data.id === "string" ? data.id : String(data.id ?? ""),
           });
@@ -1626,16 +1819,25 @@ function MusteriAnaSayfaIcerik() {
         void metaPixelLead({
           content_name: form.sorunTipi || "musteri_talep",
           phone: form.telefon,
-          firstName: form.ad,
-          lastName: form.soyad,
+          firstName: musteriAd,
+          lastName: musteriSoyad === "-" ? "" : musteriSoyad,
         });
         void tiktokPixelLead({
           content_name: form.sorunTipi || "musteri_talep",
           phone: form.telefon,
         });
       }
-      /* Tam sayfa: Pixel Helper / PageView için soft navigate kullanma */
-      window.location.assign(`/bekle/${data.id}`);
+      /* Google Ads «Tıklama» snippet: conversion → event_callback → /bekle */
+      gtagAdsFiyatTeklifiDonusumu({
+        transactionId:
+          typeof data.id === "string" ? data.id : String(data.id ?? ""),
+        user: {
+          phone: form.telefon,
+          firstName: musteriAd,
+          lastName: musteriSoyad === "-" ? "" : musteriSoyad,
+        },
+        url: `/bekle/${data.id}`,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Talep gönderilemedi.");
     } finally {
@@ -1652,7 +1854,8 @@ function MusteriAnaSayfaIcerik() {
   function oncekiAdimaDon() {
     const idx = steps.findIndex((s) => s.key === step);
     if (idx > 0) {
-      adimGit(steps[idx - 1]!.key);
+      setStep(steps[idx - 1]!.key);
+      setError("");
       return;
     }
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -1725,57 +1928,107 @@ function MusteriAnaSayfaIcerik() {
     <div className="w-full space-y-1.5">
       <HizmetVerenSayimAlani
         sorunTipi={form.sorunTipi || null}
+        sehirAd={seciliSehir || null}
         compact={compact}
       />
       {adimIlerlemeCubugu}
     </div>
   );
 
+  const seoIcerik = seoIcerikProp ?? anaSayfaSeoIcerik();
+  const seoLinkSehir = seoSehirAd || seciliSehir;
+  const seoLinkler =
+    seoBaglantilar ??
+    (seoLinkSehir
+      ? seoBolgeBaglantilari(seoLinkSehir)
+      : anaSayfaSehirBaglantilari());
+  const seoBolgeChip =
+    seoBolgeLinkleri ??
+    (seoLinkSehir === ISTANBUL_IL
+      ? seoLinkler.filter((l) => l.ad !== ISTANBUL_IL)
+      : seoLinkler);
+  const digerSecenekler =
+    seoLinkSehir === ISTANBUL_IL
+      ? seoHizmetListesi().map((h) => ({
+          href: `/istanbul/${h.slug}`,
+          label: `İstanbul ${h.etiket}`,
+        }))
+      : anaSayfaSehirBaglantilari().map((l) => ({
+          href: l.href,
+          label: l.ad,
+        }));
+  const seoHero =
+    seoHeroBaslik ??
+    (seoLinkSehir === ISTANBUL_IL ? ISTANBUL_ANA_HERO : seoIcerik.h1);
+
+  const hizmetVerenHeader = (
+    <Link
+      href="/kayit/b"
+      className="inline-flex h-7 items-center justify-center rounded-lg bg-amber-500 px-2.5 text-xs font-semibold text-white shadow-sm shadow-amber-500/20 transition touch-manipulation hover:bg-amber-600 active:scale-[0.98] sm:h-8 sm:px-3.5 sm:text-sm"
+    >
+      Hizmet Ver
+    </Link>
+  );
+
   return (
     <MobileShell
-      subtitle={
-        step === "sorun"
-          ? "Yolda mı kaldınız? Hemen en hızlı ve uygun teklifleri alın."
-          : undefined
-      }
-      subtitleAlign={step === "sorun" ? "right" : "center"}
-      brandAlign={step === "sorun" ? "left" : "right"}
-      backLabel={step === "sorun" ? undefined : "Geri"}
-      onBack={step === "sorun" ? undefined : oncekiAdimaDon}
-      headerCenter={step === "sorun" ? undefined : adimUstBilgi(true)}
+      subtitle={undefined}
+      subtitleAlign={step === "konum" ? "right" : "center"}
+      brandAlign={step === "konum" ? "left" : "right"}
+      backLabel={step === "konum" ? undefined : "Geri"}
+      onBack={step === "konum" ? undefined : oncekiAdimaDon}
+      headerBadge={step === "konum" ? adimUstBilgi(true) : undefined}
+      headerCenter={step === "konum" ? undefined : adimUstBilgi(true)}
+      headerEnd={step === "konum" ? hizmetVerenHeader : undefined}
       onBrandClick={() => {
-        setStep("sorun");
+        setStep("konum");
         setError("");
         window.scrollTo({ top: 0, behavior: "smooth" });
       }}
       footer={<YasalSiteFooter />}
     >
-      <h1 className="sr-only">
-        Acil çekici, lastikçi ve yol yardım — yakınınızdaki hizmet verenlerden
-        teklif alın
-      </h1>
-
-      {step === "sorun" && (
-        <div className="mb-5 -mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-sm text-slate-700">
-          <span className="font-medium">Hizmet mi veriyorsunuz?</span>
-          <Link
-            href="/kayit/b"
-            className="inline-flex h-8 items-center justify-center rounded-lg bg-amber-500 px-3.5 text-sm font-semibold text-white shadow-sm shadow-amber-500/20 transition touch-manipulation hover:bg-amber-600 active:scale-[0.98]"
-          >
-            Kayıt ol
-          </Link>
-          <span className="text-slate-500">veya</span>
-          <Link
-            href="/cekici/giris"
-            className="font-medium text-amber-700 underline underline-offset-2"
-          >
-            Giriş yap
-          </Link>
+      {konumIzniToast && (
+        <div
+          role="status"
+          className="fixed inset-x-0 z-20 flex justify-center px-3 pointer-events-none"
+          style={{ top: konumToastTop }}
+        >
+          <div className="pointer-events-auto w-full max-w-lg rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-snug text-amber-950 shadow-md">
+            {konumIzniToast}
+          </div>
         </div>
       )}
 
-      {step === "sorun" && (
-        <div className="mb-6">{adimUstBilgi(false)}</div>
+      {step === "konum" && (
+        <div className="mb-4 space-y-3">
+          <div className="space-y-2.5">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold leading-snug tracking-tight text-slate-900">
+                Yolda mı kaldınız?
+              </h1>
+              <p className="mt-1.5 text-base sm:text-lg font-bold leading-snug text-slate-800">
+                Kayıt olmadan 2 dakikada{" "}
+                <span className="text-amber-600">10+ çekiciden teklif alın.</span>
+              </p>
+              <p className="mt-1.5 text-sm leading-snug text-slate-600">
+                Fiyatları karşılaştırın, uygun olanı siz seçin.
+              </p>
+            </div>
+            <div className="text-xs text-slate-700 leading-snug space-y-0.5">
+              <p>
+                <span className="text-emerald-600 font-semibold">✓</span>{" "}
+                Ücretsiz
+                {" "}
+                <span className="text-emerald-600 font-semibold">✓</span> Ödeme
+                yok
+              </p>
+              <p>
+                <span className="text-emerald-600 font-semibold">✓</span>{" "}
+                Bilgileriniz yalnızca seçtiğiniz çekici ile paylaşılır
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
       {error && (
@@ -1785,6 +2038,7 @@ function MusteriAnaSayfaIcerik() {
       )}
 
       {bilgiMesaj &&
+        !(step === "bilgi" && telefonDogrulandi) &&
         (step === "bilgi" ||
           step === "detay" ||
           step === "konum" ||
@@ -1796,14 +2050,31 @@ function MusteriAnaSayfaIcerik() {
 
       {step === "sorun" && (
         <div className="space-y-4 animate-fade-in">
-          <h2 className="text-xl font-bold">Sorununuz</h2>
-          <p className="text-slate-500 text-sm">Aşağıdan sorununuzu seçin.</p>
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold leading-snug tracking-tight text-slate-900">
+              {seciliIlce && seciliSehir
+                ? `${seciliIlce}, ${sehirdeYazi(seciliSehir)} ne arıyorsunuz?`
+                : seciliSehir
+                  ? `${sehirdeYazi(seciliSehir)} ne arıyorsunuz?`
+                  : "Ne arıyorsunuz?"}
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Yakındaki hizmet verenler teklif göndersin.
+            </p>
+          </div>
           <SorunSecimi
             seciliTip={form.sorunTipi}
             detay={form.sorunDetay}
             onTipSec={(id) => {
               update("sorunTipi", id);
               posthogOlayYakala("sorun_secildi", { sorun_tipi: id });
+              musteriFunnelOlayBirKez(funnelId, "service_selected", {
+                props: { sorun_tipi: id },
+              });
+              musteriFunnelOlayBirKez(funnelId, "form_adim_sorun", {
+                props: { sorun_tipi: id },
+                analitik: false,
+              });
               const label = sorunTipiBul(id)?.label ?? id;
               tiktokPixelSearch({
                 search_string: label,
@@ -1828,12 +2099,14 @@ function MusteriAnaSayfaIcerik() {
 
       {step === "bilgi" && (
         <div className="space-y-4 animate-fade-in">
-          <h2 className="text-xl font-bold">Telefon Doğrulama</h2>
-          <p className="text-slate-500 text-sm">
-            {telefonDogrulandi
-              ? "Telefonunuz bugün doğrulanmış; tekrar SMS gerekmez. Arıza konumuna geçebilirsiniz."
-              : "SMS kodu ile telefonunuzu doğrulayın. Konum ve araç bilgileri sonraki adımlarda."}
-          </p>
+          {!telefonDogrulandi && (
+            <>
+              <h2 className="text-xl font-bold">Telefonunuzu doğrulayın</h2>
+              <p className="text-slate-500 text-sm">
+                Teklifleri görün, beğendiğinizi seçin — sizi arayalım.
+              </p>
+            </>
+          )}
           {sorunLabel && (
             <Card className="bg-slate-50 border-slate-200">
               <p className="text-xs text-slate-500">Seçilen sorun</p>
@@ -1841,37 +2114,43 @@ function MusteriAnaSayfaIcerik() {
             </Card>
           )}
 
-          <YasalOnayKutusu
-            checked={yasalOnay}
-            onChange={(checked) => {
-              setYasalOnay(checked);
-              if (checked) {
-                setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
-              }
-            }}
-            invalid={!!bilgiAlanMesajlari.yasalOnay}
-          />
-          {bilgiAlanMesajlari.yasalOnay && (
-            <p className="text-sm text-red-600 -mt-2" role="alert">
-              {bilgiAlanMesajlari.yasalOnay}
-            </p>
-          )}
-
           {telefonDogrulandi ? (
             <>
-              <Card className="bg-emerald-50 border-emerald-200">
-                <p className="text-sm text-emerald-800">
-                  ✓ {telefonMaskele(form.telefon)} bugün doğrulandı
-                </p>
-              </Card>
+              <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
+                {bilgiMesaj ||
+                  "Telefon doğrulandı. Hitap edebilmek adına adınızı giriniz."}
+              </div>
+              <div ref={konumIsimRef} className="scroll-mt-44">
+                <Field
+                  label="İsminiz"
+                  placeholder="Örn. Ahmet"
+                  value={form.ad}
+                  onChange={(e) => update("ad", e.target.value)}
+                  onBlur={adSoyadKaydet}
+                  autoComplete="given-name"
+                  name="ad"
+                  required
+                />
+              </div>
               <div className="pt-1">
                 <Btn
                   type="button"
                   className="w-full"
-                  onClick={() => adimGit("konum")}
-                  disabled={!yasalOnay}
+                  onClick={() => {
+                    if (!form.ad.trim()) {
+                      setError("Devam etmek için isminizi girin.");
+                      return;
+                    }
+                    const soyad = form.soyad.trim() || "-";
+                    musteriProfilKaydet(form.telefon, form.ad, soyad);
+                    if (!form.soyad.trim()) {
+                      setForm((f) => ({ ...f, soyad }));
+                    }
+                    setBilgiMesaj("");
+                    adimGit("detay");
+                  }}
                 >
-                  Arıza Konumuna Git
+                  Devam Et
                 </Btn>
               </div>
             </>
@@ -1888,6 +2167,7 @@ function MusteriAnaSayfaIcerik() {
                       yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
                     }));
                     setError("Devam etmek için yasal metinleri onaylayın.");
+                    yasalOnayaKaydir();
                     return;
                   }
                   if (otpKod.length === 6) void kodDogrula();
@@ -1969,7 +2249,7 @@ function MusteriAnaSayfaIcerik() {
                     </div>
                   )}
                   <Btn type="submit" disabled={loading || otpKod.length !== 6}>
-                    {loading ? "Doğrulanıyor…" : "Onayla — Arıza Konumuna Git"}
+                    {loading ? "Doğrulanıyor…" : "Onayla"}
                   </Btn>
                   <button
                     type="button"
@@ -2015,6 +2295,24 @@ function MusteriAnaSayfaIcerik() {
                   )}
                 </>
               )}
+
+              <div ref={yasalOnayRef} className="scroll-mt-28 space-y-2">
+                <YasalOnayKutusu
+                  checked={yasalOnay}
+                  onChange={(checked) => {
+                    setYasalOnay(checked);
+                    if (checked) {
+                      setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
+                    }
+                  }}
+                  invalid={!!bilgiAlanMesajlari.yasalOnay}
+                />
+                {bilgiAlanMesajlari.yasalOnay && (
+                  <p className="text-sm text-red-600" role="alert">
+                    {bilgiAlanMesajlari.yasalOnay}
+                  </p>
+                )}
+              </div>
             </form>
           )}
         </div>
@@ -2028,13 +2326,6 @@ function MusteriAnaSayfaIcerik() {
               ? "Aracınız ve arıza hakkında bilgi verin — çekici doğru teklif verebilsin."
               : "Bulunduğunuz yerde hizmet alacaksınız — ek bilgi verin."}
           </p>
-
-          {sorunLabel && (
-            <Card className="bg-slate-50 border-slate-200">
-              <p className="text-xs text-slate-500">Seçilen sorun</p>
-              <p className="text-sm font-medium text-slate-900">{sorunLabel}</p>
-            </Card>
-          )}
 
           {sorunFotografAlaniGoster(form.sorunTipi) && (
             <div ref={fotografRef} className="scroll-mt-44">
@@ -2057,10 +2348,63 @@ function MusteriAnaSayfaIcerik() {
           )}
 
           {sorunAracModeliAlaniGoster(form.sorunTipi) && (
-            <div ref={aracModeliRef} className="scroll-mt-44">
+            <div ref={aracModeliRef} className="scroll-mt-44 space-y-3">
+              <div className="space-y-1.5">
+                <span className="block text-sm font-semibold text-slate-800">
+                  Araç tipi{" "}
+                  <span className="text-slate-500 font-normal">
+                    (isteğe bağlı)
+                  </span>
+                </span>
+                <div
+                  className="grid grid-cols-1 gap-1.5"
+                  role="listbox"
+                  aria-label="Araç tipi"
+                >
+                  {ARAC_TIPLERI.map((t) => {
+                    const secili = form.aracTipi === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        role="option"
+                        aria-selected={secili}
+                        onClick={() =>
+                          update("aracTipi", secili ? "" : t.id)
+                        }
+                        className={`w-full text-left rounded-xl border px-3.5 py-2.5 flex items-center gap-2.5 transition touch-manipulation ${
+                          secili
+                            ? "border-amber-500 bg-amber-50 ring-2 ring-amber-500/25"
+                            : "border-slate-200 bg-white hover:border-amber-300"
+                        }`}
+                      >
+                        <span
+                          className={`inline-flex size-8 shrink-0 items-center justify-center ${
+                            secili ? "text-amber-700" : "text-slate-500"
+                          }`}
+                        >
+                          <AracTipiIkon tip={t.id} className="size-8" />
+                        </span>
+                        <span
+                          className={`font-medium text-sm flex-1 min-w-0 ${
+                            secili ? "text-amber-900" : "text-slate-800"
+                          }`}
+                        >
+                          {t.etiket}
+                        </span>
+                        {secili ? (
+                          <span className="shrink-0 text-amber-600 text-base">
+                            ✓
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <Field
                 label="Araç modeli (isteğe bağlı)"
-                placeholder="Örn. Audi A3 sedan, Renault Clio hatchback"
+                placeholder="Örn. Audi A3, Renault Clio"
                 value={form.aracModeli}
                 onChange={(e) => update("aracModeli", e.target.value)}
                 invalid={aracModeliHatasi}
@@ -2103,7 +2447,8 @@ function MusteriAnaSayfaIcerik() {
             />
           )}
 
-          {(aracModeliHatasi || fotografHatasi || sorunDetayHatasi) && error && (
+          {(aracModeliHatasi || fotografHatasi || sorunDetayHatasi) &&
+            error && (
             <div
               className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
               role="alert"
@@ -2141,48 +2486,308 @@ function MusteriAnaSayfaIcerik() {
       )}
 
       {step === "konum" && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold">Arıza Konumu</h2>
-          <p className="text-slate-500 text-sm">
-            İletişim bilgilerinizi ve aracınızın bulunduğu yeri girin.
-          </p>
-
-          {!gpsGuvenli && <GpsHttpsBanner compact />}
-
-          <div ref={konumIsimRef} className="scroll-mt-44 space-y-2">
-            <div className="grid grid-cols-2 gap-3">
-              <Field
-                label="Ad"
-                placeholder="Ahmet"
-                value={form.ad}
-                onChange={(e) => update("ad", e.target.value)}
-                onBlur={adSoyadKaydet}
-                autoComplete="given-name"
-                name="ad"
-                required
-                invalid={adSoyadHatasi && !form.ad.trim()}
-              />
-              <Field
-                label="Soyad"
-                placeholder="Yılmaz"
-                value={form.soyad}
-                onChange={(e) => update("soyad", e.target.value)}
-                onBlur={adSoyadKaydet}
-                autoComplete="family-name"
-                name="soyad"
-                required
-                invalid={adSoyadHatasi && !form.soyad.trim()}
-              />
-            </div>
-            {adSoyadHatasi && (
-              <p className="text-sm text-red-600" role="alert">
-                Devam etmek için ad ve soyad girin (yukarıdaki alanlar).
+        <div className="space-y-4 animate-fade-in">
+          {arizaKonumGpsAlindi && form.adres ? (
+            <Card className="bg-emerald-50 border-emerald-200">
+              <p className="text-xs text-emerald-700 uppercase tracking-wide mb-1">
+                Arıza konumu (GPS)
               </p>
-            )}
-          </div>
-          <p className="text-xs text-slate-500 -mt-2">
-            Telefon: {telefonMaskele(form.telefon)}
-          </p>
+              <p className="text-sm text-emerald-900 leading-relaxed">
+                {form.adres}
+              </p>
+              {(seciliIlce || seciliSehir) && (
+                <p className="mt-1 text-xs text-emerald-800">
+                  {[seciliIlce, seciliSehir].filter(Boolean).join(", ")}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  gpsIptal();
+                  setGpsYukleniyor(false);
+                  setArizaAdresDuzenle(true);
+                  setForm((f) => ({
+                    ...f,
+                    lat: 0,
+                    lng: 0,
+                    adres: "",
+                  }));
+                  setSeciliSehir(varsayilanSehir ?? "");
+                  setSeciliIlce(varsayilanIlce ?? "");
+                  setError("");
+                  setBilgiMesaj("");
+                  setKonumBasarisiz(false);
+                }}
+                className="mt-2 text-xs text-emerald-800 underline font-medium"
+              >
+                Konumu değiştir
+              </button>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3">
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                  <div className="min-w-0 space-y-1.5">
+                    <span className="block text-sm font-semibold text-slate-800">
+                      Şehriniz
+                    </span>
+                    <div className="relative">
+                      {!seciliSehir ? (
+                        <span
+                          className="pointer-events-none absolute -inset-1 rounded-xl bg-amber-400/35 blur-md animate-pulse"
+                          aria-hidden
+                        />
+                      ) : null}
+                      <SelectField
+                        aria-label="Şehir"
+                        className={[
+                          "!py-2.5 relative",
+                          !seciliSehir
+                            ? "border-amber-400 ring-2 ring-amber-300/80 shadow-[0_0_14px_3px_rgba(245,158,11,0.55)]"
+                            : "",
+                        ].join(" ")}
+                        value={seciliSehir}
+                        onChange={(e) => {
+                          const il = e.target.value;
+                          setSeciliSehir(il);
+                          setSeciliIlce("");
+                          setError("");
+                          const yol = musteriKonumYolu(il || null, null);
+                          if (
+                            typeof window !== "undefined" &&
+                            window.location.pathname !== yol
+                          ) {
+                            router.push(yol);
+                          }
+                        }}
+                      >
+                        <option value="">Şehir seçin</option>
+                        {illerSecimSirasi(
+                          acikIller.length > 0
+                            ? acikIller
+                            : [...KULLANIMA_ACIK_ILLER]
+                        ).map((il) => (
+                          <option key={il} value={il}>
+                            {il}
+                          </option>
+                        ))}
+                      </SelectField>
+                    </div>
+                  </div>
+                  <div
+                    className={`min-w-0 space-y-1.5 transition-opacity ${
+                      seciliSehir ? "" : "opacity-60"
+                    }`}
+                  >
+                    <span
+                      className={`block text-sm font-semibold ${
+                        seciliSehir ? "text-slate-800" : "text-slate-400"
+                      }`}
+                    >
+                      İlçeniz
+                    </span>
+                    <SelectField
+                      aria-label="İlçe"
+                      className="!py-2.5"
+                      value={seciliIlce}
+                      disabled={!seciliSehir}
+                      onChange={(e) => {
+                        const ilce = e.target.value;
+                        setSeciliIlce(ilce);
+                        setError("");
+                        const yol = musteriKonumYolu(
+                          seciliSehir || null,
+                          ilce || null
+                        );
+                        const hasGps = !!(form.lat && form.lng);
+                        if (ilce && hasGps) {
+                          setArizaAdresDuzenle(false);
+                          musteriFormTaslakKaydet({
+                            v: 1,
+                            step: "sorun",
+                            form,
+                            yasalOnay,
+                            fotografOnizleme,
+                            fotografData,
+                            hedefBilinmiyor,
+                          });
+                          if (
+                            typeof window !== "undefined" &&
+                            window.location.pathname !== yol
+                          ) {
+                            router.push(yol);
+                          } else {
+                            adimGit("sorun");
+                          }
+                          return;
+                        }
+                        if (
+                          typeof window !== "undefined" &&
+                          window.location.pathname !== yol
+                        ) {
+                          router.push(yol);
+                        }
+                      }}
+                    >
+                      <option value="">
+                        {seciliSehir ? "İlçe seçin" : "Önce şehir"}
+                      </option>
+                      {seciliSehir
+                        ? ilceListesi(seciliSehir).map((ilce) => (
+                            <option key={ilce} value={ilce}>
+                              {ilce}
+                            </option>
+                          ))
+                        : null}
+                    </SelectField>
+                  </div>
+                  <Btn
+                    className="!w-full !min-h-0 !rounded-xl !py-2.5 !px-5 !text-sm sm:!w-auto shrink-0"
+                    onClick={async () => {
+                      setError("");
+                      if (gpsYukleniyor) gpsIptal();
+
+                      if (arizaKonumGpsAlindi && form.adres) {
+                        const ok = await adresKoordinatDoldur(false);
+                        if (ok) adimGit("sorun");
+                        return;
+                      }
+
+                      if (seciliSehir && seciliIlce) {
+                        const adresMetni =
+                          form.adres.trim() ||
+                          `${seciliIlce}, ${seciliSehir}, Türkiye`;
+                        if (!form.lat || !form.lng) {
+                          setAdresGeocodeYukleniyor(true);
+                          try {
+                            const g = await geocodeAdres(
+                              `${seciliIlce}, ${seciliSehir}, Türkiye`
+                            );
+                            if (g) {
+                              await konumKaydet(g.lat, g.lng, g.adres, false);
+                            } else {
+                              setForm((f) => ({ ...f, adres: adresMetni }));
+                            }
+                          } finally {
+                            setAdresGeocodeYukleniyor(false);
+                          }
+                        } else if (!form.adres.trim()) {
+                          setForm((f) => ({ ...f, adres: adresMetni }));
+                        }
+                        adimGit("sorun");
+                        return;
+                      }
+
+                      if (form.adres.trim().length >= 6) {
+                        const ok = await adresKoordinatDoldur(false);
+                        if (ok) {
+                          adimGit("sorun");
+                          return;
+                        }
+                      }
+
+                      setError(
+                        "Otomatik konum alın veya şehir ve ilçe seçin."
+                      );
+                    }}
+                    disabled={adresGeocodeYukleniyor || gpsYukleniyor}
+                  >
+                    {adresGeocodeYukleniyor ? (
+                      <span className="inline-flex items-center justify-center gap-2">
+                        <Spinner className="size-4 border-white/40 border-t-white" />
+                        …
+                      </span>
+                    ) : (
+                      "Ücretsiz Teklif Al"
+                    )}
+                  </Btn>
+                </div>
+              </div>
+
+              {gpsGuvenli ? (
+                <div className="space-y-2">
+                  <Btn
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setError("");
+                      void konumAl(false);
+                    }}
+                    disabled={gpsYukleniyor}
+                    className="w-full !py-3 text-sm"
+                  >
+                    📍 Konum kullan
+                  </Btn>
+                  {konumBasarisiz ? <ChromeAcSecenegi /> : null}
+                </div>
+              ) : (
+                <GpsHttpsBanner compact />
+              )}
+            </div>
+          )}
+
+          {arizaKonumGpsAlindi && form.adres ? (
+            <div className="space-y-2">
+              <Btn
+                className="w-full"
+                onClick={async () => {
+                  setError("");
+                  if (gpsYukleniyor) gpsIptal();
+
+                  if (arizaKonumGpsAlindi && form.adres) {
+                    const ok = await adresKoordinatDoldur(false);
+                    if (ok) adimGit("sorun");
+                    return;
+                  }
+
+                  if (seciliSehir && seciliIlce) {
+                    const adresMetni =
+                      form.adres.trim() ||
+                      `${seciliIlce}, ${seciliSehir}, Türkiye`;
+                    if (!form.lat || !form.lng) {
+                      setAdresGeocodeYukleniyor(true);
+                      try {
+                        const g = await geocodeAdres(
+                          `${seciliIlce}, ${seciliSehir}, Türkiye`
+                        );
+                        if (g) {
+                          await konumKaydet(g.lat, g.lng, g.adres, false);
+                        } else {
+                          setForm((f) => ({ ...f, adres: adresMetni }));
+                        }
+                      } finally {
+                        setAdresGeocodeYukleniyor(false);
+                      }
+                    } else if (!form.adres.trim()) {
+                      setForm((f) => ({ ...f, adres: adresMetni }));
+                    }
+                    adimGit("sorun");
+                    return;
+                  }
+
+                  if (form.adres.trim().length >= 6) {
+                    const ok = await adresKoordinatDoldur(false);
+                    if (ok) {
+                      adimGit("sorun");
+                      return;
+                    }
+                  }
+
+                  setError("Otomatik konum alın veya şehir ve ilçe seçin.");
+                }}
+                disabled={adresGeocodeYukleniyor || gpsYukleniyor}
+              >
+                {adresGeocodeYukleniyor ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <Spinner className="size-4 border-white/40 border-t-white" />
+                    Adres işleniyor…
+                  </span>
+                ) : (
+                  "Ücretsiz Teklif Al"
+                )}
+              </Btn>
+            </div>
+          ) : null}
 
           {(gpsYukleniyor || adresGeocodeYukleniyor) && (
             <div
@@ -2210,122 +2815,41 @@ function MusteriAnaSayfaIcerik() {
             </div>
           )}
 
-          {arizaKonumGpsAlindi && form.adres ? (
-            <Card className="bg-emerald-50 border-emerald-200">
-              <p className="text-xs text-emerald-700 uppercase tracking-wide mb-1">
-                Arıza konumu (GPS)
-              </p>
-              <p className="text-sm text-emerald-900 leading-relaxed">
-                {form.adres}
-              </p>
-              <button
-                type="button"
-                onClick={() => setArizaAdresDuzenle(true)}
-                className="mt-2 text-xs text-emerald-800 underline font-medium"
-              >
-                Adresi düzelt
-              </button>
-            </Card>
-          ) : (
-            <div className="space-y-2">
-              <Field
-                ref={arizaAdresRef}
-                label="Arıza adresi"
-                placeholder="Örn. İstanbul, Bayrampaşa, mahalle, sokak…"
-                value={form.adres}
-                onChange={(e) => update("adres", e.target.value)}
-                onBlur={() => {
-                  if (form.adres.trim().length >= 6 && !form.lat) {
-                    void geocodeAdres(form.adres).then((g) => {
-                      if (g) void konumKaydet(g.lat, g.lng, g.adres, false);
-                    });
-                  }
-                }}
-              />
-              {!gpsYukleniyor && (
-                <p className="text-xs text-slate-500">
-                  {gpsGuvenli
-                    ? "Konum otomatik alınamadıysa aracınızın bulunduğu adresi yazın."
-                    : "GPS için HTTPS gerekir; adresi elle yazabilirsiniz."}
-                </p>
-              )}
-            </div>
-          )}
-
-          {gpsGuvenli && !arizaKonumGpsAlindi && !gpsYukleniyor && (
+          {!varsayilanSehir ? (
             <>
-              <KonumIzniYardim
-                durum={konumIzni}
-                gpsGuvenli={gpsGuvenli}
-                bekleniyor={konumIzniBekleniyor}
-              />
-              <Btn
-                type="button"
-                variant="outline"
-                onClick={() => konumAl(false)}
-                disabled={gpsYukleniyor}
-                className="!py-3 text-sm"
-              >
-                📍 GPS konumumu tekrar dene
-              </Btn>
-              {konumIzni !== "denied" && <ChromeAcSecenegi />}
-              {konumIzni === "denied" && (
-                <button
-                  type="button"
-                  onClick={konumIzniYenile}
-                  className="w-full text-sm text-amber-600 font-medium underline"
-                >
-                  Ayarlardan izin verdim — yeniden kontrol et
-                </button>
-              )}
+              <AnaSayfaOzellikSeridi />
+              <AnaSayfaFiyatHesaplamaTeaser />
+              <AnaSayfaHizmetVerCta />
+              <AnaSayfaHizliBaglantilar />
             </>
-          )}
+          ) : null}
 
-          <div className="space-y-2">
-            <Btn
-              className="w-full"
-              onClick={async () => {
-                setError("");
-                if (!arızaKonumuHazir) {
-                  setError(
-                    "Arıza konumu gerekli. GPS paylaşın veya arıza adresini yazın."
-                  );
-                  return;
-                }
-                if (!form.ad.trim() || !form.soyad.trim()) {
-                  konumIsimHatasiGoster();
-                  return;
-                }
-                setAdSoyadHatasi(false);
-                musteriProfilKaydet(form.telefon, form.ad, form.soyad);
-                if (gpsYukleniyor) gpsIptal();
-                const ok = await adresKoordinatDoldur(false);
-                if (ok) adimGit("detay");
-              }}
-              disabled={devamEtEngelli}
-            >
-              {adresGeocodeYukleniyor ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Spinner className="size-4 border-white/40 border-t-white" />
-                  Adres işleniyor…
-                </span>
-              ) : (
-                "Devam Et"
-              )}
-            </Btn>
-            {!arızaKonumuHazir && !gpsYukleniyor && !adresGeocodeYukleniyor && (
-              <p className="text-xs text-amber-700 text-center">
-                Devam için arıza adresini yazın veya GPS izni verin.
-              </p>
-            )}
-            {arızaKonumuHazir &&
-              (!form.ad.trim() || !form.soyad.trim()) &&
-              !gpsYukleniyor &&
-              !adresGeocodeYukleniyor && (
-                <p className="text-xs text-amber-700 text-center">
-                  Konum hazır — devam için ad ve soyadı doldurun.
-                </p>
-              )}
+          <div className="pt-6 border-t border-slate-200 space-y-8">
+            <SehirSeoIcerikBolumu
+              sehirAd={seoLinkSehir || ISTANBUL_IL}
+              icerik={seoIcerik}
+              heroBaslik={seoHero}
+              baglantilar={seoLinkler}
+              bolgeLinkleri={seoBolgeChip}
+              yogunluk="genis"
+            />
+            <section>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Diğer seçenekler
+              </h2>
+              <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+                {digerSecenekler.map((l) => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      className="text-amber-800 underline underline-offset-2 hover:text-amber-950"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
           </div>
         </div>
       )}
@@ -2713,8 +3237,6 @@ function MusteriAnaSayfaIcerik() {
           )}
         </div>
       )}
-
-      {step === "sorun" && <SssBolumu />}
     </MobileShell>
   );
 }

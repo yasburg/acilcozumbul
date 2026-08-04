@@ -14,11 +14,13 @@ import {
 /** Anonim HTML cache’lenebilir; oturum yönlendirmesi client’ta */
 export const dynamic = "force-static";
 
+/** Müşteri A/B funnel — indeks dışı (kanonik dönüşüm: /) */
 export const metadata = sayfaMetadata({
   title: SEO_BASLIK,
   description: SEO_ACIKLAMA,
   path: "/b",
   absoluteTitle: true,
+  noIndex: true,
 });
 
 export default function MusteriDonusumLandingPage() {
@@ -33,7 +35,7 @@ export default function MusteriDonusumLandingPage() {
         ]}
       />
       <CekiciOturumYonlendir />
-      <MusteriDonusumSayfa />
+      <MusteriDonusumSayfa funnelId="b" />
     </>
   );
 }

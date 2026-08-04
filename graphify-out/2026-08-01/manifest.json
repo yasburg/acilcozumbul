@@ -20,8 +20,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1785415633.9894009,
-    "ast_hash": "2fe1e0e8cbcee7f3b8a45fe14a82e0be",
+    "mtime": 1785610403.300377,
+    "ast_hash": "2d2c62dad41f2f3122adf880f5ad5703",
     "semantic_hash": ""
   },
   "postcss.config.mjs": {
@@ -100,8 +100,8 @@
     "semantic_hash": ""
   },
   "src/app/api/cekici/kayit/route.ts": {
-    "mtime": 1784844435.3804731,
-    "ast_hash": "30459273930b66614d237d543ccbfad4",
+    "mtime": 1785591887.8727,
+    "ast_hash": "1f999a8dbe17e9559f0c5af611324626",
     "semantic_hash": ""
   },
   "src/app/api/cekici/konum/route.ts": {
@@ -605,8 +605,8 @@
     "semantic_hash": ""
   },
   "src/app/sitemap.ts": {
-    "mtime": 1785400590.2353573,
-    "ast_hash": "50b63d20289ff98866c1eb00d1dabc33",
+    "mtime": 1785602488.3984926,
+    "ast_hash": "18c5a92928bf21588c2030e3e5fd0015",
     "semantic_hash": ""
   },
   "src/components/ArizaFotografAlani.tsx": {
@@ -635,8 +635,8 @@
     "semantic_hash": ""
   },
   "src/components/CerezOnayBanner.tsx": {
-    "mtime": 1785588177.795031,
-    "ast_hash": "c60103b788c8e7649a0c3134741f46fa",
+    "mtime": 1785596559.126356,
+    "ast_hash": "efd4dafe707625d3fbd06bddcc607db8",
     "semantic_hash": ""
   },
   "src/components/DemoHeaderBadge.tsx": {
@@ -690,8 +690,8 @@
     "semantic_hash": ""
   },
   "src/components/MobileShell.tsx": {
-    "mtime": 1785440078.8695052,
-    "ast_hash": "fbe84804fc194ed8feeaa7321be0c874",
+    "mtime": 1785595579.6342294,
+    "ast_hash": "260f27a7c60c90947d38d367a3d99b2d",
     "semantic_hash": ""
   },
   "src/components/MusteriCekiciTakipHarita.tsx": {
@@ -710,8 +710,8 @@
     "semantic_hash": ""
   },
   "src/components/PanelChrome.tsx": {
-    "mtime": 1785532610.554664,
-    "ast_hash": "64d5b329bf08a1f610c8e0be39770f61",
+    "mtime": 1785594621.462021,
+    "ast_hash": "3082d5ea2c365e9553331c12f6d35678",
     "semantic_hash": ""
   },
   "src/components/PanelNav.tsx": {
@@ -810,8 +810,8 @@
     "semantic_hash": ""
   },
   "src/components/yasal/YasalOnayKutusu.tsx": {
-    "mtime": 1780768787.193756,
-    "ast_hash": "5c8130f351f1cf6684776458a50635d4",
+    "mtime": 1785596001.2017887,
+    "ast_hash": "2e2f32d38ab0ae6dfb4667b374aec594",
     "semantic_hash": ""
   },
   "src/components/yasal/YasalSayfaShell.tsx": {
@@ -945,8 +945,8 @@
     "semantic_hash": ""
   },
   "src/lib/cerez-onay.ts": {
-    "mtime": 1785533148.275762,
-    "ast_hash": "6fb700e80749023ac3154b1b4331dea4",
+    "mtime": 1785596552.7962596,
+    "ast_hash": "9065ccd8ce275feaf148aa4612b2be10",
     "semantic_hash": ""
   },
   "src/lib/davet-kayit.test.ts": {
@@ -1830,13 +1830,13 @@
     "semantic_hash": ""
   },
   "src/lib/meta-pixel.test.ts": {
-    "mtime": 1785588169.7385736,
-    "ast_hash": "a4d18ac3ad71e34982638dafe93c4067",
+    "mtime": 1785588532.3553958,
+    "ast_hash": "59099eae45e323d9335168c8c0df719b",
     "semantic_hash": ""
   },
   "src/lib/meta-pixel.ts": {
-    "mtime": 1785588158.6473548,
-    "ast_hash": "5622f15ad9caf96f6104f4aba4e281f8",
+    "mtime": 1785588531.970437,
+    "ast_hash": "bf804332039d66fc026a8fd0be20a679",
     "semantic_hash": ""
   },
   "src/components/panel/PanelCekiciHarita.tsx": {
@@ -1965,8 +1965,8 @@
     "semantic_hash": ""
   },
   "src/lib/sms50-kampanya.ts": {
-    "mtime": 1785581755.2914858,
-    "ast_hash": "e3d038d0c922ceee46e5a57766bb198c",
+    "mtime": 1785602488.3326867,
+    "ast_hash": "584a3363cfa188d36a57ebf28cb15fa8",
     "semantic_hash": ""
   },
   "src/lib/sms50-tiklama-db.ts": {
@@ -2095,8 +2095,8 @@
     "semantic_hash": ""
   },
   "src/app/api/cekici/kayit/hizli/route.ts": {
-    "mtime": 1784844434.277998,
-    "ast_hash": "071c6585efe87db87c60447a0305b512",
+    "mtime": 1785606874.2230144,
+    "ast_hash": "f7abdaf886325850c1ff800dba4f541c",
     "semantic_hash": ""
   },
   "src/app/api/cekici/kurulum/route.ts": {
@@ -2105,18 +2105,18 @@
     "semantic_hash": ""
   },
   "src/app/api/kayit/funnel-olay/route.ts": {
-    "mtime": 1784839806.3614476,
-    "ast_hash": "ada2b78431e5287ed7c1271fcb80a141",
+    "mtime": 1785591832.5681183,
+    "ast_hash": "4f27015af7bd8cd5c858824159c972d4",
     "semantic_hash": ""
   },
   "src/app/api/panel/kayit-funnels/route.ts": {
-    "mtime": 1784839964.5214543,
-    "ast_hash": "a22c47cfe5aefe532b705c456a2a6877",
+    "mtime": 1785594291.7966106,
+    "ast_hash": "11559d8986d7f4466d4d3645392d4903",
     "semantic_hash": ""
   },
   "src/app/kayit/[varyant]/page.tsx": {
-    "mtime": 1784839816.730031,
-    "ast_hash": "369bf9bb2d1dbbafa464747b58d42d39",
+    "mtime": 1785598892.1361895,
+    "ast_hash": "b2ddd3f427860f002642c4e74c4f1340",
     "semantic_hash": ""
   },
   "src/app/kayit/kurulum/page.tsx": {
@@ -2130,18 +2130,18 @@
     "semantic_hash": ""
   },
   "src/app/panel/kayit-funnels/page.tsx": {
-    "mtime": 1784839964.6216023,
-    "ast_hash": "4d0be591d898abff9dbb917d3044a9b9",
+    "mtime": 1785598246.0343962,
+    "ast_hash": "543280046c3ff124637237fa7569ffa1",
     "semantic_hash": ""
   },
   "src/components/cekici/CekiciKayitKontrolSayfa.tsx": {
-    "mtime": 1785587930.0677717,
-    "ast_hash": "0d83bc5ba483d9222599e9523ad802a2",
+    "mtime": 1785591923.342997,
+    "ast_hash": "22bd473daf48364f79a62c3a6999481e",
     "semantic_hash": ""
   },
   "src/components/kayit/KayitPhoneFirstSayfa.tsx": {
-    "mtime": 1785587934.9060407,
-    "ast_hash": "48e8cb6bad4ad08a5d0040ea399005ab",
+    "mtime": 1785615321.1409144,
+    "ast_hash": "ac2df07efd18e5527ee1348935f63f2b",
     "semantic_hash": ""
   },
   "src/lib/cekici-giris-otp.ts": {
@@ -2160,23 +2160,23 @@
     "semantic_hash": ""
   },
   "src/lib/kayit-funnel-client.ts": {
-    "mtime": 1784839873.999159,
-    "ast_hash": "40b9b3f1f7745d41575d9756710b9dec",
+    "mtime": 1785591832.203294,
+    "ast_hash": "a1a1e1a5c61a7144abc72b8108d8e55c",
     "semantic_hash": ""
   },
   "src/lib/kayit-funnel-olay.ts": {
-    "mtime": 1784839730.9672487,
-    "ast_hash": "8226f8f71a1eeb8dabd18306c8e9a7c4",
+    "mtime": 1785606852.2984478,
+    "ast_hash": "94436ec3c324901c19664da05f22a081",
     "semantic_hash": ""
   },
   "src/lib/kayit-funnel.test.ts": {
-    "mtime": 1785400565.4016147,
-    "ast_hash": "c2ac447378b555c9f124a70d68dddfbe",
+    "mtime": 1785602488.3985186,
+    "ast_hash": "99cc1b1e2d2535b1377774ea63506bf1",
     "semantic_hash": ""
   },
   "src/lib/kayit-funnel.ts": {
-    "mtime": 1785400465.6032515,
-    "ast_hash": "41215fea59821e5de563ca41eb35a26a",
+    "mtime": 1785615317.469667,
+    "ast_hash": "ca05048ac2703f412ddc35365964f9e9",
     "semantic_hash": ""
   },
   "supabase/migrations/036_kayit_funnel.sql": {
@@ -2185,8 +2185,8 @@
     "semantic_hash": ""
   },
   "src/app/panel/link-haritasi/page.tsx": {
-    "mtime": 1785581780.3878827,
-    "ast_hash": "6372cd46b77df00609e5ae493440d1e1",
+    "mtime": 1785602508.0113044,
+    "ast_hash": "8bb91f2cd7fcc41ed7436d7c6f9d982e",
     "semantic_hash": ""
   },
   "src/components/panel/KullaniciSayisiGrafik.tsx": {
@@ -2535,8 +2535,8 @@
     "semantic_hash": ""
   },
   "src/lib/sms50-kayit-funnel-harita-db.test.ts": {
-    "mtime": 1785581780.4448245,
-    "ast_hash": "3179088277f01616718904b3651c4e11",
+    "mtime": 1785602488.3986886,
+    "ast_hash": "a95bbb997b80f74005a1fe7053127ad9",
     "semantic_hash": ""
   },
   "src/lib/sms50-kayit-funnel-harita-db.ts": {
@@ -2562,6 +2562,76 @@
   "src/lib/panel-talep.ts": {
     "mtime": 1785585593.783456,
     "ast_hash": "a4ed0d1a012738c03e20454df25c1df6",
+    "semantic_hash": ""
+  },
+  "src/lib/kayit-funnel-olay.test.ts": {
+    "mtime": 1785594298.1280837,
+    "ast_hash": "13890efb9544a5e2d1f55011fba099d1",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/044_kayit_funnel_olay_genis.sql": {
+    "mtime": 1785591823.3962138,
+    "ast_hash": "132cb0fea3fa1357e48d01188b52dc41",
+    "semantic_hash": ""
+  },
+  "src/components/kayit/KayitSecimWizardSayfa.tsx": {
+    "mtime": 1785614796.0013773,
+    "ast_hash": "321b1fb7dbb1fe7445bdc30da99726a3",
+    "semantic_hash": ""
+  },
+  "src/app/c/page.tsx": {
+    "mtime": 1785602476.261155,
+    "ast_hash": "43e9204c9a02b5b6e41ddbc6b11ec43f",
+    "semantic_hash": ""
+  },
+  "src/lib/turkiye-il-nufus.test.ts": {
+    "mtime": 1785606065.5510464,
+    "ast_hash": "53f5c3f20865584508f8f71a3e43b28e",
+    "semantic_hash": ""
+  },
+  "src/lib/turkiye-il-nufus.ts": {
+    "mtime": 1785606065.3134902,
+    "ast_hash": "244acac8122df82e593e3a634be2dd04",
+    "semantic_hash": ""
+  },
+  "src/app/api/cekici/kayit/cark/spin/route.ts": {
+    "mtime": 1785616016.5408418,
+    "ast_hash": "0bfe3fe9d70ab88c2c29ae9a1ba8201d",
+    "semantic_hash": ""
+  },
+  "src/components/kayit/KayitCarkKampanya.tsx": {
+    "mtime": 1785616040.1261563,
+    "ast_hash": "c32d2c6311a69f41f5f0399f95df8049",
+    "semantic_hash": ""
+  },
+  "src/lib/kayit-cark-client.ts": {
+    "mtime": 1785616038.4034486,
+    "ast_hash": "e78cc108065e8556af5a02fe38473937",
+    "semantic_hash": ""
+  },
+  "src/lib/kayit-cark-db.ts": {
+    "mtime": 1785616014.1213956,
+    "ast_hash": "918a77793bf374bf440ef19e70b2d67a",
+    "semantic_hash": ""
+  },
+  "src/lib/kayit-cark.test.ts": {
+    "mtime": 1785607523.1386259,
+    "ast_hash": "5ac3b912b081a1d041c7cb88e0d71f9d",
+    "semantic_hash": ""
+  },
+  "src/lib/kayit-cark.ts": {
+    "mtime": 1785616010.802353,
+    "ast_hash": "7db93f238eddb1d0c646c3fb55841bdf",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/045_kayit_cark_odul.sql": {
+    "mtime": 1785606816.5994406,
+    "ast_hash": "b15ddc9cbbe3f42385ce415274f01237",
+    "semantic_hash": ""
+  },
+  "public/icons/fortune-wheel.png": {
+    "mtime": 1785609002.2420256,
+    "ast_hash": "709d367731f9ce6d529dc093f6fde255",
     "semantic_hash": ""
   }
 }

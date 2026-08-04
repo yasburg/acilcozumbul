@@ -69,7 +69,7 @@ export function Btn({
 }
 
 const inputSinif = (invalid: boolean, ekstra = "") =>
-  `w-full rounded-xl bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+  `w-full rounded-xl bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-100 disabled:opacity-70 ${
     invalid
       ? "border-red-500 ring-red-500/30 focus:ring-red-500/40 focus:border-red-500"
       : "border-slate-200 focus:ring-amber-500/40 focus:border-amber-500"
@@ -124,16 +124,18 @@ export function SelectField({
   children,
   ...props
 }: SelectHTMLAttributes<HTMLSelectElement> & {
-  label: string;
+  label?: string;
   invalid?: boolean;
 }) {
   return (
-    <label className="block space-y-1.5">
-      <span
-        className={`text-sm font-medium ${invalid ? "text-red-700" : "text-slate-700"}`}
-      >
-        {label}
-      </span>
+    <label className={label ? "block space-y-1.5" : "block min-w-0 flex-1"}>
+      {label ? (
+        <span
+          className={`text-sm font-medium ${invalid ? "text-red-700" : "text-slate-700"}`}
+        >
+          {label}
+        </span>
+      ) : null}
       <div className="relative">
         <select
           aria-invalid={invalid || undefined}

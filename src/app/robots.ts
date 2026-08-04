@@ -1,29 +1,39 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/seo";
 
-export default function robots(): MetadataRoute.Robots {
-  const disallow = [
-    "/api/",
-    "/panel/",
-    "/cekici/panel",
-    "/cekici/ayarlar",
-    "/cekici/kredi",
-    "/cekici/faturalar",
-    "/cekici/odeme/",
-    "/cekici/talep/",
-    "/fatura",
-    "/bekle/",
-    "/demo/",
-  ];
+/** Test, funnel, panel ve işlem yolları — indekslenmez */
+const DISALLOW = [
+  "/api/",
+  "/panel/",
+  "/a",
+  "/b",
+  "/kayit/",
+  "/talep-olustur",
+  "/bekle/",
+  "/demo/",
+  "/sms50",
+  "/fatura",
+  "/kredi-hatirlatma/",
+  "/kurulum-hatirlatma/",
+  "/cekici/panel",
+  "/cekici/ayarlar",
+  "/cekici/kredi",
+  "/cekici/faturalar",
+  "/cekici/odeme/",
+  "/cekici/talep/",
+  "/cekici/giris",
+  "/cekici/kayit",
+  "/cekici/sifremi-unuttum",
+];
 
+export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: "*",
         allow: ["/", "/llms.txt"],
-        disallow,
+        disallow: DISALLOW,
       },
-      // AI / LLM crawlers — açıkça izin (AI SEO)
       {
         userAgent: [
           "GPTBot",
@@ -37,7 +47,7 @@ export default function robots(): MetadataRoute.Robots {
           "meta-externalagent",
         ],
         allow: ["/", "/llms.txt", "/sitemap.xml"],
-        disallow,
+        disallow: DISALLOW,
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

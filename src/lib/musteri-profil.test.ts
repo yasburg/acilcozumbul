@@ -30,8 +30,15 @@ describe("musteriProfil", () => {
     expect(p?.soyad).toBe("Demir");
   });
 
-  it("eksik isimde kaydetmez", () => {
+  it("yalnız ad ile kaydeder", () => {
     musteriProfilKaydet("05321112233", "Ahmet", "  ");
+    const p = musteriProfilOku("05321112233");
+    expect(p?.ad).toBe("Ahmet");
+    expect(p?.soyad).toBe("-");
+  });
+
+  it("boş ad kaydetmez", () => {
+    musteriProfilKaydet("05321112233", "  ", "Yılmaz");
     expect(musteriProfilOku("05321112233")).toBeNull();
   });
 });

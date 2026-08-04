@@ -139,3 +139,25 @@ export function sehirYolYardimTalepMetni(sehir: string): string | null {
   if (!p) return null;
   return `${p.sehirde} günde yaklaşık ${p.adetYazi} yol yardım talebi oluyor.`;
 }
+
+/** Nüfusa göre en büyük N il (TÜİK listesinden) */
+export function enBuyukIller(adet = 5): string[] {
+  return Object.entries(TURKIYE_IL_NUFUS)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, adet)
+    .map(([il]) => il);
+}
+
+/**
+ * Şehir seçim sırası: en büyük 5 il üstte (listede varsa),
+ * kalanlar Türkçe alfabetik.
+ */
+export function illerSecimSirasi(iller: readonly string[]): string[] {
+  const set = new Set(iller);
+  const ust = enBuyukIller(5).filter((il) => set.has(il));
+  const ustSet = new Set(ust);
+  const diger = iller
+    .filter((il) => !ustSet.has(il))
+    .sort((a, b) => a.localeCompare(b, "tr"));
+  return [...ust, ...diger];
+}

@@ -86,6 +86,62 @@ export function smsInfraHatasiMi(sonuc: SmsGonderimSonuc): boolean {
   return true;
 }
 
+/**
+ * fetch/undici ağ hataları — message + cause.code/message (sms_log / panel).
+ * Örn. "fetch failed: UND_ERR_CONNECT_TIMEOUT Connect Timeout Error …"
+ */
+export function fetchHataMesaji(err: unknown): string {
+  if (!(err instanceof Error)) return String(err);
+
+  const parcalar: string[] = [];
+  let current: unknown = err;
+
+  for (let i = 0; i < 5 && current != null; i++) {
+    if (current instanceof Error) {
+      const e = current as Error & {
+        code?: string;
+        errno?: string | number;
+      };
+      const kod =
+        typeof e.code === "string"
+          ? e.code
+          : e.errno != null
+            ? String(e.errno)
+            : undefined;
+      const msg = e.message?.trim() || undefined;
+
+      if (i === 0) {
+        if (msg) parcalar.push(msg);
+      } else {
+        const bitler = [kod, msg].filter((x): x is string => {
+          if (!x) return false;
+          return !parcalar.some((p) => p.includes(x));
+        });
+        if (bitler.length) parcalar.push(bitler.join(" "));
+      }
+      current = e.cause;
+      continue;
+    }
+
+    if (typeof current === "object") {
+      const o = current as { code?: unknown; message?: unknown };
+      const kod = typeof o.code === "string" ? o.code : undefined;
+      const msg = typeof o.message === "string" ? o.message.trim() : undefined;
+      const bitler = [kod, msg].filter((x): x is string => {
+        if (!x) return false;
+        return !parcalar.some((p) => p.includes(x));
+      });
+      if (bitler.length) parcalar.push(bitler.join(" "));
+    } else {
+      const s = String(current);
+      if (s && !parcalar.some((p) => p.includes(s))) parcalar.push(s);
+    }
+    break;
+  }
+
+  return parcalar.join(": ") || "bilinmeyen ağ hatası";
+}
+
 const NETGSM_XML_URL = "https://api.netgsm.com.tr/sms/send/xml";
 
 /** XML POST: 90XXXXXXXXXX (ülke kodu ile) — Netgsm dokümantasyonu */
@@ -204,7 +260,7 @@ async function netgsmOtpSmsGonder(
       hata: `${kod}: ${aciklama}`,
     };
   } catch (err) {
-    const hata = err instanceof Error ? err.message : String(err);
+    const hata = fetchHataMesaji(err);
     console.error("[Netgsm OTP SMS hata]", hata);
     return { basarili: false, saglayici: "netgsm-otp", hata };
   }
@@ -293,7 +349,7 @@ ${noXml}
     console.error("[Netgsm XML SMS]", kod, yanit);
     return { basarili: false, saglayici: "netgsm", hata: `${kod}: ${aciklama}` };
   } catch (err) {
-    const hata = err instanceof Error ? err.message : String(err);
+    const hata = fetchHataMesaji(err);
     console.error("[Netgsm XML SMS hata]", hata);
     return { basarili: false, saglayici: "netgsm", hata };
   }
@@ -555,7 +611,7 @@ export async function netgsmGondericiAdlariSorgula(): Promise<GondericiAdiSorguS
 
     return { basarili: false, basliklar: [], hata: "Gönderici adı bulunamadı." };
   } catch (err) {
-    const hata = err instanceof Error ? err.message : String(err);
+    const hata = fetchHataMesaji(err);
     return { basarili: false, basliklar: [], hata };
   }
 }

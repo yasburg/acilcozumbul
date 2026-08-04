@@ -1,11 +1,60 @@
 /**
- * Müşteri talep funnel — PostHog + GA4 (`gtagOlay`).
- * Google Ads primary conversion yalnızca başarılı talepte
- * (`gtagAdsFiyatTeklifiDonusumu`) kalır; ara event’ler Ads’e gönderilmez.
+ * Müşteri talep funnel katalogu + PostHog / GA4.
+ * Google Ads primary conversion yalnızca başarılı talepte kalır.
  */
 
 import { gtagOlay } from "@/lib/gtag";
 import { posthogOlayYakala } from "@/lib/posthog-client";
+
+export const MUSTERI_FUNNEL_HARFLER = ["a", "b"] as const;
+
+export type MusteriFunnelId = (typeof MUSTERI_FUNNEL_HARFLER)[number];
+
+export type MusteriFunnelTanim = {
+  id: MusteriFunnelId;
+  etiket: string;
+  yol: string;
+  aktif: boolean;
+  /** Kısa açıklama (panel) */
+  aciklama: string;
+};
+
+export const MUSTERI_FUNNELS: Record<MusteriFunnelId, MusteriFunnelTanim> = {
+  a: {
+    id: "a",
+    etiket: "Klasik anasayfa",
+    yol: "/a",
+    aktif: true,
+    aciklama:
+      "Hizmet → bilgi → konum → detay → hedef · noindex (SEO dışı A/B)",
+  },
+  b: {
+    id: "b",
+    etiket: "Dönüşüm landing",
+    yol: "/b",
+    aktif: true,
+    aciklama: "Hizmet → hedef → telefon (kısa akış) · noindex (SEO dışı A/B)",
+  },
+};
+
+export function musteriFunnelMi(v: string): v is MusteriFunnelId {
+  return (MUSTERI_FUNNEL_HARFLER as readonly string[]).includes(v);
+}
+
+export function musteriFunnelGetir(v: string): MusteriFunnelTanim | null {
+  if (!musteriFunnelMi(v)) return null;
+  return MUSTERI_FUNNELS[v];
+}
+
+export function musteriFunnelYolu(v: MusteriFunnelId): string {
+  return MUSTERI_FUNNELS[v].yol;
+}
+
+export function musteriFunnelAktifListe(): MusteriFunnelTanim[] {
+  return MUSTERI_FUNNEL_HARFLER.map((id) => MUSTERI_FUNNELS[id]).filter(
+    (f) => f.aktif
+  );
+}
 
 export function musteriFunnelOlay(
   olay: string,
@@ -15,7 +64,7 @@ export function musteriFunnelOlay(
   gtagOlay(olay, props);
 }
 
-/** DB funnel allowlist ile uyumlu olaylar için API + analitik */
+/** Eski DB funnel_events + analitik (geriye uyum) */
 export function musteriFunnelKaydet(
   olay: string,
   telefon?: string,

@@ -33,7 +33,7 @@ export function YasalOnayKutusu({
         disabled
           ? "border-slate-200 bg-slate-50 opacity-60 cursor-not-allowed"
           : invalid
-            ? "border-red-500 bg-red-50/50 ring-2 ring-red-200"
+            ? "border-red-500 bg-red-50/50 ring-2 ring-red-300 shadow-[0_0_0_4px_rgba(248,113,113,0.25)] animate-pulse"
             : checked
               ? "border-amber-300 bg-amber-50/50"
               : "border-slate-200 bg-white"

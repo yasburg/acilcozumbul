@@ -47,7 +47,12 @@ export function ArizaFotografAlani({
       <p
         className={`text-sm font-medium ${invalid ? "text-red-700" : "text-slate-800"}`}
       >
-        Arıza fotoğrafı {zorunlu ? "" : "(isteğe bağlı)"}
+        Arıza fotoğrafı{" "}
+        {zorunlu ? (
+          <span className="text-red-600 font-medium">(zorunlu)</span>
+        ) : (
+          <span className="text-slate-500 font-normal">(isteğe bağlı)</span>
+        )}
       </p>
       <p className="text-xs text-slate-500 leading-relaxed">
         Aracınızın veya sorunun fotoğrafını çekin — çekici doğru teklif verebilsin.
