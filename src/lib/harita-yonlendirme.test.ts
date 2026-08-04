@@ -3,6 +3,7 @@ import {
   appleMapsRotaUrl,
   googleMapsRotaUrl,
   haritaSecenekleri,
+  whatsappKonumMesaji,
 } from "./harita-yonlendirme";
 
 const musteri = { lat: 41.01, lng: 28.97 };
@@ -30,5 +31,16 @@ describe("harita-yonlendirme", () => {
     const sec = haritaSecenekleri(musteri, { cekici });
     expect(sec).toHaveLength(2);
     expect(sec.map((s) => s.id).sort()).toEqual(["apple", "google"]);
+  });
+
+  it("whatsappKonumMesaji harita linki ve adres içerir", () => {
+    const metin = whatsappKonumMesaji({
+      lat: 41.01,
+      lng: 28.97,
+      adres: "Kadıköy",
+    });
+    expect(metin).toContain("maps.google.com");
+    expect(metin).toContain("41.01");
+    expect(metin).toContain("Kadıköy");
   });
 });

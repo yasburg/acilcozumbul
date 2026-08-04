@@ -5,6 +5,8 @@ import { Card } from "@/components/ui";
 import type { LatLng } from "@/lib/koordinat";
 import { haritaSecenekleri } from "@/lib/harita-yonlendirme";
 
+type LeafletNS = typeof import("leaflet");
+
 interface TakipVerisi {
   konum: LatLng | null;
   guncelleme: string | null;
@@ -19,6 +21,25 @@ interface MusteriCekiciTakipHaritaProps {
   hedefKonum?: LatLng | null;
 }
 
+function noktaIkon(
+  L: LeafletNS,
+  etiket: string,
+  arka: string
+) {
+  return L.divIcon({
+    className: "acil-takip-pin",
+    html: `<span style="
+      display:flex;align-items:center;justify-content:center;
+      width:30px;height:30px;border-radius:9999px;
+      background:${arka};color:#fff;font-weight:700;font-size:11px;
+      box-shadow:0 2px 8px rgba(0,0,0,.28);border:2px solid #fff;
+      font-family:system-ui,sans-serif;
+    ">${etiket}</span>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 30],
+  });
+}
+
 export function MusteriCekiciTakipHarita({
   talepId,
   musteriKonum,
@@ -27,8 +48,14 @@ export function MusteriCekiciTakipHarita({
   const [veri, setVeri] = useState<TakipVerisi | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [haritaSecim, setHaritaSecim] = useState(false);
-  const musteriRef = useRef(musteriKonum);
-  musteriRef.current = musteriKonum;
+  const haritaElRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<import("leaflet").Map | null>(null);
+  const LRef = useRef<LeafletNS | null>(null);
+  const markersRef = useRef<{
+    musteri?: import("leaflet").Marker;
+    cekici?: import("leaflet").Marker;
+    hedef?: import("leaflet").Marker;
+  }>({});
 
   const yukle = useCallback(async () => {
     try {
@@ -45,11 +72,129 @@ export function MusteriCekiciTakipHarita({
 
   useEffect(() => {
     void yukle();
-    const id = setInterval(yukle, 30_000);
+    const id = setInterval(yukle, 15_000);
     return () => clearInterval(id);
   }, [yukle]);
 
   const cekiciKonum = veri?.konum ?? null;
+
+  /* Harita kur + noktaları güncelle */
+  useEffect(() => {
+    const el = haritaElRef.current;
+    if (!el) return;
+
+    let iptal = false;
+
+    void (async () => {
+      if (!LRef.current) {
+        const L = (await import("leaflet")).default;
+        await import("leaflet/dist/leaflet.css");
+        if (iptal) return;
+        LRef.current = L;
+      }
+      const L = LRef.current;
+      if (!L || iptal) return;
+
+      if (!mapRef.current) {
+        const map = L.map(el, {
+          scrollWheelZoom: false,
+          attributionControl: false,
+          zoomControl: true,
+        });
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+        }).addTo(map);
+        mapRef.current = map;
+      }
+
+      const map = mapRef.current;
+      const markers = markersRef.current;
+      const bounds = L.latLngBounds([]);
+
+      if (!markers.musteri) {
+        markers.musteri = L.marker([musteriKonum.lat, musteriKonum.lng], {
+          icon: noktaIkon(L, "Siz", "#1e293b"),
+          zIndexOffset: 200,
+        }).addTo(map);
+        markers.musteri.bindTooltip("Sizin konumunuz", {
+          direction: "top",
+          offset: [0, -12],
+        });
+      } else {
+        markers.musteri.setLatLng([musteriKonum.lat, musteriKonum.lng]);
+      }
+      bounds.extend([musteriKonum.lat, musteriKonum.lng]);
+
+      if (cekiciKonum) {
+        if (!markers.cekici) {
+          markers.cekici = L.marker([cekiciKonum.lat, cekiciKonum.lng], {
+            icon: noktaIkon(L, "🚛", "#059669"),
+            zIndexOffset: 300,
+          }).addTo(map);
+          markers.cekici.bindTooltip(veri?.cekiciAd ?? "Çekici", {
+            direction: "top",
+            offset: [0, -12],
+          });
+        } else {
+          markers.cekici.setLatLng([cekiciKonum.lat, cekiciKonum.lng]);
+          if (veri?.cekiciAd) {
+            markers.cekici.setTooltipContent(veri.cekiciAd);
+          }
+        }
+        bounds.extend([cekiciKonum.lat, cekiciKonum.lng]);
+      } else if (markers.cekici) {
+        map.removeLayer(markers.cekici);
+        markers.cekici = undefined;
+      }
+
+      if (hedefKonum) {
+        if (!markers.hedef) {
+          markers.hedef = L.marker([hedefKonum.lat, hedefKonum.lng], {
+            icon: noktaIkon(L, "🎯", "#d97706"),
+            zIndexOffset: 150,
+          }).addTo(map);
+          markers.hedef.bindTooltip("Hedef", {
+            direction: "top",
+            offset: [0, -12],
+          });
+        } else {
+          markers.hedef.setLatLng([hedefKonum.lat, hedefKonum.lng]);
+        }
+        bounds.extend([hedefKonum.lat, hedefKonum.lng]);
+      } else if (markers.hedef) {
+        map.removeLayer(markers.hedef);
+        markers.hedef = undefined;
+      }
+
+      if (bounds.isValid()) {
+        map.fitBounds(bounds.pad(0.28), { maxZoom: 15, animate: true });
+      }
+
+      requestAnimationFrame(() => map.invalidateSize());
+    })();
+
+    return () => {
+      iptal = true;
+    };
+  }, [
+    musteriKonum.lat,
+    musteriKonum.lng,
+    cekiciKonum?.lat,
+    cekiciKonum?.lng,
+    hedefKonum?.lat,
+    hedefKonum?.lng,
+    veri?.cekiciAd,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      mapRef.current?.remove();
+      mapRef.current = null;
+      markersRef.current = {};
+      LRef.current = null;
+    };
+  }, []);
+
   const haritaSecenek = cekiciKonum
     ? haritaSecenekleri(musteriKonum, {
         cekici: cekiciKonum,
@@ -58,7 +203,7 @@ export function MusteriCekiciTakipHarita({
     : [];
 
   return (
-    <Card className="border-emerald-200 bg-emerald-50/40 space-y-3">
+    <Card className="border-emerald-200 bg-emerald-50/40 space-y-3 overflow-hidden">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wide">
@@ -77,13 +222,20 @@ export function MusteriCekiciTakipHarita({
         )}
       </div>
 
+      <div
+        ref={haritaElRef}
+        className="h-56 w-full rounded-xl overflow-hidden border border-emerald-100 bg-slate-100 [&_.leaflet-container]:h-full [&_.leaflet-container]:w-full [&_.acil-takip-pin]:border-0 [&_.acil-takip-pin]:bg-transparent"
+        role="img"
+        aria-label="Çekici canlı konum haritası"
+      />
+
       {yukleniyor && !veri && (
         <p className="text-xs text-slate-500">Konum bilgisi alınıyor…</p>
       )}
 
       {!yukleniyor && !cekiciKonum && (
         <p className="text-xs text-slate-600 leading-relaxed">
-          Çekici konumu henüz paylaşılmadı. Yola çıktığında burada görünecek.
+          Çekici konumu henüz paylaşılmadı. Yola çıktığında haritada görünecek.
         </p>
       )}
 
@@ -91,7 +243,7 @@ export function MusteriCekiciTakipHarita({
         <>
           <p className="text-xs text-slate-600">
             {veri?.taze
-              ? "Konum güncel"
+              ? "Konum güncel · harita ~15 sn’de bir yenilenir"
               : veri?.guncelleme
                 ? `Son güncelleme: ${new Date(veri.guncelleme).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`
                 : "Konum paylaşıldı"}
@@ -100,10 +252,10 @@ export function MusteriCekiciTakipHarita({
           <button
             type="button"
             onClick={() => setHaritaSecim(true)}
-            className="w-full rounded-xl border-2 border-emerald-200 bg-white px-4 py-3 text-left transition hover:border-emerald-300 active:scale-[0.99]"
+            className="w-full rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-left transition hover:border-emerald-300 active:scale-[0.99]"
           >
             <span className="text-sm font-semibold text-emerald-900 block">
-              📍 Rotayı haritada aç
+              Rotayı haritada aç
             </span>
             <span className="text-xs text-emerald-700 mt-0.5 block">
               Çekici → sizin konumunuz

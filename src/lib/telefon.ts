@@ -91,3 +91,19 @@ export function telefonE164(tel: string): string | null {
   if (!/^05[0-9]{9}$/.test(n)) return null;
   return `+90${n.slice(1)}`;
 }
+
+/** wa.me için ülke kodlu rakamlar (905…) */
+export function telefonWhatsappDigits(tel: string): string | null {
+  const e164 = telefonE164(tel);
+  if (!e164) return null;
+  return e164.replace(/\D/g, "");
+}
+
+/** WhatsApp sohbet URL’si (metin önceden doldurulabilir) */
+export function whatsappUrl(telefon: string, metin?: string): string | null {
+  const digits = telefonWhatsappDigits(telefon);
+  if (!digits) return null;
+  if (!metin?.trim()) return `https://wa.me/${digits}`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(metin.trim())}`;
+}
+

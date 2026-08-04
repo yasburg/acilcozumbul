@@ -23,6 +23,8 @@ import { posthogOlayYakala } from "@/lib/posthog-client";
 import { musteriFunnelOlay } from "@/lib/musteri-funnel";
 import { metaPixelLead } from "@/lib/meta-pixel";
 import { tiktokPixelLead } from "@/lib/tiktok-pixel";
+import { whatsappKonumMesaji } from "@/lib/harita-yonlendirme";
+import { whatsappUrl } from "@/lib/telefon";
 
 type Durum =
   | "ihale_bekliyor"
@@ -109,6 +111,7 @@ function BekleIcerik() {
   const [cekiciProfilFotoUrl, setCekiciProfilFotoUrl] = useState<string | null>(
     null
   );
+  const [cekiciTelefon, setCekiciTelefon] = useState<string | null>(null);
   const [kazananFiyat, setKazananFiyat] = useState<number | null>(null);
   const [islem, setIslem] = useState(false);
   const [mesaj, setMesaj] = useState("");
@@ -319,6 +322,9 @@ function BekleIcerik() {
               ? data.cekiciProfilFotoUrl
               : null
           );
+          setCekiciTelefon(
+            typeof data.cekiciTelefon === "string" ? data.cekiciTelefon : null
+          );
           if (data.memnuniyet) setMemnuniyet(data.memnuniyet);
           planla(30_000);
           return;
@@ -328,6 +334,7 @@ function BekleIcerik() {
           anlasildiRef.current = false;
           setCekiciAd(null);
           setCekiciProfilFotoUrl(null);
+          setCekiciTelefon(null);
           setTeklifBanner(null);
           const teklifRes = await fetch(`/api/talep/${id}/teklifler`);
           if (teklifRes.ok) {
@@ -364,6 +371,9 @@ function BekleIcerik() {
               ? data.cekiciProfilFotoUrl
               : null
           );
+          setCekiciTelefon(
+            typeof data.cekiciTelefon === "string" ? data.cekiciTelefon : null
+          );
           setKazananFiyat(data.kazananFiyat ?? null);
           planla(8000);
           return;
@@ -376,6 +386,9 @@ function BekleIcerik() {
             typeof data.cekiciProfilFotoUrl === "string"
               ? data.cekiciProfilFotoUrl
               : null
+          );
+          setCekiciTelefon(
+            typeof data.cekiciTelefon === "string" ? data.cekiciTelefon : null
           );
           planla(8000);
           return;
@@ -569,6 +582,17 @@ function BekleIcerik() {
     const formAcik =
       anlasildi && memnuniyet?.formAcik && !memnuniyet.degerlendirildi;
     const degerlendirildi = anlasildi && memnuniyet?.degerlendirildi;
+    const whatsappKonumHref =
+      cekiciTelefon && takipKonum
+        ? whatsappUrl(
+            cekiciTelefon,
+            whatsappKonumMesaji({
+              lat: takipKonum.lat,
+              lng: takipKonum.lng,
+              adres: takipKonum.adres,
+            })
+          )
+        : null;
 
     return (
       <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
@@ -607,6 +631,23 @@ function BekleIcerik() {
               musteriKonum={takipKonum}
               hedefKonum={takipHedef}
             />
+          )}
+
+          {whatsappKonumHref && (
+            <a
+              href={whatsappKonumHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                posthogOlayYakala(
+                  "whatsapp_konum_paylas",
+                  musteriFunnelProps({ hedef: "cekici" })
+                )
+              }
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1ebe57] touch-manipulation"
+            >
+              WhatsApp’tan konum at
+            </a>
           )}
 
           {!anlasildi && mesaj && (

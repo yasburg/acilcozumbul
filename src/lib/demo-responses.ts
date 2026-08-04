@@ -215,7 +215,11 @@ export function demoMusteriTekliflerJson(talep: Talep) {
   };
 }
 
-export function demoMusteriTalepDurumJson(talep: Talep, cekiciAd?: string) {
+export function demoMusteriTalepDurumJson(
+  talep: Talep,
+  cekiciAd?: string,
+  cekiciTelefon?: string | null
+) {
   const teklifler = aktifTeklifler(talep);
   const kazananSecildi = !!talep.kazananCekiciId;
   const anlasmaBekliyor =
@@ -236,6 +240,7 @@ export function demoMusteriTalepDurumJson(talep: Talep, cekiciAd?: string) {
     yenidenAranıyor: talep.durum === "yeniden_ihalede",
     tamamlandi: talep.durum === "anlaşıldı",
     cekiciAd,
+    cekiciTelefon: kazananSecildi ? cekiciTelefon ?? null : null,
     kazananFiyat: kazananTeklif?.fiyat,
     anlasmaDurumu: talep.anlasmaDurumu,
     konum: talep.konum,

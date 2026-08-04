@@ -27,19 +27,20 @@ export async function GET(
       );
     }
     let cekiciAd: string | undefined;
+    let cekiciTelefon: string | null = null;
     if (demoCtx.talep.kazananCekiciId) {
       const kazanan = demoCtx.talep.teklifler?.find(
         (t) => t.cekiciId === demoCtx.talep.kazananCekiciId
       );
       if (kazanan) {
         cekiciAd = kazanan.cekiciAd.split(" ")[0];
-      } else {
-        const cekici = await getCekiciById(demoCtx.talep.kazananCekiciId);
-        cekiciAd = cekici?.ad;
       }
+      const cekici = await getCekiciById(demoCtx.talep.kazananCekiciId);
+      if (!cekiciAd) cekiciAd = cekici?.ad;
+      cekiciTelefon = cekici?.telefon?.trim() || null;
     }
     return NextResponse.json(
-      demoMusteriTalepDurumJson(demoCtx.talep, cekiciAd)
+      demoMusteriTalepDurumJson(demoCtx.talep, cekiciAd, cekiciTelefon)
     );
   }
 
@@ -59,9 +60,11 @@ export async function GET(
 
   let cekiciAd: string | undefined;
   let cekiciProfilFotoUrl: string | null = null;
+  let cekiciTelefon: string | null = null;
   if (talep.kazananCekiciId) {
     const cekici = await getCekiciById(talep.kazananCekiciId);
     cekiciAd = cekici?.ad;
+    cekiciTelefon = cekici?.telefon?.trim() || null;
     if (
       cekici?.profilFotoDurum === "onaylandi" &&
       cekici.profilFotoUrl?.trim()
@@ -97,6 +100,8 @@ export async function GET(
     tamamlandi,
     cekiciAd,
     cekiciProfilFotoUrl,
+    /** Yalnızca kazanan seçildikten sonra — WhatsApp konum vb. */
+    cekiciTelefon: kazananSecildi ? cekiciTelefon : null,
     kazananFiyat: kazananTeklif?.fiyat,
     anlasmaDurumu: talep.anlasmaDurumu,
     konum: talep.konum,

@@ -67,3 +67,24 @@ export function haritaSecenekleri(
   };
   return iosCihazMi() ? [apple, google] : [google, apple];
 }
+
+/** Tek noktayı Google Maps’te açan pin linki */
+export function googleMapsKonumUrl(konum: LatLng): string {
+  return `https://maps.google.com/?q=${latLngStr(konum)}`;
+}
+
+/** Çekiciye WhatsApp’tan gönderilecek konum metni */
+export function whatsappKonumMesaji(opts: {
+  lat: number;
+  lng: number;
+  adres?: string;
+}): string {
+  const satirlar = [
+    "Merhaba, konumum:",
+    googleMapsKonumUrl({ lat: opts.lat, lng: opts.lng }),
+  ];
+  const adres = opts.adres?.trim();
+  if (adres) satirlar.push(`Adres: ${adres}`);
+  return satirlar.join("\n");
+}
+
