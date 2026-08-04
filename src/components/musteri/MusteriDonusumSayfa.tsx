@@ -269,6 +269,7 @@ function MusteriDonusumSayfaIcerik({
     hedefAdres: "",
     sorunTipi: "",
     sorunDetay: "",
+    aracTipi: "",
     aracModeli: "",
   });
   const [fotografOnizleme, setFotografOnizleme] = useState<string | null>(null);

@@ -780,8 +780,8 @@
     "semantic_hash": ""
   },
   "src/components/musteri/MusteriAnaSayfa.tsx": {
-    "mtime": 1785839202.0515213,
-    "ast_hash": "44c9a5e29bacd8fa9dd7f7841c708373",
+    "mtime": 1785840038.8497684,
+    "ast_hash": "85041b324af56b64c032b13b2106321f",
     "semantic_hash": ""
   },
   "src/components/panel/HizmetVerenSayimPanel.tsx": {
@@ -820,7 +820,7 @@
     "semantic_hash": ""
   },
   "src/components/yasal/YasalSiteFooter.tsx": {
-    "mtime": 1785797725.670175,
+    "mtime": 1785839962.8108242,
     "ast_hash": "dfc791314416911a20364e4cd53a096c",
     "semantic_hash": ""
   },
@@ -3080,8 +3080,58 @@
     "semantic_hash": ""
   },
   "src/components/AracTipiIkon.tsx": {
-    "mtime": 1785839208.7506328,
-    "ast_hash": "fb36117be51a39fd03bce02546bd93f0",
+    "mtime": 1785840038.838895,
+    "ast_hash": "a4c7c42ca3c2e5f068f574deadafd3ff",
+    "semantic_hash": ""
+  },
+  "public/icons/arac-tipi/ATTRIBUTION.txt": {
+    "mtime": 1785839991.992579,
+    "ast_hash": "f8c98bd1add45d4a1925fe82f608420f",
+    "semantic_hash": ""
+  },
+  "public/icons/arac-tipi/coupe.png": {
+    "mtime": 1785839842.4340162,
+    "ast_hash": "a6df28e8e69599972db2fd819385cce7",
+    "semantic_hash": ""
+  },
+  "public/icons/arac-tipi/diger.png": {
+    "mtime": 1785839844.780466,
+    "ast_hash": "2cca1f8828e51492c05ff01e9f0f6228",
+    "semantic_hash": ""
+  },
+  "public/icons/arac-tipi/hatchback.png": {
+    "mtime": 1785839840.6291137,
+    "ast_hash": "f9fc08be7f1b743413cb24cd9d35d495",
+    "semantic_hash": ""
+  },
+  "public/icons/arac-tipi/minivan.png": {
+    "mtime": 1785839842.7908392,
+    "ast_hash": "38f6dda65980ecb4e6a2417b8bf79755",
+    "semantic_hash": ""
+  },
+  "public/icons/arac-tipi/motosiklet.png": {
+    "mtime": 1785839843.934489,
+    "ast_hash": "c1b156c26f5998647810b412dda53b6c",
+    "semantic_hash": ""
+  },
+  "public/icons/arac-tipi/pickup.png": {
+    "mtime": 1785839843.306847,
+    "ast_hash": "dab615eda1ec2fe830603d7f1775a72e",
+    "semantic_hash": ""
+  },
+  "public/icons/arac-tipi/sedan.png": {
+    "mtime": 1785839840.070738,
+    "ast_hash": "93aff1a5a855aac636d43ea5e77bcaa4",
+    "semantic_hash": ""
+  },
+  "public/icons/arac-tipi/station.png": {
+    "mtime": 1785839891.598529,
+    "ast_hash": "447079b5965e5f8dddbf6a1bea8d1d0f",
+    "semantic_hash": ""
+  },
+  "public/icons/arac-tipi/suv.png": {
+    "mtime": 1785839841.2501552,
+    "ast_hash": "fe0e800869ffca9b24f28bf621fb289f",
     "semantic_hash": ""
   }
 }
