@@ -1,7 +1,7 @@
 # Graph Report - acilcozumbul  (2026-08-04)
 
 ## Corpus Check
-- 595 files · ~506,636 words
+- 595 files · ~506,682 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `953fea97`
+- Built from commit: `8b2bbc28`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -382,8 +382,8 @@ Cohesion: 0.08
 Nodes (33): GET(), GET(), GET(), hataMesajiFromParam(), Ozet, PanelIcerik(), HizmetVerenSayimAlani(), HizmetVerenSayimGostergesi() (+25 more)
 
 ### Community 64 - "layout.tsx"
-Cohesion: 0.18
-Nodes (19): kaynakOku(), POST(), KrediPage(), ABONELIK_PAKETLERI, KREDI_PAKET_TL_LISTESI, KREDI_SATIN_AL_PAKETLERI, KrediPaket, krediPaketBul() (+11 more)
+Cohesion: 0.10
+Nodes (31): kaynakOku(), POST(), KrediPage(), hizmetBolgeleriFlatten(), ABONELIK_PAKETLERI, KREDI_PAKET_TL_LISTESI, KREDI_SATIN_AL_PAKETLERI, KrediPaket (+23 more)
 
 ### Community 65 - "kampanya-db.ts"
 Cohesion: 0.15
@@ -394,8 +394,8 @@ Cohesion: 0.20
 Nodes (11): telefonSabitHatMi(), AD_BASLIKLAR, baslikEsle(), elleTelefonEkle(), excelAlicilariListeyeEkle(), exceldenTopluSmsAliciOku(), ExcelYukleOzet, TELEFON_BASLIKLAR (+3 more)
 
 ### Community 68 - "posthog-client.ts"
-Cohesion: 0.15
-Nodes (21): PATCH(), POST(), sonKullanmaAyir(), tcKimlikGecerliMi(), vergiNoGecerliMi(), aylikRecurringOpts(), BASARI_KODLARI, GarantiKrediOdemeIstegi (+13 more)
+Cohesion: 0.28
+Nodes (12): PATCH(), POST(), sonKullanmaAyir(), tcKimlikGecerliMi(), vergiNoGecerliMi(), istemciIpAl(), abonelikKrediSifirlaVeYukle(), baglaKrediHatirlatmaYukleme() (+4 more)
 
 ### Community 69 - "getCekiciler"
 Cohesion: 0.15
@@ -474,8 +474,8 @@ Cohesion: 0.32
 Nodes (11): GET(), panelKullanici(), PATCH(), GET(), getAcikIller(), listeleSehirAcilis(), sehirAcilisAyarla(), sehirAcilisCacheTemizle() (+3 more)
 
 ### Community 92 - "kredi-odeme.ts"
-Cohesion: 0.12
-Nodes (20): GET(), GET(), hizmetBolgeleriFlatten(), getKrediOdemeById(), kaydetKrediOdeme(), listeleKrediOdemeler(), cekiciFromRow(), CekiciRow (+12 more)
+Cohesion: 0.33
+Nodes (7): GET(), GET(), getKrediOdemeById(), kaydetKrediOdeme(), listeleKrediOdemeler(), krediOdemeFromRow(), krediOdemeToRow()
 
 ### Community 93 - "middleware.ts"
 Cohesion: 0.24
@@ -518,8 +518,8 @@ Cohesion: 0.83
 Nodes (3): GET(), istemciIp(), ozelIp()
 
 ### Community 105 - "Cekici"
-Cohesion: 0.25
-Nodes (11): GARANTI_HATA_KODLARI, garantiKodNormalize(), garantiMesajGenelMi(), garantiMusteriHataMesaji(), garantiYetersizBakiyeMetniMi(), GENEL_MESAJ_ORNEKLERI, YETERSIZ_BAKIYE_ORNEKLERI, garantiYanitAlanlari (+3 more)
+Cohesion: 0.14
+Nodes (21): GARANTI_HATA_KODLARI, garantiKodNormalize(), garantiMesajGenelMi(), garantiMusteriHataMesaji(), garantiYetersizBakiyeMetniMi(), GENEL_MESAJ_ORNEKLERI, YETERSIZ_BAKIYE_ORNEKLERI, aylikRecurringOpts() (+13 more)
 
 ### Community 107 - "page.tsx"
 Cohesion: 0.19

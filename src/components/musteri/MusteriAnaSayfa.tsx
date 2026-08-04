@@ -1154,13 +1154,18 @@ function MusteriAnaSayfaIcerik({
     }
 
     setKonumIzniBekleniyor(true);
-    const izin = await konumIzniOku();
-    if (gpsIstekRef.current !== istekId) return;
-    if (izin === "granted") setKonumIzni("granted");
-    else if (izin !== "denied") setKonumIzni(izin);
-    /* Safari: permissions “denied” olsa bile GPS dene (site ayarı Allow olabilir) */
+    /*
+     * Safari iOS: getCurrentPosition tıklama (user gesture) içinde senkron
+     * başlamalı. permissions.query await edilirse izin diyaloğu çıkmayabilir.
+     */
+    const konumPromise = konumAlEsnek();
+    void konumIzniOku().then((izin) => {
+      if (gpsIstekRef.current !== istekId) return;
+      if (izin === "granted") setKonumIzni("granted");
+      else if (izin !== "denied") setKonumIzni(izin);
+    });
     try {
-      const pos = await konumAlEsnek();
+      const pos = await konumPromise;
       if (gpsIstekRef.current !== istekId) return;
       const { latitude, longitude } = pos.coords;
       const adres = await reverseGeocode(latitude, longitude);

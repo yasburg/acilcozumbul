@@ -69,6 +69,8 @@ export function konumAyarlariAdimlari(): string[] {
 /**
  * Safari iOS often reports "denied" here while site settings are "Allow".
  * Do not use this alone to block getCurrentPosition — only for UI hints.
+ * Never await this *before* getCurrentPosition on a click: Safari may skip
+ * the permission dialog if the user-gesture chain is broken.
  */
 export async function konumIzniOku(): Promise<KonumIzniDurumu> {
   if (typeof navigator === "undefined" || !navigator.geolocation) {

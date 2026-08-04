@@ -55,8 +55,8 @@ export function ChromeAcSecenegi({
       ) : null}
       {tiklandi && (
         <p className="text-xs text-slate-500 leading-relaxed text-center">
-          Chrome açılmazsa App Store / Play Store’dan yükleyip bu sayfayı orada
-          açın.
+          Chrome yüklü değilse veya açılmazsa sorun değil — aşağıdan şehrinizi ve
+          ilçenizi seçerek forma devam edebilirsiniz.
         </p>
       )}
     </div>
