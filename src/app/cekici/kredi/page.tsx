@@ -149,8 +149,6 @@ export default function KrediPage() {
   return (
     <MobileShell
       backHref="/cekici/panel?tab=hesabim"
-      backLabel="Ücretsiz devam et"
-      backMuted
       subtitle="Kredi / Abonelik"
       headerEnd={
         <p className="text-right leading-tight">
@@ -303,6 +301,13 @@ export default function KrediPage() {
               ? `💳 ${odenecek} ₺ — Abone ol`
               : `💳 ${odenecek} ₺ — Ödemeye Git`}
         </Btn>
+        <button
+          type="button"
+          onClick={() => router.push("/cekici/panel?tab=hesabim")}
+          className="w-full text-center text-sm font-medium text-slate-400 hover:text-slate-500 touch-manipulation py-2"
+        >
+          Ücretsiz devam et
+        </button>
       </div>
     </MobileShell>
   );
