@@ -6,6 +6,7 @@ import {
   forwardRef,
   useState,
 } from "react";
+import { ACB_BRAND, isAcbBrand } from "@/lib/brand";
 
 function GozIkonu({ kapali }: { kapali: boolean }) {
   if (kapali) {
@@ -227,6 +228,35 @@ export function Card({
 }
 
 export function Spinner({ className = "" }: { className?: string }) {
+  if (isAcbBrand) {
+    return (
+      <span
+        className={`brand-acb-spinner inline-flex size-5 shrink-0 items-center justify-center ${className}`}
+        role="status"
+        aria-label="Yükleniyor"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- animated SVG; static fallback for reduced-motion */}
+        <img
+          src={ACB_BRAND.animationPingpong}
+          alt=""
+          width={40}
+          height={40}
+          className="brand-acb-spinner-anim size-full object-contain"
+          aria-hidden
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={ACB_BRAND.logoIcon}
+          alt=""
+          width={40}
+          height={40}
+          className="brand-acb-spinner-static size-full object-contain"
+          aria-hidden
+        />
+      </span>
+    );
+  }
+
   return (
     <span
       className={`inline-block size-5 shrink-0 animate-spin rounded-full border-2 border-amber-500 border-t-transparent ${className}`}

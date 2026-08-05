@@ -9,6 +9,113 @@
   --accent: #d97706;
 }
 
+/* Staging ACB rebrand — html.brand-acb (NEXT_PUBLIC_APP_ENV=staging) */
+html.brand-acb {
+  --background: #eaf0ce;
+  --foreground: #1b2d2a;
+  --card: #ffffff;
+  --border: color-mix(in srgb, #1b2d2a 14%, white);
+  --muted: color-mix(in srgb, #1b2d2a 55%, white);
+  --accent: #089b2d;
+
+  /* Amber (CTAs / brand accents) → green */
+  --color-amber-50: #eaf8ee;
+  --color-amber-100: #d0f0d9;
+  --color-amber-200: #a3e0b3;
+  --color-amber-300: #6bcb82;
+  --color-amber-400: #1aad3a;
+  --color-amber-500: #089b2d;
+  --color-amber-600: #077f25;
+  --color-amber-700: #066b1f;
+  --color-amber-800: #05571a;
+  --color-amber-900: #044314;
+  --color-amber-950: #032e0e;
+
+  /* Emerald success → green */
+  --color-emerald-50: #eaf8ee;
+  --color-emerald-100: #d0f0d9;
+  --color-emerald-200: #a3e0b3;
+  --color-emerald-300: #6bcb82;
+  --color-emerald-400: #2fb34d;
+  --color-emerald-500: #089b2d;
+  --color-emerald-600: #077f25;
+  --color-emerald-700: #066b1f;
+  --color-emerald-800: #05571a;
+  --color-emerald-900: #044314;
+  --color-emerald-950: #032e0e;
+
+  /* Orange → warning orange */
+  --color-orange-50: #fff5eb;
+  --color-orange-100: #ffe8d1;
+  --color-orange-200: #ffd0a3;
+  --color-orange-300: #ffb56e;
+  --color-orange-400: #ffa555;
+  --color-orange-500: #ff9b42;
+  --color-orange-600: #e8872f;
+  --color-orange-700: #c45a10;
+  --color-orange-800: #9a4508;
+  --color-orange-900: #7a3706;
+  --color-orange-950: #4a2103;
+
+  /* Yellow attention → warning orange family */
+  --color-yellow-50: #fff5eb;
+  --color-yellow-100: #ffe8d1;
+  --color-yellow-200: #ffd0a3;
+  --color-yellow-300: #ffb56e;
+  --color-yellow-400: #ffa555;
+  --color-yellow-500: #ff9b42;
+  --color-yellow-600: #e8872f;
+  --color-yellow-700: #c45a10;
+  --color-yellow-800: #9a4508;
+  --color-yellow-900: #7a3706;
+  --color-yellow-950: #4a2103;
+
+  /* Page shells */
+  --color-slate-50: #eaf0ce;
+  --color-slate-900: #1b2d2a;
+}
+
+html.brand-acb body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Brand keyframe accents (hardcoded amber rgb in keyframes) */
+html.brand-acb {
+  --brand-green-rgb: 8 155 45;
+  --brand-warn-rgb: 255 155 66;
+}
+
+html.brand-acb .animate-hedef-secim-parla {
+  animation-name: hedef-secim-parla-acb;
+}
+
+@keyframes hedef-secim-parla-acb {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgb(var(--brand-green-rgb) / 0.45);
+    border-color: rgb(var(--brand-green-rgb));
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgb(var(--brand-green-rgb) / 0.35);
+    border-color: #077f25;
+  }
+}
+
+html.brand-acb .animate-nasil-glow {
+  animation-name: nasil-glow-acb;
+}
+
+@keyframes nasil-glow-acb {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(var(--brand-green-rgb) / 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgb(var(--brand-green-rgb) / 0);
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -329,4 +436,23 @@ select {
   .animate-nasil-glow {
     animation: none;
   }
+}
+
+/* Staging ACB loading spinner — ping-pong SVG with static fallback */
+.brand-acb-spinner-static {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-acb-spinner-anim {
+    display: none;
+  }
+
+  .brand-acb-spinner-static {
+    display: block;
+  }
+}
+
+html.brand-acb .animate-konum-ring-emerald {
+  background: rgb(var(--brand-green-rgb) / 0.25);
 }

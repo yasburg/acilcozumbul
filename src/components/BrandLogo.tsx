@@ -1,12 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { MouseEventHandler } from "react";
+import { ACB_BRAND, isAcbBrand } from "@/lib/brand";
 
 /** Header LCP yolu — ~11 KB WebP (640×416) */
 const LOGO_YAZILI_HEADER = "/acilcozumbul-logo-yazili-header.webp";
 /** OG / büyük yüzeyler için orijinal PNG */
 const LOGO_YAZILI_FULL = "/acilcozumbul-logo-yazili-dikdortgen.png";
 const LOGO_ICON = "/acilcozumbul-logo-icon-192.png";
+
+const yaziliSrc = isAcbBrand ? ACB_BRAND.logoYazili : LOGO_YAZILI_HEADER;
+const yaziliFullSrc = isAcbBrand ? ACB_BRAND.logoSocial : LOGO_YAZILI_FULL;
+const iconSrc = isAcbBrand ? ACB_BRAND.logoIcon : LOGO_ICON;
+const yaziliSize = isAcbBrand
+  ? { width: 1027, height: 851 }
+  : { width: 640, height: 416 };
 
 /** Yazılı marka logosu (header vb.) */
 export function BrandLogoYazili({
@@ -22,10 +30,10 @@ export function BrandLogoYazili({
 }) {
   const img = (
     <Image
-      src={LOGO_YAZILI_HEADER}
+      src={yaziliSrc}
       alt="Acil Çözüm Bul — acilcozumbul.com"
-      width={640}
-      height={416}
+      width={yaziliSize.width}
+      height={yaziliSize.height}
       sizes="(max-width: 512px) 200px, 312px"
       className={className}
       priority={priority}
@@ -56,10 +64,10 @@ export function BrandLogoIcon({
 }) {
   return (
     <Image
-      src={LOGO_ICON}
+      src={iconSrc}
       alt=""
-      width={192}
-      height={192}
+      width={isAcbBrand ? 1276 : 192}
+      height={isAcbBrand ? 1276 : 192}
       className={className}
       style={{ width: size, height: size }}
       aria-hidden
@@ -67,4 +75,8 @@ export function BrandLogoIcon({
   );
 }
 
-export { LOGO_YAZILI_FULL, LOGO_YAZILI_HEADER, LOGO_ICON };
+export {
+  yaziliFullSrc as LOGO_YAZILI_FULL,
+  yaziliSrc as LOGO_YAZILI_HEADER,
+  iconSrc as LOGO_ICON,
+};

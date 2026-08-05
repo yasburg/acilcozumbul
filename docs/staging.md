@@ -22,6 +22,16 @@ Doğrulama: `railway domain status stage.acilcozumbul.com -e staging -s acilcozu
 
 **Not:** Staging şu an production ile aynı Supabase’i kullanır. Ayrı DB isterseniz yeni Supabase project + env güncellemesi gerekir.
 
+## ACB rebrand önizleme
+
+`NEXT_PUBLIC_APP_ENV=staging` iken uygulama yeni ACB markasını gösterir (`html.brand-acb`):
+
+- Logo / ikon / OG: `public/brand/acb/`
+- Palette: krem `#EAF0CE`, yeşil butonlar `#089B2D`, turuncu uyarı `#FF9B42`, koyu metin `#1B2D2A`
+- Yükleme: `ACB-Animation-pingpong.svg` (Spinner)
+
+Production bu değişikliklerden etkilenmez. Yerelde denemek için: `NEXT_PUBLIC_APP_ENV=staging npm run dev`
+
 ## Deploy
 
 `main` push → production. Staging için Railway dashboard’dan redeploy veya:

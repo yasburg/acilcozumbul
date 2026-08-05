@@ -18,6 +18,7 @@ import {
   SITE_URL,
   sayfaUrl,
 } from "@/lib/seo";
+import { ACB_BRAND, isAcbBrand } from "@/lib/brand";
 import {
   GA_MEASUREMENT_ID,
   GOOGLE_ADS_ID,
@@ -32,6 +33,13 @@ const geist = Geist({
   adjustFontFallback: true,
   preload: true,
 });
+
+const brandIcon = isAcbBrand
+  ? ACB_BRAND.logoIcon
+  : "/acilcozumbul-logo-icon-192.png";
+const brandOg = isAcbBrand
+  ? ACB_BRAND.logoSocial
+  : "/acilcozumbul-logo-yazili.png";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -60,7 +68,7 @@ export const metadata: Metadata = {
     description: SEO_ACIKLAMA,
     images: [
       {
-        url: sayfaUrl("/acilcozumbul-logo-yazili.png"),
+        url: sayfaUrl(brandOg),
         alt: `${SITE_ADI} — acil çekici ve yol yardım`,
       },
     ],
@@ -69,7 +77,7 @@ export const metadata: Metadata = {
     card: "summary",
     title: SEO_BASLIK,
     description: SEO_ACIKLAMA,
-    images: [sayfaUrl("/acilcozumbul-logo-yazili.png")],
+    images: [sayfaUrl(brandOg)],
   },
   robots: {
     index: true,
@@ -83,9 +91,9 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: [{ url: "/acilcozumbul-logo-icon-192.png", type: "image/png", sizes: "192x192" }],
-    apple: "/acilcozumbul-logo-icon-192.png",
-    shortcut: "/acilcozumbul-logo-icon-192.png",
+    icon: [{ url: brandIcon, type: "image/png", sizes: "192x192" }],
+    apple: brandIcon,
+    shortcut: brandIcon,
   },
   appleWebApp: {
     capable: true,
@@ -103,7 +111,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   /* maximumScale/userScalable=false mobilde ~300ms dokunma gecikmesi + PSI INP cezası */
-  themeColor: "#ffffff",
+  themeColor: isAcbBrand ? ACB_BRAND.themeColor : "#ffffff",
 };
 
 const googleConsentGerekli = Boolean(
@@ -116,7 +124,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className={`${geist.variable} h-full`}>
+    <html
+      lang="tr"
+      className={`${geist.variable} h-full${isAcbBrand ? " brand-acb" : ""}`}
+    >
       <head>
         {/*
           Consent bootstrap: next/script beforeInteractive React 19’da

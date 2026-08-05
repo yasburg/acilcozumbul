@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ACB_BRAND, isAcbBrand } from "@/lib/brand";
 import { smsBaseUrl } from "@/lib/sms-base-url";
 import { YASAL_SIRKET } from "@/lib/yasal-sirket";
 
@@ -6,6 +7,13 @@ export const SITE_URL = smsBaseUrl();
 
 export const SITE_ADI = YASAL_SIRKET.platformAdi;
 export const SITE_DOMAIN = YASAL_SIRKET.platformDomain;
+
+const brandOgPath = isAcbBrand
+  ? ACB_BRAND.logoSocial
+  : "/acilcozumbul-logo-yazili.png";
+const brandIconPath = isAcbBrand
+  ? ACB_BRAND.logoIcon
+  : "/acilcozumbul-logo-icon-192.png";
 
 /** Ana anahtar ifadeler — Google + AI cevap kutuları */
 export const SEO_ANAHTARLAR = [
@@ -96,7 +104,7 @@ export function sayfaMetadata(opts: {
       type: "website",
       images: [
         {
-          url: sayfaUrl("/acilcozumbul-logo-yazili.png"),
+          url: sayfaUrl(brandOgPath),
           alt: `${SITE_ADI} logo`,
         },
       ],
@@ -105,7 +113,7 @@ export function sayfaMetadata(opts: {
       card: "summary",
       title: opts.title,
       description: opts.description,
-      images: [sayfaUrl("/acilcozumbul-logo-yazili.png")],
+      images: [sayfaUrl(brandOgPath)],
     },
     robots: opts.noIndex
       ? { index: false, follow: false }
@@ -120,7 +128,7 @@ export function organizationJsonLd() {
     name: SITE_ADI,
     alternateName: ["acilcozumbul", "AcilCozumBul"],
     url: SITE_URL,
-    logo: sayfaUrl("/acilcozumbul-logo-icon-192.png"),
+    logo: sayfaUrl(brandIconPath),
     email: YASAL_SIRKET.eposta,
     foundingLocation: {
       "@type": "Place",
