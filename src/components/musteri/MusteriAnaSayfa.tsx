@@ -95,6 +95,9 @@ import {
   musteriFunnelOlayBirKez,
   musteriFunnelOlayGonder,
 } from "@/lib/musteri-funnel-client";
+import type { IhaleSureTipi } from "@/lib/ihale";
+import { ihaleBitisHesapla } from "@/lib/ihale";
+import { IhaleSureSecimi } from "@/components/musteri/IhaleSureSecimi";
 
 const HedefOneriHarita = dynamic(
   () =>
@@ -327,6 +330,9 @@ function MusteriAnaSayfaIcerik({
   });
   const [fotografOnizleme, setFotografOnizleme] = useState<string | null>(null);
   const [fotografData, setFotografData] = useState<string | null>(null);
+  const [ihaleSureTipi, setIhaleSureTipi] = useState<IhaleSureTipi>("acil");
+  const [ihaleOzelBitis, setIhaleOzelBitis] = useState("");
+  const [ihaleSureHatasi, setIhaleSureHatasi] = useState(false);
   const [hedefBilinmiyor, setHedefBilinmiyor] = useState(false);
   const [hedefKendimArat, setHedefKendimArat] = useState(false);
   /** Kullanıcının yazdığı arama metni (bulunan tam adresten ayrı) */
@@ -339,6 +345,8 @@ function MusteriAnaSayfaIcerik({
     fotografOnizleme: null as string | null,
     fotografData: null as string | null,
     hedefBilinmiyor: false,
+    ihaleSureTipi: "acil" as IhaleSureTipi,
+    ihaleOzelBitis: "",
   });
 
   /** App/sekme dönüşünde formu geri yükle (sessionStorage) */
@@ -351,6 +359,8 @@ function MusteriAnaSayfaIcerik({
       setFotografOnizleme(t.fotografOnizleme);
       setFotografData(t.fotografData);
       setHedefBilinmiyor(t.hedefBilinmiyor === true);
+      if (t.ihaleSureTipi) setIhaleSureTipi(t.ihaleSureTipi);
+      if (t.ihaleOzelBitis) setIhaleOzelBitis(t.ihaleOzelBitis);
       if (t.form.adres) {
         const { il, ilce } = parseIlIlce(t.form.adres);
         if (il) setSeciliSehir(il);
@@ -482,6 +492,8 @@ function MusteriAnaSayfaIcerik({
     fotografOnizleme,
     fotografData,
     hedefBilinmiyor,
+    ihaleSureTipi,
+    ihaleOzelBitis,
   };
 
   /** Seçimler + alanlar: her değişimde ve arka plana geçince kaydet */
@@ -495,6 +507,8 @@ function MusteriAnaSayfaIcerik({
       fotografOnizleme,
       fotografData,
       hedefBilinmiyor,
+      ihaleSureTipi,
+      ihaleOzelBitis: ihaleOzelBitis || undefined,
     };
     if (musteriFormTaslakBosMu(taslak)) {
       musteriFormTaslakSil();
@@ -509,6 +523,8 @@ function MusteriAnaSayfaIcerik({
     fotografOnizleme,
     fotografData,
     hedefBilinmiyor,
+    ihaleSureTipi,
+    ihaleOzelBitis,
   ]);
 
   useEffect(() => {
@@ -523,6 +539,8 @@ function MusteriAnaSayfaIcerik({
         fotografOnizleme: a.fotografOnizleme,
         fotografData: a.fotografData,
         hedefBilinmiyor: a.hedefBilinmiyor,
+        ihaleSureTipi: a.ihaleSureTipi,
+        ihaleOzelBitis: a.ihaleOzelBitis || undefined,
       };
       if (musteriFormTaslakBosMu(taslak)) musteriFormTaslakSil();
       else musteriFormTaslakKaydet(taslak);
@@ -689,10 +707,19 @@ function MusteriAnaSayfaIcerik({
       konumZorunluAlanHatasiGoster(aracEksik, fotografEksik);
       return false;
     }
+    const sure = ihaleBitisHesapla(ihaleSureTipi, {
+      ozelBitis: ihaleOzelBitis,
+    });
+    if (!sure.ok) {
+      setIhaleSureHatasi(true);
+      setError(sure.hata);
+      return false;
+    }
     setError("");
     setAracModeliHatasi(false);
     setFotografHatasi(false);
     setSorunDetayHatasi(false);
+    setIhaleSureHatasi(false);
     return true;
   }
 
@@ -810,6 +837,8 @@ function MusteriAnaSayfaIcerik({
         fotografOnizleme,
         fotografData,
         hedefBilinmiyor,
+        ihaleSureTipi,
+        ihaleOzelBitis: ihaleOzelBitis || undefined,
       });
       if (
         typeof window !== "undefined" &&
@@ -1193,6 +1222,8 @@ function MusteriAnaSayfaIcerik({
           fotografOnizleme,
           fotografData,
           hedefBilinmiyor,
+          ihaleSureTipi,
+          ihaleOzelBitis: ihaleOzelBitis || undefined,
         });
         const yol = musteriKonumYolu(il, ilce);
         if (
@@ -1773,6 +1804,10 @@ function MusteriAnaSayfaIcerik({
           aracModeli: aracModeliMetniOlustur(form.aracTipi, form.aracModeli),
           fotograf: fotografData || undefined,
           sorun: sorunMetniOlustur(form.sorunTipi, form.sorunDetay),
+          ihaleSureTipi,
+          ...(ihaleSureTipi === "ozel" && ihaleOzelBitis
+            ? { ihaleOzelBitis }
+            : {}),
         }),
       });
       const data = await res.json();
@@ -2452,6 +2487,17 @@ function MusteriAnaSayfaIcerik({
             />
           )}
 
+          <IhaleSureSecimi
+            value={ihaleSureTipi}
+            ozelBitis={ihaleOzelBitis}
+            invalid={ihaleSureHatasi}
+            onChange={(tip, ozel) => {
+              setIhaleSureTipi(tip);
+              setIhaleOzelBitis(ozel);
+              setIhaleSureHatasi(false);
+            }}
+          />
+
           {(aracModeliHatasi || fotografHatasi || sorunDetayHatasi) &&
             error && (
             <div
@@ -2615,6 +2661,8 @@ function MusteriAnaSayfaIcerik({
                             fotografOnizleme,
                             fotografData,
                             hedefBilinmiyor,
+                            ihaleSureTipi,
+                            ihaleOzelBitis: ihaleOzelBitis || undefined,
                           });
                           if (
                             typeof window !== "undefined" &&

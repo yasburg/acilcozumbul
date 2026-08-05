@@ -11,7 +11,7 @@ import {
   talepFraudKontrol,
 } from "@/lib/talep-fraud";
 import { ipHash, istekIp } from "@/lib/request-ip";
-import { IHALE_SURE_DK } from "@/lib/ihale";
+import { ihaleBitisHesapla, ihaleSureTipiNormalize } from "@/lib/ihale";
 import { parseIlIlce } from "@/lib/konum-parse";
 import {
   sorunAracModeliAlaniGoster,
@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
     sorun,
     aracModeli,
     fotograf,
+    ihaleSureTipi: ihaleSureTipiRaw,
+    ihaleOzelBitis: ihaleOzelBitisRaw,
   } = body;
 
   const hedefBilinmiyor = Boolean(hedefBilinmiyorRaw);
@@ -111,7 +113,16 @@ export async function POST(request: NextRequest) {
   }
 
   const olusturulma = new Date();
-  const ihaleBitis = new Date(olusturulma.getTime() + IHALE_SURE_DK * 60 * 1000);
+  const ihaleSureTipi = ihaleSureTipiNormalize(ihaleSureTipiRaw);
+  const ihaleHesap = ihaleBitisHesapla(ihaleSureTipi, {
+    ozelBitis:
+      typeof ihaleOzelBitisRaw === "string" ? ihaleOzelBitisRaw : undefined,
+    simdi: olusturulma,
+  });
+  if (!ihaleHesap.ok) {
+    return NextResponse.json({ error: ihaleHesap.hata }, { status: 400 });
+  }
+  const ihaleBitis = ihaleHesap.bitis;
   const { il: konumIl, ilce: konumIlce } = parseIlIlce(konum.adres.trim());
 
   const talepId = randomUUID();

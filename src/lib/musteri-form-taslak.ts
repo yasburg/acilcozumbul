@@ -1,5 +1,10 @@
 /** Ana sayfa talep formu — sekme/app değişiminde state koruması (sessionStorage) */
 
+import {
+  ihaleSureTipiNormalize,
+  type IhaleSureTipi,
+} from "@/lib/ihale";
+
 const STORAGE_KEY = "acilcozum_musteri_form_taslak";
 
 export type MusteriFormAlanlari = {
@@ -35,6 +40,8 @@ export type MusteriFormTaslak = {
   fotografData: string | null;
   /** Hedef adımında «bilmiyorum sonra seçeceğim» */
   hedefBilinmiyor?: boolean;
+  ihaleSureTipi?: IhaleSureTipi;
+  ihaleOzelBitis?: string;
 };
 
 const ADIMLAR: ReadonlySet<string> = new Set([
@@ -114,6 +121,9 @@ export function musteriFormTaslakOku(): MusteriFormTaslak | null {
         typeof p.fotografOnizleme === "string" ? p.fotografOnizleme : null,
       fotografData: typeof p.fotografData === "string" ? p.fotografData : null,
       hedefBilinmiyor: p.hedefBilinmiyor === true,
+      ihaleSureTipi: ihaleSureTipiNormalize(p.ihaleSureTipi),
+      ihaleOzelBitis:
+        typeof p.ihaleOzelBitis === "string" ? p.ihaleOzelBitis : undefined,
     };
   } catch {
     return null;

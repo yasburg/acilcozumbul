@@ -66,6 +66,110 @@ export function cekiciTalepSmsAdayiMi(talep: Talep, cekici: Cekici): boolean {
   );
 }
 export const IHALE_SURE_DK = 60;
+export const IHALE_OZEL_MAX_GUN = 30;
+export const IHALE_OZEL_MIN_DK = 5;
+
+export type IhaleSureTipi = "acil" | "1_gun" | "1_hafta" | "ozel";
+
+export const IHALE_SURE_TIPLERI: readonly IhaleSureTipi[] = [
+  "acil",
+  "1_gun",
+  "1_hafta",
+  "ozel",
+] as const;
+
+export function ihaleSureTipiNormalize(raw: unknown): IhaleSureTipi {
+  if (
+    raw === "acil" ||
+    raw === "1_gun" ||
+    raw === "1_hafta" ||
+    raw === "ozel"
+  ) {
+    return raw;
+  }
+  return "acil";
+}
+
+/** datetime-local / ISO string → Date; geçersizse null */
+function ozelBitisParse(raw: string): Date | null {
+  const t = raw.trim();
+  if (!t) return null;
+  // datetime-local: YYYY-MM-DDTHH:mm — yerel saat
+  const local = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(t);
+  if (local) {
+    const [, y, mo, d, h, mi] = local;
+    const dt = new Date(
+      Number(y),
+      Number(mo) - 1,
+      Number(d),
+      Number(h),
+      Number(mi),
+      0,
+      0
+    );
+    return Number.isNaN(dt.getTime()) ? null : dt;
+  }
+  const dt = new Date(t);
+  return Number.isNaN(dt.getTime()) ? null : dt;
+}
+
+/**
+ * İhale bitiş anını hesaplar.
+ * Preset’ler sunucuda yeniden hesaplanır; özel tarih istemciden gelir ve sınırlanır.
+ */
+export function ihaleBitisHesapla(
+  tip: IhaleSureTipi,
+  opts?: { ozelBitis?: string; simdi?: Date }
+): { ok: true; bitis: Date } | { ok: false; hata: string } {
+  const simdi = opts?.simdi ?? new Date();
+
+  if (tip === "acil") {
+    return {
+      ok: true,
+      bitis: new Date(simdi.getTime() + IHALE_SURE_DK * 60 * 1000),
+    };
+  }
+  if (tip === "1_gun") {
+    return {
+      ok: true,
+      bitis: new Date(simdi.getTime() + 24 * 60 * 60 * 1000),
+    };
+  }
+  if (tip === "1_hafta") {
+    return {
+      ok: true,
+      bitis: new Date(simdi.getTime() + 7 * 24 * 60 * 60 * 1000),
+    };
+  }
+
+  const bitis = ozelBitisParse(opts?.ozelBitis ?? "");
+  if (!bitis) {
+    return { ok: false, hata: "Özel bitiş tarihi gerekli." };
+  }
+  const min = new Date(simdi.getTime() + IHALE_OZEL_MIN_DK * 60 * 1000);
+  const max = new Date(
+    simdi.getTime() + IHALE_OZEL_MAX_GUN * 24 * 60 * 60 * 1000
+  );
+  if (bitis < min) {
+    return {
+      ok: false,
+      hata: "İhale bitişi en az 5 dakika sonra olmalı.",
+    };
+  }
+  if (bitis > max) {
+    return {
+      ok: false,
+      hata: "İhale süresi en fazla 1 ay olabilir.",
+    };
+  }
+  return { ok: true, bitis };
+}
+
+/** datetime-local input değeri (yerel) */
+export function ihaleDatetimeLocal(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 
 export function ihaleAcikMi(talep: Talep): boolean {
   if (talep.durum !== "ihalede" && talep.durum !== "yeniden_ihalede") return false;

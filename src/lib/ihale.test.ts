@@ -3,6 +3,11 @@ import {
   anlasamadiSonrasiIhaleyiSurdur,
   cekiciBildirimKrediTutari,
   cekiciTalebeBildirildiMi,
+  ihaleBitisHesapla,
+  ihaleDatetimeLocal,
+  ihaleSureTipiNormalize,
+  IHALE_OZEL_MAX_GUN,
+  IHALE_SURE_DK,
   PANEL_BILDIRIM_KREDI,
   PREMIUM_SMS_BILDIRIM_KREDI,
   SMS_BILDIRIM_KREDI,
@@ -79,5 +84,63 @@ describe("anlasamadiSonrasiIhaleyiSurdur", () => {
     expect(kalanAktif).toBe(0);
     expect(talep.durum).toBe("yeniden_ihalede");
     expect(talep.haricTutulanCekiciIds).toContain("c1");
+  });
+});
+
+describe("ihaleBitisHesapla", () => {
+  const simdi = new Date("2026-08-05T12:00:00+03:00");
+
+  it("acil = 1 saat", () => {
+    const r = ihaleBitisHesapla("acil", { simdi });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.bitis.getTime() - simdi.getTime()).toBe(IHALE_SURE_DK * 60 * 1000);
+  });
+
+  it("1_gun = 24 saat", () => {
+    const r = ihaleBitisHesapla("1_gun", { simdi });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.bitis.getTime() - simdi.getTime()).toBe(24 * 60 * 60 * 1000);
+  });
+
+  it("1_hafta = 7 gün", () => {
+    const r = ihaleBitisHesapla("1_hafta", { simdi });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.bitis.getTime() - simdi.getTime()).toBe(7 * 24 * 60 * 60 * 1000);
+  });
+
+  it("ozel geçerli tarih kabul eder", () => {
+    const hedef = new Date(simdi.getTime() + 2 * 60 * 60 * 1000);
+    const r = ihaleBitisHesapla("ozel", {
+      simdi,
+      ozelBitis: ihaleDatetimeLocal(hedef),
+    });
+    expect(r.ok).toBe(true);
+  });
+
+  it("ozel geçmiş / çok yakın reddeder", () => {
+    const r = ihaleBitisHesapla("ozel", {
+      simdi,
+      ozelBitis: ihaleDatetimeLocal(simdi),
+    });
+    expect(r.ok).toBe(false);
+  });
+
+  it("ozel 1 aydan uzun reddeder", () => {
+    const fazla = new Date(
+      simdi.getTime() + (IHALE_OZEL_MAX_GUN + 1) * 24 * 60 * 60 * 1000
+    );
+    const r = ihaleBitisHesapla("ozel", {
+      simdi,
+      ozelBitis: ihaleDatetimeLocal(fazla),
+    });
+    expect(r.ok).toBe(false);
+  });
+
+  it("bilinmeyen tip acil’e düşer", () => {
+    expect(ihaleSureTipiNormalize("xyz")).toBe("acil");
+    expect(ihaleSureTipiNormalize("1_hafta")).toBe("1_hafta");
   });
 });

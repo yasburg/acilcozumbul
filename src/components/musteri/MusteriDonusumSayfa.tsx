@@ -75,6 +75,9 @@ import {
   musteriFormTaslakOku,
   musteriFormTaslakSil,
 } from "@/lib/musteri-form-taslak";
+import type { IhaleSureTipi } from "@/lib/ihale";
+import { ihaleBitisHesapla } from "@/lib/ihale";
+import { IhaleSureSecimi } from "@/components/musteri/IhaleSureSecimi";
 
 const NasilCalisirSerit = dynamic(
   () =>
@@ -274,6 +277,9 @@ function MusteriDonusumSayfaIcerik({
   });
   const [fotografOnizleme, setFotografOnizleme] = useState<string | null>(null);
   const [fotografData, setFotografData] = useState<string | null>(null);
+  const [ihaleSureTipi, setIhaleSureTipi] = useState<IhaleSureTipi>("acil");
+  const [ihaleOzelBitis, setIhaleOzelBitis] = useState("");
+  const [ihaleSureHatasi, setIhaleSureHatasi] = useState(false);
   const [hedefBilinmiyor, setHedefBilinmiyor] = useState(false);
   const [hedefKendimArat, setHedefKendimArat] = useState(false);
   const [hedefHaritaAra, setHedefHaritaAra] = useState(false);
@@ -292,6 +298,8 @@ function MusteriDonusumSayfaIcerik({
     fotografOnizleme: null as string | null,
     fotografData: null as string | null,
     hedefBilinmiyor: false,
+    ihaleSureTipi: "acil" as IhaleSureTipi,
+    ihaleOzelBitis: "",
   });
 
   /** App/sekme dönüşünde formu geri yükle (sessionStorage) */
@@ -304,6 +312,8 @@ function MusteriDonusumSayfaIcerik({
       setFotografOnizleme(t.fotografOnizleme);
       setFotografData(t.fotografData);
       setHedefBilinmiyor(t.hedefBilinmiyor === true);
+      if (t.ihaleSureTipi) setIhaleSureTipi(t.ihaleSureTipi);
+      if (t.ihaleOzelBitis) setIhaleOzelBitis(t.ihaleOzelBitis);
     }
     setTaslakHazir(true);
   }, []);
@@ -394,6 +404,8 @@ function MusteriDonusumSayfaIcerik({
     fotografOnizleme,
     fotografData,
     hedefBilinmiyor,
+    ihaleSureTipi,
+    ihaleOzelBitis,
   };
 
   /** Seçimler + alanlar: her değişimde ve arka plana geçince kaydet */
@@ -407,6 +419,8 @@ function MusteriDonusumSayfaIcerik({
       fotografOnizleme,
       fotografData,
       hedefBilinmiyor,
+      ihaleSureTipi,
+      ihaleOzelBitis: ihaleOzelBitis || undefined,
     };
     if (musteriFormTaslakBosMu(taslak)) {
       musteriFormTaslakSil();
@@ -421,6 +435,8 @@ function MusteriDonusumSayfaIcerik({
     fotografOnizleme,
     fotografData,
     hedefBilinmiyor,
+    ihaleSureTipi,
+    ihaleOzelBitis,
   ]);
 
   useEffect(() => {
@@ -435,6 +451,8 @@ function MusteriDonusumSayfaIcerik({
         fotografOnizleme: a.fotografOnizleme,
         fotografData: a.fotografData,
         hedefBilinmiyor: a.hedefBilinmiyor,
+        ihaleSureTipi: a.ihaleSureTipi,
+        ihaleOzelBitis: a.ihaleOzelBitis || undefined,
       };
       if (musteriFormTaslakBosMu(taslak)) musteriFormTaslakSil();
       else musteriFormTaslakKaydet(taslak);
@@ -1447,16 +1465,26 @@ function MusteriDonusumSayfaIcerik({
   function hedefFotografKontrol(): boolean {
     if (fotografData) {
       setFotografHatasi(false);
-      return true;
-    }
-    setFotografHatasi(true);
-    setError("Arıza fotoğrafı zorunludur — lütfen fotoğraf ekleyin.");
-    window.requestAnimationFrame(() => {
+    } else {
+      setFotografHatasi(true);
+      setError("Arıza fotoğrafı zorunludur — lütfen fotoğraf ekleyin.");
       window.requestAnimationFrame(() => {
-        scrollBelowStickyHeader(fotografRef.current);
+        window.requestAnimationFrame(() => {
+          scrollBelowStickyHeader(fotografRef.current);
+        });
       });
+      return false;
+    }
+    const sure = ihaleBitisHesapla(ihaleSureTipi, {
+      ozelBitis: ihaleOzelBitis,
     });
-    return false;
+    if (!sure.ok) {
+      setIhaleSureHatasi(true);
+      setError(sure.hata);
+      return false;
+    }
+    setIhaleSureHatasi(false);
+    return true;
   }
 
   async function hedefIleriGit() {
@@ -1717,6 +1745,10 @@ function MusteriDonusumSayfaIcerik({
           aracModeli: form.aracModeli.trim() || undefined,
           fotograf: fotografData || undefined,
           sorun: sorunMetniOlustur(form.sorunTipi, form.sorunDetay),
+          ihaleSureTipi,
+          ...(ihaleSureTipi === "ozel" && ihaleOzelBitis
+            ? { ihaleOzelBitis }
+            : {}),
         }),
       });
       const data = await res.json();
@@ -2595,6 +2627,16 @@ function MusteriDonusumSayfaIcerik({
               value={form.sorunDetay}
               onChange={(e) => update("sorunDetay", e.target.value)}
               rows={2}
+            />
+            <IhaleSureSecimi
+              value={ihaleSureTipi}
+              ozelBitis={ihaleOzelBitis}
+              invalid={ihaleSureHatasi}
+              onChange={(tip, ozel) => {
+                setIhaleSureTipi(tip);
+                setIhaleOzelBitis(ozel);
+                setIhaleSureHatasi(false);
+              }}
             />
           </div>
         </div>
