@@ -45,7 +45,6 @@ interface TalepDurum {
     tahminiSureDk: number;
     mesaj?: string;
   };
-  teklifSayisi?: number;
   ihaleBitis?: string;
   ad?: string;
   soyad?: string;
@@ -402,11 +401,6 @@ export default function CekiciTalepClient() {
                 <p className="text-xs text-slate-500 mt-3">
                   Müşteri seçim yapana kadar bekleyin.
                 </p>
-                {talep.teklifSayisi != null && (
-                  <p className="text-xs text-amber-700 mt-2">
-                    Toplam {talep.teklifSayisi} aktif teklif
-                  </p>
-                )}
                 <p className="text-xs text-slate-500 mt-3 leading-relaxed">
                   Teklif fiyatı değiştirilemez.
                 </p>

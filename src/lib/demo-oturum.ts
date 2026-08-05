@@ -684,7 +684,6 @@ function demoToOzet(talep: Talep, cekici: Cekici): TalepOzet {
   const cekiciId = cekici.id;
   const kazandim = talep.kazananCekiciId === cekiciId;
   const durum = demoListeDurumuBelirle(talep, cekici);
-  const aktifTeklifler = talep.teklifler?.filter((t) => t.durum === "aktif") ?? [];
   const benimTeklif = talep.teklifler?.find((t) => t.cekiciId === cekiciId);
   const gizli = durum === "gizli";
 
@@ -696,12 +695,6 @@ function demoToOzet(talep: Talep, cekici: Cekici): TalepOzet {
     sorunOzet: gizli ? "Detaylar için ihaleye katılın" : talepSorunOzet(talep.sorun),
     durum: talep.durum,
     olusturulma: talep.olusturulma,
-    teklifSayisi: gizli ? undefined : aktifTeklifler.length,
-    enDusukTeklif: gizli
-      ? undefined
-      : aktifTeklifler.length
-        ? Math.min(...aktifTeklifler.map((t) => t.fiyat))
-        : undefined,
     benimTeklifim: !!benimTeklif,
     kazandim,
     telefon: kazandim ? talep.telefon : undefined,

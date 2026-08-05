@@ -12,7 +12,7 @@ export function talepBolge(talep: Talep): string {
 }
 
 export function talepSorunOzet(sorun: string): string {
-  return sorun.length > 60 ? sorun.slice(0, 60) + "…" : sorun;
+  return sorun.trim();
 }
 
 export function formatKredi(kredi: number): string {

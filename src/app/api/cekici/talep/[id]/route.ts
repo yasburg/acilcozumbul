@@ -142,7 +142,6 @@ export async function GET(
       ihaleAcik: ihaleAcikMi(talep),
       ihaleBitis: talep.ihaleBitis,
       benimTeklif: benimTeklifim,
-      teklifSayisi: talep.teklifler?.filter((t) => t.durum === "aktif").length ?? 0,
       onizleme: {
         bolge: talepBolge(talep),
         sorunOzet: talepSorunOzet(talep.sorun),

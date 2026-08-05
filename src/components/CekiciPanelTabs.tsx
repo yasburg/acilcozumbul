@@ -52,8 +52,6 @@ interface TalepOzet {
   sorunOzet: string;
   durum: string;
   olusturulma: string;
-  teklifSayisi?: number;
-  enDusukTeklif?: number;
   benimTeklifim?: boolean;
   kazandim?: boolean;
   telefon?: string;
@@ -123,15 +121,9 @@ function TalepKarti({
           {!kilitle && (
             <>
               <p className="text-sm text-slate-500 mt-0.5">📍 {bolge}</p>
-              <p className="text-sm text-slate-600 mt-1 line-clamp-2">
+              <p className="text-sm text-slate-600 mt-1 whitespace-pre-wrap break-words">
                 {talep.sorunOzet}
               </p>
-              {talep.teklifSayisi != null && talep.teklifSayisi > 0 && (
-                <p className="text-xs text-amber-600 mt-1">
-                  {talep.teklifSayisi} teklif
-                  {talep.enDusukTeklif != null && ` · en düşük ${talep.enDusukTeklif} TL`}
-                </p>
-              )}
             </>
           )}
           {kilitle && durum === "kaybettim" && (
