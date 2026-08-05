@@ -2575,33 +2575,104 @@ function MusteriAnaSayfaIcerik({
           ) : (
             <div className="space-y-3">
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3">
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-                  <div className="min-w-0 space-y-1.5">
-                    <span className="block text-sm font-semibold text-slate-800">
-                      Şehriniz
-                    </span>
-                    <div className="relative">
-                      {!seciliSehir ? (
-                        <span
-                          className="pointer-events-none absolute -inset-1 rounded-xl bg-amber-400/35 blur-md animate-pulse"
-                          aria-hidden
-                        />
-                      ) : null}
+                <div className="grid grid-cols-1 gap-2.5">
+                  <div className="grid grid-cols-2 gap-2.5 items-end">
+                    <div className="min-w-0 space-y-1.5">
+                      <span className="block text-sm font-semibold text-slate-800">
+                        Şehriniz
+                      </span>
+                      <div className="relative">
+                        {!seciliSehir ? (
+                          <span
+                            className="pointer-events-none absolute -inset-1 rounded-xl bg-amber-400/35 blur-md animate-pulse"
+                            aria-hidden
+                          />
+                        ) : null}
+                        <SelectField
+                          aria-label="Şehir"
+                          className={[
+                            "!py-2.5 !px-3 !pr-9 relative text-[0.9375rem]",
+                            !seciliSehir
+                              ? "border-amber-400 ring-2 ring-amber-300/80 shadow-[0_0_14px_3px_rgba(245,158,11,0.55)]"
+                              : "",
+                          ].join(" ")}
+                          value={seciliSehir}
+                          onChange={(e) => {
+                            const il = e.target.value;
+                            setSeciliSehir(il);
+                            setSeciliIlce("");
+                            setError("");
+                            const yol = musteriKonumYolu(il || null, null);
+                            if (
+                              typeof window !== "undefined" &&
+                              window.location.pathname !== yol
+                            ) {
+                              router.push(yol);
+                            }
+                          }}
+                        >
+                          <option value="">Şehir seçin</option>
+                          {illerSecimSirasi(
+                            acikIller.length > 0
+                              ? acikIller
+                              : [...KULLANIMA_ACIK_ILLER]
+                          ).map((il) => (
+                            <option key={il} value={il}>
+                              {il}
+                            </option>
+                          ))}
+                        </SelectField>
+                      </div>
+                    </div>
+                    <div
+                      className={`min-w-0 space-y-1.5 transition-opacity ${
+                        seciliSehir ? "" : "opacity-60"
+                      }`}
+                    >
+                      <span
+                        className={`block text-sm font-semibold ${
+                          seciliSehir ? "text-slate-800" : "text-slate-400"
+                        }`}
+                      >
+                        İlçeniz
+                      </span>
                       <SelectField
-                        aria-label="Şehir"
-                        className={[
-                          "!py-2.5 relative",
-                          !seciliSehir
-                            ? "border-amber-400 ring-2 ring-amber-300/80 shadow-[0_0_14px_3px_rgba(245,158,11,0.55)]"
-                            : "",
-                        ].join(" ")}
-                        value={seciliSehir}
+                        aria-label="İlçe"
+                        className="!py-2.5 !px-3 !pr-9 text-[0.9375rem]"
+                        value={seciliIlce}
+                        disabled={!seciliSehir}
                         onChange={(e) => {
-                          const il = e.target.value;
-                          setSeciliSehir(il);
-                          setSeciliIlce("");
+                          const ilce = e.target.value;
+                          setSeciliIlce(ilce);
                           setError("");
-                          const yol = musteriKonumYolu(il || null, null);
+                          const yol = musteriKonumYolu(
+                            seciliSehir || null,
+                            ilce || null
+                          );
+                          const hasGps = !!(form.lat && form.lng);
+                          if (ilce && hasGps) {
+                            setArizaAdresDuzenle(false);
+                            musteriFormTaslakKaydet({
+                              v: 1,
+                              step: "sorun",
+                              form,
+                              yasalOnay,
+                              fotografOnizleme,
+                              fotografData,
+                              hedefBilinmiyor,
+                              ihaleSureTipi,
+                              ihaleOzelBitis: ihaleOzelBitis || undefined,
+                            });
+                            if (
+                              typeof window !== "undefined" &&
+                              window.location.pathname !== yol
+                            ) {
+                              router.push(yol);
+                            } else {
+                              adimGit("sorun");
+                            }
+                            return;
+                          }
                           if (
                             typeof window !== "undefined" &&
                             window.location.pathname !== yol
@@ -2610,90 +2681,21 @@ function MusteriAnaSayfaIcerik({
                           }
                         }}
                       >
-                        <option value="">Şehir seçin</option>
-                        {illerSecimSirasi(
-                          acikIller.length > 0
-                            ? acikIller
-                            : [...KULLANIMA_ACIK_ILLER]
-                        ).map((il) => (
-                          <option key={il} value={il}>
-                            {il}
-                          </option>
-                        ))}
+                        <option value="">
+                          {seciliSehir ? "İlçe seçin" : "Önce şehir"}
+                        </option>
+                        {seciliSehir
+                          ? ilceListesi(seciliSehir).map((ilce) => (
+                              <option key={ilce} value={ilce}>
+                                {ilce}
+                              </option>
+                            ))
+                          : null}
                       </SelectField>
                     </div>
                   </div>
-                  <div
-                    className={`min-w-0 space-y-1.5 transition-opacity ${
-                      seciliSehir ? "" : "opacity-60"
-                    }`}
-                  >
-                    <span
-                      className={`block text-sm font-semibold ${
-                        seciliSehir ? "text-slate-800" : "text-slate-400"
-                      }`}
-                    >
-                      İlçeniz
-                    </span>
-                    <SelectField
-                      aria-label="İlçe"
-                      className="!py-2.5"
-                      value={seciliIlce}
-                      disabled={!seciliSehir}
-                      onChange={(e) => {
-                        const ilce = e.target.value;
-                        setSeciliIlce(ilce);
-                        setError("");
-                        const yol = musteriKonumYolu(
-                          seciliSehir || null,
-                          ilce || null
-                        );
-                        const hasGps = !!(form.lat && form.lng);
-                        if (ilce && hasGps) {
-                          setArizaAdresDuzenle(false);
-                          musteriFormTaslakKaydet({
-                            v: 1,
-                            step: "sorun",
-                            form,
-                            yasalOnay,
-                            fotografOnizleme,
-                            fotografData,
-                            hedefBilinmiyor,
-                            ihaleSureTipi,
-                            ihaleOzelBitis: ihaleOzelBitis || undefined,
-                          });
-                          if (
-                            typeof window !== "undefined" &&
-                            window.location.pathname !== yol
-                          ) {
-                            router.push(yol);
-                          } else {
-                            adimGit("sorun");
-                          }
-                          return;
-                        }
-                        if (
-                          typeof window !== "undefined" &&
-                          window.location.pathname !== yol
-                        ) {
-                          router.push(yol);
-                        }
-                      }}
-                    >
-                      <option value="">
-                        {seciliSehir ? "İlçe seçin" : "Önce şehir"}
-                      </option>
-                      {seciliSehir
-                        ? ilceListesi(seciliSehir).map((ilce) => (
-                            <option key={ilce} value={ilce}>
-                              {ilce}
-                            </option>
-                          ))
-                        : null}
-                    </SelectField>
-                  </div>
                   <Btn
-                    className="!w-full !min-h-0 !rounded-xl !py-2.5 !px-5 !text-sm sm:!w-auto shrink-0"
+                    className="!w-full !min-h-0 !rounded-xl !py-2.5 !px-5 !text-sm"
                     onClick={async () => {
                       setError("");
                       if (gpsYukleniyor) gpsIptal();

@@ -780,8 +780,8 @@
     "semantic_hash": ""
   },
   "src/components/musteri/MusteriAnaSayfa.tsx": {
-    "mtime": 1785964520.1248863,
-    "ast_hash": "cbfc1fd8d7b58943644d32f54309d245",
+    "mtime": 1785949467.2818706,
+    "ast_hash": "9e2b7e851bbad7fbc3f85f0168b9eb4a",
     "semantic_hash": ""
   },
   "src/components/panel/HizmetVerenSayimPanel.tsx": {
@@ -3292,16 +3292,6 @@
   "src/lib/panel-yetki.ts": {
     "mtime": 1785934071.5437772,
     "ast_hash": "98174bfd44aae0f8305549af3658346f",
-    "semantic_hash": ""
-  },
-  "assets/ACB-Logo-White-Background-Tescil.jpg": {
-    "mtime": 1785960444.2240453,
-    "ast_hash": "4ac8cf880a01a1b540f71881ce46f26d",
-    "semantic_hash": ""
-  },
-  "assets/ACB-Logo-White-Background-Tescil.png": {
-    "mtime": 1785960294.5474596,
-    "ast_hash": "23eda29bc7c7fc6f8c24ef7ce364dd9a",
     "semantic_hash": ""
   }
 }
