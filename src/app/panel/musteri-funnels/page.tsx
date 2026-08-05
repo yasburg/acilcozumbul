@@ -102,14 +102,17 @@ function HuniSvgYatay({ adimlar }: { adimlar: HuniAdim[] }) {
           const points = `${x0},${yL} ${x1},${yR} ${x1},${baseline} ${x0},${baseline}`;
           const midX = (x0 + x1) / 2;
           const midY = (yL + yR) / 2 + (baseline - (yL + yR) / 2) * 0.35;
-          const totalYuzde = (a.sessionSayisi / basSayi) * 100;
+          const totalYuzde = Math.min(
+            100,
+            (a.sessionSayisi / basSayi) * 100
+          );
           const oncekiSayi =
             i === 0 ? a.sessionSayisi : adimlar[i - 1]!.sessionSayisi;
           const adimYuzde =
             i === 0
               ? 100
               : oncekiSayi > 0
-                ? (a.sessionSayisi / oncekiSayi) * 100
+                ? Math.min(100, (a.sessionSayisi / oncekiSayi) * 100)
                 : 0;
 
           return (
@@ -224,14 +227,17 @@ function HuniSvgDikey({ adimlar }: { adimlar: HuniAdim[] }) {
           const x1b = cx + bottomW / 2;
           const points = `${x0t},${y0} ${x1t},${y0} ${x1b},${y1} ${x0b},${y1}`;
           const midY = (y0 + y1) / 2;
-          const totalYuzde = (a.sessionSayisi / basSayi) * 100;
+          const totalYuzde = Math.min(
+            100,
+            (a.sessionSayisi / basSayi) * 100
+          );
           const oncekiSayi =
             i === 0 ? a.sessionSayisi : adimlar[i - 1]!.sessionSayisi;
           const adimYuzde =
             i === 0
               ? 100
               : oncekiSayi > 0
-                ? (a.sessionSayisi / oncekiSayi) * 100
+                ? Math.min(100, (a.sessionSayisi / oncekiSayi) * 100)
                 : 0;
 
           return (

@@ -1,29 +1,69 @@
 import { describe, expect, it } from "vitest";
 import {
+  MUSTERI_FUNNEL_HUNI_A,
   musteriFunnelOlayHacmiHesapla,
   musteriFunnelOzetHesapla,
   musteriFunnelSessionHuniHesapla,
 } from "./musteri-funnel-olay";
 
 describe("musteri-funnel-olay", () => {
-  it("session hunisinde adımları sayar", () => {
-    const huni = musteriFunnelSessionHuniHesapla([
-      { funnel: "a", olay: "goruldu", session_id: "s1" },
-      { funnel: "a", olay: "form_adim_sorun", session_id: "s1" },
-      { funnel: "a", olay: "service_selected", session_id: "s1" },
-      { funnel: "a", olay: "form_adim_konum", session_id: "s1" },
-      { funnel: "a", olay: "form_adim_bilgi", session_id: "s1" },
-      { funnel: "a", olay: "otp_gonder", session_id: "s1" },
-      { funnel: "a", olay: "otp_dogrulandi", session_id: "s1" },
-      { funnel: "a", olay: "talep_olustur", session_id: "s1" },
-      { funnel: "b", olay: "goruldu", session_id: "s2" },
-      { funnel: "b", olay: "form_adim_sorun", session_id: "s2" },
-    ]);
+  it("session hunisinde kümülatif monoton sayar", () => {
+    const huni = musteriFunnelSessionHuniHesapla(
+      [
+        { funnel: "a", olay: "goruldu", session_id: "s1" },
+        { funnel: "a", olay: "form_adim_konum", session_id: "s1" },
+        { funnel: "a", olay: "form_adim_sorun", session_id: "s1" },
+        { funnel: "a", olay: "service_selected", session_id: "s1" },
+        { funnel: "a", olay: "form_adim_bilgi", session_id: "s1" },
+        { funnel: "a", olay: "otp_gonder", session_id: "s1" },
+        { funnel: "a", olay: "otp_dogrulandi", session_id: "s1" },
+        { funnel: "a", olay: "talep_olustur", session_id: "s1" },
+        { funnel: "b", olay: "goruldu", session_id: "s2" },
+        { funnel: "b", olay: "form_adim_sorun", session_id: "s2" },
+      ],
+      MUSTERI_FUNNEL_HUNI_A
+    );
 
     expect(huni[0]?.adim).toBe("goruldu");
     expect(huni[0]?.sessionSayisi).toBe(2);
     expect(huni.find((a) => a.adim === "talep_olustur")?.sessionSayisi).toBe(1);
-    expect(huni.find((a) => a.adim === "form_adim_ara")?.sessionSayisi).toBe(1);
+    // s2 hizmete ulaştığı için kümülatif konumda da sayılır
+    expect(huni.find((a) => a.adim === "form_adim_konum")?.sessionSayisi).toBe(
+      2
+    );
+    expect(huni.find((a) => a.adim === "form_adim_sorun")?.sessionSayisi).toBe(
+      2
+    );
+    // Monoton: her adım ≤ önceki
+    for (let i = 1; i < huni.length; i++) {
+      expect(huni[i]!.sessionSayisi).toBeLessThanOrEqual(
+        huni[i - 1]!.sessionSayisi
+      );
+    }
+  });
+
+  it("konum hizmetten fazla olsa bile huniyi şişirmez", () => {
+    const huni = musteriFunnelSessionHuniHesapla(
+      [
+        // s1: sadece konum (A’da ilk adım) — görülme yok
+        { funnel: "a", olay: "form_adim_konum", session_id: "s1" },
+        // s2: görülme + konum + hizmet
+        { funnel: "a", olay: "goruldu", session_id: "s2" },
+        { funnel: "a", olay: "form_adim_konum", session_id: "s2" },
+        { funnel: "a", olay: "form_adim_sorun", session_id: "s2" },
+      ],
+      MUSTERI_FUNNEL_HUNI_A
+    );
+
+    const goruldu = huni.find((a) => a.adim === "goruldu")!.sessionSayisi;
+    const konum = huni.find((a) => a.adim === "form_adim_konum")!.sessionSayisi;
+    const hizmet = huni.find((a) => a.adim === "form_adim_sorun")!.sessionSayisi;
+    // Kümülatif: konum’a ulaşanlar görülmede de sayılır
+    expect(goruldu).toBe(2);
+    expect(konum).toBe(2);
+    expect(hizmet).toBe(1);
+    expect(konum).toBeLessThanOrEqual(goruldu);
+    expect(hizmet).toBeLessThanOrEqual(konum);
   });
 
   it("özet satırlarını funnel kırılımıyla verir", () => {

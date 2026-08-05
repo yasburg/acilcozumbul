@@ -26,7 +26,7 @@ export const MUSTERI_FUNNELS: Record<MusteriFunnelId, MusteriFunnelTanim> = {
     yol: "/a",
     aktif: true,
     aciklama:
-      "Hizmet → bilgi → konum → detay → hedef · noindex (SEO dışı A/B)",
+      "Konum → hizmet → telefon → detay → hedef · noindex (SEO dışı A/B)",
   },
   b: {
     id: "b",

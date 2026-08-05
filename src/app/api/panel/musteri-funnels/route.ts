@@ -11,6 +11,7 @@ import {
 import {
   musteriFunnelBenzersizSession,
   musteriFunnelGunlukHesapla,
+  musteriFunnelHuniAdimlariSec,
   musteriFunnelOlayHacmiHesapla,
   musteriFunnelOzetHesapla,
   musteriFunnelSessionHuniHesapla,
@@ -122,11 +123,16 @@ export async function GET(request: NextRequest) {
   }));
   const liste = musteriFunnelOzetHesapla(tumTarihRows, tumTanimlar);
 
-  const huni = musteriFunnelSessionHuniHesapla(rows);
+  const huniAdimlari =
+    funnels.length === 1
+      ? musteriFunnelHuniAdimlariSec(funnels[0])
+      : musteriFunnelHuniAdimlariSec(null);
+  const huni = musteriFunnelSessionHuniHesapla(rows, huniAdimlari);
   const karsilastirma = funnels.map((funnel) => ({
     funnel,
     adimlar: musteriFunnelSessionHuniHesapla(
-      rows.filter((r) => r.funnel === funnel)
+      rows.filter((r) => r.funnel === funnel),
+      musteriFunnelHuniAdimlariSec(funnel)
     ),
   }));
 

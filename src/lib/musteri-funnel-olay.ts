@@ -98,37 +98,77 @@ export function musteriFunnelOzetHesapla(
   });
 }
 
-/** Ortak huni — A/B karşılaştırılabilir adımlar */
-export const MUSTERI_FUNNEL_HUNI_ADIMLARI = [
+export type MusteriFunnelHuniAdimTanim = {
+  id: string;
+  label: string;
+  olaylar: readonly string[];
+  /** Herhangi bir form / OTP / talep etkileşimi */
+  ilkEtkilesim?: boolean;
+};
+
+/**
+ * Funnel A gerçek akış: konum → hizmet → telefon → detay → hedef
+ * (MusteriAnaSayfa STEP_SIRA)
+ */
+export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
   { id: "goruldu", label: "Görülme", olaylar: ["goruldu"] },
-  {
-    id: "ilk_etkilesim",
-    label: "İlk etkileşim",
-    olaylar: [] as string[],
-  },
+  { id: "form_adim_konum", label: "Adım · Konum", olaylar: ["form_adim_konum"] },
   {
     id: "form_adim_sorun",
     label: "Adım · Hizmet",
     olaylar: ["form_adim_sorun", "service_selected"],
   },
-  {
-    id: "form_adim_ara",
-    label: "Adım · Konum/hedef",
-    olaylar: ["form_adim_konum", "form_adim_hedef", "form_adim_detay"],
-  },
-  {
-    id: "form_adim_bilgi",
-    label: "Adım · Telefon",
-    olaylar: ["form_adim_bilgi"],
-  },
+  { id: "form_adim_bilgi", label: "Adım · Telefon", olaylar: ["form_adim_bilgi"] },
+  { id: "form_adim_detay", label: "Adım · Detay", olaylar: ["form_adim_detay"] },
+  { id: "form_adim_hedef", label: "Adım · Hedef", olaylar: ["form_adim_hedef"] },
   { id: "otp_gonder", label: "OTP gönder", olaylar: ["otp_gonder"] },
-  {
-    id: "otp_dogrulandi",
-    label: "OTP doğrula",
-    olaylar: ["otp_dogrulandi"],
-  },
+  { id: "otp_dogrulandi", label: "OTP doğrula", olaylar: ["otp_dogrulandi"] },
   { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
-] as const;
+];
+
+/**
+ * Funnel B gerçek akış: hizmet → hedef → telefon
+ * (MusteriDonusumSayfa STEP_SIRA)
+ */
+export const MUSTERI_FUNNEL_HUNI_B: readonly MusteriFunnelHuniAdimTanim[] = [
+  { id: "goruldu", label: "Görülme", olaylar: ["goruldu"] },
+  {
+    id: "form_adim_sorun",
+    label: "Adım · Hizmet",
+    olaylar: ["form_adim_sorun", "service_selected"],
+  },
+  { id: "form_adim_hedef", label: "Adım · Hedef", olaylar: ["form_adim_hedef"] },
+  { id: "form_adim_bilgi", label: "Adım · Telefon", olaylar: ["form_adim_bilgi"] },
+  { id: "otp_gonder", label: "OTP gönder", olaylar: ["otp_gonder"] },
+  { id: "otp_dogrulandi", label: "OTP doğrula", olaylar: ["otp_dogrulandi"] },
+  { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
+];
+
+/**
+ * A+B birlikte: ortak dönüşüm kilometre taşları (sıra güvenli).
+ * Konum/hedef A’da hizmetten önce geldiği için ortak hunide yok.
+ */
+export const MUSTERI_FUNNEL_HUNI_ORTAK: readonly MusteriFunnelHuniAdimTanim[] = [
+  { id: "goruldu", label: "Görülme", olaylar: ["goruldu"] },
+  {
+    id: "ilk_etkilesim",
+    label: "İlk etkileşim",
+    olaylar: [],
+    ilkEtkilesim: true,
+  },
+  {
+    id: "form_adim_sorun",
+    label: "Hizmet seçimi",
+    olaylar: ["form_adim_sorun", "service_selected"],
+  },
+  { id: "form_adim_bilgi", label: "Telefon", olaylar: ["form_adim_bilgi"] },
+  { id: "otp_gonder", label: "OTP gönder", olaylar: ["otp_gonder"] },
+  { id: "otp_dogrulandi", label: "OTP doğrula", olaylar: ["otp_dogrulandi"] },
+  { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
+];
+
+/** @deprecated MUSTERI_FUNNEL_HUNI_ORTAK kullanın */
+export const MUSTERI_FUNNEL_HUNI_ADIMLARI = MUSTERI_FUNNEL_HUNI_ORTAK;
 
 export type MusteriFunnelHuniAdim = {
   adim: string;
@@ -146,10 +186,9 @@ export type MusteriFunnelOlaySatir = {
 
 function sessionOlayEslesir(
   olaylar: Set<string>,
-  adimOlaylari: readonly string[],
-  ilkEtkilesim: boolean
+  adim: MusteriFunnelHuniAdimTanim
 ): boolean {
-  if (ilkEtkilesim) {
+  if (adim.ilkEtkilesim) {
     for (const o of olaylar) {
       if (o.startsWith("form_adim_")) return true;
       if (o === "service_selected") return true;
@@ -159,11 +198,36 @@ function sessionOlayEslesir(
     }
     return false;
   }
-  return adimOlaylari.some((o) => olaylar.has(o));
+  return adim.olaylar.some((o) => olaylar.has(o));
 }
 
+/** Session’ın ulaştığı en ileri huni adımı (−1 = hiç) */
+export function musteriFunnelSessionMaxAdim(
+  olaylar: Set<string>,
+  adimlar: readonly MusteriFunnelHuniAdimTanim[]
+): number {
+  let max = -1;
+  for (let i = 0; i < adimlar.length; i++) {
+    if (sessionOlayEslesir(olaylar, adimlar[i]!)) max = i;
+  }
+  return max;
+}
+
+export function musteriFunnelHuniAdimlariSec(
+  funnel?: string | null
+): readonly MusteriFunnelHuniAdimTanim[] {
+  if (funnel === "a") return MUSTERI_FUNNEL_HUNI_A;
+  if (funnel === "b") return MUSTERI_FUNNEL_HUNI_B;
+  return MUSTERI_FUNNEL_HUNI_ORTAK;
+}
+
+/**
+ * Session hunisi — kümülatif (monoton): adım i = en az i’ye ulaşan session sayısı.
+ * Böylece sonraki adım öncekinden büyük olamaz; %100+ üretmez.
+ */
 export function musteriFunnelSessionHuniHesapla(
-  rows: MusteriFunnelOlaySatir[]
+  rows: MusteriFunnelOlaySatir[],
+  adimTanimlari: readonly MusteriFunnelHuniAdimTanim[] = MUSTERI_FUNNEL_HUNI_ORTAK
 ): MusteriFunnelHuniAdim[] {
   const bySession = new Map<string, Set<string>>();
   for (const r of rows) {
@@ -173,21 +237,21 @@ export function musteriFunnelSessionHuniHesapla(
     bySession.get(sid)!.add(String(r.olay));
   }
 
-  const adimlar = MUSTERI_FUNNEL_HUNI_ADIMLARI.map((a) => {
-    let n = 0;
-    const form = a.id === "ilk_etkilesim";
-    for (const olaylar of bySession.values()) {
-      if (sessionOlayEslesir(olaylar, a.olaylar, form)) n += 1;
-    }
-    return { adim: a.id, label: a.label, sessionSayisi: n };
-  });
+  const counts = adimTanimlari.map(() => 0);
+  for (const olaylar of bySession.values()) {
+    const max = musteriFunnelSessionMaxAdim(olaylar, adimTanimlari);
+    for (let i = 0; i <= max; i++) counts[i]! += 1;
+  }
 
-  return adimlar.map((a, i) => {
-    const onceki = i === 0 ? null : adimlar[i - 1]!.sessionSayisi;
+  return adimTanimlari.map((a, i) => {
+    const sessionSayisi = counts[i]!;
+    const onceki = i === 0 ? null : counts[i - 1]!;
     return {
-      ...a,
+      adim: a.id,
+      label: a.label,
+      sessionSayisi,
       oncekiOran:
-        onceki != null && onceki > 0 ? a.sessionSayisi / onceki : null,
+        onceki != null && onceki > 0 ? sessionSayisi / onceki : null,
     };
   });
 }
