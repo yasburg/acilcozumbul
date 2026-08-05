@@ -2140,12 +2140,7 @@ function MusteriAnaSayfaIcerik({
       {step === "bilgi" && (
         <div className="space-y-4 animate-fade-in">
           {!telefonDogrulandi && (
-            <>
-              <h2 className="text-xl font-bold">Telefonunuzu doğrulayın</h2>
-              <p className="text-slate-500 text-sm">
-                Teklifleri görün, beğendiğinizi seçin — sizi arayalım.
-              </p>
-            </>
+            <h2 className="text-xl font-bold">Telefonunuzu doğrulayın</h2>
           )}
           {sorunLabel && (
             <Card className="bg-slate-50 border-slate-200">
@@ -2316,6 +2311,9 @@ function MusteriAnaSayfaIcerik({
 
               {!kodGirisAcik && (
                 <>
+                  <p className="text-sm font-bold text-slate-700 text-center">
+                    Sizi arayabilmemiz için telefonunuzu doğrulamamız gerekiyor.
+                  </p>
                   <Btn type="submit" disabled={loading} className="w-full">
                     {loading ? "Kod gönderiliyor…" : "Doğrulama Kodu Gönder"}
                   </Btn>

@@ -108,10 +108,10 @@ function Toggle({
 }
 
 const dugmeSinif =
-  "min-h-[32px] flex-1 rounded-md border border-slate-300 bg-white text-slate-800 text-xs font-semibold px-2 py-1.5 hover:bg-slate-50 touch-manipulation";
+  "min-h-[32px] rounded-md border border-slate-300 bg-white text-slate-800 text-xs font-semibold px-2 py-1.5 hover:bg-slate-50 touch-manipulation";
 
 const yalnizcaGerekliSinif =
-  "min-h-[32px] flex-1 rounded-md border border-slate-200 bg-transparent text-slate-400 text-xs font-medium px-2 py-1.5 hover:bg-slate-50 hover:text-slate-500 touch-manipulation";
+  "min-h-[32px] shrink-0 rounded-md border border-slate-200 bg-white text-slate-500 text-xs font-medium px-2 py-1.5 hover:bg-slate-50 hover:text-slate-600 touch-manipulation whitespace-nowrap";
 
 export function CerezOnayBanner() {
   const gosterilmeli = useSyncExternalStore(
@@ -161,10 +161,10 @@ export function CerezOnayBanner() {
     >
       <div className="pointer-events-auto max-w-lg mx-auto bg-white/95 backdrop-blur-sm px-3 py-1.5 border-t border-slate-200 shadow-[0_-2px_12px_rgba(15,23,42,0.08)]">
         {gorunum === "ozet" ? (
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <p
               id="cerez-banner-baslik"
-              className="text-[11px] text-slate-600 leading-snug min-w-0 flex-1"
+              className="text-[11px] text-slate-600 leading-snug min-w-0"
             >
               Çerezleri yönetebilirsiniz.{" "}
               <Link
@@ -178,7 +178,7 @@ export function CerezOnayBanner() {
               Zorunlu çerezler site için gereklidir. İsteğe bağlı analitik
               çerezlerini kabul edebilir veya reddedebilirsiniz.
             </p>
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={() => tercihKaydet("zorunlu", kapat)}
@@ -189,7 +189,7 @@ export function CerezOnayBanner() {
               <button
                 type="button"
                 onClick={() => tercihKaydet("tumu", kapat)}
-                className="min-h-[32px] rounded-md border border-amber-500 bg-amber-500 text-white text-xs font-semibold px-2.5 py-1.5 hover:bg-amber-600 touch-manipulation"
+                className="min-h-[32px] shrink-0 rounded-md border border-amber-500 bg-amber-500 text-white text-xs font-semibold px-2.5 py-1.5 hover:bg-amber-600 touch-manipulation whitespace-nowrap"
               >
                 Tümünü kabul et
               </button>
@@ -199,7 +199,7 @@ export function CerezOnayBanner() {
                   setAnalitikAcik(true);
                   setGorunum("ayarlar");
                 }}
-                className="shrink-0 text-[11px] text-slate-500 underline underline-offset-2 hover:text-slate-700 touch-manipulation px-0.5"
+                className="shrink-0 text-[11px] text-slate-500 underline underline-offset-2 hover:text-slate-700 touch-manipulation px-0.5 whitespace-nowrap"
               >
                 Ayarlar
               </button>
@@ -229,12 +229,12 @@ export function CerezOnayBanner() {
                 aciklama="Ölçüm ve dönüşüm."
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {analitikAcik ? (
                 <button
                   type="button"
                   onClick={() => tercihKaydet("tumu", kapat)}
-                  className={dugmeSinif}
+                  className={`${dugmeSinif} flex-1`}
                 >
                   Kaydet
                 </button>
@@ -242,7 +242,7 @@ export function CerezOnayBanner() {
                 <button
                   type="button"
                   onClick={() => setGorunum("onay")}
-                  className={dugmeSinif}
+                  className={`${dugmeSinif} flex-1`}
                 >
                   Devam
                 </button>
