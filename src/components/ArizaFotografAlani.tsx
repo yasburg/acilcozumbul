@@ -16,7 +16,7 @@ interface ArizaFotografAlaniProps {
 export function ArizaFotografAlani({
   onizleme,
   onDegisti,
-  zorunlu = true,
+  zorunlu = false,
   invalid = false,
   onDevam,
 }: ArizaFotografAlaniProps) {

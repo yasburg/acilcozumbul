@@ -1463,18 +1463,7 @@ function MusteriDonusumSayfaIcerik({
   }
 
   function hedefFotografKontrol(): boolean {
-    if (fotografData) {
-      setFotografHatasi(false);
-    } else {
-      setFotografHatasi(true);
-      setError("Arıza fotoğrafı zorunludur — lütfen fotoğraf ekleyin.");
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          scrollBelowStickyHeader(fotografRef.current);
-        });
-      });
-      return false;
-    }
+    setFotografHatasi(false);
     const sure = ihaleBitisHesapla(ihaleSureTipi, {
       ozelBitis: ihaleOzelBitis,
     });
@@ -2599,12 +2588,12 @@ function MusteriDonusumSayfaIcerik({
           >
             <p className="text-sm font-semibold text-slate-900">
               Araç fotoğrafı{" "}
-              <span className="text-amber-700 font-medium">(zorunlu)</span>
+              <span className="text-slate-500 font-medium">(isteğe bağlı)</span>
             </p>
             <ArizaFotografAlani
               onizleme={fotografOnizleme}
               invalid={fotografHatasi}
-              zorunlu
+              zorunlu={false}
               onDegisti={(dataUrl) => {
                 setFotografOnizleme(dataUrl);
                 setFotografData(dataUrl);

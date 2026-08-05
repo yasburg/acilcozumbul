@@ -151,7 +151,7 @@ export function musteriGosterimSureDk(
   );
 }
 
-/** Konum adımında fotoğraf alanı göster (zorunlu veya isteğe bağlı) */
+/** Konum adımında fotoğraf alanı göster (isteğe bağlı) */
 export function sorunFotografAlaniGoster(sorunTipi?: string): boolean {
   if (!sorunTipi?.trim()) return false;
   const id = talepSorunTipi({ sorunTipi: sorunTipi });
@@ -161,9 +161,9 @@ export function sorunFotografAlaniGoster(sorunTipi?: string): boolean {
   );
 }
 
-export function sorunFotografGerekliMi(sorunTipi?: string): boolean {
-  const id = talepSorunTipi({ sorunTipi: sorunTipi });
-  return SORUN_FOTOGRAF_TIPLERI.includes(id);
+/** Fotoğraf artık zorunlu değil; alan isteğe bağlı gösterilir */
+export function sorunFotografGerekliMi(_sorunTipi?: string): boolean {
+  return false;
 }
 
 /** Araç modeli artık zorunlu değil; alan isteğe bağlı gösterilir */
