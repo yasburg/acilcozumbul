@@ -64,6 +64,19 @@ describe("cekiciFiyatTahmini", () => {
     expect(zor.orta).toBeGreaterThan(baz.orta);
   });
 
+  it("gidiş-dönüş için bandı ikiye katlar ve özetler", () => {
+    const s = cekiciFiyatTahmini({
+      sehirAd: "İstanbul",
+      kapsam: "sehirler_arasi",
+      mesafeKm: 100,
+      aracTipi: "otomobil",
+      saat: "gunduz",
+      durum: "standart",
+    });
+    expect(s.ozet.some((o) => o.includes("gidiş-dönüş"))).toBe(true);
+    expect(s.kmBasiOrtalama).toBe(Math.round(s.orta / 200));
+  });
+
   it("tlYazi Türkçe formatlar", () => {
     expect(tlYazi(1500)).toMatch(/1\.500/);
   });

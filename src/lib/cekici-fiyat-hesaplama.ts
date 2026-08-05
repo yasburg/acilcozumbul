@@ -198,16 +198,17 @@ export function cekiciFiyatTahmini(girdi: CekiciFiyatGirdi): CekiciFiyatSonuc {
     durumCarpan(girdi.durum);
 
   const otoyol = girdi.otoyolGecis ? (metro ? 180 : 120) : 0;
-  const orta = yuvarla50(ham + otoyol);
+  // Tek yön mesafe hesaplanır; çekici boş dönüş yaptığı için band x2
+  const orta = yuvarla50((ham + otoyol) * 2);
   const dusuk = yuvarla50(orta * 0.78);
   const yuksek = yuvarla50(orta * 1.32);
-  const kmBasiOrtalama = Math.round(orta / km);
+  const kmBasiOrtalama = Math.round(orta / (km * 2));
 
   const ozet: string[] = [
     girdi.kapsam === "sehir_ici"
       ? "Şehir içi dilimli mesafe tarifesi uygulandı"
       : "Şehirler arası azalan km dilimleri uygulandı",
-    `Rota mesafesi ≈ ${km} km`,
+    `Tek yön rota ≈ ${km} km · gidiş-dönüş dahil (x2)`,
   ];
   if (metro) ozet.push(`${girdi.sehirAd} için büyükşehir / trafik primi`);
   if (girdi.saat !== "gunduz") ozet.push("Saat dilimi çarpanı eklendi");

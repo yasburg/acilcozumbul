@@ -13,6 +13,7 @@ export const TUM_SORUN_TIP_IDLERI = [
   "yakit",
   "kaza",
   "kilit",
+  "arac-tasima",
   "diger",
 ] as const;
 
@@ -26,6 +27,7 @@ export const SORUN_TIPLERI: SorunTipi[] = [
   { id: "yakit", label: "Yakıt bitti", icon: "⛽" },
   { id: "kaza", label: "Kaza / çarpışma", icon: "💥" },
   { id: "kilit", label: "Araç kilitlendi / Anahtar çalışmıyor", icon: "🔑" },
+  { id: "arac-tasima", label: "Araç taşıma", icon: "🛻" },
   { id: "diger", label: "Diğer", icon: "✏️" },
 ];
 
@@ -50,6 +52,7 @@ export const HIZMET_QUERY_HARITASI: Record<string, SorunTipiId> = {
   ariza: "ariza",
   kaza: "kaza",
   yakit: "yakit",
+  "arac-tasima": "arac-tasima",
   diger: "diger",
 };
 
@@ -86,11 +89,17 @@ export const SORUN_FOTOGRAF_TIPLERI: SorunTipiId[] = [
   "lastik",
   "kaza",
   "cekici",
+  "arac-tasima",
   "diger",
 ];
 
 /** Çekici / kurtarma — araç modeli alanı gösterilen tipler (opsiyonel) */
-export const SORUN_ARAC_MODELI_TIPLERI: SorunTipiId[] = ["ariza", "kaza", "cekici"];
+export const SORUN_ARAC_MODELI_TIPLERI: SorunTipiId[] = [
+  "ariza",
+  "kaza",
+  "cekici",
+  "arac-tasima",
+];
 
 /** Yerinde müdahale — hedef (çekilecek) adres adımı yok */
 export const SORUN_HEDEF_KONUM_ATLANIR: SorunTipiId[] = [

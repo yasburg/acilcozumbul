@@ -55,7 +55,10 @@ function adimAciklamaMetni(
   if (sorunTipi === "kaza" && idx === 2) {
     return "Aracın çekileceği servis veya adresi seçin";
   }
-  if (sorunTipi === "cekici" && idx === 2) {
+  if (
+    (sorunTipi === "cekici" || sorunTipi === "arac-tasima") &&
+    idx === 2
+  ) {
     return "Aracın götürüleceği hedefi belirleyin";
   }
 

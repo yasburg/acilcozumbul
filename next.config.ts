@@ -54,6 +54,7 @@ const nextConfig: NextConfig = {
       { source: "/bekle/:path*", headers: [noindex] },
       { source: "/demo/:path*", headers: [noindex] },
       { source: "/sms50/:path*", headers: [noindex] },
+      { source: "/t/:path*", headers: [noindex] },
       { source: "/panel/:path*", headers: [noindex] },
       { source: "/cekici/panel/:path*", headers: [noindex] },
       { source: "/cekici/giris", headers: [noindex] },

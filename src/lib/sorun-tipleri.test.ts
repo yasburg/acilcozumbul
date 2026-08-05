@@ -13,6 +13,7 @@ describe("hizmetQuerydenSorunTipi", () => {
     expect(hizmetQuerydenSorunTipi("anahtar")).toBe("kilit");
     expect(hizmetQuerydenSorunTipi("ariza")).toBe("ariza");
     expect(hizmetQuerydenSorunTipi("kaza")).toBe("kaza");
+    expect(hizmetQuerydenSorunTipi("arac-tasima")).toBe("arac-tasima");
   });
 
   it("büyük/küçük harf ve boşluk toleranslı", () => {
@@ -24,6 +25,19 @@ describe("hizmetQuerydenSorunTipi", () => {
     expect(hizmetQuerydenSorunTipi(null)).toBeNull();
     expect(hizmetQuerydenSorunTipi("")).toBeNull();
     expect(hizmetQuerydenSorunTipi("xyz")).toBeNull();
+  });
+});
+
+describe("SORUN_TIPLERI sırası", () => {
+  it("arac-tasima Diğer’in hemen üstündedir", async () => {
+    const { SORUN_TIPLERI, TUM_SORUN_TIP_IDLERI, sorunHedefKonumGerekliMi } =
+      await import("./sorun-tipleri");
+    const ids = SORUN_TIPLERI.map((t) => t.id);
+    expect(ids[ids.length - 1]).toBe("diger");
+    expect(ids[ids.length - 2]).toBe("arac-tasima");
+    expect(TUM_SORUN_TIP_IDLERI.at(-1)).toBe("diger");
+    expect(TUM_SORUN_TIP_IDLERI.at(-2)).toBe("arac-tasima");
+    expect(sorunHedefKonumGerekliMi("arac-tasima")).toBe(true);
   });
 });
 

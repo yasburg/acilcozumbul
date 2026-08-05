@@ -45,7 +45,7 @@ describe("otpMesajAscii", () => {
 });
 
 describe("cekiciTalepSmsMetni (OTP 155)", () => {
-  it("kısa konum + tam ihale linki; tam adres kullanmaz", () => {
+  it("isim yok; ilçe + kısa link OTP limitine sığar", () => {
     const c = cekiciFixture({ token: "tok-1" });
     const t = talepFixture({
       id: "talep-uuid-1",
@@ -60,17 +60,21 @@ describe("cekiciTalepSmsMetni (OTP 155)", () => {
           "Eski Edirne Asfaltı, Yıldırım Mahallesi, Bayrampaşa, İstanbul, Marmara Bölgesi, 34045, Türkiye",
       },
     });
+    const kisa = "https://www.acilcozumbul.com/t/Aa0Bb1Cc";
     const { mesaj, link } = cekiciTalepSmsMetni(
       t,
       c,
-      "https://www.acilcozumbul.com"
+      "https://www.acilcozumbul.com",
+      false,
+      { link: kisa }
     );
-    expect(mesaj).toContain(link);
-    expect(mesaj).toContain("/cekici/talep/talep-uuid-1?t=tok-1");
-    expect(mesaj).toContain("[Bayrampaşa]");
+    expect(link).toBe(kisa);
+    expect(mesaj).toContain("Yeni yol yardim talebi: Bayrampaşa");
+    expect(mesaj).toContain(kisa);
+    expect(mesaj).not.toContain("Asdf");
     expect(mesaj).not.toContain("Eski Edirne");
     const gonderilen = otpMesajAscii(mesaj);
-    expect(gonderilen).toContain(link);
+    expect(gonderilen).toContain(kisa);
     expect(gonderilen.length).toBeLessThanOrEqual(OTP_SMS_MAX_LEN);
   });
 });

@@ -10,7 +10,7 @@ import {
   cekiciYeterliBildirimKredisi,
 } from "@/lib/ihale";
 import { smsBaseUrl } from "@/lib/sms-base-url";
-import { cekiciTalepSmsMetni } from "@/lib/sms";
+import { cekiciTalepSmsHazirla } from "@/lib/sms";
 import { sendSms } from "@/lib/sms-provider";
 import { demoTalepGetir, demoKatil, isDemoTalepId } from "@/lib/demo-oturum";
 import { demoKatilMesaji } from "@/lib/demo-responses";
@@ -100,7 +100,7 @@ export async function POST(
   const baseUrl = smsBaseUrl(
     process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.acilcozumbul.com"
   );
-  const { mesaj, link } = cekiciTalepSmsMetni(talep, cekici, baseUrl);
+  const { mesaj, link } = await cekiciTalepSmsHazirla(talep, cekici, baseUrl);
   await sendSms(cekici.telefon, mesaj, {
     aliciTipi: "cekici",
     cekiciId: cekici.id,

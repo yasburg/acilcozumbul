@@ -175,10 +175,10 @@ describe("D — Çekici bildirim (mock)", () => {
       { yenidenArama: true }
     );
     const mesaj = sendSms.mock.calls[0][1] as string;
-    expect(mesaj).toContain("yeni cekici ariyor");
+    expect(mesaj).toContain("Yeni yol yardim talebi (tekrar)");
   });
 
-  it("D8: premium ilk talep mesajı ve token linki", async () => {
+  it("D8: premium ilk talep mesajı ve kısa link", async () => {
     const c = cekiciFixture({
       token: "abc-token",
       premiumSmsAktif: true,
@@ -187,15 +187,18 @@ describe("D — Çekici bildirim (mock)", () => {
     getCekicilerBildirimAdaylari.mockResolvedValue([c]);
     const t = talepFixture({
       id: "t99",
+      ad: "Asdf",
+      soyad: "Test",
       konumIl: "İstanbul",
       konumIlce: "Kadıköy",
     });
     await notifyCekiciler(t, "http://localhost:3000");
     const mesaj = sendSms.mock.calls[0][1] as string;
-    expect(mesaj).toContain("yolda kaldi");
-    expect(mesaj).toContain("[Kadıköy]");
-    expect(mesaj).toContain("t=abc-token");
-    expect(mesaj).toContain("/cekici/talep/t99");
+    expect(mesaj).toContain("Yeni yol yardim talebi: Kadıköy");
+    expect(mesaj).not.toContain("Asdf");
+    expect(mesaj).not.toContain("yolda kaldi");
+    expect(mesaj).toMatch(/\/t\/[0-9A-Za-z]{8}/);
+    expect(mesaj).not.toContain("t=abc-token");
     expect(mesaj).not.toMatch(/\([^)]{20,}\)/);
   });
 

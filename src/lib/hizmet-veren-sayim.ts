@@ -33,6 +33,7 @@ const HIZMET_ETIKET: Record<SorunTipiId, string> = {
   kaza: "çekici",
   kilit: "anahtarcı",
   cekici: "çekici",
+  "arac-tasima": "araç taşıma",
   diger: "operatör",
 };
 

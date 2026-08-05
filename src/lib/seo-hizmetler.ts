@@ -8,6 +8,7 @@ export const SEO_HIZMET_SLUGS = [
   "oto-anahtarci",
   "yakit-yardimi",
   "yol-yardim",
+  "arac-tasima",
 ] as const;
 
 export type SeoHizmetSlug = (typeof SEO_HIZMET_SLUGS)[number];
@@ -69,6 +70,13 @@ export const SEO_HIZMETLER: Record<SeoHizmetSlug, SeoHizmetTanim> = {
     etiketUzun: "Yol yardım",
     sorunTipi: null,
     formHizmetQuery: null,
+  },
+  "arac-tasima": {
+    slug: "arac-tasima",
+    etiket: "Araç taşıma",
+    etiketUzun: "Araç taşıma",
+    sorunTipi: "arac-tasima",
+    formHizmetQuery: "arac-tasima",
   },
 };
 

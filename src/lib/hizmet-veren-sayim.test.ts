@@ -53,6 +53,9 @@ describe("hizmetVerenSayimHesapla", () => {
     expect(hizmetVerenKisaMetin("kilit", 0, 0)).toBe(
       "Şu an kayıtlı anahtarcı yok"
     );
+    expect(hizmetVerenKisaMetin("arac-tasima", 2, 5)).toBe(
+      "2 çevrimiçi araç taşıma · 5 kayıtlı"
+    );
   });
 
   it("müşteri gösteriminde aktif offset var, çevrimiçi ham kalır", () => {

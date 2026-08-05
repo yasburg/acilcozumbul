@@ -29,6 +29,7 @@ describe("kayit-funnel", () => {
     expect(f?.tip).toBe("phone_first");
     expect(f?.hizmetOnsecim).toBe("cekici");
     expect(kayitHizmetSorunOnerisi("cekici")).toContain("cekici");
+    expect(kayitHizmetSorunOnerisi("cekici")).toContain("arac-tasima");
   });
 
   it("c seçim wizard", () => {

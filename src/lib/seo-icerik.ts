@@ -432,6 +432,12 @@ function hizmetSenaryolari(slug: SeoHizmetSlug, ilceAd?: string): string[] {
         "Arıza teşhisi sonrası yönlendirme",
         "Birden fazla hizmet seçeneğini karşılaştırma",
       ];
+    case "arac-tasima":
+      return [
+        `${yer}şehirler arası araç taşıma`,
+        "Galeri, servis veya otopark arası nakil",
+        "İstenen adrese güvenli araç taşıma",
+      ];
   }
 }
 

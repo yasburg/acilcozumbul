@@ -4,6 +4,11 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { CekiciFiyatHesaplamaAraci } from "@/components/cekici/CekiciFiyatHesaplamaAraci";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import {
+  cekiciFiyatTahmini,
+  rotaMesafeKm,
+  tlYazi,
+} from "@/lib/cekici-fiyat-hesaplama";
+import {
   faqJsonLd,
   organizationJsonLd,
   sayfaMetadata,
@@ -34,6 +39,36 @@ const FAQ = [
   },
 ] as const;
 
+/** Popüler şehirler arası rotalar — tabloda gündüz / otomobil / otoyol varsayımı */
+const SEHIRLER_ARASI_ORNEK_ROTALAR = [
+  ["İstanbul", "Ankara"],
+  ["Ankara", "İzmir"],
+  ["İstanbul", "İzmir"],
+  ["İstanbul", "Bursa"],
+  ["İstanbul", "Adana"],
+  ["Ankara", "Bursa"],
+  ["İstanbul", "Trabzon"],
+  ["İstanbul", "Gaziantep"],
+  ["İzmir", "Samsun"],
+] as const;
+
+function sehirlerArasiOrnekSatirlari() {
+  return SEHIRLER_ARASI_ORNEK_ROTALAR.map(([nereden, nereye]) => {
+    const mesafeKm =
+      rotaMesafeKm({ cikisIl: nereden, varisIl: nereye }) ?? 100;
+    const fiyat = cekiciFiyatTahmini({
+      sehirAd: nereden,
+      kapsam: "sehirler_arasi",
+      mesafeKm,
+      aracTipi: "otomobil",
+      saat: "gunduz",
+      durum: "standart",
+      otoyolGecis: true,
+    });
+    return { nereden, nereye, mesafeKm, ...fiyat };
+  });
+}
+
 export const metadata = sayfaMetadata({
   title: TITLE,
   description: DESCRIPTION,
@@ -42,6 +77,8 @@ export const metadata = sayfaMetadata({
 });
 
 export default function CekiciFiyatHesaplamaPage() {
+  const ornekSatirlar = sehirlerArasiOrnekSatirlari();
+
   return (
     <>
       <JsonLd
@@ -153,6 +190,60 @@ export default function CekiciFiyatHesaplamaPage() {
                 ek ücreti getirebilir. Gece çekici fiyatları gündüze göre daha
                 yüksek olabilir.
               </p>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-xl font-bold text-slate-900">
+                2026 şehirler arası oto çekici fiyatları
+              </h2>
+              <p>
+                Aşağıdaki örnekler gündüz, standart otomobil ve otoyol geçişli
+                varsayımla üretilmiş tahmini bantlardır; gidiş-dönüş dahildir.
+                Gerçek teklifler firmaya ve koşullara göre değişir.
+              </p>
+              <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+                <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      <th className="px-3 py-2.5 font-semibold">Nereden</th>
+                      <th className="px-3 py-2.5 font-semibold">Nereye</th>
+                      <th className="px-3 py-2.5 font-semibold text-right">
+                        En düşük
+                      </th>
+                      <th className="px-3 py-2.5 font-semibold text-right">
+                        Ortalama
+                      </th>
+                      <th className="px-3 py-2.5 font-semibold text-right">
+                        En yüksek
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ornekSatirlar.map((s) => (
+                      <tr
+                        key={`${s.nereden}-${s.nereye}`}
+                        className="border-b border-slate-100 last:border-0"
+                      >
+                        <td className="px-3 py-2.5 font-medium text-slate-900">
+                          {s.nereden}
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-700">
+                          {s.nereye}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums text-slate-700">
+                          {tlYazi(s.dusuk)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums font-semibold text-amber-900">
+                          {tlYazi(s.orta)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right tabular-nums text-slate-700">
+                          {tlYazi(s.yuksek)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </section>
 
             <section className="space-y-3">

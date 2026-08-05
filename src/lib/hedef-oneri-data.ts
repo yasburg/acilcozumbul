@@ -34,6 +34,7 @@ export const SORUN_ARAMALARI: Record<string, string[]> = {
   kaza: ["oto sanayi", "oto kurtarma", "ekspertiz"],
   kilit: ["oto anahtar", "anahtarcı", "oto sanayi"],
   cekici: ["oto sanayi", "oto kurtarma", "çekici park"],
+  "arac-tasima": ["oto sanayi", "çekici park", "oto kurtarma"],
   diger: ["oto sanayi", "oto servis", "oto kurtarma"],
 };
 

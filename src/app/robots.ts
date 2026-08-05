@@ -12,6 +12,7 @@ const DISALLOW = [
   "/bekle/",
   "/demo/",
   "/sms50",
+  "/t/",
   "/fatura",
   "/kredi-hatirlatma/",
   "/kurulum-hatirlatma/",

@@ -7,6 +7,11 @@ import {
   PANEL_BILDIRIM_KREDI,
 } from "./ihale";
 import { sendSms, smsInfraHatasiMi, type SmsKanal } from "./sms-provider";
+import {
+  olusturSmsTalepKisaLink,
+  smsTalepKisaUrl,
+  smsTalepUzunUrl,
+} from "./sms-talep-kisa-link";
 import type { Cekici, Talep } from "./types";
 
 /**
@@ -21,25 +26,53 @@ export function smsYalnizTesterCekicilerMi(): boolean {
   return process.env.NODE_ENV === "development";
 }
 
+/** SMS konum parçası (ilçe veya il) — isim yok */
+function smsTalepYer(talep: Talep): string {
+  return (talep.konumIlce || talep.konumIl || "").trim();
+}
+
 /**
- * Çekici talep SMS metni.
- * OTP (premium) max 155 — kısa konum; link sonda korunur.
- * Toplu (standart) aynı metni kullanır (Türkçe karakter ASCII'ye çevrilmez XML'de).
+ * Çekici talep SMS metni (isim yok).
+ * OTP max 155 — kısa link tercih edilir; link sonda korunur.
  */
 export function cekiciTalepSmsMetni(
   talep: Talep,
   cekici: Cekici,
   baseUrl: string,
-  yenidenArama = false
+  yenidenArama = false,
+  opts?: { link?: string }
 ): { mesaj: string; link: string } {
-  const link = `${baseUrl.replace(/\/$/, "")}/cekici/talep/${talep.id}?t=${cekici.token}`;
-  const yer = talep.konumIlce || talep.konumIl || "";
-  const yerParca = yer ? ` [${yer}]` : "";
-  const kim = `${talep.ad} ${talep.soyad.charAt(0)}.`;
-  const mesaj = yenidenArama
-    ? `${kim} yeni cekici ariyor${yerParca}. Teklif: ${link}`
-    : `${kim} yolda kaldi${yerParca}. Teklif: ${link}`;
+  const link =
+    opts?.link?.trim() ||
+    smsTalepUzunUrl(talep.id, cekici.token, baseUrl);
+  const yer = smsTalepYer(talep);
+  const baslik = yenidenArama
+    ? "Yeni yol yardim talebi (tekrar)"
+    : "Yeni yol yardim talebi";
+  const onek = yer ? `${baslik}: ${yer}` : baslik;
+  const mesaj = `${onek}\n${link}`;
   return { mesaj, link };
+}
+
+/** Kısa link üretir; başarısızsa uzun URL’ye düşer */
+export async function cekiciTalepSmsHazirla(
+  talep: Talep,
+  cekici: Cekici,
+  baseUrl: string,
+  yenidenArama = false
+): Promise<{ mesaj: string; link: string }> {
+  let link = smsTalepUzunUrl(talep.id, cekici.token, baseUrl);
+  try {
+    const kisa = await olusturSmsTalepKisaLink({
+      talepId: talep.id,
+      cekiciId: cekici.id,
+      cekiciToken: cekici.token,
+    });
+    link = smsTalepKisaUrl(kisa.token, baseUrl);
+  } catch (e) {
+    console.error("[sms] kısa link üretilemedi, uzun URL kullanılıyor", e);
+  }
+  return cekiciTalepSmsMetni(talep, cekici, baseUrl, yenidenArama, { link });
 }
 
 /**
@@ -87,7 +120,7 @@ export async function notifyCekiciler(
     adaylar.map(async (cekici: Cekici) => {
       const tutar = cekiciBildirimKrediTutari(cekici);
       const kanal: SmsKanal = cekiciPremiumSmsAktifMi(cekici) ? "otp" : "xml";
-      const { mesaj, link } = cekiciTalepSmsMetni(
+      const { mesaj, link } = await cekiciTalepSmsHazirla(
         talep,
         cekici,
         baseUrl,

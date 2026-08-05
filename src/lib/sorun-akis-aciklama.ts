@@ -63,6 +63,11 @@ export const SORUN_AKIS_ACIKLAMA: Record<SorunTipiId, SorunAkisAciklama> = {
       "Çekici aracınızı kurtarır ve seçtiğiniz hedef adrese güvenle taşır.",
     adimlar: CEKICI_ADIMLAR,
   },
+  "arac-tasima": {
+    hizmet:
+      "Aracınızı bulunduğunuz yerden alır; şehirler arası veya seçtiğiniz adrese taşır.",
+    adimlar: CEKICI_ADIMLAR,
+  },
   diger: {
     hizmet:
       "Açıklamanıza uygun yol yardım veya çekici; gerekirse hedef adres de seçilir.",

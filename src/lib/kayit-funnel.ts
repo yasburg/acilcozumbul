@@ -160,13 +160,22 @@ export function kayitHizmetSorunOnerisi(
 ): string[] {
   switch (h) {
     case "cekici":
-      return ["cekici", "ariza", "kaza"];
+      return ["cekici", "arac-tasima", "ariza", "kaza"];
     case "lastik":
       return ["lastik"];
     case "anahtar":
       return ["kilit"];
     case "birden_fazla":
-      return ["cekici", "lastik", "kilit", "aku", "yakit", "ariza", "kaza"];
+      return [
+        "cekici",
+        "arac-tasima",
+        "lastik",
+        "kilit",
+        "aku",
+        "yakit",
+        "ariza",
+        "kaza",
+      ];
     default:
       return [];
   }

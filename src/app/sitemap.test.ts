@@ -18,6 +18,10 @@ describe("sitemap", () => {
     expect(urls.some((u) => u.endsWith("/istanbul/bayrampasa/cekici"))).toBe(
       true
     );
+    expect(urls.some((u) => u.endsWith("/istanbul/arac-tasima"))).toBe(true);
+    expect(urls.some((u) => u.endsWith("/istanbul/bayrampasa/arac-tasima"))).toBe(
+      true
+    );
     expect(urls.some((u) => u.endsWith("/hizmet-veren"))).toBe(true);
   });
 });
