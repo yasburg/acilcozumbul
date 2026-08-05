@@ -1,5 +1,7 @@
 import { randomUUID } from "crypto";
 import { getCekiciById } from "./db";
+import { epostaGonder } from "./email-gonder";
+import { epostaGecerliMi, epostaNormalize } from "./eposta";
 import { supabaseDbAktif } from "./supabase/admin";
 import {
   faturaBelgeNoUret,
@@ -17,17 +19,36 @@ import {
 } from "./fatura-storage";
 import { sendSms } from "./sms-provider";
 
+export type FaturaBildirimKanal = "email" | "sms" | null;
+
 export type FaturaYukleSonuc =
-  | { ok: true; fatura: FaturaLink; smsGonderildi: boolean }
+  | {
+      ok: true;
+      fatura: FaturaLink;
+      smsGonderildi: boolean;
+      emailGonderildi: boolean;
+      bildirimKanal: FaturaBildirimKanal;
+    }
   | { ok: false; hata: string };
 
+export function faturaEpostaMetni(url: string): string {
+  return `Faturanız düzenlenmiştir. Görüntülemek için: ${url}`;
+}
+
+export function faturaEpostaKonu(): string {
+  return "Faturanız hazır";
+}
+
 /**
- * Panel: PDF yükle → private Storage + fatura_link → çekiciye SMS.
+ * Panel: PDF yükle → private Storage + fatura_link →
+ * e-posta varsa e-posta, yoksa SMS.
  */
 export async function panelFaturaYukleVeSms(opts: {
   cekiciId: string;
   pdf: Buffer;
   krediOdemeId?: string | null;
+  /** Varsa öncelikli bildirim e-postası (ödeme fatura e-postası) */
+  bildirimEposta?: string | null;
 }): Promise<FaturaYukleSonuc> {
   if (!supabaseDbAktif()) {
     return { ok: false, hata: "Veritabanı yok" };
@@ -58,17 +79,78 @@ export async function panelFaturaYukleVeSms(opts: {
       belgeNo,
     });
 
-    const smsGonderildi = await faturaSmsGonder({
+    const bildirim = await faturaBildirimGonder({
       telefon: cekici.telefon,
       cekiciId: cekici.id,
       token: fatura.token,
+      eposta:
+        opts.bildirimEposta?.trim() ||
+        cekici.faturaEposta?.trim() ||
+        undefined,
     });
-    return { ok: true, fatura, smsGonderildi };
+
+    return {
+      ok: true,
+      fatura,
+      smsGonderildi: bildirim.smsGonderildi,
+      emailGonderildi: bildirim.emailGonderildi,
+      bildirimKanal: bildirim.kanal,
+    };
   } catch (e) {
     const hata = e instanceof Error ? e.message : "Fatura yüklenemedi";
     console.error("[fatura-servis]", hata);
     return { ok: false, hata };
   }
+}
+
+async function faturaBildirimGonder(opts: {
+  telefon: string;
+  cekiciId: string;
+  token: string;
+  eposta?: string;
+}): Promise<{
+  emailGonderildi: boolean;
+  smsGonderildi: boolean;
+  kanal: FaturaBildirimKanal;
+}> {
+  const url = faturaUrl(opts.token);
+  const epostaHam = (opts.eposta ?? "").trim();
+  const eposta =
+    epostaHam && epostaGecerliMi(epostaHam)
+      ? epostaNormalize(epostaHam)
+      : "";
+
+  if (eposta) {
+    try {
+      const sonuc = await epostaGonder(
+        eposta,
+        faturaEpostaKonu(),
+        faturaEpostaMetni(url)
+      );
+      if (sonuc.basarili) {
+        return {
+          emailGonderildi: true,
+          smsGonderildi: false,
+          kanal: "email",
+        };
+      }
+      console.error("[fatura-servis] email", sonuc.hata);
+    } catch (e) {
+      console.error("[fatura-servis] email", e);
+    }
+    // E-posta başarısızsa SMS'e düş
+  }
+
+  const smsGonderildi = await faturaSmsGonder({
+    telefon: opts.telefon,
+    cekiciId: opts.cekiciId,
+    token: opts.token,
+  });
+  return {
+    emailGonderildi: false,
+    smsGonderildi,
+    kanal: smsGonderildi ? "sms" : null,
+  };
 }
 
 async function faturaSmsGonder(opts: {

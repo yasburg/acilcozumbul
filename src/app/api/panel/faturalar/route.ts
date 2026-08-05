@@ -88,6 +88,8 @@ export async function POST(request: NextRequest) {
       cekiciAd: cekici.ad,
       cekiciTelefon: cekici.telefon,
     },
+    bildirimKanal: sonuc.bildirimKanal,
+    emailGonderildi: sonuc.emailGonderildi,
     smsGonderildi: sonuc.smsGonderildi,
   });
 }

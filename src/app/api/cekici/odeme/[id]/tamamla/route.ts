@@ -194,6 +194,7 @@ export async function POST(
     tutar: bekleyen.tutar,
     listeFiyati: bekleyen.listeFiyati,
     paketTl: bekleyen.paketTl ?? bekleyen.listeFiyati ?? bekleyen.tutar,
+    odemeTipi: bekleyen.odemeTipi === "abonelik" ? "abonelik" : "kredi",
     faturaEposta: faturaSonuc.data.faturaEposta ?? "",
     faturaAdres: faturaSonuc.data.faturaAdres,
     faturaTcKimlik: faturaSonuc.data.faturaTcKimlik,

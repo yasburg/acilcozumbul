@@ -391,6 +391,7 @@ export type KrediOdemeRow = {
   tutar: number;
   liste_fiyati: number | null;
   paket_tl: number;
+  odeme_tipi?: string | null;
   fatura_eposta: string | null;
   fatura_adres: string | null;
   fatura_tc_kimlik: string | null;
@@ -413,6 +414,12 @@ export function krediOdemeFromRow(r: KrediOdemeRow): KrediOdeme {
     tutar: Number(r.tutar),
     listeFiyati: r.liste_fiyati != null ? Number(r.liste_fiyati) : undefined,
     paketTl: Number(r.paket_tl),
+    odemeTipi:
+      r.odeme_tipi === "abonelik"
+        ? "abonelik"
+        : r.odeme_tipi === "kredi"
+          ? "kredi"
+          : undefined,
     faturaEposta: r.fatura_eposta ?? undefined,
     faturaAdres: r.fatura_adres ?? undefined,
     faturaTcKimlik: r.fatura_tc_kimlik ?? undefined,
@@ -436,6 +443,7 @@ export function krediOdemeToRow(k: KrediOdeme): KrediOdemeRow {
     tutar: k.tutar,
     liste_fiyati: k.listeFiyati ?? null,
     paket_tl: k.paketTl,
+    odeme_tipi: k.odemeTipi === "abonelik" ? "abonelik" : "kredi",
     fatura_eposta: k.faturaEposta ?? null,
     fatura_adres: k.faturaAdres ?? null,
     fatura_tc_kimlik: k.faturaTcKimlik ?? null,

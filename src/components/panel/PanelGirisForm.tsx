@@ -40,10 +40,21 @@ export function PanelGirisForm({
         );
       }
 
+      const rol = data.rol === "muhasebe" ? "muhasebe" : "admin";
+      const varsayilan =
+        typeof data.anaSayfa === "string" && data.anaSayfa.startsWith("/panel")
+          ? data.anaSayfa
+          : rol === "muhasebe"
+            ? "/panel/kredi-odemeler"
+            : "/panel";
       const hedef =
-        nextHref.startsWith("/panel") && nextHref !== "/panel/giris"
+        nextHref.startsWith("/panel") &&
+        nextHref !== "/panel/giris" &&
+        (rol !== "muhasebe" ||
+          nextHref.startsWith("/panel/kredi-odemeler") ||
+          nextHref.startsWith("/panel/faturalar"))
           ? nextHref
-          : "/panel";
+          : varsayilan;
 
       await onBasarili?.();
       window.location.replace(hedef);

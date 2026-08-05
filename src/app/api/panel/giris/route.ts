@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import {
   panelEpostaIzinli,
+  panelMuhasebeAnaSayfa,
+  panelRol,
   supabaseYapilandirildi,
   supabaseYapilandirmaHataMesaji,
 } from "@/lib/supabase/env";
@@ -69,6 +71,14 @@ export async function POST(request: NextRequest) {
   }
 
   return applyCookies(
-    NextResponse.json({ ok: true, eposta: data.user.email })
+    NextResponse.json({
+      ok: true,
+      eposta: data.user.email,
+      rol: panelRol(data.user.email),
+      anaSayfa:
+        panelRol(data.user.email) === "muhasebe"
+          ? panelMuhasebeAnaSayfa()
+          : "/panel",
+    })
   );
 }

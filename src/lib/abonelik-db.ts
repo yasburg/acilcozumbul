@@ -151,6 +151,12 @@ export type AbonelikIslemSatir = {
   createdAt: string;
 };
 
+export type AbonelikIslemTamSatir = AbonelikIslemSatir & {
+  id: string;
+  cekiciId: string;
+  abonelikId: string;
+};
+
 /** Panel özet — abonelik tahsilatları (created / renewal vb.) */
 export async function listeleAbonelikIslemleriSince(
   sinceIso: string
@@ -178,6 +184,77 @@ export async function listeleAbonelikIslemleriSince(
     garantiOrderId: r.garanti_order_id ?? undefined,
     createdAt: r.created_at,
   }));
+}
+
+/** Panel satın almalar — yenileme / created satırları (tam alan) */
+export async function listeleAbonelikIslemleriTahsilat(): Promise<
+  AbonelikIslemTamSatir[]
+> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("abonelik_islem")
+    .select(
+      "id, abonelik_id, cekici_id, tip, tutar_tl, kredi, garanti_order_id, created_at"
+    )
+    .in("tip", ["created", "renewal"])
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (
+    (data as
+      | {
+          id: string;
+          abonelik_id: string;
+          cekici_id: string;
+          tip: string;
+          tutar_tl: number;
+          kredi: number;
+          garanti_order_id?: string | null;
+          created_at: string;
+        }[]
+      | null) ?? []
+  ).map((r) => ({
+    id: r.id,
+    abonelikId: r.abonelik_id,
+    cekiciId: r.cekici_id,
+    tip: r.tip as AbonelikIslemTip,
+    tutarTl: Number(r.tutar_tl),
+    kredi: Number(r.kredi),
+    garantiOrderId: r.garanti_order_id ?? undefined,
+    createdAt: r.created_at,
+  }));
+}
+
+export async function getAbonelikIslemById(
+  id: string
+): Promise<AbonelikIslemTamSatir | null> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("abonelik_islem")
+    .select(
+      "id, abonelik_id, cekici_id, tip, tutar_tl, kredi, garanti_order_id, created_at"
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const r = data as {
+    id: string;
+    abonelik_id: string;
+    cekici_id: string;
+    tip: string;
+    tutar_tl: number;
+    kredi: number;
+    garanti_order_id?: string | null;
+    created_at: string;
+  };
+  return {
+    id: r.id,
+    abonelikId: r.abonelik_id,
+    cekiciId: r.cekici_id,
+    tip: r.tip as AbonelikIslemTip,
+    tutarTl: Number(r.tutar_tl),
+    kredi: Number(r.kredi),
+    garantiOrderId: r.garanti_order_id ?? undefined,
+    createdAt: r.created_at,
+  };
 }
 
 export async function guncelleAbonelik(

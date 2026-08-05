@@ -2,6 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import {
   panelEpostaIzinli,
+  panelMuhasebeAnaSayfa,
+  panelMuhasebeApiIzinli,
+  panelMuhasebeSayfaIzinli,
+  panelRol,
   supabaseYapilandirildi,
 } from "./env";
 
@@ -73,7 +77,9 @@ export async function updatePanelSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const rol = panelRol(user?.email);
   const yetkili = Boolean(user && panelEpostaIzinli(user.email));
+  const muhasebe = rol === "muhasebe";
 
   if (user && !yetkili) {
     await supabase.auth.signOut();
@@ -99,7 +105,36 @@ export async function updatePanelSession(request: NextRequest) {
     return oturumCerezleriniKopyala(response, NextResponse.redirect(url));
   }
 
-  if (yetkili && pathname === "/panel/giris") {
+  if (yetkili && muhasebe && isPanelApi && !panelMuhasebeApiIzinli(pathname)) {
+    return oturumCerezleriniKopyala(
+      response,
+      NextResponse.json(
+        { error: "Bu işlem için yetkiniz yok." },
+        { status: 403 }
+      )
+    );
+  }
+
+  if (yetkili && muhasebe && isPanelPage) {
+    const ana = panelMuhasebeAnaSayfa();
+    if (pathname === "/panel" || pathname === "/panel/giris") {
+      const url = request.nextUrl.clone();
+      const next = request.nextUrl.searchParams.get("next");
+      const hedef =
+        next && panelMuhasebeSayfaIzinli(next) ? next : ana;
+      url.pathname = hedef;
+      url.search = "";
+      return oturumCerezleriniKopyala(response, NextResponse.redirect(url));
+    }
+    if (!panelMuhasebeSayfaIzinli(pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = ana;
+      url.search = "";
+      return oturumCerezleriniKopyala(response, NextResponse.redirect(url));
+    }
+  }
+
+  if (yetkili && !muhasebe && pathname === "/panel/giris") {
     const url = request.nextUrl.clone();
     const next = request.nextUrl.searchParams.get("next");
     url.pathname = next?.startsWith("/panel") ? next : "/panel";

@@ -105,12 +105,14 @@ export default function PanelFaturalarPage() {
           typeof data.error === "string" ? data.error : "Yükleme başarısız."
         );
       }
-      const sms =
-        data.smsGonderildi === true
-          ? "SMS gönderildi."
-          : "PDF kaydedildi; SMS gönderilemedi.";
+      const bildirim =
+        data.bildirimKanal === "email"
+          ? "E-posta gönderildi."
+          : data.bildirimKanal === "sms"
+            ? "SMS gönderildi."
+            : "PDF kaydedildi; bildirim gönderilemedi.";
       setMesaj(
-        `${data.fatura?.belgeNo ?? "Fatura"} yüklendi. ${sms}`
+        `${data.fatura?.belgeNo ?? "Fatura"} yüklendi. ${bildirim}`
       );
       setDosya(null);
       await yukle();
@@ -126,8 +128,8 @@ export default function PanelFaturalarPage() {
       <div>
         <h2 className="text-2xl font-bold">Faturalar</h2>
         <p className="text-sm text-slate-500 mt-1">
-          Çekici seçip PDF yükleyin. Kayıt sonrası ilgili telefona fatura
-          bağlantısı SMS ile gider.
+          Çekici seçip PDF yükleyin. E-posta varsa e-posta, yoksa SMS ile
+          fatura bağlantısı gider.
         </p>
       </div>
 

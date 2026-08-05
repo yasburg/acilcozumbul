@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Card } from "@/components/ui";
-import type { KrediOdeme } from "@/lib/types";
+import { Btn, Card } from "@/components/ui";
+import type { SatinAlmaTip } from "@/lib/panel-satin-almalar";
 
 function Satir({ label, value }: { label: string; value?: string | number | null }) {
   if (value == null || value === "") return null;
@@ -16,18 +16,85 @@ function Satir({ label, value }: { label: string; value?: string | number | null
   );
 }
 
-export default function PanelKrediOdemeDetayPage() {
+type Detay = {
+  id: string;
+  tip: SatinAlmaTip;
+  tipEtiket: string;
+  cekiciId: string;
+  cekiciAd: string;
+  ad: string;
+  soyad: string;
+  cekiciTelefon: string;
+  miktar: number;
+  tutar: number;
+  paketTl: number;
+  faturaEposta?: string;
+  faturaAdres?: string;
+  faturaTcKimlik?: string;
+  kurumsal: boolean;
+  sirketUnvan?: string;
+  vergiNo?: string;
+  odemeReferans?: string;
+  garantiRespCode?: string;
+  demoOdeme: boolean;
+  olusturulma: string;
+  fatura: { id: string; belgeNo: string; createdAt: string } | null;
+};
+
+export default function PanelSatinAlmaDetayPage() {
   const params = useParams();
   const id = params.id as string;
-  const [kayit, setKayit] = useState<KrediOdeme | null>(null);
+  const [kayit, setKayit] = useState<Detay | null>(null);
   const [loading, setLoading] = useState(true);
+  const [yukleniyor, setYukleniyor] = useState(false);
+  const [mesaj, setMesaj] = useState("");
+  const [hata, setHata] = useState("");
+  const dosyaRef = useRef<HTMLInputElement>(null);
+
+  async function yukle() {
+    const r = await fetch(`/api/panel/kredi-odemeler/${id}`);
+    setKayit(r.ok ? await r.json() : null);
+  }
 
   useEffect(() => {
-    fetch(`/api/panel/kredi-odemeler/${id}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then(setKayit)
-      .finally(() => setLoading(false));
+    void yukle().finally(() => setLoading(false));
   }, [id]);
+
+  async function faturaYukle(e: React.ChangeEvent<HTMLInputElement>) {
+    const dosya = e.target.files?.[0];
+    e.target.value = "";
+    if (!dosya) return;
+    setHata("");
+    setMesaj("");
+    setYukleniyor(true);
+    try {
+      const form = new FormData();
+      form.set("pdf", dosya);
+      const res = await fetch(`/api/panel/kredi-odemeler/${id}/fatura`, {
+        method: "POST",
+        credentials: "include",
+        body: form,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string" ? data.error : "Yükleme başarısız."
+        );
+      }
+      const bildirim =
+        data.bildirimKanal === "email"
+          ? "E-posta gönderildi."
+          : data.bildirimKanal === "sms"
+            ? "SMS gönderildi."
+            : "PDF kaydedildi; bildirim gönderilemedi.";
+      setMesaj(`${data.fatura?.belgeNo ?? "Fatura"} yüklendi. ${bildirim}`);
+      await yukle();
+    } catch (err) {
+      setHata(err instanceof Error ? err.message : "Yükleme başarısız.");
+    } finally {
+      setYukleniyor(false);
+    }
+  }
 
   if (loading) {
     return <p className="text-sm text-slate-500">Yükleniyor…</p>;
@@ -44,47 +111,41 @@ export default function PanelKrediOdemeDetayPage() {
     );
   }
 
+  const tipSinif =
+    kayit.tip === "kredi"
+      ? "bg-amber-50 text-amber-800"
+      : kayit.tip === "abonelik_yenileme"
+        ? "bg-sky-50 text-sky-800"
+        : "bg-emerald-50 text-emerald-800";
+
   return (
     <div className="space-y-4">
       <Link
         href="/panel/kredi-odemeler"
         className="text-sm text-amber-600 font-medium"
       >
-        ← Kredi satın alımları
+        ← Satın almalar
       </Link>
 
-      <div>
-        <h2 className="text-2xl font-bold">Ödeme detayı</h2>
-        <p className="text-sm text-slate-500">
-          {new Date(kayit.olusturulma).toLocaleString("tr-TR")}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold">Ödeme detayı</h2>
+          <p className="text-sm text-slate-500">
+            {new Date(kayit.olusturulma).toLocaleString("tr-TR")}
+          </p>
+        </div>
+        <span className={`text-sm font-medium px-3 py-1 rounded-full ${tipSinif}`}>
+          {kayit.tipEtiket}
+        </span>
       </div>
-
-      <Card>
-        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
-          Çekici
-        </h3>
-        <Satir label="Ad" value={kayit.cekiciAd} />
-        <Satir label="Telefon" value={kayit.cekiciTelefon} />
-        <Satir label="Çekici ID" value={kayit.cekiciId} />
-      </Card>
-
-      <Card>
-        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
-          Ödeme
-        </h3>
-        <Satir label="Kredi" value={`${kayit.miktar}`} />
-        <Satir label="Paket (liste)" value={`${kayit.paketTl} ₺`} />
-        <Satir label="Ödenen tutar" value={`${kayit.tutar} ₺`} />
-        <Satir label="Banka referansı" value={kayit.odemeReferans} />
-        <Satir label="Garanti kod" value={kayit.garantiRespCode} />
-        <Satir label="Ortam" value={kayit.demoOdeme ? "Demo" : "Canlı"} />
-      </Card>
 
       <Card>
         <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
           Fatura bilgileri
         </h3>
+        <Satir label="Ad" value={kayit.ad} />
+        <Satir label="Soyad" value={kayit.soyad} />
+        <Satir label="Telefon" value={kayit.cekiciTelefon} />
         <Satir label="E-posta" value={kayit.faturaEposta} />
         <Satir label="Adres" value={kayit.faturaAdres} />
         <Satir label="TC kimlik" value={kayit.faturaTcKimlik} />
@@ -95,6 +156,59 @@ export default function PanelKrediOdemeDetayPage() {
             <Satir label="Vergi no" value={kayit.vergiNo} />
           </>
         )}
+      </Card>
+
+      <Card>
+        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
+          Fatura PDF
+        </h3>
+        {kayit.fatura ? (
+          <p className="text-sm text-slate-700">
+            Yüklü: <strong>{kayit.fatura.belgeNo}</strong>
+            <span className="text-slate-500">
+              {" "}
+              · {new Date(kayit.fatura.createdAt).toLocaleString("tr-TR")}
+            </span>
+          </p>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-sm text-slate-600">
+              PDF yükleyin. E-posta varsa e-posta, yoksa SMS ile fatura linki
+              gider.
+            </p>
+            <input
+              ref={dosyaRef}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="hidden"
+              onChange={(e) => void faturaYukle(e)}
+            />
+            <Btn
+              type="button"
+              className="!w-auto min-h-0 py-2.5 px-4 text-sm"
+              disabled={yukleniyor}
+              onClick={() => dosyaRef.current?.click()}
+            >
+              {yukleniyor ? "Yükleniyor…" : "Fatura yükle"}
+            </Btn>
+          </div>
+        )}
+        {mesaj && <p className="text-sm text-emerald-700 mt-2">{mesaj}</p>}
+        {hata && <p className="text-sm text-red-600 mt-2">{hata}</p>}
+      </Card>
+
+      <Card>
+        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
+          Ödeme
+        </h3>
+        <Satir label="Tür" value={kayit.tipEtiket} />
+        <Satir label="Kredi" value={`${kayit.miktar}`} />
+        <Satir label="Paket (liste)" value={`${kayit.paketTl} ₺`} />
+        <Satir label="Ödenen tutar" value={`${kayit.tutar} ₺`} />
+        <Satir label="Banka referansı" value={kayit.odemeReferans} />
+        <Satir label="Garanti kod" value={kayit.garantiRespCode} />
+        <Satir label="Ortam" value={kayit.demoOdeme ? "Demo" : "Canlı"} />
+        <Satir label="Çekici ID" value={kayit.cekiciId} />
       </Card>
     </div>
   );
