@@ -12,6 +12,8 @@ interface MobileShellProps {
   backHref?: string;
   /** Geri butonu metni (ör. Geri). Verilmezse yalnız ← ikonu */
   backLabel?: string;
+  /** Sol üst geri: amber chip yerine soluk gri metin */
+  backMuted?: boolean;
   /** Sayfa içi geri (href yerine); wizard adımları için */
   onBack?: () => void;
   /** Header ortasında, subtitle üstünde (ör. demo ikonu) */
@@ -37,6 +39,7 @@ export function MobileShell({
   showBrand = true,
   backHref,
   backLabel,
+  backMuted = false,
   onBack,
   headerBadge,
   headerCenter,
@@ -47,9 +50,15 @@ export function MobileShell({
   footer,
 }: MobileShellProps) {
   const geriMetinli = Boolean(backLabel);
-  const geriSinif = `flex shrink-0 items-center justify-center gap-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300/80 touch-manipulation font-semibold shadow-sm shadow-amber-500/10 ${
-    geriMetinli ? "px-3.5 py-2 text-sm" : "h-9 w-9 text-lg"
-  }`;
+  const geriSinif = backMuted
+    ? `flex shrink-0 items-center justify-center gap-1 touch-manipulation text-slate-400 hover:text-slate-500 ${
+        geriMetinli
+          ? "px-1 py-2 text-sm font-medium"
+          : "h-9 w-9 text-lg font-semibold"
+      }`
+    : `flex shrink-0 items-center justify-center gap-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300/80 touch-manipulation font-semibold shadow-sm shadow-amber-500/10 ${
+        geriMetinli ? "px-3.5 py-2 text-sm" : "h-9 w-9 text-lg"
+      }`;
   const geriAria = backLabel ?? "Geri";
   const geriIcerik = geriMetinli ? (
     <span>{backLabel}</span>

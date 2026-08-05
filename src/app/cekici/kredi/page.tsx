@@ -149,6 +149,8 @@ export default function KrediPage() {
   return (
     <MobileShell
       backHref="/cekici/panel?tab=hesabim"
+      backLabel="Ücretsiz devam et"
+      backMuted
       subtitle="Kredi / Abonelik"
       headerEnd={
         <p className="text-right leading-tight">
