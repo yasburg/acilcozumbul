@@ -324,7 +324,7 @@ export function tiktokPixelClickButton(params: {
 
 /**
  * Müşteri talep formu tamamlandı → TikTok standart olay «Lead».
- * OTP henüz yok; teklif seçiminde `tiktokPixelContact` ateşlenir.
+ * İletişim/OTP henüz yok; teklif seçiminde `tiktokPixelContact` (telefonlu).
  * PII varsa önce identify (SHA-256); Events API ile aynı event_id.
  */
 export async function tiktokPixelLead(params?: {
@@ -363,6 +363,7 @@ export async function tiktokPixelLead(params?: {
 
 /**
  * Doğrulanmış telefon + teklif seçimi → TikTok «Contact».
+ * Lead’den sonra; iletişim formu + OTP tamamlanıp çekiciye bildirim giden an.
  */
 export async function tiktokPixelContact(params?: {
   content_name?: string;

@@ -29,6 +29,8 @@ interface MobileShellProps {
   /** İlk ekranda daha alçak header */
   headerCompact?: boolean;
   footer?: React.ReactNode;
+  /** Sticky alt nav varken footer’ın altında boşluk (ör. pb-24 / pb-44) */
+  footerClassName?: string;
 }
 
 export function MobileShell({
@@ -48,6 +50,7 @@ export function MobileShell({
   headerBottom,
   headerCompact = false,
   footer,
+  footerClassName,
 }: MobileShellProps) {
   const geriMetinli = Boolean(backLabel);
   const geriSinif = backMuted
@@ -209,7 +212,9 @@ export function MobileShell({
       >
         {children}
       </main>
-      {footer}
+      {footer ? (
+        <div className={footerClassName}>{footer}</div>
+      ) : null}
     </div>
   );
 }

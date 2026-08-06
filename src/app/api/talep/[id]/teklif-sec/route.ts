@@ -11,6 +11,7 @@ import {
 import { isSimulasyonTalep } from "@/lib/simulasyon-ihale-db";
 import { getDogrulanmisTelefon } from "@/lib/musteri-auth";
 import { telefonMaskele, telefonNormalize } from "@/lib/telefon";
+import { talepIletisimTamMi } from "@/lib/talep-iletisim";
 import { notifyCekiciSecildi } from "@/lib/sms";
 import { smsBaseUrl } from "@/lib/sms-base-url";
 
@@ -82,6 +83,18 @@ export async function POST(
     return NextResponse.json(
       { error: "Bu talep için seçim yapılamıyor." },
       { status: 409 }
+    );
+  }
+
+  if (!talepIletisimTamMi(talep)) {
+    return NextResponse.json(
+      {
+        error: "Teklif seçmek için iletişim bilgilerinizi girin.",
+        iletisimGerekli: true,
+        telefonDogrulamaGerekli: true,
+        telefonMaskeli: "",
+      },
+      { status: 403 }
     );
   }
 

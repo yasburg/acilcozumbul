@@ -15,6 +15,8 @@ export function SehirSeoIcerikBolumu({
   baglantilar,
   bolgeLinkleri,
   yogunluk = "kompakt",
+  /** false: yalnızca başlık, uzun özet metni yok (şehir/ilçe form altı) */
+  ozetGoster = true,
 }: {
   icerik: SeoLandingIcerik;
   /** Metin içi şehir/ilçe linkleri için */
@@ -25,6 +27,7 @@ export function SehirSeoIcerikBolumu({
   /** Altta gösterilecek ilçe/bölge chip listesi */
   bolgeLinkleri?: SeoMetinBaglanti[];
   yogunluk?: Yogunluk;
+  ozetGoster?: boolean;
 }) {
   const linkler = baglantilar ?? seoBolgeBaglantilari(sehirAd);
   const chipLinkler =
@@ -50,11 +53,13 @@ export function SehirSeoIcerikBolumu({
           <h2 className="text-[1.35rem] sm:text-[1.65rem] font-bold leading-snug tracking-tight text-slate-900">
             {heroBaslik}
           </h2>
-          <SeoMetin
-            metin={icerik.ozet}
-            baglantilar={linkler}
-            className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed"
-          />
+          {ozetGoster ? (
+            <SeoMetin
+              metin={icerik.ozet}
+              baglantilar={linkler}
+              className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed"
+            />
+          ) : null}
         </div>
       ) : null}
 

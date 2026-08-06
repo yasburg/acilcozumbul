@@ -82,16 +82,21 @@ export async function otpFraudKontrol(ipHashDeger: string | null): Promise<
 }
 
 export async function talepFraudKontrol(
-  telefon: string,
+  telefon: string | null | undefined,
   ipHashDeger: string | null
 ): Promise<{ ok: true } | { ok: false; hata: string }> {
-  const tel = telefonNormalize(telefon);
-  const telSay = await telefonTalepSay(tel, TELEFON_SAAT());
-  if (telSay >= TELEFON_LIMIT()) {
-    return {
-      ok: false,
-      hata: `Bu telefon numarasıyla son ${TELEFON_SAAT()} saatte en fazla ${TELEFON_LIMIT()} talep açılabilir.`,
-    };
+  const telHam = telefon?.trim() ?? "";
+  if (telHam) {
+    const tel = telefonNormalize(telHam);
+    if (/^05[0-9]{9}$/.test(tel)) {
+      const telSay = await telefonTalepSay(tel, TELEFON_SAAT());
+      if (telSay >= TELEFON_LIMIT()) {
+        return {
+          ok: false,
+          hata: `Bu telefon numarasıyla son ${TELEFON_SAAT()} saatte en fazla ${TELEFON_LIMIT()} talep açılabilir.`,
+        };
+      }
+    }
   }
 
   if (ipHashDeger) {

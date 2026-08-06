@@ -11,6 +11,7 @@ import {
 import { isSimulasyonTalep } from "./simulasyon-ihale-db";
 import { cekiciTalepSmsHazirla, smsYalnizTesterCekicilerMi } from "./sms";
 import { getSupabaseAdmin, supabaseDbAktif } from "./supabase/admin";
+import { telefonGecerliMi } from "./telefon";
 import {
   olusturTopluSmsIsi,
   tetikleTopluSmsKuyruk,
@@ -77,6 +78,9 @@ async function musteriHatirlatmaGonder(
   adim: IhaleHatirlatmaAdim,
   baseUrl: string
 ): Promise<{ ok: boolean; isId?: string }> {
+  if (!telefonGecerliMi(talep.telefon)) {
+    return { ok: false };
+  }
   if (await hatirlatmaGonderildiMi(talep.id, adim, "musteri")) {
     return { ok: false };
   }

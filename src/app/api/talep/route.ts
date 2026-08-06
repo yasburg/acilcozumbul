@@ -22,7 +22,7 @@ import {
 } from "@/lib/sorun-tipleri";
 import { talepFotografYukle } from "@/lib/talep-fotograf";
 import { smsBaseUrl } from "@/lib/sms-base-url";
-import { telefonNormalize } from "@/lib/telefon";
+import { telefonGecerliMi, telefonNormalize } from "@/lib/telefon";
 import type { Talep } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
@@ -76,15 +76,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!ad || !soyad || !telefon || !konum?.adres || !sorunMetni) {
+  if (!konum?.adres || !sorunMetni) {
     return NextResponse.json(
-      { error: "Tüm alanları doldurun." },
+      { error: "Konum ve sorun bilgisi gerekli." },
       { status: 400 }
     );
   }
 
-  const telNorm = telefonNormalize(telefon);
-  if (!/^05[0-9]{9}$/.test(telNorm)) {
+  /* İletişim (ad/soyad/telefon) teklif seçiminde alınır — oluşturmada opsiyonel */
+  const adMetin = typeof ad === "string" ? ad.trim() : "";
+  const soyadMetin = typeof soyad === "string" ? soyad.trim() : "";
+  const telHam = typeof telefon === "string" ? telefon.trim() : "";
+  const telNorm = telHam ? telefonNormalize(telHam) : "";
+  if (telHam && !telefonGecerliMi(telNorm)) {
     return NextResponse.json(
       { error: "Geçerli bir Türkiye cep telefonu girin." },
       { status: 400 }
@@ -105,7 +109,7 @@ export async function POST(request: NextRequest) {
   const ip = istekIp(request);
   const hash = ipHash(ip);
 
-  const fraud = await talepFraudKontrol(telNorm, hash);
+  const fraud = await talepFraudKontrol(telNorm || null, hash);
   if (!fraud.ok) {
     return NextResponse.json({ error: fraud.hata }, { status: 429 });
   }
@@ -144,9 +148,9 @@ export async function POST(request: NextRequest) {
 
   const talep: Talep = {
     id: talepId,
-    ad: ad.trim(),
-    soyad: soyad.trim(),
-    telefon: telefon.trim(),
+    ad: adMetin,
+    soyad: soyadMetin,
+    telefon: telNorm,
     konum: {
       lat: konum.lat ?? 0,
       lng: konum.lng ?? 0,
@@ -184,7 +188,9 @@ export async function POST(request: NextRequest) {
   talep.bildirilenCekiciIds = bildirilenIds;
 
   await addTalep(talep);
-  await notifyMusteri(talep, "talep_alindi", baseUrl);
+  if (telefonGecerliMi(talep.telefon)) {
+    await notifyMusteri(talep, "talep_alindi", baseUrl);
+  }
 
   try {
     await notifyKrediHatirlatma(talep, baseUrl, bildirilenIds);
@@ -193,14 +199,14 @@ export async function POST(request: NextRequest) {
   }
 
   await guvenlikOlayiKaydet({
-    anahtar: hash ? `ip:${hash}` : `tel:${telNorm}`,
+    anahtar: hash ? `ip:${hash}` : telNorm ? `tel:${telNorm}` : `talep:${talepId}`,
     olayTipi: "talep_olustur",
     ipHash: hash,
-    telefon: telNorm,
+    telefon: telNorm || null,
   });
   await funnelOlayKaydet({
     olay: "talep_olustur",
-    telefon: telNorm,
+    telefon: telNorm || null,
     ipHash: hash,
     talepId: talep.id,
   });

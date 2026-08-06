@@ -13,6 +13,7 @@ import {
   smsTalepUzunUrl,
 } from "./sms-talep-kisa-link";
 import type { Cekici, Talep } from "./types";
+import { telefonGecerliMi } from "./telefon";
 
 /**
  * Yerel `next dev` / açıkça açılan modda gerçek çekicilere SMS gitmez;
@@ -171,6 +172,7 @@ export async function notifyMusteri(
   _ek?: { fiyat?: number; cekiciAd?: string }
 ): Promise<void> {
   if (MUSTERI_SMS_IPTAL.has(tip)) return;
+  if (!telefonGecerliMi(talep.telefon)) return;
 
   const bekleLink = `${baseUrl.replace(/\/$/, "")}/bekle/${talep.id}`;
 

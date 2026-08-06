@@ -205,8 +205,8 @@
     "semantic_hash": ""
   },
   "src/app/api/cekici/talep/[id]/teklif/route.ts": {
-    "mtime": 1785684752.4317262,
-    "ast_hash": "fad1406585311d045b8c5416117de271",
+    "mtime": 1786041607.5641923,
+    "ast_hash": "6882ede76869a3ee5329a7b9f6f120b3",
     "semantic_hash": ""
   },
   "src/app/api/cekici/talepler/route.ts": {
@@ -275,8 +275,8 @@
     "semantic_hash": ""
   },
   "src/app/api/musteri/otp/gonder/route.ts": {
-    "mtime": 1786040171.781302,
-    "ast_hash": "16d7fc3d07b242c9572639ccdc910d99",
+    "mtime": 1786049357.3214176,
+    "ast_hash": "6754bf3b3dd6d1103beec6bf229f6141",
     "semantic_hash": ""
   },
   "src/app/api/musteri/otp/sifirla/route.ts": {
@@ -405,8 +405,8 @@
     "semantic_hash": ""
   },
   "src/app/api/talep/[id]/teklif-sec/route.ts": {
-    "mtime": 1786040152.3753824,
-    "ast_hash": "b83e1be781701480f1683abb410c4090",
+    "mtime": 1786049354.3587492,
+    "ast_hash": "cc3c223508a13ba357c25a6c465a2eb4",
     "semantic_hash": ""
   },
   "src/app/api/talep/[id]/teklifler/route.ts": {
@@ -415,13 +415,13 @@
     "semantic_hash": ""
   },
   "src/app/api/talep/route.ts": {
-    "mtime": 1786040131.3713882,
-    "ast_hash": "8e3ee0bda1fbcb6dd2be3042f027daf1",
+    "mtime": 1786049346.9804475,
+    "ast_hash": "4877b4411086f065bee627385d89459f",
     "semantic_hash": ""
   },
   "src/app/bekle/[id]/page.tsx": {
-    "mtime": 1786041120.0906734,
-    "ast_hash": "f871ed141dfc1baaf9578789e5840c30",
+    "mtime": 1786049428.7292447,
+    "ast_hash": "d09ad750bb9e78734803aa489ee449c6",
     "semantic_hash": ""
   },
   "src/app/cekici/ayarlar/page.tsx": {
@@ -780,8 +780,8 @@
     "semantic_hash": ""
   },
   "src/components/musteri/MusteriAnaSayfa.tsx": {
-    "mtime": 1786041093.8904815,
-    "ast_hash": "efaa75e9af36d435c6fda5b590a13a64",
+    "mtime": 1786049600.8045301,
+    "ast_hash": "9f8d5a9c8fdd5d7053b6d9787412a2cb",
     "semantic_hash": ""
   },
   "src/components/panel/HizmetVerenSayimPanel.tsx": {
@@ -1080,13 +1080,13 @@
     "semantic_hash": ""
   },
   "src/lib/ihale.test.ts": {
-    "mtime": 1785928618.9787002,
-    "ast_hash": "c5115a504991d205e01b109354eb6a5b",
+    "mtime": 1786041625.0993657,
+    "ast_hash": "25415fa8b4c558cb06cf3ec05ff92e3e",
     "semantic_hash": ""
   },
   "src/lib/ihale.ts": {
-    "mtime": 1785928603.300816,
-    "ast_hash": "2927b749b7dabc6db782c67009834383",
+    "mtime": 1786041599.196491,
+    "ast_hash": "239bfaa27747659d2592bcc6e04c7adf",
     "semantic_hash": ""
   },
   "src/lib/il-ilce.ts": {
@@ -1345,8 +1345,8 @@
     "semantic_hash": ""
   },
   "src/lib/talep-fraud.ts": {
-    "mtime": 1780610344.4917748,
-    "ast_hash": "b1342fad19b84b475846269eaefacbed",
+    "mtime": 1786049321.82345,
+    "ast_hash": "f4476190bb19534ea63a7062816e5479",
     "semantic_hash": ""
   },
   "src/lib/talep-utils.ts": {
@@ -2375,13 +2375,13 @@
     "semantic_hash": ""
   },
   "src/lib/musteri-form-taslak.test.ts": {
-    "mtime": 1785837853.1970537,
-    "ast_hash": "55275c0d08c8e3904276155fb6c7c6c1",
+    "mtime": 1786049701.4828978,
+    "ast_hash": "f3e18326b7f51d3f5946acb014926189",
     "semantic_hash": ""
   },
   "src/lib/musteri-form-taslak.ts": {
-    "mtime": 1785928647.7009175,
-    "ast_hash": "d2815b78839e5a881d7c724ff955fdef",
+    "mtime": 1786049682.0990357,
+    "ast_hash": "dc3293539f00909851041fc2b6fc8ac7",
     "semantic_hash": ""
   },
   "src/components/ChromeAcSecenegi.tsx": {
@@ -2450,8 +2450,8 @@
     "semantic_hash": ""
   },
   "src/lib/musteri-funnel.ts": {
-    "mtime": 1786041114.1462235,
-    "ast_hash": "b8030df990c7edcef8d6b6e0c5a5c54e",
+    "mtime": 1786049694.4251807,
+    "ast_hash": "dbb538d61e7aad84ff0e53c216e3d178",
     "semantic_hash": ""
   },
   "src/app/b/page.tsx": {
@@ -2460,8 +2460,8 @@
     "semantic_hash": ""
   },
   "src/components/musteri/MusteriDonusumSayfa.tsx": {
-    "mtime": 1786041099.0362952,
-    "ast_hash": "3f87cb5cf0dc4418d36bbb032425c89b",
+    "mtime": 1786049823.9459925,
+    "ast_hash": "aae0bd75f3b14060ee55fe97a1003245",
     "semantic_hash": ""
   },
   "src/lib/toplu-sms-excel.test.ts": {
@@ -2730,8 +2730,8 @@
     "semantic_hash": ""
   },
   "src/app/panel/musteri-funnels/page.tsx": {
-    "mtime": 1786040980.829048,
-    "ast_hash": "e4fcdf6ddf63777b6805f19bf2361edf",
+    "mtime": 1786049702.7095435,
+    "ast_hash": "1b93b4413950e0ee8e8f4f044f871fb5",
     "semantic_hash": ""
   },
   "src/lib/musteri-funnel-client.ts": {
@@ -2740,13 +2740,13 @@
     "semantic_hash": ""
   },
   "src/lib/musteri-funnel-olay.test.ts": {
-    "mtime": 1786040967.6060984,
-    "ast_hash": "37499daef58e126091cc04482ccba06e",
+    "mtime": 1786049700.8289435,
+    "ast_hash": "f9b3e1314f0e8a9d8798978e82c51d20",
     "semantic_hash": ""
   },
   "src/lib/musteri-funnel-olay.ts": {
-    "mtime": 1786040825.342169,
-    "ast_hash": "984b17030d1d9abf239db89d1bba286c",
+    "mtime": 1786049696.39547,
+    "ast_hash": "c1dc956b91cb208a2cb6751ad5958d95",
     "semantic_hash": ""
   },
   "supabase/migrations/049_musteri_funnel_olay.sql": {
@@ -3380,8 +3380,8 @@
     "semantic_hash": ""
   },
   "src/components/musteri/MusteriTeklifSecOtp.tsx": {
-    "mtime": 1786041107.2436638,
-    "ast_hash": "eaaeede20b2ee203e4a8e64f104e889b",
+    "mtime": 1786049403.153978,
+    "ast_hash": "0557cdfc5ad81ef02d030da1de8d1ff2",
     "semantic_hash": ""
   },
   "src/app/api/cron/ihale-hatirlatma/route.ts": {
@@ -3400,13 +3400,23 @@
     "semantic_hash": ""
   },
   "src/lib/ihale-hatirlatma.ts": {
-    "mtime": 1786041421.501824,
-    "ast_hash": "91e05ff078a90e23f4b1e9ad5943982f",
+    "mtime": 1786041607.7340603,
+    "ast_hash": "3eebd20ee03a833373897a555787efe4",
     "semantic_hash": ""
   },
   "supabase/migrations/058_ihale_hatirlatma.sql": {
     "mtime": 1786041408.0157897,
     "ast_hash": "60ff4d2ffaf1f032b124431a1fcb2bd9",
+    "semantic_hash": ""
+  },
+  "src/app/api/talep/[id]/iletisim/route.ts": {
+    "mtime": 1786049349.2992818,
+    "ast_hash": "608edd45e44c04ebd4a9336e08840653",
+    "semantic_hash": ""
+  },
+  "src/lib/talep-iletisim.ts": {
+    "mtime": 1786049313.6569686,
+    "ast_hash": "65d82d4365d5eb212f7982dc4ce42ba3",
     "semantic_hash": ""
   }
 }

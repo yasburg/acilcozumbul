@@ -165,6 +165,7 @@ function BekleIcerik() {
   const [teklifBanner, setTeklifBanner] = useState<string | null>(null);
   const [otpTeklifId, setOtpTeklifId] = useState<string | null>(null);
   const [otpMaske, setOtpMaske] = useState("");
+  const [otpIletisimGerekli, setOtpIletisimGerekli] = useState(false);
 
   useEffect(() => {
     if (!teklifBanner) return;
@@ -238,25 +239,26 @@ function BekleIcerik() {
     void musteriBildirimIzniIste();
   }, [id]);
 
-  /* Müşteri formu tamamlandı → Lead (OTP sonrası Contact ayrı; çift sayım yok) */
+  /* Müşteri formu tamamlandı → Lead (iletişim+OTP sonrası Contact ayrı) */
   useEffect(() => {
     if (demoTalep || demoParam) return;
     let sorun: string | null = null;
-    let telefon: string | null = null;
     try {
       if (sessionStorage.getItem(`acil_meta_lead_${id}`) === "1") return;
       sessionStorage.setItem(`acil_meta_lead_${id}`, "1");
       sorun = sessionStorage.getItem(`acil_bekle_sorun_${id}`);
-      telefon = sessionStorage.getItem(`acil_bekle_tel_${id}`);
     } catch {
       /* private mode — yine de dene */
     }
+    /* Lead: talep anı — iletişim/telefon henüz yok */
     void metaPixelLead({
       content_name: sorun || "musteri_talep",
-      phone: telefon,
       externalId: id,
     });
-    void tiktokPixelLead({ content_name: sorun || "musteri_talep" });
+    void tiktokPixelLead({
+      content_name: sorun || "musteri_talep",
+      externalId: id,
+    });
   }, [id, demoTalep, demoParam]);
 
   useEffect(() => {
@@ -497,10 +499,11 @@ function BekleIcerik() {
       });
       const data = await res.json();
       if (!res.ok) {
-        if (data.telefonDogrulamaGerekli) {
+        if (data.telefonDogrulamaGerekli || data.iletisimGerekli) {
           setOtpMaske(
             typeof data.telefonMaskeli === "string" ? data.telefonMaskeli : ""
           );
+          setOtpIletisimGerekli(Boolean(data.iletisimGerekli));
           setOtpTeklifId(teklifId);
           setMesaj("");
           return;
@@ -669,10 +672,15 @@ function BekleIcerik() {
       <MusteriTeklifSecOtp
         talepId={id}
         telefonMaskeli={otpMaske}
-        onIptal={() => setOtpTeklifId(null)}
+        iletisimGerekli={otpIletisimGerekli || !otpMaske.trim()}
+        onIptal={() => {
+          setOtpTeklifId(null);
+          setOtpIletisimGerekli(false);
+        }}
         onDogrulandi={() => {
           const tid = otpTeklifId;
           setOtpTeklifId(null);
+          setOtpIletisimGerekli(false);
           if (tid) void teklifSec(tid);
         }}
       />

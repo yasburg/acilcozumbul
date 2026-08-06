@@ -6,7 +6,17 @@ import { Card } from "@/components/ui";
 const STORAGE_KEY = "acil_nasil_calisir_kapali";
 const ADIM_SURE_MS = 3000;
 
-type FormAdimi = "sorun" | "bilgi" | "konum" | "detay" | "hedef";
+type FormAdimi =
+  | "sorun"
+  | "bilgi"
+  | "konum"
+  | "detay"
+  | "fotograf"
+  | "arac_tipi"
+  | "arac_modeli"
+  | "ek_detay"
+  | "ihale"
+  | "hedef";
 
 type NasilAdim = {
   ikon: string;
@@ -40,7 +50,16 @@ const NASIL_ADIMLAR: NasilAdim[] = [
 function formAdimindenAnchor(adim: FormAdimi): number {
   if (adim === "sorun") return 0;
   if (adim === "hedef") return 1;
-  if (adim === "bilgi" || adim === "konum" || adim === "detay") {
+  if (
+    adim === "bilgi" ||
+    adim === "konum" ||
+    adim === "detay" ||
+    adim === "fotograf" ||
+    adim === "arac_tipi" ||
+    adim === "arac_modeli" ||
+    adim === "ek_detay" ||
+    adim === "ihale"
+  ) {
     return 2;
   }
   return 0;

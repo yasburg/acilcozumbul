@@ -23,12 +23,21 @@ export type MusteriFormAlanlari = {
   aracModeli: string;
 };
 
-/** / klasik wizard + /b 3 ekran; eski konum/detay değerleri korunur */
+/**
+ * / klasik wizard + /b 3 ekran; eski konum/detay değerleri korunur.
+ * `detay` eski (tek) adım — MusteriAnaSayfa artık onu fotograf/arac_tipi/
+ * arac_modeli/ek_detay/ihale alt adımlarına böler (geriye dönük uyum için tutulur).
+ */
 export type MusteriFormAdim =
   | "bilgi"
   | "konum"
   | "sorun"
   | "detay"
+  | "fotograf"
+  | "arac_tipi"
+  | "arac_modeli"
+  | "ek_detay"
+  | "ihale"
   | "hedef";
 
 export type MusteriFormTaslak = {
@@ -49,15 +58,31 @@ const ADIMLAR: ReadonlySet<string> = new Set([
   "konum",
   "sorun",
   "detay",
+  "fotograf",
+  "arac_tipi",
+  "arac_modeli",
+  "ek_detay",
+  "ihale",
   "hedef",
 ]);
 
-/** /b dönüşüm akışı — konum/detay → sorun */
+/** /b dönüşüm akışı — konum/detay (+ alt adımları) → sorun; eski iletişim adımı → hedef */
 export function musteriFormAdimDonusumNormalize(
   step: string
-): "bilgi" | "sorun" | "hedef" {
-  if (step === "konum" || step === "detay") return "sorun";
-  if (step === "hedef" || step === "bilgi" || step === "sorun") return step;
+): "sorun" | "hedef" {
+  if (
+    step === "konum" ||
+    step === "detay" ||
+    step === "fotograf" ||
+    step === "arac_tipi" ||
+    step === "arac_modeli" ||
+    step === "ek_detay" ||
+    step === "ihale"
+  ) {
+    return "sorun";
+  }
+  if (step === "bilgi") return "hedef";
+  if (step === "hedef" || step === "sorun") return step;
   return "sorun";
 }
 

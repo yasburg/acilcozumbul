@@ -1,11 +1,11 @@
 # Graph Report - acilcozumbul  (2026-08-07)
 
 ## Corpus Check
-- 632 files · ~682,654 words
+- 632 files · ~682,392 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3017 nodes · 9810 edges · 147 communities (123 shown, 24 thin omitted)
+- 3017 nodes · 9810 edges · 146 communities (122 shown, 24 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 45 edges (avg confidence: 0.63)
 - Token cost: 0 input · 0 output
 
@@ -103,7 +103,6 @@
 - [[_COMMUNITY_cekici-sehir-acilis-db.ts|cekici-sehir-acilis-db.ts]]
 - [[_COMMUNITY_layout.tsx|layout.tsx]]
 - [[_COMMUNITY_sorunHedefKonumGerekliMi|sorunHedefKonumGerekliMi]]
-- [[_COMMUNITY_seo-icerik.ts|seo-icerik.ts]]
 - [[_COMMUNITY_musteri-funnel-client.ts|musteri-funnel-client.ts]]
 - [[_COMMUNITY_admin.ts|admin.ts]]
 - [[_COMMUNITY_talep-fraud.ts|talep-fraud.ts]]
@@ -185,7 +184,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (147 total, 24 thin omitted)
+## Communities (146 total, 24 thin omitted)
 
 ### Community 0 - "demo-oturum.ts"
 Cohesion: 0.11
@@ -196,8 +195,8 @@ Cohesion: 0.14
 Nodes (32): GET(), panelKullanici(), POST(), GET(), talepSehriAcikMi(), cekiciKrediHatirlatmaAdayiMi(), cekiciKrediHatirlatmaManuelAdayiMi(), baglaKrediHatirlatmaYukleme() (+24 more)
 
 ### Community 2 - "cekici-email-otp.ts"
-Cohesion: 0.15
-Nodes (22): POST(), panelKullanici(), POST(), register(), topluSmsIsTablolariVar(), aliciSayisi(), calisanIsler, calistirTopluSmsIsi() (+14 more)
+Cohesion: 0.18
+Nodes (18): register(), aliciSayisi(), calisanIsler, calistirTopluSmsIsi(), ensureTopluSmsScheduler(), getTopluSmsIs(), GlobalScheduler, iptalTopluSmsIs() (+10 more)
 
 ### Community 3 - "getSupabaseAdmin"
 Cohesion: 0.47
@@ -236,8 +235,8 @@ Cohesion: 0.17
 Nodes (25): GET(), GET(), POST(), POST(), getDogrulanmisTelefon(), musteriTelCookieDegeri(), musteriTelCookieTemizle(), ayniIstanbulGunuMu() (+17 more)
 
 ### Community 12 - "sms-provider.ts"
-Cohesion: 0.13
-Nodes (27): metadata, MusteriFunnelAPage(), metadata, MusteriDonusumLandingPage(), CekiciFiyatHesaplamaPage(), CekiciKayitLayout(), metadata, HizmetVerenSeoPage() (+19 more)
+Cohesion: 0.12
+Nodes (30): metadata, MusteriFunnelAPage(), metadata, MusteriDonusumLandingPage(), CekiciFiyatHesaplamaPage(), CekiciKayitLayout(), metadata, HizmetVerenSeoPage() (+22 more)
 
 ### Community 13 - "CekiciAyarlarPanel.tsx"
 Cohesion: 0.15
@@ -312,8 +311,8 @@ Cohesion: 0.23
 Nodes (27): GET(), rotaKoordinatlari(), POST(), GET(), listeDurumuBelirle(), toOzet(), demoListeDurumuBelirle(), demoPanelVerisi() (+19 more)
 
 ### Community 32 - "kayit-kodu.ts"
-Cohesion: 0.13
-Nodes (29): POST(), GET(), POST(), GET(), panelKullanici(), POST(), panelKullanici(), POST() (+21 more)
+Cohesion: 0.11
+Nodes (33): POST(), POST(), GET(), POST(), panelKullanici(), POST(), GET(), panelKullanici() (+25 more)
 
 ### Community 33 - "migrate-json-to-supabase.mjs"
 Cohesion: 0.31
@@ -368,8 +367,8 @@ Cohesion: 0.17
 Nodes (24): POST(), POST(), GUNCELLENEBILIR, POST(), beniAnimsaOku(), bekleyenCekiciGirisOtp(), cekiciGirisOtpDogrula(), cekiciGirisOtpGonder() (+16 more)
 
 ### Community 55 - "CerezOnayBanner.tsx"
-Cohesion: 0.13
-Nodes (38): generateStaticParams(), generateMetadata(), generateStaticParams(), IlceHizmetPage(), Props, generateMetadata(), generateStaticParams(), Props (+30 more)
+Cohesion: 0.22
+Nodes (25): generateMetadata(), generateStaticParams(), IlceHizmetPage(), Props, generateMetadata(), generateStaticParams(), Props, SehirSegmentPage() (+17 more)
 
 ### Community 56 - "musteri-funnel.ts"
 Cohesion: 0.07
@@ -468,8 +467,8 @@ Cohesion: 0.12
 Nodes (9): FUNNEL_CHIPLER, Gunluk, HUNI_ADIM_RENKLERI, HuniAdim, OlayHacmi, OzetSatir, PanelKayitFunnelsPage(), PanelOzet (+1 more)
 
 ### Community 85 - "cekici-giris-otp.ts"
-Cohesion: 0.47
-Nodes (4): DISALLOW, robots(), tumDisallow(), SITE_URL
+Cohesion: 0.19
+Nodes (11): DISALLOW, robots(), tumDisallow(), generateStaticParams(), Entry, sitemap(), statikSayfalar(), yerelSeoSayfalari() (+3 more)
 
 ### Community 86 - "layout.tsx"
 Cohesion: 0.12
@@ -490,10 +489,6 @@ Nodes (12): OnayIcerik(), Adim, SifremiUnuttumPage(), SmsKaydi, BrandLogoYazili(
 ### Community 92 - "sorunHedefKonumGerekliMi"
 Cohesion: 0.36
 Nodes (8): AbonelikIslemOzetSatir, istanbulAyAnahtari(), istanbulAyBaslangicIso(), KrediOdemeOzetSatir, paketDagilimHesapla(), PanelGelirKalem, panelGelirOzetHesapla(), AbonelikIslemTip
-
-### Community 93 - "seo-icerik.ts"
-Cohesion: 0.20
-Nodes (12): generateMetadata(), ANA_SAYFA_ONCU_SEHIRLER, asyaSet, bolgeIfadesi(), hizmetSenaryolari(), istanbulSehirHubIcerik(), kisaBolge(), sehirHubIcerik() (+4 more)
 
 ### Community 94 - "musteri-funnel-client.ts"
 Cohesion: 0.29
@@ -569,7 +564,7 @@ Nodes (14): ayniNokta(), noktaOku(), POST(), CekiciRotaPanel(), CekiciRotaPanelP
 
 ### Community 113 - "SeoLandingShell.tsx"
 Cohesion: 0.18
-Nodes (17): SehirSeoIcerikBolumu(), Yogunluk, SeoBreadcrumb(), Props, SeoIliskiLink, SeoLandingShell(), metinParcala(), regexKacis() (+9 more)
+Nodes (16): SehirSeoIcerikBolumu(), Yogunluk, SeoBreadcrumb(), Props, SeoIliskiLink, SeoLandingShell(), metinParcala(), regexKacis() (+8 more)
 
 ### Community 115 - "Staging — stage.acilcozumbul.com"
 Cohesion: 0.33
@@ -580,8 +575,8 @@ Cohesion: 0.15
 Nodes (13): Gorunum, PanelTalepSatir, Siralama, PanelTalepHaritaNoktalar(), RENK, TalepHaritaNokta, PanelTalepDurumAdet, panelTalepDurumEtiketi() (+5 more)
 
 ### Community 117 - "sitemap.ts"
-Cohesion: 0.22
-Nodes (13): AnaSayfaHizliBaglantilar(), SEHIR_LINKLER, ilceBySehirVeSlug, ilcelerBySehir, sehirBySlug, SeoIlceKayit, SeoSehirKayit, ilceSlug() (+5 more)
+Cohesion: 0.11
+Nodes (29): AnaSayfaHizliBaglantilar(), SEHIR_LINKLER, ilceBySehirVeSlug, ilcelerBySehir, indeksKur(), sehirBySlug, SeoIlceKayit, seoIlceListesi() (+21 more)
 
 ### Community 118 - "fatura-pdf.ts"
 Cohesion: 0.83
@@ -679,5 +674,5 @@ _Questions this graph is uniquely positioned to answer:_
   _Cohesion score 0.1126984126984127 - nodes in this community are weakly interconnected._
 - **Should `telefonNormalize` be split into smaller, more focused modules?**
   _Cohesion score 0.14366998577524892 - nodes in this community are weakly interconnected._
-- **Should `cekici-email-otp.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.14814814814814814 - nodes in this community are weakly interconnected._
+- **Should `seo.ts` be split into smaller, more focused modules?**
+  _Cohesion score 0.1455026455026455 - nodes in this community are weakly interconnected._

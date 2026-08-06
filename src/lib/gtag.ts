@@ -285,11 +285,11 @@ export function gtagAdsAnaSayfaGoruntulemeDonusumu(): void {
 
 /**
  * Müşteri talep formu başarıyla gönderildiğinde Google Ads dönüşümü.
- * Akış: form → talep (OTP yok) → teklifler; OTP teklif seçiminde.
+ * Akış: form → talep (iletişim/OTP yok) → teklifler; iletişim+OTP teklif seçiminde.
  * Google Ads «Tıklama» snippet’i (`gtag_report_conversion`) ile aynı olay:
  * event_callback sonrası url’ye gider (sayfa yükleme snippet’i değil).
  * transaction_id: talep id — yenileme / geri dönüşte mükerrer sayımı önler.
- * Enhanced conversions: telefon / ad ile user_data (doğrulanmamış olabilir).
+ * Enhanced conversions: talep anında genelde telefonsuz; Contact/teklif_secildi’de PII.
  */
 export function gtagAdsFiyatTeklifiDonusumu(opts: {
   transactionId: string;

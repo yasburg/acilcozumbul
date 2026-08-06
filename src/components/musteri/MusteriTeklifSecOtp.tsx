@@ -2,17 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { Btn, Card, Field } from "@/components/ui";
+import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import {
   musteriFunnelIdTalepOku,
+  musteriFunnelOlayBirKez,
   musteriFunnelOlayGonder,
 } from "@/lib/musteri-funnel-client";
 import { musteriFunnelMi } from "@/lib/musteri-funnel";
 import { gtagUserDataAyarla } from "@/lib/gtag";
 import { metaUserDataSakla } from "@/lib/meta-pixel";
+import { telefonDogrulamaHatasi } from "@/lib/telefon";
 
 type Props = {
   talepId: string;
+  /** Boşsa iletişim formu önce gösterilir */
   telefonMaskeli: string;
+  iletisimGerekli?: boolean;
   onIptal: () => void;
   onDogrulandi: () => void;
 };
@@ -23,18 +28,38 @@ function funnelIdCoz(talepId: string): string {
   return "a";
 }
 
-function dogrulanmisUserDataSakla(telefon?: string | null) {
+function dogrulanmisUserDataSakla(
+  telefon?: string | null,
+  ad?: string,
+  soyad?: string
+) {
   if (!telefon?.trim()) return;
-  metaUserDataSakla({ phone: telefon });
-  gtagUserDataAyarla({ phone: telefon });
+  metaUserDataSakla({
+    phone: telefon,
+    firstName: ad?.trim() || undefined,
+    lastName: soyad && soyad !== "-" ? soyad.trim() : undefined,
+  });
+  gtagUserDataAyarla({
+    phone: telefon,
+    firstName: ad?.trim() || undefined,
+    lastName: soyad && soyad !== "-" ? soyad.trim() : undefined,
+  });
 }
 
 export function MusteriTeklifSecOtp({
   talepId,
   telefonMaskeli,
+  iletisimGerekli = false,
   onIptal,
   onDogrulandi,
 }: Props) {
+  const iletisimBaslangic = iletisimGerekli || !telefonMaskeli.trim();
+  const [adim, setAdim] = useState<"iletisim" | "otp">(
+    iletisimBaslangic ? "iletisim" : "otp"
+  );
+  const [ad, setAd] = useState("");
+  const [telefon, setTelefon] = useState("");
+  const [yasalOnay, setYasalOnay] = useState(false);
   const [otpKod, setOtpKod] = useState("");
   const [loading, setLoading] = useState(false);
   const [hata, setHata] = useState("");
@@ -50,6 +75,74 @@ export function MusteriTeklifSecOtp({
     return () => clearTimeout(t);
   }, [yenidenSn]);
 
+  useEffect(() => {
+    if (adim === "iletisim") {
+      musteriFunnelOlayBirKez(funnelIdCoz(talepId), "form_adim_bilgi", {
+        talepId,
+        props: { kaynak: "teklif_sec" },
+      });
+    }
+  }, [adim, talepId]);
+
+  async function iletisimKaydet() {
+    const telHata = telefonDogrulamaHatasi(telefon);
+    if (telHata) {
+      setHata(telHata);
+      return;
+    }
+    if (!ad.trim()) {
+      setHata("İsminizi girin.");
+      return;
+    }
+    if (!yasalOnay) {
+      setHata("Devam etmek için yasal metinleri onaylayın.");
+      return;
+    }
+    setLoading(true);
+    setHata("");
+    try {
+      const r = await fetch(`/api/talep/${talepId}/iletisim`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ad: ad.trim(),
+          soyad: "-",
+          telefon,
+        }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        throw new Error(
+          typeof j.error === "string" ? j.error : "Kaydedilemedi."
+        );
+      }
+      if (typeof j.telefonMaskeli === "string") {
+        setMaske(j.telefonMaskeli);
+      }
+      const tel =
+        typeof j.telefon === "string" ? j.telefon : telefon.trim();
+      try {
+        sessionStorage.setItem(`acil_bekle_tel_${talepId}`, tel);
+      } catch {
+        /* ignore */
+      }
+      dogrulanmisUserDataSakla(tel, ad.trim(), "-");
+      void musteriFunnelOlayGonder(funnelIdCoz(talepId), "form_adim_bilgi", {
+        talepId,
+        telefon: tel,
+        props: { kaynak: "teklif_sec", kaydedildi: true },
+      });
+      setAdim("otp");
+      setKodGonderildi(false);
+      setLoading(false);
+      void kodGonder();
+    } catch (e) {
+      setHata(e instanceof Error ? e.message : "Kaydedilemedi.");
+      setLoading(false);
+    }
+  }
+
   async function kodGonder() {
     setLoading(true);
     setHata("");
@@ -62,9 +155,20 @@ export function MusteriTeklifSecOtp({
         body: JSON.stringify({ talepId }),
       });
       const j = await r.json().catch(() => ({}));
+      if (j.iletisimGerekli) {
+        setAdim("iletisim");
+        setHata(
+          typeof j.error === "string"
+            ? j.error
+            : "Önce iletişim bilgilerinizi girin."
+        );
+        return;
+      }
       if (j.zatenDogrulandi) {
         dogrulanmisUserDataSakla(
-          typeof j.telefon === "string" ? j.telefon : null
+          typeof j.telefon === "string" ? j.telefon : null,
+          ad,
+          "-"
         );
         void musteriFunnelOlayGonder(funnelIdCoz(talepId), "otp_dogrulandi", {
           talepId,
@@ -126,9 +230,16 @@ export function MusteriTeklifSecOtp({
         });
         throw new Error(j.error ?? "Doğrulama başarısız.");
       }
-      dogrulanmisUserDataSakla(
-        typeof j.telefon === "string" ? j.telefon : null
-      );
+      const tel =
+        typeof j.telefon === "string" ? j.telefon : telefon.trim() || null;
+      if (tel) {
+        try {
+          sessionStorage.setItem(`acil_bekle_tel_${talepId}`, tel);
+        } catch {
+          /* ignore */
+        }
+      }
+      dogrulanmisUserDataSakla(tel, ad, "-");
       void musteriFunnelOlayGonder(funnelIdCoz(talepId), "otp_dogrulandi", {
         talepId,
         birKez: true,
@@ -145,60 +256,114 @@ export function MusteriTeklifSecOtp({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
       <Card className="w-full max-w-md space-y-4 !p-5">
-        <h2 className="text-lg font-semibold text-slate-900">
-          Telefon doğrulama
-        </h2>
-        <p className="text-sm text-slate-600">
-          Teklif seçmek için {maske || "telefonunuza"} gelen SMS kodunu
-          onaylayın. Onaydan sonra çekici bilgilendirilir.
-        </p>
-
-        {!kodGonderildi ? (
-          <Btn
-            type="button"
-            disabled={loading}
-            onClick={() => void kodGonder()}
-          >
-            {loading ? "Gönderiliyor…" : "Doğrulama kodu gönder"}
-          </Btn>
-        ) : (
+        {adim === "iletisim" ? (
           <>
-            {mesaj && <p className="text-sm text-emerald-700">{mesaj}</p>}
-            {gelistirmeKodu && (
-              <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                Geliştirme kodu:{" "}
-                <span className="font-mono font-bold">{gelistirmeKodu}</span>
-              </p>
-            )}
+            <h2 className="text-lg font-semibold text-slate-900">
+              İletişim bilgileriniz
+            </h2>
+            <p className="text-sm text-slate-600">
+              Teklifi kabul etmek için telefonunuzu ve isminizi girin. SMS ile
+              doğrulayacağız; ardından çekici bilgilendirilir.
+            </p>
             <Field
-              label="Doğrulama kodu"
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="123456"
-              value={otpKod}
-              onChange={(e) =>
-                setOtpKod(e.target.value.replace(/\D/g, "").slice(0, 6))
-              }
-              autoComplete="one-time-code"
+              label="Telefon"
+              type="tel"
+              placeholder="05XX XXX XX XX"
+              value={telefon}
+              onChange={(e) => {
+                setTelefon(e.target.value);
+                setHata("");
+              }}
+              autoComplete="tel"
+              inputMode="tel"
+              name="telefon"
+              required
+            />
+            <Field
+              label="İsminiz"
+              placeholder="Örn. Ahmet"
+              value={ad}
+              onChange={(e) => {
+                setAd(e.target.value);
+                setHata("");
+              }}
+              autoComplete="given-name"
+              name="ad"
+              required
+            />
+            <YasalOnayKutusu
+              checked={yasalOnay}
+              onChange={(checked) => {
+                setYasalOnay(checked);
+                setHata("");
+              }}
             />
             <Btn
               type="button"
-              disabled={loading || otpKod.length !== 6}
-              onClick={() => void kodDogrula()}
+              disabled={loading}
+              onClick={() => void iletisimKaydet()}
             >
-              {loading ? "Doğrulanıyor…" : "Onayla ve teklifi seç"}
+              {loading ? "Kaydediliyor…" : "Devam Et"}
             </Btn>
-            <button
-              type="button"
-              className="w-full text-sm text-amber-700 font-medium disabled:text-slate-400"
-              disabled={loading || yenidenSn > 0}
-              onClick={() => void kodGonder()}
-            >
-              {yenidenSn > 0
-                ? `Yeni kod (${yenidenSn}s)`
-                : "Kodu tekrar gönder"}
-            </button>
+          </>
+        ) : (
+          <>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Telefon doğrulama
+            </h2>
+            <p className="text-sm text-slate-600">
+              Teklif seçmek için {maske || "telefonunuza"} gelen SMS kodunu
+              onaylayın. Onaydan sonra çekici bilgilendirilir.
+            </p>
+
+            {!kodGonderildi ? (
+              <Btn
+                type="button"
+                disabled={loading}
+                onClick={() => void kodGonder()}
+              >
+                {loading ? "Gönderiliyor…" : "Doğrulama kodu gönder"}
+              </Btn>
+            ) : (
+              <>
+                {mesaj && <p className="text-sm text-emerald-700">{mesaj}</p>}
+                {gelistirmeKodu && (
+                  <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    Geliştirme kodu:{" "}
+                    <span className="font-mono font-bold">{gelistirmeKodu}</span>
+                  </p>
+                )}
+                <Field
+                  label="Doğrulama kodu"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="123456"
+                  value={otpKod}
+                  onChange={(e) =>
+                    setOtpKod(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  autoComplete="one-time-code"
+                />
+                <Btn
+                  type="button"
+                  disabled={loading || otpKod.length !== 6}
+                  onClick={() => void kodDogrula()}
+                >
+                  {loading ? "Doğrulanıyor…" : "Onayla ve teklifi seç"}
+                </Btn>
+                <button
+                  type="button"
+                  className="w-full text-sm text-amber-700 font-medium disabled:text-slate-400"
+                  disabled={loading || yenidenSn > 0}
+                  onClick={() => void kodGonder()}
+                >
+                  {yenidenSn > 0
+                    ? `Yeni kod (${yenidenSn}s)`
+                    : "Kodu tekrar gönder"}
+                </button>
+              </>
+            )}
           </>
         )}
 

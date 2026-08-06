@@ -219,7 +219,8 @@ export async function metaCekiciOturumZenginlestir(): Promise<void> {
 
 /**
  * Müşteri talep formu tamamlandı → Meta standart olay «Lead».
- * OTP henüz yok; teklif seçiminde `metaPixelContact` ateşlenir.
+ * İletişim/OTP henüz yok; teklif seçiminde `metaPixelContact` (telefonlu).
+ * Google Ads fiyat conversion ayrı: `gtagAdsFiyatTeklifiDonusumu` (talep anı).
  */
 export async function metaPixelLead(params?: {
   content_name?: string;
@@ -252,7 +253,7 @@ export async function metaPixelLead(params?: {
 
 /**
  * Doğrulanmış telefon + teklif seçimi → Meta «Contact».
- * Lead’den sonraki yüksek niyet; çekiciye bildirim giden an.
+ * Lead’den sonra; iletişim formu + OTP tamamlanıp çekiciye bildirim giden an.
  */
 export async function metaPixelContact(params?: {
   content_name?: string;

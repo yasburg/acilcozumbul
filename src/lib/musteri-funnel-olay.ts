@@ -10,6 +10,11 @@ export const MUSTERI_FUNNEL_OLAY_SABIT = [
   "form_adim_bilgi",
   "form_adim_konum",
   "form_adim_detay",
+  "form_adim_fotograf",
+  "form_adim_arac_tipi",
+  "form_adim_arac_modeli",
+  "form_adim_ek_detay",
+  "form_adim_ihale",
   "form_adim_hedef",
   "service_selected",
   "talep_olustur",
@@ -114,8 +119,8 @@ export type MusteriFunnelHuniAdimTanim = {
 };
 
 /**
- * Funnel A gerçek akış: konum → hizmet → iletişim → detay → hedef → talep → OTP (teklif seçimi)
- * (MusteriAnaSayfa STEP_SIRA)
+ * Funnel A: konum → hizmet → foto/araç/ek/ihale → hedef → talep →
+ * iletişim → OTP → teklif seçildi (MusteriAnaSayfa; iletişim teklif seçiminde)
  */
 export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
   { id: "goruldu", label: "Görülme", olaylar: ["goruldu"] },
@@ -126,13 +131,38 @@ export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
     olaylar: ["form_adim_sorun", "service_selected"],
   },
   {
-    id: "form_adim_bilgi",
-    label: "Adım · İletişim",
-    olaylar: ["form_adim_bilgi"],
+    id: "form_adim_fotograf",
+    label: "Adım · Fotoğraf",
+    /* form_adim_detay: eski tek detay adımı (geriye uyum) */
+    olaylar: ["form_adim_fotograf", "form_adim_detay"],
   },
-  { id: "form_adim_detay", label: "Adım · Detay", olaylar: ["form_adim_detay"] },
+  {
+    id: "form_adim_arac_tipi",
+    label: "Adım · Araç tipi",
+    olaylar: ["form_adim_arac_tipi", "form_adim_detay"],
+  },
+  {
+    id: "form_adim_arac_modeli",
+    label: "Adım · Araç modeli",
+    olaylar: ["form_adim_arac_modeli", "form_adim_detay"],
+  },
+  {
+    id: "form_adim_ek_detay",
+    label: "Adım · Ek detay",
+    olaylar: ["form_adim_ek_detay", "form_adim_detay"],
+  },
+  {
+    id: "form_adim_ihale",
+    label: "Adım · İhale süresi",
+    olaylar: ["form_adim_ihale", "form_adim_detay"],
+  },
   { id: "form_adim_hedef", label: "Adım · Hedef", olaylar: ["form_adim_hedef"] },
   { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
+  {
+    id: "form_adim_bilgi",
+    label: "İletişim (teklif seç)",
+    olaylar: ["form_adim_bilgi"],
+  },
   {
     id: "otp_gonder",
     label: "OTP (teklif seç)",
@@ -147,8 +177,8 @@ export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
 ];
 
 /**
- * Funnel B gerçek akış: hizmet → hedef → iletişim → talep → OTP (teklif seçimi)
- * (MusteriDonusumSayfa STEP_SIRA)
+ * Funnel B: hizmet → hedef → talep → iletişim → OTP → teklif
+ * (MusteriDonusumSayfa; iletişim teklif seçiminde)
  */
 export const MUSTERI_FUNNEL_HUNI_B: readonly MusteriFunnelHuniAdimTanim[] = [
   { id: "goruldu", label: "Görülme", olaylar: ["goruldu"] },
@@ -158,12 +188,12 @@ export const MUSTERI_FUNNEL_HUNI_B: readonly MusteriFunnelHuniAdimTanim[] = [
     olaylar: ["form_adim_sorun", "service_selected"],
   },
   { id: "form_adim_hedef", label: "Adım · Hedef", olaylar: ["form_adim_hedef"] },
+  { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
   {
     id: "form_adim_bilgi",
-    label: "Adım · İletişim",
+    label: "İletişim (teklif seç)",
     olaylar: ["form_adim_bilgi"],
   },
-  { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
   {
     id: "otp_gonder",
     label: "OTP (teklif seç)",
@@ -178,9 +208,8 @@ export const MUSTERI_FUNNEL_HUNI_B: readonly MusteriFunnelHuniAdimTanim[] = [
 ];
 
 /**
- * A+B birlikte: ortak dönüşüm kilometre taşları (sıra güvenli).
- * Konum/hedef A’da hizmetten önce geldiği için ortak hunide yok.
- * OTP talep sonrası — teklif seçiminde.
+ * A+B ortak: hizmet → talep → iletişim → OTP → teklif.
+ * Detay alt adımları A’ya özel; ortak hunide tek «detay» kilometre taşı.
  */
 export const MUSTERI_FUNNEL_HUNI_ORTAK: readonly MusteriFunnelHuniAdimTanim[] = [
   { id: "goruldu", label: "Görülme", olaylar: ["goruldu"] },
@@ -195,8 +224,24 @@ export const MUSTERI_FUNNEL_HUNI_ORTAK: readonly MusteriFunnelHuniAdimTanim[] = 
     label: "Hizmet seçimi",
     olaylar: ["form_adim_sorun", "service_selected"],
   },
-  { id: "form_adim_bilgi", label: "İletişim", olaylar: ["form_adim_bilgi"] },
+  {
+    id: "form_adim_detay",
+    label: "Detay adımları",
+    olaylar: [
+      "form_adim_detay",
+      "form_adim_fotograf",
+      "form_adim_arac_tipi",
+      "form_adim_arac_modeli",
+      "form_adim_ek_detay",
+      "form_adim_ihale",
+    ],
+  },
   { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
+  {
+    id: "form_adim_bilgi",
+    label: "İletişim (teklif seç)",
+    olaylar: ["form_adim_bilgi"],
+  },
   {
     id: "otp_gonder",
     label: "OTP (teklif seç)",

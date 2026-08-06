@@ -83,6 +83,7 @@ describe("musteriFormTaslak", () => {
     expect(musteriFormTaslakOku()?.step).toBe("konum");
     expect(musteriFormAdimDonusumNormalize("konum")).toBe("sorun");
     expect(musteriFormAdimDonusumNormalize("detay")).toBe("sorun");
+    expect(musteriFormAdimDonusumNormalize("bilgi")).toBe("hedef");
   });
 
   it("boş taslağı ayırt eder", () => {

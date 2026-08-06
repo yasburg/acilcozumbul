@@ -43,9 +43,6 @@ import {
   reverseGeocode,
   type KonumIzniDurumu,
 } from "@/lib/konum-client";
-import {
-  telefonDogrulamaHatasi,
-} from "@/lib/telefon";
 import { googleMapsYapilandirildi } from "@/lib/google-maps";
 import type { KonumOneri } from "@/lib/hedef-oneri-data";
 import { otoTamirAramaSorgusu } from "@/lib/hedef-oneri-data";
@@ -69,8 +66,8 @@ import {
   posthogKampanyaKaydet,
   posthogOlayYakala,
 } from "@/lib/posthog-client";
-import { gtagAdsAnaSayfaGoruntulemeDonusumu, gtagAdsFiyatTeklifiDonusumu, gtagUserDataAyarla } from "@/lib/gtag";
-import { metaPixelLead, metaUserDataSakla } from "@/lib/meta-pixel";
+import { gtagAdsAnaSayfaGoruntulemeDonusumu, gtagAdsFiyatTeklifiDonusumu } from "@/lib/gtag";
+import { metaPixelLead } from "@/lib/meta-pixel";
 import {
   tiktokPixelLead,
   tiktokPixelSearch,
@@ -154,15 +151,57 @@ const ArizaFotografAlani = dynamic(
   }
 );
 
-type Step = "bilgi" | "konum" | "sorun" | "detay" | "hedef";
+type Step =
+  | "konum"
+  | "sorun"
+  | "fotograf"
+  | "arac_tipi"
+  | "arac_modeli"
+  | "ek_detay"
+  | "ihale"
+  | "hedef";
 
-/** Konum (şehir/ilçe) → sorun → iletişim → detay → hedef · OTP teklif seçiminde */
-const STEP_SIRA: Step[] = ["konum", "sorun", "bilgi", "detay", "hedef"];
+/** Sabit kanonik sıra — aktifAdimlar() bundan filtreler, göreli sıra hep aynı */
+const TUM_ADIMLAR: Step[] = [
+  "konum",
+  "sorun",
+  "fotograf",
+  "arac_tipi",
+  "arac_modeli",
+  "ek_detay",
+  "ihale",
+  "hedef",
+];
+
+/** Konum → sorun → [fotoğraf/araç tipi/araç modeli/ek detay/ihale] → hedef */
+function aktifAdimlar(sorunTipi: string, hedefGerekli: boolean): Step[] {
+  return TUM_ADIMLAR.filter((adim) => {
+    if (adim === "fotograf") return sorunFotografAlaniGoster(sorunTipi);
+    if (adim === "arac_tipi" || adim === "arac_modeli") {
+      return sorunAracModeliAlaniGoster(sorunTipi);
+    }
+    if (adim === "hedef") return hedefGerekli;
+    return true;
+  });
+}
+
+/** Eski tek «detay» adımının bölündüğü alt adımlar */
+const DETAY_ALT_ADIMLARI: Step[] = [
+  "fotograf",
+  "arac_tipi",
+  "arac_modeli",
+  "ek_detay",
+  "ihale",
+];
+
 const ADIM_OLAYLARI: Partial<Record<Step, string>> = {
   sorun: "form_adim_sorun",
-  bilgi: "form_adim_bilgi",
   konum: "form_adim_konum",
-  detay: "form_adim_detay",
+  fotograf: "form_adim_fotograf",
+  arac_tipi: "form_adim_arac_tipi",
+  arac_modeli: "form_adim_arac_modeli",
+  ek_detay: "form_adim_ek_detay",
+  ihale: "form_adim_ihale",
   hedef: "form_adim_hedef",
 };
 
@@ -182,6 +221,130 @@ type MusteriAnaSayfaProps = {
 
 function sorunProps(sorunTipi: string): Record<string, unknown> {
   return sorunTipi ? { sorun_tipi: sorunTipi } : {};
+}
+
+/** Konum sonrası tüm adımlarda ortak sticky alt nav (Geri + Devam) */
+function AdimAltNav({
+  devamMetin,
+  devamDisabled = false,
+  devamGlow = false,
+  onGeri,
+  onDevam,
+}: {
+  devamMetin: React.ReactNode;
+  devamDisabled?: boolean;
+  /** Seçim yapıldıktan sonra Devam butonunda amber glow */
+  devamGlow?: boolean;
+  onGeri: () => void;
+  onDevam: () => void;
+}) {
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]">
+      <div className="mx-auto flex max-w-lg gap-3">
+        <Btn
+          type="button"
+          variant="secondary"
+          className="!w-auto flex-1"
+          onClick={onGeri}
+        >
+          Geri
+        </Btn>
+        <Btn
+          type="button"
+          className={[
+            "flex-[2]",
+            devamGlow && !devamDisabled
+              ? "ring-2 ring-amber-300/90 shadow-[0_0_16px_4px_rgba(245,158,11,0.55)] animate-pulse"
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          onClick={onDevam}
+          disabled={devamDisabled}
+        >
+          {devamMetin}
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
+/** Hedef sayfası — sticky alt panel: uyarı + yasal onay + Geri/CTA */
+function HedefAltNav({
+  hedefSeciliMi,
+  yasalOnayRef,
+  yasalOnay,
+  onYasalOnayChange,
+  yasalOnayHata,
+  onGeri,
+  onDevam,
+  devamDisabled = false,
+  devamGlow = false,
+  devamIcerik,
+}: {
+  hedefSeciliMi: boolean;
+  yasalOnayRef: React.RefObject<HTMLDivElement | null>;
+  yasalOnay: boolean;
+  onYasalOnayChange: (checked: boolean) => void;
+  yasalOnayHata: string;
+  onGeri: () => void;
+  onDevam: () => void;
+  devamDisabled?: boolean;
+  devamGlow?: boolean;
+  devamIcerik: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]">
+      <div className="mx-auto max-w-lg space-y-2">
+        {!hedefSeciliMi && (
+          <p
+            className="text-sm font-semibold text-red-600 text-center"
+            role="alert"
+          >
+            Bir opsiyonu seçiniz
+          </p>
+        )}
+        <div ref={yasalOnayRef} className="scroll-mt-28 space-y-1.5">
+          <YasalOnayKutusu
+            checked={yasalOnay}
+            onChange={onYasalOnayChange}
+            invalid={!!yasalOnayHata}
+            kucukMetin
+          />
+          {yasalOnayHata && (
+            <p className="text-xs text-red-600" role="alert">
+              {yasalOnayHata}
+            </p>
+          )}
+        </div>
+        <div className="flex gap-3">
+          <Btn
+            type="button"
+            variant="secondary"
+            className="!w-auto flex-1"
+            onClick={onGeri}
+          >
+            Geri
+          </Btn>
+          <Btn
+            type="button"
+            className={[
+              "flex-[2]",
+              devamGlow && !devamDisabled
+                ? "ring-2 ring-amber-300/90 shadow-[0_0_16px_4px_rgba(245,158,11,0.55)] animate-pulse"
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onClick={onDevam}
+            disabled={devamDisabled}
+          >
+            {devamIcerik}
+          </Btn>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function MusteriAnaSayfa({
@@ -311,6 +474,10 @@ function MusteriAnaSayfaIcerik({
   const [ihaleSureHatasi, setIhaleSureHatasi] = useState(false);
   const [hedefBilinmiyor, setHedefBilinmiyor] = useState(false);
   const [hedefKendimArat, setHedefKendimArat] = useState(false);
+  /** Nereye çekilecek: 4 opsiyondan hangisi tıklandı (taslak adres glow’u bozmasın) */
+  const [hedefOpsiyon, setHedefOpsiyon] = useState<
+    null | "oto_tamir" | "oto_sanayi" | "bilmiyorum" | "kendim"
+  >(null);
   /** Kullanıcının yazdığı arama metni (bulunan tam adresten ayrı) */
   const [hedefAramaMetni, setHedefAramaMetni] = useState("");
   const [taslakHazir, setTaslakHazir] = useState(false);
@@ -330,11 +497,37 @@ function MusteriAnaSayfaIcerik({
     const t = musteriFormTaslakOku();
     if (t && !musteriFormTaslakBosMu(t)) {
       setForm(t.form);
-      setStep(t.step);
+      const gecerliAdimlar = aktifAdimlar(
+        t.form.sorunTipi,
+        sorunHedefKonumGerekliMi(t.form.sorunTipi)
+      );
+      const istenenAdim: Step =
+        t.step === "bilgi"
+          ? "hedef"
+          : t.step === "detay"
+            ? (gecerliAdimlar.find((a) => DETAY_ALT_ADIMLARI.includes(a)) ??
+              "ek_detay")
+            : TUM_ADIMLAR.includes(t.step as Step)
+              ? (t.step as Step)
+              : "konum";
+      /* Atlanan adıma (ör. fotoğrafsız tip) düşülmesin — en yakın geçerliye çek */
+      const adim = gecerliAdimlar.includes(istenenAdim)
+        ? istenenAdim
+        : [...TUM_ADIMLAR]
+            .slice(0, TUM_ADIMLAR.indexOf(istenenAdim) + 1)
+            .reverse()
+            .find((a) => gecerliAdimlar.includes(a)) ?? "konum";
+      setStep(adim);
       setYasalOnay(t.yasalOnay);
       setFotografOnizleme(t.fotografOnizleme);
       setFotografData(t.fotografData);
       setHedefBilinmiyor(t.hedefBilinmiyor === true);
+      if (t.hedefBilinmiyor === true) {
+        setHedefOpsiyon("bilmiyorum");
+      } else if (t.form.hedefAdres?.trim() && t.form.hedefLat && t.form.hedefLng) {
+        setHedefOpsiyon("kendim");
+        setHedefKendimArat(true);
+      }
       if (t.ihaleSureTipi) setIhaleSureTipi(t.ihaleSureTipi);
       if (t.ihaleOzelBitis) setIhaleOzelBitis(t.ihaleOzelBitis);
       if (t.form.adres) {
@@ -533,18 +726,15 @@ function MusteriAnaSayfaIcerik({
   }, [taslakHazir]);
 
   useEffect(() => {
-    if (step !== "detay") {
-      setAracModeliHatasi(false);
-      setFotografHatasi(false);
-      setSorunDetayHatasi(false);
-    }
+    if (step !== "fotograf") setFotografHatasi(false);
+    if (step !== "arac_modeli") setAracModeliHatasi(false);
+    if (step !== "ek_detay") setSorunDetayHatasi(false);
+    if (step !== "ihale") setIhaleSureHatasi(false);
     if (step !== "konum") {
       setAdSoyadHatasi(false);
       setArizaAdresDuzenle(false);
     }
-    if (step !== "bilgi") {
-      setBilgiAlanMesajlari({ yasalOnay: "", telefon: "" });
-    }
+    setBilgiAlanMesajlari({ yasalOnay: "", telefon: "" });
   }, [step]);
 
   useEffect(() => {
@@ -596,23 +786,48 @@ function MusteriAnaSayfaIcerik({
     });
   }
 
-  function detayAdimiDevam(): boolean {
-    const detayEksik =
-      form.sorunTipi === "diger" && !form.sorunDetay.trim();
-    const aracEksik =
-      sorunAracModeliGerekliMi(form.sorunTipi) && !form.aracModeli.trim();
+  /** `fotograf` adımında Devam — foto isteğe bağlı (bugün hiçbir tip zorunlu değil) */
+  function fotografAdimiDevam(): boolean {
     const fotografEksik =
       sorunFotografGerekliMi(form.sorunTipi) && !fotografData;
+    setFotografHatasi(fotografEksik);
+    if (fotografEksik) {
+      setError(
+        "Arıza fotoğrafı zorunludur — çekici doğru teklif verebilsin."
+      );
+      return false;
+    }
+    setError("");
+    return true;
+  }
 
+  /** `arac_modeli` adımında Devam — model isteğe bağlı (bugün hiçbir tip zorunlu değil) */
+  function aracModeliAdimiDevam(): boolean {
+    const aracEksik =
+      sorunAracModeliGerekliMi(form.sorunTipi) && !form.aracModeli.trim();
+    setAracModeliHatasi(aracEksik);
+    if (aracEksik) {
+      setError("Araç modelini girin (ör. Audi A3 sedan).");
+      return false;
+    }
+    setError("");
+    return true;
+  }
+
+  /** `ek_detay` adımında Devam — «diğer» tipinde açıklama zorunlu */
+  function ekDetayAdimiDevam(): boolean {
+    const detayEksik = form.sorunTipi === "diger" && !form.sorunDetay.trim();
     setSorunDetayHatasi(detayEksik);
     if (detayEksik) {
       setError("Lütfen sorununuzu kısaca açıklayın.");
       return false;
     }
-    if (aracEksik || fotografEksik) {
-      konumZorunluAlanHatasiGoster(aracEksik, fotografEksik);
-      return false;
-    }
+    setError("");
+    return true;
+  }
+
+  /** `ihale` adımında Devam — süre seçimi doğrulanır */
+  function ihaleAdimiDevam(): boolean {
     const sure = ihaleBitisHesapla(ihaleSureTipi, {
       ozelBitis: ihaleOzelBitis,
     });
@@ -621,38 +836,9 @@ function MusteriAnaSayfaIcerik({
       setError(sure.hata);
       return false;
     }
-    setError("");
-    setAracModeliHatasi(false);
-    setFotografHatasi(false);
-    setSorunDetayHatasi(false);
     setIhaleSureHatasi(false);
+    setError("");
     return true;
-  }
-
-  function konumZorunluAlanHatasiGoster(
-    aracEksik: boolean,
-    fotografEksik: boolean
-  ) {
-    setAracModeliHatasi(aracEksik);
-    setFotografHatasi(fotografEksik);
-
-    const parcalar: string[] = [];
-    if (fotografEksik) parcalar.push("arıza fotoğrafı");
-    if (aracEksik) parcalar.push("araç modeli");
-    setError(
-      `Devam etmek için ${parcalar.join(" ve ")} zorunludur — lütfen doldurun.`
-    );
-
-    const hedef = fotografEksik
-      ? fotografRef.current
-      : aracEksik
-        ? aracModeliRef.current
-        : null;
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        scrollBelowStickyHeader(hedef);
-      });
-    });
   }
 
   function update(field: string, value: string | number) {
@@ -685,10 +871,9 @@ function MusteriAnaSayfaIcerik({
   }
 
   function adimGit(hedef: Step) {
-    const hedefIdx = STEP_SIRA.indexOf(hedef);
-    const konumIdx = STEP_SIRA.indexOf("konum");
-    const sorunIdx = STEP_SIRA.indexOf("sorun");
-    const bilgiIdx = STEP_SIRA.indexOf("bilgi");
+    const hedefIdx = TUM_ADIMLAR.indexOf(hedef);
+    const konumIdx = TUM_ADIMLAR.indexOf("konum");
+    const sorunIdx = TUM_ADIMLAR.indexOf("sorun");
 
     if (hedefIdx > konumIdx && !konumSecimiHazir()) {
       setError("Önce otomatik konum alın veya şehir ve ilçe seçin.");
@@ -702,12 +887,6 @@ function MusteriAnaSayfaIcerik({
         setStep("sorun");
         return;
       }
-    }
-
-    if (hedefIdx > bilgiIdx && !yasalOnay) {
-      setError("Devam etmek için yasal metinleri onaylayın.");
-      setStep("bilgi");
-      return;
     }
 
     /* Konum adımından çıkarken URL’yi şehir/ilçe ile senkronize et */
@@ -1136,6 +1315,9 @@ function MusteriAnaSayfaIcerik({
   function oneriSec(o: KonumOneri) {
     setHedefBilinmiyor(false);
     setHedefKendimArat(false);
+    setHedefOpsiyon(
+      o.kategori === "oto_sanayi" ? "oto_sanayi" : "oto_tamir"
+    );
     setForm((f) => ({
       ...f,
       hedefLat: o.lat,
@@ -1157,6 +1339,7 @@ function MusteriAnaSayfaIcerik({
     setError("");
     setHedefBilinmiyor(false);
     setHedefKendimArat(false);
+    setHedefOpsiyon(kategori);
     const grupId =
       kategori === "oto_tamir"
         ? "hedef-grup-oto_tamir"
@@ -1196,6 +1379,7 @@ function MusteriAnaSayfaIcerik({
     setError("");
     setHedefKendimArat(false);
     setHedefBilinmiyor(true);
+    setHedefOpsiyon("bilmiyorum");
     setForm((f) => ({
       ...f,
       hedefLat: 0,
@@ -1209,6 +1393,7 @@ function MusteriAnaSayfaIcerik({
     setError("");
     setHedefBilinmiyor(false);
     setHedefKendimArat(true);
+    setHedefOpsiyon("kendim");
     if (!hedefAramaMetni.trim() && form.hedefAdres.trim() && !form.hedefLat) {
       setHedefAramaMetni(form.hedefAdres);
     }
@@ -1224,41 +1409,20 @@ function MusteriAnaSayfaIcerik({
     if (await adresKoordinatDoldur(true)) void cekiciBul();
   }
 
-  const hedefSeciliMi =
-    hedefBilinmiyor ||
-    hedefKendimArat ||
-    Boolean(form.hedefAdres.trim() && form.hedefLat && form.hedefLng);
+  const hedefSeciliMi = hedefOpsiyon != null;
 
+  const hedefGonderilebilir =
+    hedefOpsiyon === "bilmiyorum" ||
+    (hedefOpsiyon != null &&
+      Boolean(form.hedefAdres.trim() && form.hedefLat && form.hedefLng));
+
+  /** Seçim yoksa veya kendim-arat adresi eksikse CTA kapalı */
   const hedefIleriEngelli =
-    loading ||
-    (!hedefBilinmiyor &&
-      (!form.hedefAdres.trim() || adresGeocodeYukleniyor));
+    loading || adresGeocodeYukleniyor || !hedefGonderilebilir;
 
-  function hedefNavButonlari(className = "mt-3") {
-    return (
-      <div className={className}>
-        <Btn
-          className="w-full"
-          onClick={() => void hedefIleriGit()}
-          disabled={hedefIleriEngelli}
-        >
-          {loading ? (
-            <span className="inline-flex items-center justify-center gap-2">
-              <Spinner className="size-4 border-white/40 border-t-white" />
-              Gönderiliyor…
-            </span>
-          ) : adresGeocodeYukleniyor ? (
-            <span className="inline-flex items-center justify-center gap-2">
-              <Spinner className="size-4 border-white/40 border-t-white" />
-              Adres işleniyor…
-            </span>
-          ) : (
-            sorunCagriButonEtiketi(form.sorunTipi)
-          )}
-        </Btn>
-      </div>
-    );
-  }
+  const hedefGlowSinif =
+    "border-amber-400 bg-white text-slate-900 ring-2 ring-amber-300/80 shadow-[0_0_14px_3px_rgba(245,158,11,0.55)] animate-pulse";
+  const hedefNormalSinif = "border-slate-200 bg-white text-slate-900";
 
   function hedefOneriSeciliMi(o: KonumOneri): boolean {
     if (hedefBilinmiyor || hedefKendimArat || !form.hedefLat || !form.hedefLng) {
@@ -1363,22 +1527,13 @@ function MusteriAnaSayfaIcerik({
     }
     if (!yasalOnay) {
       setError("Talep göndermek için yasal metinleri onaylayın.");
-      setStep("bilgi");
+      setBilgiAlanMesajlari((m) => ({
+        ...m,
+        yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
+      }));
+      yasalOnayaKaydir();
       return;
     }
-    if (!form.ad?.trim() || !form.telefon) {
-      setError("İsminizi ve telefonunuzu girin.");
-      setStep("bilgi");
-      return;
-    }
-    const telHata = telefonDogrulamaHatasi(form.telefon);
-    if (telHata) {
-      setError(telHata);
-      setStep("bilgi");
-      return;
-    }
-    const musteriAd = form.ad.trim();
-    const musteriSoyad = form.soyad.trim() || "-";
     if (!form.adres) {
       setError("Arıza konumu gerekli.");
       setStep("konum");
@@ -1391,18 +1546,29 @@ function MusteriAnaSayfaIcerik({
     }
     if (form.sorunTipi === "diger" && !form.sorunDetay.trim()) {
       setError("Lütfen sorununuzu kısaca açıklayın.");
-      setStep("detay");
+      setStep("ek_detay");
       return;
     }
     if (sorunAracModeliGerekliMi(form.sorunTipi) && !form.aracModeli.trim()) {
       setError("Araç modelini girin (ör. Audi A3 sedan).");
-      setStep("detay");
+      setStep("arac_modeli");
       return;
     }
     if (sorunFotografGerekliMi(form.sorunTipi) && !fotografData) {
       setError("Arıza fotoğrafı gerekli.");
-      setStep("detay");
+      setStep("fotograf");
       return;
+    }
+    {
+      const sure = ihaleBitisHesapla(ihaleSureTipi, {
+        ozelBitis: ihaleOzelBitis,
+      });
+      if (!sure.ok) {
+        setIhaleSureHatasi(true);
+        setError(sure.hata);
+        setStep("ihale");
+        return;
+      }
     }
     if (
       sorunHedefKonumGerekliMi(form.sorunTipi) &&
@@ -1422,9 +1588,6 @@ function MusteriAnaSayfaIcerik({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ad: musteriAd,
-          soyad: musteriSoyad,
-          telefon: form.telefon,
           konum: { lat: form.lat, lng: form.lng, adres: form.adres },
           ...(hedefBilinmiyor ? { hedefBilinmiyor: true } : {}),
           ...(hedefGerekli
@@ -1450,13 +1613,11 @@ function MusteriAnaSayfaIcerik({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Bir hata oluştu.");
       musteriFormTaslakSil();
-      musteriProfilKaydet(form.telefon, musteriAd, musteriSoyad);
       posthogOlayYakala("talep_olustur", {
         sorun_tipi: form.sorunTipi,
         bildirilen_sayisi: data.bildirilenSayisi ?? 0,
       });
       void musteriFunnelOlayGonder(funnelId, "talep_olustur", {
-        telefon: form.telefon,
         talepId: typeof data.id === "string" ? data.id : String(data.id ?? ""),
         props: {
           sorun_tipi: form.sorunTipi,
@@ -1473,15 +1634,11 @@ function MusteriAnaSayfaIcerik({
           sessionStorage.setItem(`acil_meta_lead_${data.id}`, "1");
           metaPixelLead({
             content_name: form.sorunTipi || "musteri_talep",
-            phone: form.telefon,
-            firstName: musteriAd,
-            lastName: musteriSoyad === "-" ? "" : musteriSoyad,
             externalId:
               typeof data.id === "string" ? data.id : String(data.id ?? ""),
           });
           void tiktokPixelLead({
             content_name: form.sorunTipi || "musteri_talep",
-            phone: form.telefon,
             externalId: typeof data.id === "string" ? data.id : String(data.id ?? ""),
           });
         }
@@ -1492,30 +1649,18 @@ function MusteriAnaSayfaIcerik({
         if (form.sorunTipi) {
           sessionStorage.setItem(`acil_bekle_sorun_${data.id}`, form.sorunTipi);
         }
-        if (form.telefon.trim()) {
-          sessionStorage.setItem(`acil_bekle_tel_${data.id}`, form.telefon.trim());
-        }
       } catch {
         void metaPixelLead({
           content_name: form.sorunTipi || "musteri_talep",
-          phone: form.telefon,
-          firstName: musteriAd,
-          lastName: musteriSoyad === "-" ? "" : musteriSoyad,
         });
         void tiktokPixelLead({
           content_name: form.sorunTipi || "musteri_talep",
-          phone: form.telefon,
         });
       }
       /* Google Ads «Tıklama» snippet: conversion → event_callback → /bekle */
       gtagAdsFiyatTeklifiDonusumu({
         transactionId:
           typeof data.id === "string" ? data.id : String(data.id ?? ""),
-        user: {
-          phone: form.telefon,
-          firstName: musteriAd,
-          lastName: musteriSoyad === "-" ? "" : musteriSoyad,
-        },
         url: `/bekle/${data.id}`,
       });
     } catch (e) {
@@ -1527,9 +1672,18 @@ function MusteriAnaSayfaIcerik({
 
   const hedefKonumGerekli = sorunHedefKonumGerekliMi(form.sorunTipi);
 
-  const steps: { key: Step; label: string }[] = STEP_SIRA.filter(
-    (s) => s !== "hedef" || hedefKonumGerekli
-  ).map((key, i) => ({ key, label: String(i + 1) }));
+  const adimSirasi = aktifAdimlar(form.sorunTipi, hedefKonumGerekli);
+  const steps: { key: Step; label: string }[] = adimSirasi.map(
+    (key, i) => ({ key, label: String(i + 1) })
+  );
+
+  /** Geçerli adım listesinde bir sonraki adım (yoksa null → submit) */
+  function sonrakiAdim(mevcut: Step): Step | null {
+    const idx = adimSirasi.indexOf(mevcut);
+    return idx >= 0 && idx < adimSirasi.length - 1
+      ? adimSirasi[idx + 1]!
+      : null;
+  }
 
   function oncekiAdimaDon() {
     const idx = steps.findIndex((s) => s.key === step);
@@ -1560,11 +1714,17 @@ function MusteriAnaSayfaIcerik({
 
   const googleOneriAktif = googleMapsYapilandirildi();
 
+  /** Atlanan bir adımda kalınırsa (ör. tip değişti, hedef artık gerekmiyor) en yakın geçerli adıma çek */
   useEffect(() => {
-    if (step === "hedef" && !hedefKonumGerekli) {
-      setStep("detay");
-    }
-  }, [step, hedefKonumGerekli]);
+    if (adimSirasi.includes(step)) return;
+    const idx = TUM_ADIMLAR.indexOf(step);
+    const enYakin = [...TUM_ADIMLAR]
+      .slice(0, idx + 1)
+      .reverse()
+      .find((a) => adimSirasi.includes(a));
+    setStep(enYakin ?? "sorun");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- adimSirasi her render türetiliyor
+  }, [step, form.sorunTipi, hedefKonumGerekli]);
 
   useEffect(() => {
     if (step !== "hedef") {
@@ -1666,6 +1826,13 @@ function MusteriAnaSayfaIcerik({
         window.scrollTo({ top: 0, behavior: "smooth" });
       }}
       footer={<YasalSiteFooter />}
+      footerClassName={
+        step === "hedef"
+          ? "pb-56"
+          : step !== "konum"
+            ? "pb-28"
+            : undefined
+      }
     >
       {konumIzniToast && (
         <div
@@ -1718,17 +1885,14 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {bilgiMesaj &&
-        (step === "bilgi" ||
-          step === "detay" ||
-          step === "konum" ||
-          step === "hedef") && (
+        (step === "konum" || step === "hedef" || DETAY_ALT_ADIMLARI.includes(step)) && (
         <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
           {bilgiMesaj}
         </div>
       )}
 
       {step === "sorun" && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-4 animate-fade-in pb-28">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold leading-snug tracking-tight text-slate-900">
               {seciliIlce && seciliSehir
@@ -1763,225 +1927,159 @@ function MusteriAnaSayfaIcerik({
             }}
             onDetayChange={(v) => update("sorunDetay", v)}
             sadeceTipSecimi
+          />
+          <NasilCalisirSerit aktifFormAdimi={step} />
+          <AdimAltNav
+            devamMetin="Devam Et"
+            devamDisabled={!form.sorunTipi}
+            devamGlow={!!form.sorunTipi}
+            onGeri={oncekiAdimaDon}
             onDevam={() => {
               if (!form.sorunTipi) {
                 setError("Lütfen sorununuzu seçin.");
                 return;
               }
               setError("");
-              adimGit("bilgi");
+              const sonraki = sonrakiAdim("sorun");
+              if (sonraki) adimGit(sonraki);
             }}
           />
-          <NasilCalisirSerit aktifFormAdimi={step} />
         </div>
       )}
 
-      {step === "bilgi" && (
-        <div className="space-y-4 animate-fade-in">
-          <h2 className="text-xl font-bold">İletişim bilgileriniz</h2>
-          {sorunLabel && (
-            <Card className="bg-slate-50 border-slate-200">
-              <p className="text-xs text-slate-500">Seçilen sorun</p>
-              <p className="text-sm font-medium text-slate-900">{sorunLabel}</p>
-            </Card>
-          )}
-          <p className="text-sm text-slate-600">
-            Teklifleri ücretsiz alın. Çekici seçerken telefonunuzu SMS ile
-            doğrulayacağız.
+      {step === "fotograf" && (
+        <div className="space-y-4 animate-fade-in pb-28">
+          <h2 className="text-xl font-bold">Arıza Fotoğrafı</h2>
+          <p className="text-slate-500 text-sm">
+            Bir fotoğraf ekleyin — çekici doğru teklif verebilsin (isteğe
+            bağlı).
           </p>
-          <Field
-            label="Telefon"
-            type="tel"
-            placeholder="05XX XXX XX XX"
-            value={form.telefon}
-            onChange={(e) => {
-              update("telefon", e.target.value);
-              setBilgiAlanMesajlari((m) => ({ ...m, telefon: "" }));
-              setError("");
-            }}
-            autoComplete="tel"
-            inputMode="tel"
-            name="telefon"
-            required
-            invalid={!!bilgiAlanMesajlari.telefon}
-          />
-          {bilgiAlanMesajlari.telefon && (
-            <p className="text-sm text-red-600 -mt-2" role="alert">
-              {bilgiAlanMesajlari.telefon}
-            </p>
-          )}
-          <div ref={konumIsimRef} className="scroll-mt-44">
-            <Field
-              label="İsminiz"
-              placeholder="Örn. Ahmet"
-              value={form.ad}
-              onChange={(e) => update("ad", e.target.value)}
-              onBlur={adSoyadKaydet}
-              autoComplete="given-name"
-              name="ad"
-              required
-            />
-          </div>
-          <div ref={yasalOnayRef} className="scroll-mt-28 space-y-2">
-            <YasalOnayKutusu
-              checked={yasalOnay}
-              onChange={(checked) => {
-                setYasalOnay(checked);
-                if (checked) {
-                  setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
-                }
+          <div ref={fotografRef} className="scroll-mt-44">
+            <ArizaFotografAlani
+              onizleme={fotografOnizleme}
+              invalid={fotografHatasi}
+              zorunlu={sorunFotografGerekliMi(form.sorunTipi)}
+              onDegisti={(dataUrl) => {
+                setFotografOnizleme(dataUrl);
+                setFotografData(dataUrl);
+                if (dataUrl) setFotografHatasi(false);
               }}
-              invalid={!!bilgiAlanMesajlari.yasalOnay}
             />
-            {bilgiAlanMesajlari.yasalOnay && (
-              <p className="text-sm text-red-600" role="alert">
-                {bilgiAlanMesajlari.yasalOnay}
+            {fotografHatasi && (
+              <p className="text-sm text-red-600 mt-1" role="alert">
+                Arıza fotoğrafı zorunludur — çekici doğru teklif verebilsin.
               </p>
             )}
           </div>
-          <div className="pt-1">
-            <Btn
-              type="button"
-              className="w-full"
-              onClick={() => {
-                const telHata = telefonDogrulamaHatasi(form.telefon);
-                if (telHata) {
-                  setBilgiAlanMesajlari((m) => ({ ...m, telefon: telHata }));
-                  setError(telHata);
-                  return;
-                }
-                if (!form.ad.trim()) {
-                  setError("Devam etmek için isminizi girin.");
-                  return;
-                }
-                if (!yasalOnay) {
-                  setBilgiAlanMesajlari((m) => ({
-                    ...m,
-                    yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
-                  }));
-                  setError("Devam etmek için yasal metinleri onaylayın.");
-                  yasalOnayaKaydir();
-                  return;
-                }
-                const soyad = form.soyad.trim() || "-";
-                musteriProfilKaydet(form.telefon, form.ad, soyad);
-                metaUserDataSakla({
-                  phone: form.telefon,
-                  firstName: form.ad,
-                  lastName: soyad === "-" ? "" : soyad,
-                });
-                gtagUserDataAyarla({
-                  phone: form.telefon,
-                  firstName: form.ad,
-                  lastName: soyad === "-" ? "" : soyad,
-                });
-                if (!form.soyad.trim()) {
-                  setForm((f) => ({ ...f, soyad }));
-                }
-                setBilgiMesaj("");
-                setError("");
-                adimGit("detay");
-              }}
-            >
-              Devam Et
-            </Btn>
-          </div>
+          <AdimAltNav
+            devamMetin="Devam Et"
+            onGeri={oncekiAdimaDon}
+            onDevam={() => {
+              if (!fotografAdimiDevam()) return;
+              const sonraki = sonrakiAdim("fotograf");
+              if (sonraki) adimGit(sonraki);
+            }}
+          />
         </div>
       )}
 
-      {step === "detay" && (
-        <div className="space-y-4 animate-fade-in">
+      {step === "arac_tipi" && (
+        <div className="space-y-4 animate-fade-in pb-28">
+          <h2 className="text-xl font-bold">Araç Tipi</h2>
+          <p className="text-slate-500 text-sm">
+            Aracınızın tipini seçin (isteğe bağlı).
+          </p>
+          <div
+            className="grid grid-cols-1 gap-1.5"
+            role="listbox"
+            aria-label="Araç tipi"
+          >
+            {ARAC_TIPLERI.map((t) => {
+              const secili = form.aracTipi === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="option"
+                  aria-selected={secili}
+                  onClick={() => update("aracTipi", secili ? "" : t.id)}
+                  className={`w-full text-left rounded-xl border px-3.5 py-2.5 flex items-center gap-2.5 transition touch-manipulation ${
+                    secili
+                      ? "border-amber-500 bg-amber-50 ring-2 ring-amber-500/25"
+                      : "border-slate-200 bg-white hover:border-amber-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-flex size-8 shrink-0 items-center justify-center ${
+                      secili ? "text-amber-700" : "text-slate-500"
+                    }`}
+                  >
+                    <AracTipiIkon tip={t.id} className="size-8" />
+                  </span>
+                  <span
+                    className={`font-medium text-sm flex-1 min-w-0 ${
+                      secili ? "text-amber-900" : "text-slate-800"
+                    }`}
+                  >
+                    {t.etiket}
+                  </span>
+                  {secili ? (
+                    <span className="shrink-0 text-amber-600 text-base">
+                      ✓
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+          <AdimAltNav
+            devamMetin="Devam Et"
+            onGeri={oncekiAdimaDon}
+            onDevam={() => {
+              const sonraki = sonrakiAdim("arac_tipi");
+              if (sonraki) adimGit(sonraki);
+            }}
+          />
+        </div>
+      )}
+
+      {step === "arac_modeli" && (
+        <div className="space-y-4 animate-fade-in pb-28">
+          <h2 className="text-xl font-bold">Araç Modeli</h2>
+          <p className="text-slate-500 text-sm">
+            Aracın modelini yazın — çekici doğru teklif verebilsin (isteğe
+            bağlı).
+          </p>
+          <div ref={aracModeliRef} className="scroll-mt-44">
+            <Field
+              label="Araç modeli (isteğe bağlı)"
+              placeholder="Örn. Audi A3, Renault Clio"
+              value={form.aracModeli}
+              onChange={(e) => update("aracModeli", e.target.value)}
+              invalid={aracModeliHatasi}
+              autoFocus
+            />
+          </div>
+          <AdimAltNav
+            devamMetin="Devam Et"
+            onGeri={oncekiAdimaDon}
+            onDevam={() => {
+              if (!aracModeliAdimiDevam()) return;
+              const sonraki = sonrakiAdim("arac_modeli");
+              if (sonraki) adimGit(sonraki);
+            }}
+          />
+        </div>
+      )}
+
+      {step === "ek_detay" && (
+        <div className="space-y-4 animate-fade-in pb-28">
           <h2 className="text-xl font-bold">Sorun Detayı</h2>
           <p className="text-slate-500 text-sm">
             {hedefKonumGerekli
-              ? "Aracınız ve arıza hakkında bilgi verin — çekici doğru teklif verebilsin."
+              ? "Arıza hakkında ek bilgi verin — çekici doğru teklif verebilsin."
               : "Bulunduğunuz yerde hizmet alacaksınız — ek bilgi verin."}
           </p>
-
-          {sorunFotografAlaniGoster(form.sorunTipi) && (
-            <div ref={fotografRef} className="scroll-mt-44">
-              <ArizaFotografAlani
-                onizleme={fotografOnizleme}
-                invalid={fotografHatasi}
-                zorunlu={sorunFotografGerekliMi(form.sorunTipi)}
-                onDegisti={(dataUrl) => {
-                  setFotografOnizleme(dataUrl);
-                  setFotografData(dataUrl);
-                  if (dataUrl) setFotografHatasi(false);
-                }}
-              />
-              {fotografHatasi && (
-                <p className="text-sm text-red-600 mt-1" role="alert">
-                  Arıza fotoğrafı zorunludur — çekici doğru teklif verebilsin.
-                </p>
-              )}
-            </div>
-          )}
-
-          {sorunAracModeliAlaniGoster(form.sorunTipi) && (
-            <div ref={aracModeliRef} className="scroll-mt-44 space-y-3">
-              <div className="space-y-1.5">
-                <span className="block text-sm font-semibold text-slate-800">
-                  Araç tipi{" "}
-                  <span className="text-slate-500 font-normal">
-                    (isteğe bağlı)
-                  </span>
-                </span>
-                <div
-                  className="grid grid-cols-1 gap-1.5"
-                  role="listbox"
-                  aria-label="Araç tipi"
-                >
-                  {ARAC_TIPLERI.map((t) => {
-                    const secili = form.aracTipi === t.id;
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        role="option"
-                        aria-selected={secili}
-                        onClick={() =>
-                          update("aracTipi", secili ? "" : t.id)
-                        }
-                        className={`w-full text-left rounded-xl border px-3.5 py-2.5 flex items-center gap-2.5 transition touch-manipulation ${
-                          secili
-                            ? "border-amber-500 bg-amber-50 ring-2 ring-amber-500/25"
-                            : "border-slate-200 bg-white hover:border-amber-300"
-                        }`}
-                      >
-                        <span
-                          className={`inline-flex size-8 shrink-0 items-center justify-center ${
-                            secili ? "text-amber-700" : "text-slate-500"
-                          }`}
-                        >
-                          <AracTipiIkon tip={t.id} className="size-8" />
-                        </span>
-                        <span
-                          className={`font-medium text-sm flex-1 min-w-0 ${
-                            secili ? "text-amber-900" : "text-slate-800"
-                          }`}
-                        >
-                          {t.etiket}
-                        </span>
-                        {secili ? (
-                          <span className="shrink-0 text-amber-600 text-base">
-                            ✓
-                          </span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <Field
-                label="Araç modeli (isteğe bağlı)"
-                placeholder="Örn. Audi A3, Renault Clio"
-                value={form.aracModeli}
-                onChange={(e) => update("aracModeli", e.target.value)}
-                invalid={aracModeliHatasi}
-              />
-            </div>
-          )}
 
           {form.sorunTipi === "diger" ? (
             <label className="block space-y-1.5">
@@ -1996,6 +2094,7 @@ function MusteriAnaSayfaIcerik({
                 value={form.sorunDetay}
                 onChange={(e) => update("sorunDetay", e.target.value)}
                 aria-invalid={sorunDetayHatasi || undefined}
+                autoFocus
                 className={`w-full rounded-xl bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 resize-none ${
                   sorunDetayHatasi
                     ? "border-red-500 ring-red-500/30 focus:ring-red-500/40"
@@ -2018,6 +2117,26 @@ function MusteriAnaSayfaIcerik({
             />
           )}
 
+          <AdimAltNav
+            devamMetin="Devam Et"
+            onGeri={oncekiAdimaDon}
+            onDevam={() => {
+              if (!ekDetayAdimiDevam()) return;
+              const sonraki = sonrakiAdim("ek_detay");
+              if (sonraki) adimGit(sonraki);
+            }}
+          />
+        </div>
+      )}
+
+      {step === "ihale" && (
+        <div className="space-y-4 animate-fade-in pb-40">
+          <h2 className="text-xl font-bold">İhale Süresi</h2>
+          <p className="text-slate-500 text-sm">
+            Teklif toplama süresini seçin — süre dolunca en uygun teklifi
+            seçersiniz.
+          </p>
+
           <IhaleSureSecimi
             value={ihaleSureTipi}
             ozelBitis={ihaleOzelBitis}
@@ -2029,41 +2148,60 @@ function MusteriAnaSayfaIcerik({
             }}
           />
 
-          {(aracModeliHatasi || fotografHatasi || sorunDetayHatasi) &&
-            error && (
-            <div
-              className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
-              role="alert"
-            >
-              {error}
+          {!hedefKonumGerekli && (
+            <div ref={yasalOnayRef} className="scroll-mt-28 space-y-2">
+              <YasalOnayKutusu
+                checked={yasalOnay}
+                onChange={(checked) => {
+                  setYasalOnay(checked);
+                  if (checked) {
+                    setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
+                  }
+                }}
+                invalid={!!bilgiAlanMesajlari.yasalOnay}
+              />
+              {bilgiAlanMesajlari.yasalOnay && (
+                <p className="text-sm text-red-600" role="alert">
+                  {bilgiAlanMesajlari.yasalOnay}
+                </p>
+              )}
             </div>
           )}
 
-          <div className="pt-2">
-            <Btn
-              className="w-full"
-              onClick={() => {
-                if (!detayAdimiDevam()) return;
-                if (hedefKonumGerekli) {
-                  adimGit("hedef");
-                } else {
-                  void cekiciBul();
-                }
-              }}
-              disabled={loading}
-            >
-              {loading ? (
+          <AdimAltNav
+            devamMetin={
+              loading ? (
                 <span className="inline-flex items-center justify-center gap-2">
                   <Spinner className="size-4 border-white/40 border-t-white" />
                   Gönderiliyor…
                 </span>
-              ) : hedefKonumGerekli ? (
+              ) : sonrakiAdim("ihale") ? (
                 "Devam Et"
               ) : (
                 sorunCagriButonEtiketi(form.sorunTipi)
-              )}
-            </Btn>
-          </div>
+              )
+            }
+            devamDisabled={loading}
+            onGeri={oncekiAdimaDon}
+            onDevam={() => {
+              if (!ihaleAdimiDevam()) return;
+              const sonraki = sonrakiAdim("ihale");
+              if (sonraki) {
+                adimGit(sonraki);
+                return;
+              }
+              if (!yasalOnay) {
+                setBilgiAlanMesajlari((m) => ({
+                  ...m,
+                  yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
+                }));
+                setError("Talep göndermek için yasal metinleri onaylayın.");
+                yasalOnayaKaydir();
+                return;
+              }
+              void cekiciBul();
+            }}
+          />
         </div>
       )}
 
@@ -2401,14 +2539,12 @@ function MusteriAnaSayfaIcerik({
             </div>
           )}
 
-          {!varsayilanSehir ? (
-            <>
-              <AnaSayfaOzellikSeridi />
-              <AnaSayfaFiyatHesaplamaTeaser />
-              <AnaSayfaHizmetVerCta />
-              <AnaSayfaHizliBaglantilar />
-            </>
-          ) : null}
+          <>
+            <AnaSayfaOzellikSeridi />
+            <AnaSayfaFiyatHesaplamaTeaser />
+            <AnaSayfaHizmetVerCta />
+            {!varsayilanSehir ? <AnaSayfaHizliBaglantilar /> : null}
+          </>
 
           <div className="pt-6 border-t border-slate-200 space-y-8">
             <SehirSeoIcerikBolumu
@@ -2417,7 +2553,8 @@ function MusteriAnaSayfaIcerik({
               heroBaslik={seoHero}
               baglantilar={seoLinkler}
               bolgeLinkleri={seoBolgeChip}
-              yogunluk="genis"
+              yogunluk={varsayilanSehir ? "kompakt" : "genis"}
+              ozetGoster={!varsayilanSehir}
             />
             <section>
               <h2 className="text-xl font-semibold text-slate-900">
@@ -2441,7 +2578,7 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {step === "hedef" && (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-48">
           <h2 className="text-xl font-bold">Nereye Çekilecek?</h2>
           <p className="text-slate-500 text-sm">
             {sorunLabel
@@ -2457,26 +2594,36 @@ function MusteriAnaSayfaIcerik({
               onClick={() => enYakinHedefSec("oto_tamir")}
               disabled={oneriYukleniyor && oneriler.length === 0}
               className={`w-full rounded-xl border px-4 py-3.5 text-left font-semibold text-sm transition touch-manipulation active:scale-[0.99] disabled:opacity-50 ${
-                enYakinModSeciliMi("oto_tamir")
+                enYakinModSeciliMi("oto_tamir") || hedefOpsiyon === "oto_tamir"
                   ? "border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-200"
-                  : "border-slate-200 bg-white text-slate-900 hover:border-blue-400"
+                  : !hedefSeciliMi
+                    ? hedefGlowSinif
+                    : `${hedefNormalSinif} hover:border-blue-400`
               }`}
             >
               En yakın oto servis
-              {enYakinModSeciliMi("oto_tamir") ? " ✓" : ""}
+              {enYakinModSeciliMi("oto_tamir") || hedefOpsiyon === "oto_tamir"
+                ? " ✓"
+                : ""}
             </button>
             <button
               type="button"
               onClick={() => enYakinHedefSec("oto_sanayi")}
               disabled={oneriYukleniyor && oneriler.length === 0}
               className={`w-full rounded-xl border px-4 py-3.5 text-left font-semibold text-sm transition touch-manipulation active:scale-[0.99] disabled:opacity-50 ${
-                enYakinModSeciliMi("oto_sanayi")
+                enYakinModSeciliMi("oto_sanayi") ||
+                hedefOpsiyon === "oto_sanayi"
                   ? "border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-200"
-                  : "border-slate-200 bg-white text-slate-900 hover:border-emerald-400"
+                  : !hedefSeciliMi
+                    ? hedefGlowSinif
+                    : `${hedefNormalSinif} hover:border-emerald-400`
               }`}
             >
               En yakın oto sanayi
-              {enYakinModSeciliMi("oto_sanayi") ? " ✓" : ""}
+              {enYakinModSeciliMi("oto_sanayi") ||
+              hedefOpsiyon === "oto_sanayi"
+                ? " ✓"
+                : ""}
             </button>
 
             {hedefBilinmiyor ? (
@@ -2496,14 +2643,17 @@ function MusteriAnaSayfaIcerik({
                     Hedefi sonra seçebilirsiniz. Tahmini sürelere ortalama{" "}
                     <strong>+{HEDEF_BILINMIYOR_EK_SURE_DK} dk</strong> eklenir.
                   </p>
-                  {hedefNavButonlari()}
                 </div>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={hedefBilmiyorumSec}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation active:scale-[0.99] hover:border-amber-400"
+                className={`w-full rounded-xl border px-4 py-3.5 text-left font-semibold text-sm transition touch-manipulation active:scale-[0.99] ${
+                  !hedefSeciliMi
+                    ? hedefGlowSinif
+                    : `${hedefNormalSinif} hover:border-amber-400`
+                }`}
               >
                 Bilmiyorum, sonra seçeceğim
               </button>
@@ -2523,14 +2673,17 @@ function MusteriAnaSayfaIcerik({
                 </button>
                 <div className="px-4 pb-3 space-y-1">
                   {hedefAdresAramaAlani()}
-                  {hedefNavButonlari()}
                 </div>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={hedefKendimAratSec}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-left font-semibold text-sm text-slate-900 transition touch-manipulation active:scale-[0.99] hover:border-amber-400"
+                className={`w-full rounded-xl border px-4 py-3.5 text-left font-semibold text-sm transition touch-manipulation active:scale-[0.99] ${
+                  !hedefSeciliMi
+                    ? hedefGlowSinif
+                    : `${hedefNormalSinif} hover:border-amber-400`
+                }`}
               >
                 Çekeceğim adresi kendim aratacağım
               </button>
@@ -2701,11 +2854,10 @@ function MusteriAnaSayfaIcerik({
                               type="button"
                               onClick={() => oneriSec(o)}
                               aria-pressed
-                              className="w-full text-left px-4 pt-3 pb-2"
+                              className="w-full text-left px-4 py-3"
                             >
                               {icerik}
                             </button>
-                            <div className="px-4 pb-3">{hedefNavButonlari()}</div>
                           </div>
                         );
                       }
@@ -2762,11 +2914,10 @@ function MusteriAnaSayfaIcerik({
                             type="button"
                             onClick={() => oneriSec(o)}
                             aria-pressed
-                            className="w-full text-left px-4 pt-3 pb-2"
+                            className="w-full text-left px-4 py-3"
                           >
                             {icerik}
                           </button>
-                          <div className="px-4 pb-3">{hedefNavButonlari()}</div>
                         </div>
                       );
                     }
@@ -2800,28 +2951,52 @@ function MusteriAnaSayfaIcerik({
               </Btn>
             )}
 
-          {!hedefSeciliMi && (
-            <Btn
-              className="w-full"
-              onClick={() => void hedefIleriGit()}
-              disabled={hedefIleriEngelli}
-            >
-              {loading ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Spinner className="size-4 border-white/40 border-t-white" />
-                  Gönderiliyor…
-                </span>
-              ) : adresGeocodeYukleniyor ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Spinner className="size-4 border-white/40 border-t-white" />
-                  Adres işleniyor…
-                </span>
-              ) : (
-                sorunCagriButonEtiketi(form.sorunTipi)
-              )}
-            </Btn>
-          )}
         </div>
+      )}
+      {step === "hedef" && (
+        <HedefAltNav
+          hedefSeciliMi={hedefSeciliMi}
+          yasalOnayRef={yasalOnayRef}
+          yasalOnay={yasalOnay}
+          onYasalOnayChange={(checked) => {
+            setYasalOnay(checked);
+            if (checked) {
+              setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
+            }
+          }}
+          yasalOnayHata={bilgiAlanMesajlari.yasalOnay}
+          onGeri={oncekiAdimaDon}
+          devamDisabled={hedefIleriEngelli}
+          devamGlow={hedefGonderilebilir}
+          devamIcerik={
+            loading ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <Spinner className="size-4 border-white/40 border-t-white" />
+                Gönderiliyor…
+              </span>
+            ) : adresGeocodeYukleniyor ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <Spinner className="size-4 border-white/40 border-t-white" />
+                Adres işleniyor…
+              </span>
+            ) : (
+              "Ücretsiz teklif iste"
+            )
+          }
+          onDevam={() => {
+            if (!hedefGonderilebilir) return;
+            if (!yasalOnay) {
+              setBilgiAlanMesajlari((m) => ({
+                ...m,
+                yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
+              }));
+              setError("Talep göndermek için yasal metinleri onaylayın.");
+              yasalOnayaKaydir();
+              return;
+            }
+            void hedefIleriGit();
+          }}
+        />
       )}
     </MobileShell>
   );
