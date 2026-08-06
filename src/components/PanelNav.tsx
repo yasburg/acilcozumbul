@@ -41,6 +41,7 @@ const LINKS: {
     roller: ["admin"],
   },
   { href: "/panel/talep-analiz", label: "Talep analizi", roller: ["admin"] },
+  { href: "/panel/simulasyon", label: "Simülasyon", roller: ["admin"] },
   {
     href: "/panel/sms",
     label: "SMS Sağlık",

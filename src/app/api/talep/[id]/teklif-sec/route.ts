@@ -8,6 +8,7 @@ import {
   demoTeklifSec,
   isDemoTalepId,
 } from "@/lib/demo-oturum";
+import { isSimulasyonTalep } from "@/lib/simulasyon-ihale-db";
 
 export async function POST(
   request: NextRequest,
@@ -71,6 +72,13 @@ export async function POST(
   const talep = await getTalepById(id);
   if (!talep) {
     return NextResponse.json({ error: "Talep bulunamadı." }, { status: 404 });
+  }
+
+  if (await isSimulasyonTalep(id)) {
+    return NextResponse.json(
+      { error: "Bu talep için seçim yapılamıyor." },
+      { status: 409 }
+    );
   }
 
   if (talep.kazananCekiciId) {

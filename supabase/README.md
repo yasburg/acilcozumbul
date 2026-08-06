@@ -45,6 +45,14 @@ Panel toplu SMS arka plan kuyruğu: migration `033_panel_toplu_sms_isler.sql`
 Sunucu içinde ~8 sn’lik scheduler partileri sürdürür; sekme açık kalması gerekmez.
 Ek kurtarma cron: `POST /api/cron/toplu-sms` + aynı `CRON_SECRET` (her 1–2 dk önerilir).
 
+## Simülasyon ihale
+
+`migrations/056_simulasyon_ihale.sql` — plan + side-table (çekici API’de flag yok).
+
+- Akşam planlama: `POST /api/cron/simulasyon-planla` + `Authorization: Bearer CRON_SECRET` (günde 1)
+- Aç/kapat: `POST /api/cron/simulasyon-calistir` + aynı secret (her 5–10 dk)
+- Panel: `/panel/simulasyon`
+
 ## Güvenlik
 
 Tablolarda RLS açık; anon key ile doğrudan okuma/yazma yok. API route’ları `SUPABASE_SERVICE_ROLE_KEY` ile sunucudan erişir.

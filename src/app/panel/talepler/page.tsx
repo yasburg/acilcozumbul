@@ -17,9 +17,10 @@ const PAGE_SIZE = 50;
 
 type Gorunum = "liste" | "ozet" | "harita" | "sehir-harita";
 type Siralama = "adet" | "alfa";
+type PanelTalepSatir = Talep & { simulasyon?: boolean };
 
 export default function PanelTaleplerPage() {
-  const [liste, setListe] = useState<Talep[]>([]);
+  const [liste, setListe] = useState<PanelTalepSatir[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -28,6 +29,9 @@ export default function PanelTaleplerPage() {
   const [noktalar, setNoktalar] = useState<PanelTalepHaritaNokta[]>([]);
   const [gorunum, setGorunum] = useState<Gorunum>("liste");
   const [sehirFiltre, setSehirFiltre] = useState("");
+  const [simulasyonFiltre, setSimulasyonFiltre] = useState<
+    "" | "sadece" | "haric"
+  >("");
   const [siralama, setSiralama] = useState<Siralama>("adet");
   const [sayiGizli, setSayiGizli] = useState(false);
 
@@ -39,7 +43,7 @@ export default function PanelTaleplerPage() {
         `/api/panel/talepler?limit=${PAGE_SIZE}&offset=${nextOffset}`
       );
       const data = await r.json();
-      const items: Talep[] = data.talepler ?? [];
+      const items: PanelTalepSatir[] = data.talepler ?? [];
       setTotal(typeof data.total === "number" ? data.total : items.length);
       setListe((prev) => (append ? [...prev, ...items] : items));
       setOffset(nextOffset + items.length);
@@ -74,12 +78,16 @@ export default function PanelTaleplerPage() {
   }, [ozet, sehirFiltre, siralama]);
 
   const filtreliListe = useMemo(() => {
-    if (!sehirFiltre) return liste;
     return liste.filter((t) => {
-      const sehir = (t.konumIl ?? "").trim() || SEHIR_YOK;
-      return sehir === sehirFiltre;
+      if (sehirFiltre) {
+        const sehir = (t.konumIl ?? "").trim() || SEHIR_YOK;
+        if (sehir !== sehirFiltre) return false;
+      }
+      if (simulasyonFiltre === "sadece" && !t.simulasyon) return false;
+      if (simulasyonFiltre === "haric" && t.simulasyon) return false;
+      return true;
     });
-  }, [liste, sehirFiltre]);
+  }, [liste, sehirFiltre, simulasyonFiltre]);
 
   const dahaVar = liste.length < total;
   const haritaSayiGizle =
@@ -166,6 +174,23 @@ export default function PanelTaleplerPage() {
               ))}
             </SelectField>
           </div>
+          {gorunum === "liste" && (
+            <div className="min-w-[10rem] max-w-xs flex-1">
+              <SelectField
+                label="Kaynak"
+                value={simulasyonFiltre}
+                onChange={(e) =>
+                  setSimulasyonFiltre(
+                    e.target.value as "" | "sadece" | "haric"
+                  )
+                }
+              >
+                <option value="">Tümü</option>
+                <option value="sadece">Yalnızca simülasyon</option>
+                <option value="haric">Simülasyon hariç</option>
+              </SelectField>
+            </div>
+          )}
           {(gorunum === "ozet" || gorunum === "sehir-harita") && (
             <div className="min-w-[10rem] max-w-xs flex-1">
               <SelectField
@@ -334,6 +359,11 @@ export default function PanelTaleplerPage() {
                   <div>
                     <p className="font-semibold">
                       {t.ad} {t.soyad}
+                      {t.simulasyon ? (
+                        <span className="ml-2 text-[10px] font-semibold uppercase tracking-wide text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded-md align-middle">
+                          Simülasyon
+                        </span>
+                      ) : null}
                     </p>
                     <p className="text-sm text-slate-600">{t.telefon}</p>
                   </div>

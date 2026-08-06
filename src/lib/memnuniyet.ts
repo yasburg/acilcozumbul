@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { getTaleplerMemnuniyetBekleyen } from "./db";
 import { notifyMusteriMemnuniyet } from "./sms";
 import { getSupabaseAdmin } from "./supabase/admin";
+import { isSimulasyonTalep } from "./simulasyon-ihale-db";
 import type { MusteriDegerlendirme, Talep } from "./types";
 
 /** Anlaşmadan sonra müşteri değerlendirmesi için bekleme */
@@ -82,6 +83,10 @@ export async function topluMemnuniyetSmsGonder(baseUrl: string): Promise<number>
 
   for (const talep of talepler) {
     if (talep.durum !== "anlaşıldı" || talep.memnuniyetSmsGonderildi) continue;
+    if (await isSimulasyonTalep(talep.id)) {
+      await memnuniyetSmsIsaretle(talep.id);
+      continue;
+    }
     const mevcut = await getDegerlendirmeByTalepId(talep.id);
     if (mevcut) continue;
     const durum = memnuniyetDurumuHesapla(talep, null);

@@ -6,6 +6,7 @@ import {
 } from "@/lib/db";
 import { PANEL_TALEP_MIN_OLUSTURULMA } from "@/lib/panel-talep";
 import { ensureSeedData } from "@/lib/seed";
+import { simulasyonTalepIdSet } from "@/lib/simulasyon-ihale-db";
 
 export async function GET(request: NextRequest) {
   await ensureSeedData();
@@ -28,8 +29,14 @@ export async function GET(request: NextRequest) {
     sinceIso: since,
   });
 
+  const simIds = await simulasyonTalepIdSet(talepler.map((t) => t.id));
+  const taleplerPanel = talepler.map((t) => ({
+    ...t,
+    simulasyon: simIds.has(t.id),
+  }));
+
   return NextResponse.json({
-    talepler,
+    talepler: taleplerPanel,
     total,
     since,
     limit: Math.min(Math.max(Number.isFinite(limit) ? limit : 50, 1), 200),
