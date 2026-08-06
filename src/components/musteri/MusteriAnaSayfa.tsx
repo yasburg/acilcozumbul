@@ -45,9 +45,6 @@ import {
 } from "@/lib/konum-client";
 import {
   telefonDogrulamaHatasi,
-  telefonGecerliMi,
-  telefonMaskele,
-  telefonNormalize,
 } from "@/lib/telefon";
 import { googleMapsYapilandirildi } from "@/lib/google-maps";
 import type { KonumOneri } from "@/lib/hedef-oneri-data";
@@ -72,8 +69,8 @@ import {
   posthogKampanyaKaydet,
   posthogOlayYakala,
 } from "@/lib/posthog-client";
-import { gtagAdsAnaSayfaGoruntulemeDonusumu, gtagAdsFiyatTeklifiDonusumu } from "@/lib/gtag";
-import { metaPixelLead } from "@/lib/meta-pixel";
+import { gtagAdsAnaSayfaGoruntulemeDonusumu, gtagAdsFiyatTeklifiDonusumu, gtagUserDataAyarla } from "@/lib/gtag";
+import { metaPixelLead, metaUserDataSakla } from "@/lib/meta-pixel";
 import {
   tiktokPixelLead,
   tiktokPixelSearch,
@@ -81,7 +78,6 @@ import {
 } from "@/lib/tiktok-pixel";
 import {
   musteriProfilKaydet,
-  musteriProfilOku,
 } from "@/lib/musteri-profil";
 import {
   musteriFormTaslakBosMu,
@@ -92,6 +88,7 @@ import {
 } from "@/lib/musteri-form-taslak";
 import type { MusteriFunnelId } from "@/lib/musteri-funnel";
 import {
+  musteriFunnelIdTalepKaydet,
   musteriFunnelOlayBirKez,
   musteriFunnelOlayGonder,
 } from "@/lib/musteri-funnel-client";
@@ -159,9 +156,8 @@ const ArizaFotografAlani = dynamic(
 
 type Step = "bilgi" | "konum" | "sorun" | "detay" | "hedef";
 
-/** Konum (şehir/ilçe) → sorun → telefon → detay → hedef */
+/** Konum (şehir/ilçe) → sorun → iletişim → detay → hedef · OTP teklif seçiminde */
 const STEP_SIRA: Step[] = ["konum", "sorun", "bilgi", "detay", "hedef"];
-const OTP_BEKLEYEN_KEY = "acilcozum_otp_bekleyen";
 const ADIM_OLAYLARI: Partial<Record<Step, string>> = {
   sorun: "form_adim_sorun",
   bilgi: "form_adim_bilgi",
@@ -186,19 +182,6 @@ type MusteriAnaSayfaProps = {
 
 function sorunProps(sorunTipi: string): Record<string, unknown> {
   return sorunTipi ? { sorun_tipi: sorunTipi } : {};
-}
-
-/** Kayıtlı ad/soyadı boş alanlara uygular; dolu alanlara dokunmaz */
-function kayitliAdSoyadUygula(
-  telefon: string,
-  mevcut: { ad: string; soyad: string }
-): { telefon: string; ad: string; soyad: string } {
-  const profil = musteriProfilOku(telefon);
-  return {
-    telefon,
-    ad: mevcut.ad.trim() ? mevcut.ad : (profil?.ad ?? mevcut.ad),
-    soyad: mevcut.soyad.trim() ? mevcut.soyad : (profil?.soyad ?? mevcut.soyad),
-  };
 }
 
 export default function MusteriAnaSayfa({
@@ -278,13 +261,6 @@ function MusteriAnaSayfaIcerik({
   );
   const [oneriAcikFiltre, setOneriAcikFiltre] = useState(false);
   const [oneriSemt, setOneriSemt] = useState<string | null>(null);
-  const [telefonDogrulandi, setTelefonDogrulandi] = useState(false);
-  const [otpKod, setOtpKod] = useState("");
-  const [otpHata, setOtpHata] = useState("");
-  const [gelistirmeKodu, setGelistirmeKodu] = useState<string | null>(null);
-  const [yenidenGonderSn, setYenidenGonderSn] = useState(0);
-  const [otpBekleniyor, setOtpBekleniyor] = useState(false);
-  const [kodGirisAcik, setKodGirisAcik] = useState(false);
   const [gpsGuvenli, setGpsGuvenli] = useState(false);
   const [konumIzni, setKonumIzni] = useState<KonumIzniDurumu>("unknown");
   const [konumIzniBekleniyor, setKonumIzniBekleniyor] = useState(false);
@@ -595,80 +571,10 @@ function MusteriAnaSayfaIcerik({
     });
   }, [step]);
 
-  useEffect(() => {
-    if (!telefonDogrulandi) return;
-    setYasalOnay(true);
-    setBilgiAlanMesajlari((m) =>
-      m.yasalOnay ? { ...m, yasalOnay: "" } : m
-    );
-  }, [telefonDogrulandi]);
-
-  useEffect(() => {
-    fetch("/api/musteri/otp/durum", { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.dogrulandi && d.telefon) {
-          setTelefonDogrulandi(true);
-          setYasalOnay(true);
-          setForm((f) => ({ ...f, ...kayitliAdSoyadUygula(d.telefon, f) }));
-          setOtpBekleniyor(false);
-          setKodGirisAcik(false);
-          try {
-            sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
-          } catch {
-            /* ignore */
-          }
-        } else {
-          setTelefonDogrulandi(false);
-        }
-      })
-      .catch(() => {});
-
-    try {
-      const kayitli = sessionStorage.getItem(OTP_BEKLEYEN_KEY);
-      if (kayitli) {
-        // Durum cevabı gelene kadar bekleyen OTP’yi göster; doğrulanmışsa yukarıda temizlenir
-        setOtpBekleniyor(true);
-        setKodGirisAcik(true);
-        setStep("bilgi");
-        setForm((f) => (f.telefon ? f : { ...f, telefon: kayitli }));
-      }
-    } catch {
-      /* sessionStorage yok */
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!telefonGecerliMi(form.telefon)) {
-      setOtpBekleniyor(false);
-      return;
-    }
-    const tel = telefonNormalize(form.telefon);
-    const t = setTimeout(() => {
-      fetch(`/api/musteri/otp/bekleyen?telefon=${encodeURIComponent(tel)}`, {
-        credentials: "include",
-      })
-        .then((r) => r.json())
-        .then((d) => {
-          if (d.bekliyor) {
-            setOtpBekleniyor(true);
-            setKodGirisAcik(true);
-            setYenidenGonderSn(d.yenidenGonderSn ?? 0);
-            if (d.gelistirmeKodu) setGelistirmeKodu(d.gelistirmeKodu);
-          }
-        })
-        .catch(() => {});
-    }, 400);
-    return () => clearTimeout(t);
-  }, [form.telefon]);
-
-  useEffect(() => {
-    if (yenidenGonderSn <= 0) return;
-    const t = setInterval(() => {
-      setYenidenGonderSn((s) => (s > 0 ? s - 1 : 0));
-    }, 1000);
-    return () => clearInterval(t);
-  }, [yenidenGonderSn]);
+  function adSoyadKaydet() {
+    if (!form.telefon.trim()) return;
+    musteriProfilKaydet(form.telefon, form.ad, form.soyad.trim() || "-");
+  }
 
   function scrollBelowStickyHeader(el: HTMLElement | null) {
     if (!el) return;
@@ -749,11 +655,6 @@ function MusteriAnaSayfaIcerik({
     });
   }
 
-  function adSoyadKaydet() {
-    if (!telefonDogrulandi) return;
-    musteriProfilKaydet(form.telefon, form.ad, form.soyad.trim() || "-");
-  }
-
   function update(field: string, value: string | number) {
     if (field === "ad" || field === "soyad") {
       setAdSoyadHatasi(false);
@@ -766,16 +667,6 @@ function MusteriAnaSayfaIcerik({
     }
     setForm((f) => {
       const next = { ...f, [field]: value };
-      if (field === "telefon" && value !== f.telefon) {
-        setTelefonDogrulandi(false);
-        setGelistirmeKodu(null);
-        setOtpBekleniyor(false);
-        try {
-          sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
-        } catch {
-          /* ignore */
-        }
-      }
       if (field === "hedefAdres" && value !== f.hedefAdres) {
         next.hedefLat = 0;
         next.hedefLng = 0;
@@ -819,13 +710,6 @@ function MusteriAnaSayfaIcerik({
       return;
     }
 
-    if (hedefIdx > bilgiIdx && !telefonDogrulandi) {
-      setError("Devam etmek için telefon doğrulaması gerekli.");
-      setKodGirisAcik(true);
-      setStep("bilgi");
-      return;
-    }
-
     /* Konum adımından çıkarken URL’yi şehir/ilçe ile senkronize et */
     if (step === "konum" && hedef !== "konum" && seciliSehir) {
       const yol = musteriKonumYolu(seciliSehir, seciliIlce || null);
@@ -853,61 +737,6 @@ function MusteriAnaSayfaIcerik({
     setError("");
   }
 
-  function kodGirisGoster(opts?: {
-    mesaj?: string;
-    gelistirmeKodu?: string | null;
-    yenidenGonderSn?: number;
-  }) {
-    const tel = telefonNormalize(form.telefon);
-    setOtpBekleniyor(true);
-    setKodGirisAcik(true);
-    setStep("bilgi");
-    setError("");
-    if (opts?.mesaj) setBilgiMesaj(opts.mesaj);
-    if (opts?.gelistirmeKodu !== undefined) {
-      setGelistirmeKodu(opts.gelistirmeKodu);
-    }
-    if (opts?.yenidenGonderSn != null) setYenidenGonderSn(opts.yenidenGonderSn);
-    try {
-      sessionStorage.setItem(OTP_BEKLEYEN_KEY, tel);
-    } catch {
-      /* ignore */
-    }
-  }
-
-  function bilgiAdimiAlanlariniDogrula(): boolean {
-    const mesajlar = { yasalOnay: "", telefon: "" };
-    let gecersiz = false;
-
-    if (!yasalOnay) {
-      mesajlar.yasalOnay = "Yasal metinleri onaylamanız zorunludur.";
-      gecersiz = true;
-    }
-    if (!form.telefon.trim()) {
-      mesajlar.telefon = "Telefon numarası zorunludur.";
-      gecersiz = true;
-    } else if (!telefonGecerliMi(form.telefon)) {
-      mesajlar.telefon = telefonDogrulamaHatasi(form.telefon);
-      gecersiz = true;
-    }
-
-    setBilgiAlanMesajlari(mesajlar);
-    if (gecersiz) {
-      setError(
-        mesajlar.yasalOnay && mesajlar.telefon
-          ? "Devam etmek için zorunlu alanları doldurun."
-          : mesajlar.yasalOnay || mesajlar.telefon
-      );
-      if (mesajlar.yasalOnay) {
-        yasalOnayaKaydir();
-      }
-      return false;
-    }
-
-    setBilgiAlanMesajlari({ yasalOnay: "", telefon: "" });
-    return true;
-  }
-
   function yasalOnayaKaydir() {
     window.setTimeout(() => {
       yasalOnayRef.current?.scrollIntoView({
@@ -915,198 +744,6 @@ function MusteriAnaSayfaIcerik({
         block: "center",
       });
     }, 50);
-  }
-
-  async function kodGonder() {
-    setError("");
-    setBilgiMesaj("");
-    if (!bilgiAdimiAlanlariniDogrula()) {
-      return;
-    }
-
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-
-    setLoading(true);
-    try {
-      const res = await fetch("/api/musteri/otp/gonder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ telefon: telefonNormalize(form.telefon) }),
-      });
-      let data: {
-        error?: string;
-        mesaj?: string;
-        gelistirmeKodu?: string;
-        yenidenGonderSn?: number;
-        smsGonderildi?: boolean;
-        smsHatasi?: string;
-        kodBekliyor?: boolean;
-        zatenDogrulandi?: boolean;
-        telefon?: string;
-      };
-      try {
-        data = await res.json();
-      } catch {
-        throw new Error(
-          "Sunucuya ulaşılamadı. Bilgisayarda npm run dev:lan çalışıyor mu?"
-        );
-      }
-
-      if (data.zatenDogrulandi) {
-        setTelefonDogrulandi(true);
-        setYasalOnay(true);
-        setOtpBekleniyor(false);
-        setKodGirisAcik(false);
-        setGelistirmeKodu(null);
-        setOtpKod("");
-        setForm((f) => ({
-          ...f,
-          ...kayitliAdSoyadUygula(
-            typeof data.telefon === "string" ? data.telefon : f.telefon,
-            f
-          ),
-        }));
-        setBilgiMesaj("Telefon doğrulandı. Hitap edebilmek adına adınızı giriniz.");
-        try {
-          sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
-        } catch {
-          /* ignore */
-        }
-        return;
-      }
-
-      if (data.kodBekliyor) {
-        setOtpKod("");
-        setTelefonDogrulandi(false);
-        kodGirisGoster({
-          mesaj: data.mesaj ?? "SMS'teki kodu girin.",
-          gelistirmeKodu: data.gelistirmeKodu ?? null,
-          yenidenGonderSn: data.yenidenGonderSn ?? 60,
-        });
-        return;
-      }
-
-      if (!res.ok) {
-        throw new Error(
-          data.error ?? `İstek başarısız (${res.status}). ${data.mesaj ?? ""}`
-        );
-      }
-
-      setOtpKod("");
-      setTelefonDogrulandi(false);
-      kodGirisGoster({
-        yenidenGonderSn: data.yenidenGonderSn ?? 60,
-        gelistirmeKodu: data.gelistirmeKodu ?? null,
-        mesaj: data.smsGonderildi
-          ? (data.mesaj ?? "Kod gönderildi. Aşağıya girin.")
-          : data.gelistirmeKodu
-            ? (data.mesaj ?? "Kod gelmediyse geliştirme kodunu girin.")
-            : undefined,
-      });
-
-      if (data.smsGonderildi || data.gelistirmeKodu) {
-        posthogOlayYakala("otp_gonder", sorunProps(form.sorunTipi));
-        void musteriFunnelOlayGonder(funnelId, "otp_gonder", {
-          telefon: form.telefon,
-          props: sorunProps(form.sorunTipi),
-          analitik: false,
-        });
-      }
-
-      if (!data.smsGonderildi && !data.gelistirmeKodu) {
-        setError(
-          [data.mesaj, data.smsHatasi].filter(Boolean).join(" ") ||
-            "Doğrulama kodu gönderilemedi."
-        );
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Kod gönderilemedi.";
-      if (msg === "Failed to fetch" || msg.includes("NetworkError")) {
-        setError(
-          "Sunucuya ulaşılamadı. Telefonda https://10.55.33.167:3000 kullanın (http değil)."
-        );
-      } else {
-        setError(msg);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function kodDogrula() {
-    setError("");
-    setOtpHata("");
-    if (otpKod.length !== 6) {
-      const msg = "6 haneli doğrulama kodunu girin.";
-      setOtpHata(msg);
-      setError(msg);
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await fetch("/api/musteri/otp/dogrula", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          telefon: telefonNormalize(form.telefon),
-          kod: otpKod,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        const msg =
-          data.error ??
-          "Doğrulama kodu hatalı. SMS’teki 6 haneli kodu kontrol edin.";
-        setOtpHata(msg);
-        setError(msg);
-        return;
-      }
-      setOtpHata("");
-      setTelefonDogrulandi(true);
-      setOtpBekleniyor(false);
-      setKodGirisAcik(false);
-      setGelistirmeKodu(null);
-      setBilgiMesaj("");
-      setOtpKod("");
-      setForm((f) => ({
-        ...f,
-        ...kayitliAdSoyadUygula(
-          typeof data.telefon === "string" ? data.telefon : f.telefon,
-          f
-        ),
-      }));
-      posthogOlayYakala("otp_dogrulandi", sorunProps(form.sorunTipi));
-      void musteriFunnelOlayGonder(funnelId, "otp_dogrulandi", {
-        telefon: form.telefon,
-        props: sorunProps(form.sorunTipi),
-        analitik: false,
-      });
-      try {
-        sessionStorage.removeItem(OTP_BEKLEYEN_KEY);
-      } catch {
-        /* ignore */
-      }
-      void import("@/lib/meta-pixel").then((m) =>
-        m.metaUserDataSakla({
-          phone: typeof data.telefon === "string" ? data.telefon : form.telefon,
-          firstName: form.ad,
-          lastName: form.soyad,
-        })
-      );
-      setBilgiMesaj("Telefon doğrulandı. Hitap edebilmek adına adınızı giriniz.");
-      /* bilgi adımında kal — isim */
-    } catch (e) {
-      const msg =
-        e instanceof Error ? e.message : "Doğrulama kodu doğrulanamadı.";
-      setOtpHata(msg);
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
   }
 
   async function konumKaydet(
@@ -1729,14 +1366,14 @@ function MusteriAnaSayfaIcerik({
       setStep("bilgi");
       return;
     }
-    if (!telefonDogrulandi) {
-      setError("Telefon doğrulaması gerekli.");
-      setKodGirisAcik(true);
+    if (!form.ad?.trim() || !form.telefon) {
+      setError("İsminizi ve telefonunuzu girin.");
       setStep("bilgi");
       return;
     }
-    if (!form.ad?.trim() || !form.telefon) {
-      setError("İsminizi girin.");
+    const telHata = telefonDogrulamaHatasi(form.telefon);
+    if (telHata) {
+      setError(telHata);
       setStep("bilgi");
       return;
     }
@@ -1827,6 +1464,9 @@ function MusteriAnaSayfaIcerik({
         },
         analitik: false,
       });
+      if (typeof data.id === "string" || data.id != null) {
+        musteriFunnelIdTalepKaydet(String(data.id), funnelId);
+      }
       /* Meta + TikTok Lead: bekle sayfasına gitmeden önce + bir kez (bekle yedek) */
       try {
         if (sessionStorage.getItem(`acil_meta_lead_${data.id}`) !== "1") {
@@ -2078,7 +1718,6 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {bilgiMesaj &&
-        !(step === "bilgi" && telefonDogrulandi) &&
         (step === "bilgi" ||
           step === "detay" ||
           step === "konum" ||
@@ -2139,220 +1778,114 @@ function MusteriAnaSayfaIcerik({
 
       {step === "bilgi" && (
         <div className="space-y-4 animate-fade-in">
-          {!telefonDogrulandi && (
-            <h2 className="text-xl font-bold">Telefonunuzu doğrulayın</h2>
-          )}
+          <h2 className="text-xl font-bold">İletişim bilgileriniz</h2>
           {sorunLabel && (
             <Card className="bg-slate-50 border-slate-200">
               <p className="text-xs text-slate-500">Seçilen sorun</p>
               <p className="text-sm font-medium text-slate-900">{sorunLabel}</p>
             </Card>
           )}
-
-          {telefonDogrulandi ? (
-            <>
-              <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
-                {bilgiMesaj ||
-                  "Telefon doğrulandı. Hitap edebilmek adına adınızı giriniz."}
-              </div>
-              <div ref={konumIsimRef} className="scroll-mt-44">
-                <Field
-                  label="İsminiz"
-                  placeholder="Örn. Ahmet"
-                  value={form.ad}
-                  onChange={(e) => update("ad", e.target.value)}
-                  onBlur={adSoyadKaydet}
-                  autoComplete="given-name"
-                  name="ad"
-                  required
-                />
-              </div>
-              <div className="pt-1">
-                <Btn
-                  type="button"
-                  className="w-full"
-                  onClick={() => {
-                    if (!form.ad.trim()) {
-                      setError("Devam etmek için isminizi girin.");
-                      return;
-                    }
-                    const soyad = form.soyad.trim() || "-";
-                    musteriProfilKaydet(form.telefon, form.ad, soyad);
-                    if (!form.soyad.trim()) {
-                      setForm((f) => ({ ...f, soyad }));
-                    }
-                    setBilgiMesaj("");
-                    adimGit("detay");
-                  }}
-                >
-                  Devam Et
-                </Btn>
-              </div>
-            </>
-          ) : (
-            <form
-              className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (loading) return;
-                if (kodGirisAcik) {
-                  if (!yasalOnay) {
-                    setBilgiAlanMesajlari((m) => ({
-                      ...m,
-                      yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
-                    }));
-                    setError("Devam etmek için yasal metinleri onaylayın.");
-                    yasalOnayaKaydir();
-                    return;
-                  }
-                  if (otpKod.length === 6) void kodDogrula();
-                  else setError("6 haneli doğrulama kodunu girin.");
+          <p className="text-sm text-slate-600">
+            Teklifleri ücretsiz alın. Çekici seçerken telefonunuzu SMS ile
+            doğrulayacağız.
+          </p>
+          <Field
+            label="Telefon"
+            type="tel"
+            placeholder="05XX XXX XX XX"
+            value={form.telefon}
+            onChange={(e) => {
+              update("telefon", e.target.value);
+              setBilgiAlanMesajlari((m) => ({ ...m, telefon: "" }));
+              setError("");
+            }}
+            autoComplete="tel"
+            inputMode="tel"
+            name="telefon"
+            required
+            invalid={!!bilgiAlanMesajlari.telefon}
+          />
+          {bilgiAlanMesajlari.telefon && (
+            <p className="text-sm text-red-600 -mt-2" role="alert">
+              {bilgiAlanMesajlari.telefon}
+            </p>
+          )}
+          <div ref={konumIsimRef} className="scroll-mt-44">
+            <Field
+              label="İsminiz"
+              placeholder="Örn. Ahmet"
+              value={form.ad}
+              onChange={(e) => update("ad", e.target.value)}
+              onBlur={adSoyadKaydet}
+              autoComplete="given-name"
+              name="ad"
+              required
+            />
+          </div>
+          <div ref={yasalOnayRef} className="scroll-mt-28 space-y-2">
+            <YasalOnayKutusu
+              checked={yasalOnay}
+              onChange={(checked) => {
+                setYasalOnay(checked);
+                if (checked) {
+                  setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
+                }
+              }}
+              invalid={!!bilgiAlanMesajlari.yasalOnay}
+            />
+            {bilgiAlanMesajlari.yasalOnay && (
+              <p className="text-sm text-red-600" role="alert">
+                {bilgiAlanMesajlari.yasalOnay}
+              </p>
+            )}
+          </div>
+          <div className="pt-1">
+            <Btn
+              type="button"
+              className="w-full"
+              onClick={() => {
+                const telHata = telefonDogrulamaHatasi(form.telefon);
+                if (telHata) {
+                  setBilgiAlanMesajlari((m) => ({ ...m, telefon: telHata }));
+                  setError(telHata);
                   return;
                 }
-                void kodGonder();
+                if (!form.ad.trim()) {
+                  setError("Devam etmek için isminizi girin.");
+                  return;
+                }
+                if (!yasalOnay) {
+                  setBilgiAlanMesajlari((m) => ({
+                    ...m,
+                    yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
+                  }));
+                  setError("Devam etmek için yasal metinleri onaylayın.");
+                  yasalOnayaKaydir();
+                  return;
+                }
+                const soyad = form.soyad.trim() || "-";
+                musteriProfilKaydet(form.telefon, form.ad, soyad);
+                metaUserDataSakla({
+                  phone: form.telefon,
+                  firstName: form.ad,
+                  lastName: soyad === "-" ? "" : soyad,
+                });
+                gtagUserDataAyarla({
+                  phone: form.telefon,
+                  firstName: form.ad,
+                  lastName: soyad === "-" ? "" : soyad,
+                });
+                if (!form.soyad.trim()) {
+                  setForm((f) => ({ ...f, soyad }));
+                }
+                setBilgiMesaj("");
+                setError("");
+                adimGit("detay");
               }}
             >
-              <Field
-                label="Telefon"
-                type="tel"
-                placeholder="05XX XXX XX XX"
-                value={form.telefon}
-                onChange={(e) => {
-                  update("telefon", e.target.value);
-                  setBilgiAlanMesajlari((m) => ({ ...m, telefon: "" }));
-                  setError("");
-                }}
-                autoComplete="tel"
-                inputMode="tel"
-                enterKeyHint="go"
-                name="telefon"
-                required
-                disabled={kodGirisAcik}
-                invalid={!!bilgiAlanMesajlari.telefon}
-              />
-              {bilgiAlanMesajlari.telefon && (
-                <p className="text-sm text-red-600 -mt-2" role="alert">
-                  {bilgiAlanMesajlari.telefon}
-                </p>
-              )}
-
-              {kodGirisAcik && (
-                <>
-                  <p className="text-sm text-slate-600">
-                    {telefonMaskele(form.telefon)} numarasına gelen 6 haneli kodu
-                    girin.
-                  </p>
-                  {gelistirmeKodu && (
-                    <Card className="bg-amber-50 border-amber-200">
-                      <p className="text-xs text-amber-800">
-                        Geliştirme kodu:{" "}
-                        <span className="font-mono font-bold text-lg">
-                          {gelistirmeKodu}
-                        </span>
-                      </p>
-                    </Card>
-                  )}
-                  <Field
-                    label="Doğrulama kodu"
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="123456"
-                    maxLength={6}
-                    value={otpKod}
-                    onChange={(e) => {
-                      setOtpHata("");
-                      setError("");
-                      setOtpKod(e.target.value.replace(/\D/g, "").slice(0, 6));
-                    }}
-                    autoComplete="one-time-code"
-                    enterKeyHint="done"
-                    name="otp"
-                    required
-                    aria-invalid={!!otpHata}
-                    className={
-                      otpHata
-                        ? "border-red-400 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-300/50"
-                        : undefined
-                    }
-                  />
-                  {otpHata && (
-                    <div
-                      className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800 font-medium"
-                      role="alert"
-                    >
-                      ⚠️ {otpHata}
-                    </div>
-                  )}
-                  <Btn type="submit" disabled={loading || otpKod.length !== 6}>
-                    {loading ? "Doğrulanıyor…" : "Onayla"}
-                  </Btn>
-                  <button
-                    type="button"
-                    onClick={() => void kodGonder()}
-                    disabled={loading || yenidenGonderSn > 0}
-                    className="w-full min-h-[44px] text-sm text-amber-600 font-medium touch-manipulation disabled:text-slate-400"
-                  >
-                    {yenidenGonderSn > 0
-                      ? `Yeni kod (${yenidenGonderSn}s)`
-                      : "Kodu tekrar gönder"}
-                  </button>
-                  <Btn
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setKodGirisAcik(false);
-                      setOtpKod("");
-                    }}
-                  >
-                    Telefonu değiştir
-                  </Btn>
-                </>
-              )}
-
-              {!kodGirisAcik && (
-                <>
-                  <p className="text-sm font-bold text-slate-700 text-center">
-                    Sizi arayabilmemiz için telefonunuzu doğrulamamız gerekiyor.
-                  </p>
-                  <Btn type="submit" disabled={loading} className="w-full">
-                    {loading ? "Kod gönderiliyor…" : "Doğrulama Kodu Gönder"}
-                  </Btn>
-                  {(otpBekleniyor || yenidenGonderSn > 0) && (
-                    <Btn
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() =>
-                        kodGirisGoster({
-                          mesaj: "SMS ile gelen 6 haneli kodu girin.",
-                        })
-                      }
-                    >
-                      SMS Kodunu Gir
-                    </Btn>
-                  )}
-                </>
-              )}
-
-              <div ref={yasalOnayRef} className="scroll-mt-28 space-y-2">
-                <YasalOnayKutusu
-                  checked={yasalOnay}
-                  onChange={(checked) => {
-                    setYasalOnay(checked);
-                    if (checked) {
-                      setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
-                    }
-                  }}
-                  invalid={!!bilgiAlanMesajlari.yasalOnay}
-                />
-                {bilgiAlanMesajlari.yasalOnay && (
-                  <p className="text-sm text-red-600" role="alert">
-                    {bilgiAlanMesajlari.yasalOnay}
-                  </p>
-                )}
-              </div>
-            </form>
-          )}
+              Devam Et
+            </Btn>
+          </div>
         </div>
       )}
 

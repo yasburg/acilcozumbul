@@ -184,7 +184,7 @@ export function gtagHazirIsaretle(): void {
 
 /**
  * Conversion’ı config’ten önce dataLayer’a basmamak için.
- * gtag.js henüz yoksa kuyruğa alır (OTP hızlı tamamlanınca kaçmasın).
+ * gtag.js henüz yoksa kuyruğa alır (teklif seçimi OTP hızlı tamamlanınca kaçmasın).
  */
 export function gtagHazirOlunca(fn: GtagHazirFn): void {
   if (typeof window === "undefined") return;
@@ -285,10 +285,11 @@ export function gtagAdsAnaSayfaGoruntulemeDonusumu(): void {
 
 /**
  * Müşteri talep formu başarıyla gönderildiğinde Google Ads dönüşümü.
+ * Akış: form → talep (OTP yok) → teklifler; OTP teklif seçiminde.
  * Google Ads «Tıklama» snippet’i (`gtag_report_conversion`) ile aynı olay:
  * event_callback sonrası url’ye gider (sayfa yükleme snippet’i değil).
  * transaction_id: talep id — yenileme / geri dönüşte mükerrer sayımı önler.
- * Enhanced conversions: telefon / ad ile user_data.
+ * Enhanced conversions: telefon / ad ile user_data (doğrulanmamış olabilir).
  */
 export function gtagAdsFiyatTeklifiDonusumu(opts: {
   transactionId: string;
@@ -361,6 +362,43 @@ export function gtagAdsFiyatTeklifiDonusumu(opts: {
     if (!url) {
       if (guvenlikTimer) window.clearTimeout(guvenlikTimer);
     }
+  });
+}
+
+/**
+ * Doğrulanmış telefon sonrası teklif seçimi — GA4 / Ads özel olay (ikincil sinyal).
+ * Primary Ads dönüşümü hâlâ `gtagAdsFiyatTeklifiDonusumu` (talep oluşumu).
+ * transaction_id: talep id; value: seçilen teklif fiyatı.
+ */
+export function gtagTeklifSecildiOlay(opts: {
+  transactionId: string;
+  fiyat?: number | null;
+  user?: GtagUserData;
+}): void {
+  if (typeof window === "undefined") return;
+  if (!cerezAnalitikAktif()) return;
+  const tx = opts.transactionId.trim();
+  if (!tx) return;
+
+  const key = `acil_ga_teklif_secildi:${tx}`;
+  try {
+    if (sessionStorage.getItem(key) === "1") return;
+    sessionStorage.setItem(key, "1");
+  } catch {
+    /* private mode */
+  }
+
+  gtagHazirOlunca(() => {
+    if (opts.user) gtagUserDataAyarla(opts.user);
+    const value =
+      typeof opts.fiyat === "number" && Number.isFinite(opts.fiyat)
+        ? opts.fiyat
+        : 1;
+    gtagCagir("event", "teklif_secildi", {
+      transaction_id: tx,
+      value,
+      currency: "TRY",
+    });
   });
 }
 

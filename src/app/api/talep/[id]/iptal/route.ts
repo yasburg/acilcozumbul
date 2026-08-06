@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTalepById, updateTalep } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
-import { getDogrulanmisTelefon } from "@/lib/musteri-auth";
-import { telefonNormalize } from "@/lib/telefon";
 import {
   demoMusteriTalepIptal,
   isDemoTalepId,
@@ -34,14 +32,6 @@ export async function POST(
   const talep = await getTalepById(id);
   if (!talep) {
     return NextResponse.json({ error: "Talep bulunamadı." }, { status: 404 });
-  }
-
-  const dogrulanmis = await getDogrulanmisTelefon();
-  if (!dogrulanmis || dogrulanmis !== telefonNormalize(talep.telefon)) {
-    return NextResponse.json(
-      { error: "Bu talebi iptal etmek için telefon doğrulaması gerekli." },
-      { status: 403 }
-    );
   }
 
   if (talep.durum === "iptal") {

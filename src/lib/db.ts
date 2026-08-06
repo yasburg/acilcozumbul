@@ -384,6 +384,22 @@ export async function getTaleplerMemnuniyetBekleyen(): Promise<Talep[]> {
   return hydrateTalepler(rows.map(talepFromRow), rows);
 }
 
+/** Açık ihale talepleri (hatırlatma cron) — ihale_bitis gelecekte */
+export async function getTaleplerAcikIhale(): Promise<Talep[]> {
+  const nowIso = new Date().toISOString();
+  const { data, error } = await getSupabaseAdmin()
+    .from("talepler")
+    .select("*")
+    .in("durum", ["ihalede", "yeniden_ihalede"])
+    .is("kazanan_cekici_id", null)
+    .gt("ihale_bitis", nowIso)
+    .order("olusturulma", { ascending: true })
+    .limit(200);
+  if (error) throw error;
+  const rows = (data ?? []) as TalepRow[];
+  return hydrateTalepler(rows.map(talepFromRow), rows);
+}
+
 export async function countTalepler(opts?: {
   sinceIso?: string;
 }): Promise<number> {

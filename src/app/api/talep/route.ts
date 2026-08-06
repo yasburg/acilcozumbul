@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { addTalep } from "@/lib/db";
-import { getDogrulanmisTelefon } from "@/lib/musteri-auth";
 import { ensureSeedData } from "@/lib/seed";
 import { notifyKrediHatirlatma } from "@/lib/kredi-hatirlatma-db";
 import { notifyCekiciler, notifyMusteri } from "@/lib/sms";
@@ -84,11 +83,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const dogrulanmisTel = await getDogrulanmisTelefon();
-  if (!dogrulanmisTel || dogrulanmisTel !== telefonNormalize(telefon)) {
+  const telNorm = telefonNormalize(telefon);
+  if (!/^05[0-9]{9}$/.test(telNorm)) {
     return NextResponse.json(
-      { error: "Telefon doğrulaması gerekli. Lütfen SMS kodunu onaylayın." },
-      { status: 403 }
+      { error: "Geçerli bir Türkiye cep telefonu girin." },
+      { status: 400 }
     );
   }
 
@@ -105,7 +104,6 @@ export async function POST(request: NextRequest) {
 
   const ip = istekIp(request);
   const hash = ipHash(ip);
-  const telNorm = telefonNormalize(telefon);
 
   const fraud = await talepFraudKontrol(telNorm, hash);
   if (!fraud.ok) {

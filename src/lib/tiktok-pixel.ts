@@ -324,6 +324,7 @@ export function tiktokPixelClickButton(params: {
 
 /**
  * Müşteri talep formu tamamlandı → TikTok standart olay «Lead».
+ * OTP henüz yok; teklif seçiminde `tiktokPixelContact` ateşlenir.
  * PII varsa önce identify (SHA-256); Events API ile aynı event_id.
  */
 export async function tiktokPixelLead(params?: {
@@ -346,6 +347,43 @@ export async function tiktokPixelLead(params?: {
   const name = params?.content_name ?? "musteri_talep";
   trackEvent(
     "Lead",
+    {
+      contents: [icerik(name, name)],
+      value: params?.value ?? 1,
+      currency: params?.currency ?? "TRY",
+    },
+    {
+      eventId: params?.event_id,
+      phone: params?.phone,
+      email: params?.email,
+      externalId: params?.externalId,
+    }
+  );
+}
+
+/**
+ * Doğrulanmış telefon + teklif seçimi → TikTok «Contact».
+ */
+export async function tiktokPixelContact(params?: {
+  content_name?: string;
+  phone?: string | null;
+  externalId?: string | null;
+  email?: string | null;
+  value?: number;
+  currency?: string;
+  event_id?: string;
+}): Promise<void> {
+  if (!analitikHazir()) return;
+
+  await tiktokPixelIdentify({
+    email: params?.email,
+    phone: params?.phone,
+    externalId: params?.externalId,
+  });
+
+  const name = params?.content_name ?? "teklif_secildi";
+  trackEvent(
+    "Contact",
     {
       contents: [icerik(name, name)],
       value: params?.value ?? 1,

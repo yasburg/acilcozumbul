@@ -32,6 +32,7 @@ describe("tiktok pixel", () => {
   it("event helpers export edilir", async () => {
     const mod = await import("./tiktok-pixel");
     expect(typeof mod.tiktokPixelLead).toBe("function");
+    expect(typeof mod.tiktokPixelContact).toBe("function");
     expect(typeof mod.tiktokPixelKayitOl).toBe("function");
     expect(typeof mod.tiktokPixelHesapOlustur).toBe("function");
     expect(typeof mod.tiktokPixelViewContent).toBe("function");

@@ -167,19 +167,22 @@ export async function olusturTopluSmsIsi(opts: {
   kisiBazliTakip?: boolean;
   /** ISO — gelecekteyse ilk parti o ana kadar bekler */
   baslangicAt?: string | null;
-  alicilar: Array<{ telefon: string; ad?: string | null }>;
+  alicilar: Array<{ telefon: string; ad?: string | null; mesaj?: string | null }>;
 }): Promise<TopluSmsIsOzet> {
   const kisiBazliTakip = Boolean(
     opts.kisiBazliTakip && opts.varyant && sms50VaryantMi(opts.varyant)
   );
-  const tempoHam = kisiBazliTakip
-    ? { ...opts.tempo, partiBoyutu: 1 }
-    : opts.tempo;
+  const kisiselMesajVar = opts.alicilar.some((a) => Boolean(a.mesaj?.trim()));
+  const tempoHam =
+    kisiBazliTakip || kisiselMesajVar
+      ? { ...opts.tempo, partiBoyutu: 1 }
+      : opts.tempo;
   const tempo = topluSmsTempoNormalize(tempoHam);
   const alicilar = opts.alicilar.map((a, i) => ({
     sira: i,
     telefon: telefonNormalize(a.telefon),
     ad: a.ad?.trim() || null,
+    mesaj: a.mesaj?.trim() || null,
   }));
   if (alicilar.length === 0) {
     throw new Error("Gönderilecek alıcı yok.");
@@ -251,6 +254,7 @@ export async function olusturTopluSmsIsi(opts: {
       sira: a.sira,
       telefon: a.telefon,
       ad: a.ad,
+      mesaj: a.mesaj,
       durum: "beklemede",
     }))
   );
@@ -349,7 +353,7 @@ export async function isleTopluSmsSiradakiParti(
 
   const { data: adayAlicilar, error: aliciErr } = await sb
     .from("panel_toplu_sms_is_alicilar")
-    .select("id, telefon, ad")
+    .select("id, telefon, ad, mesaj")
     .eq("is_id", isId)
     .eq("durum", "beklemede")
     .order("sira", { ascending: true })
@@ -381,7 +385,7 @@ export async function isleTopluSmsSiradakiParti(
     .update({ durum: "gonderiliyor" })
     .in("id", adayIds)
     .eq("durum", "beklemede")
-    .select("id, telefon, ad");
+    .select("id, telefon, ad, mesaj");
   if (kilitErr) {
     /* 034 migration yoksa eski yolla devam */
     if (
@@ -423,6 +427,10 @@ export async function isleTopluSmsSiradakiParti(
     Boolean(is.kisi_bazli_takip) &&
     is.varyant &&
     sms50VaryantMi(String(is.varyant));
+  const kisiselMesajVar = kilitli.some(
+    (a) => typeof (a as { mesaj?: string | null }).mesaj === "string" &&
+      Boolean(String((a as { mesaj?: string | null }).mesaj).trim())
+  );
   try {
     if (kisiBazli) {
       const varyant = String(is.varyant) as Sms50Varyant;
@@ -451,6 +459,22 @@ export async function isleTopluSmsSiradakiParti(
             throw new Error("Kişisel token mesaja yazılamadı.");
           }
           const sonuc = await sendPanelTopluSms([tel], kisiselMesaj);
+          sonuclar.push(...sonuc.sonuclar);
+        } catch (e) {
+          const hata = e instanceof Error ? e.message : "Gönderim hatası";
+          sonuclar.push({ telefon: tel, basarili: false, hata });
+        }
+      }
+    } else if (kisiselMesajVar) {
+      sonuclar = [];
+      for (const a of kilitli) {
+        const tel = String(a.telefon);
+        const ozel = String(
+          (a as { mesaj?: string | null }).mesaj ?? ""
+        ).trim();
+        const metin = ozel || String(is.mesaj);
+        try {
+          const sonuc = await sendPanelTopluSms([tel], metin);
           sonuclar.push(...sonuc.sonuclar);
         } catch (e) {
           const hata = e instanceof Error ? e.message : "Gönderim hatası";

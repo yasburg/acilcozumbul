@@ -1,6 +1,7 @@
 /**
  * Müşteri talep funnel katalogu + PostHog / GA4.
- * Google Ads primary conversion yalnızca başarılı talepte kalır.
+ * Google Ads primary conversion: başarılı talep (`gtagAdsFiyatTeklifiDonusumu`).
+ * Meta/TikTok Lead: talep; Contact + GA `teklif_secildi`: OTP sonrası teklif seçimi.
  */
 
 import { gtagOlay } from "@/lib/gtag";
@@ -26,14 +27,15 @@ export const MUSTERI_FUNNELS: Record<MusteriFunnelId, MusteriFunnelTanim> = {
     yol: "/a",
     aktif: true,
     aciklama:
-      "Konum → hizmet → telefon → detay → hedef · noindex (SEO dışı A/B)",
+      "Konum → hizmet → iletişim → detay → hedef → talep · OTP teklif seçiminde · noindex",
   },
   b: {
     id: "b",
     etiket: "Dönüşüm landing",
     yol: "/b",
     aktif: true,
-    aciklama: "Hizmet → hedef → telefon (kısa akış) · noindex (SEO dışı A/B)",
+    aciklama:
+      "Hizmet → hedef → iletişim → talep · OTP teklif seçiminde · noindex",
   },
 };
 

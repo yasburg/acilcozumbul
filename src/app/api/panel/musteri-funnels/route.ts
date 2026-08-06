@@ -140,6 +140,7 @@ export async function GET(request: NextRequest) {
   const goruldu = rows.filter((r) => r.olay === "goruldu").length;
   const otpGonder = rows.filter((r) => r.olay === "otp_gonder").length;
   const talep = rows.filter((r) => r.olay === "talep_olustur").length;
+  const teklifSecildi = rows.filter((r) => r.olay === "teklif_secildi").length;
 
   return NextResponse.json({
     filtre: { from, to, funnels },
@@ -148,8 +149,10 @@ export async function GET(request: NextRequest) {
       goruldu,
       otpGonder,
       talep,
-      otpOran: goruldu > 0 ? otpGonder / goruldu : null,
+      teklifSecildi,
+      otpOran: talep > 0 ? otpGonder / talep : null,
       talepOran: goruldu > 0 ? talep / goruldu : null,
+      teklifOran: talep > 0 ? teklifSecildi / talep : null,
     },
     huni,
     karsilastirma,

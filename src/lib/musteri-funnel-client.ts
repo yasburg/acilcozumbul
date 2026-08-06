@@ -21,6 +21,54 @@ export function musteriFunnelSessionId(): string {
   }
 }
 
+const FUNNEL_ID_KEY = "musteri_funnel_id";
+
+/** Bekle / OTP adımlarında hangi A/B funnel’dan gelindiğini tutar */
+export function musteriFunnelIdKaydet(funnel: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(FUNNEL_ID_KEY, funnel);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function musteriFunnelIdOku(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const v = sessionStorage.getItem(FUNNEL_ID_KEY)?.trim().toLowerCase();
+    return v || null;
+  } catch {
+    return null;
+  }
+}
+
+export function musteriFunnelIdTalepKaydet(
+  talepId: string,
+  funnel: string
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(`acil_bekle_funnel_${talepId}`, funnel);
+    musteriFunnelIdKaydet(funnel);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function musteriFunnelIdTalepOku(talepId: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const v = sessionStorage
+      .getItem(`acil_bekle_funnel_${talepId}`)
+      ?.trim()
+      .toLowerCase();
+    return v || musteriFunnelIdOku();
+  } catch {
+    return musteriFunnelIdOku();
+  }
+}
+
 function birKezAnahtar(funnel: string, olay: string): string {
   return `musteri_funnel_once:${funnel}:${olay}`;
 }

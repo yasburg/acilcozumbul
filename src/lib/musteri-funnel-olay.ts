@@ -12,10 +12,11 @@ export const MUSTERI_FUNNEL_OLAY_SABIT = [
   "form_adim_detay",
   "form_adim_hedef",
   "service_selected",
+  "talep_olustur",
   "otp_gonder",
   "otp_dogrulandi",
   "otp_hata",
-  "talep_olustur",
+  "teklif_secildi",
 ] as const;
 
 export type MusteriFunnelOlayTip = (typeof MUSTERI_FUNNEL_OLAY_SABIT)[number];
@@ -63,8 +64,10 @@ export type MusteriFunnelOzet = {
   goruldu: number;
   otpGonder: number;
   talep: number;
+  teklifSecildi: number;
   otpOran: number | null;
   talepOran: number | null;
+  teklifOran: number | null;
 };
 
 export function musteriFunnelOzetHesapla(
@@ -85,6 +88,7 @@ export function musteriFunnelOzetHesapla(
     const goruldu = m.get("goruldu") ?? 0;
     const otpGonder = m.get("otp_gonder") ?? 0;
     const talep = m.get("talep_olustur") ?? 0;
+    const teklifSecildi = m.get("teklif_secildi") ?? 0;
     return {
       funnel: t.id,
       etiket: t.etiket,
@@ -92,8 +96,11 @@ export function musteriFunnelOzetHesapla(
       goruldu,
       otpGonder,
       talep,
-      otpOran: goruldu > 0 ? otpGonder / goruldu : null,
+      teklifSecildi,
+      /** OTP / talep — doğrulama teklif seçiminde */
+      otpOran: talep > 0 ? otpGonder / talep : null,
       talepOran: goruldu > 0 ? talep / goruldu : null,
+      teklifOran: talep > 0 ? teklifSecildi / talep : null,
     };
   });
 }
@@ -107,7 +114,7 @@ export type MusteriFunnelHuniAdimTanim = {
 };
 
 /**
- * Funnel A gerçek akış: konum → hizmet → telefon → detay → hedef
+ * Funnel A gerçek akış: konum → hizmet → iletişim → detay → hedef → talep → OTP (teklif seçimi)
  * (MusteriAnaSayfa STEP_SIRA)
  */
 export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
@@ -118,16 +125,29 @@ export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
     label: "Adım · Hizmet",
     olaylar: ["form_adim_sorun", "service_selected"],
   },
-  { id: "form_adim_bilgi", label: "Adım · Telefon", olaylar: ["form_adim_bilgi"] },
+  {
+    id: "form_adim_bilgi",
+    label: "Adım · İletişim",
+    olaylar: ["form_adim_bilgi"],
+  },
   { id: "form_adim_detay", label: "Adım · Detay", olaylar: ["form_adim_detay"] },
   { id: "form_adim_hedef", label: "Adım · Hedef", olaylar: ["form_adim_hedef"] },
-  { id: "otp_gonder", label: "OTP gönder", olaylar: ["otp_gonder"] },
-  { id: "otp_dogrulandi", label: "OTP doğrula", olaylar: ["otp_dogrulandi"] },
   { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
+  {
+    id: "otp_gonder",
+    label: "OTP (teklif seç)",
+    olaylar: ["otp_gonder"],
+  },
+  { id: "otp_dogrulandi", label: "OTP doğrula", olaylar: ["otp_dogrulandi"] },
+  {
+    id: "teklif_secildi",
+    label: "Teklif seçildi",
+    olaylar: ["teklif_secildi"],
+  },
 ];
 
 /**
- * Funnel B gerçek akış: hizmet → hedef → telefon
+ * Funnel B gerçek akış: hizmet → hedef → iletişim → talep → OTP (teklif seçimi)
  * (MusteriDonusumSayfa STEP_SIRA)
  */
 export const MUSTERI_FUNNEL_HUNI_B: readonly MusteriFunnelHuniAdimTanim[] = [
@@ -138,15 +158,29 @@ export const MUSTERI_FUNNEL_HUNI_B: readonly MusteriFunnelHuniAdimTanim[] = [
     olaylar: ["form_adim_sorun", "service_selected"],
   },
   { id: "form_adim_hedef", label: "Adım · Hedef", olaylar: ["form_adim_hedef"] },
-  { id: "form_adim_bilgi", label: "Adım · Telefon", olaylar: ["form_adim_bilgi"] },
-  { id: "otp_gonder", label: "OTP gönder", olaylar: ["otp_gonder"] },
-  { id: "otp_dogrulandi", label: "OTP doğrula", olaylar: ["otp_dogrulandi"] },
+  {
+    id: "form_adim_bilgi",
+    label: "Adım · İletişim",
+    olaylar: ["form_adim_bilgi"],
+  },
   { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
+  {
+    id: "otp_gonder",
+    label: "OTP (teklif seç)",
+    olaylar: ["otp_gonder"],
+  },
+  { id: "otp_dogrulandi", label: "OTP doğrula", olaylar: ["otp_dogrulandi"] },
+  {
+    id: "teklif_secildi",
+    label: "Teklif seçildi",
+    olaylar: ["teklif_secildi"],
+  },
 ];
 
 /**
  * A+B birlikte: ortak dönüşüm kilometre taşları (sıra güvenli).
  * Konum/hedef A’da hizmetten önce geldiği için ortak hunide yok.
+ * OTP talep sonrası — teklif seçiminde.
  */
 export const MUSTERI_FUNNEL_HUNI_ORTAK: readonly MusteriFunnelHuniAdimTanim[] = [
   { id: "goruldu", label: "Görülme", olaylar: ["goruldu"] },
@@ -161,10 +195,19 @@ export const MUSTERI_FUNNEL_HUNI_ORTAK: readonly MusteriFunnelHuniAdimTanim[] = 
     label: "Hizmet seçimi",
     olaylar: ["form_adim_sorun", "service_selected"],
   },
-  { id: "form_adim_bilgi", label: "Telefon", olaylar: ["form_adim_bilgi"] },
-  { id: "otp_gonder", label: "OTP gönder", olaylar: ["otp_gonder"] },
-  { id: "otp_dogrulandi", label: "OTP doğrula", olaylar: ["otp_dogrulandi"] },
+  { id: "form_adim_bilgi", label: "İletişim", olaylar: ["form_adim_bilgi"] },
   { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
+  {
+    id: "otp_gonder",
+    label: "OTP (teklif seç)",
+    olaylar: ["otp_gonder"],
+  },
+  { id: "otp_dogrulandi", label: "OTP doğrula", olaylar: ["otp_dogrulandi"] },
+  {
+    id: "teklif_secildi",
+    label: "Teklif seçildi",
+    olaylar: ["teklif_secildi"],
+  },
 ];
 
 /** @deprecated MUSTERI_FUNNEL_HUNI_ORTAK kullanın */
@@ -195,6 +238,7 @@ function sessionOlayEslesir(
       if (o === "otp_gonder") return true;
       if (o === "otp_dogrulandi") return true;
       if (o === "talep_olustur") return true;
+      if (o === "teklif_secildi") return true;
     }
     return false;
   }

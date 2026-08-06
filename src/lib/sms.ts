@@ -228,3 +228,35 @@ export async function notifyCekiciIptal(
     }
   );
 }
+
+/** Müşteri teklifi seçti — kazanan çekiciye bildirim (kredi düşmez) */
+export async function notifyCekiciSecildi(
+  cekici: Cekici,
+  talep: Talep,
+  baseUrl: string
+): Promise<void> {
+  let link = smsTalepUzunUrl(talep.id, cekici.token, baseUrl);
+  try {
+    const kisa = await olusturSmsTalepKisaLink({
+      talepId: talep.id,
+      cekiciId: cekici.id,
+      cekiciToken: cekici.token,
+    });
+    link = smsTalepKisaUrl(kisa.token, baseUrl);
+  } catch (e) {
+    console.error("[sms] seçildi kısa link", e);
+  }
+  const yer = smsTalepYer(talep);
+  const onek = yer
+    ? `Musteri sizi secti (${yer})`
+    : "Musteri sizi secti";
+  const mesaj = `${onek}. Musteriyi arayin: ${talep.telefon}\n${link}`;
+  await sendSms(cekici.telefon, mesaj, {
+    aliciTipi: "cekici",
+    cekiciId: cekici.id,
+    talepId: talep.id,
+    link,
+    krediDus: false,
+    kanal: "otp",
+  });
+}

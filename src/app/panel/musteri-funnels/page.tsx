@@ -11,8 +11,10 @@ type OzetSatir = {
   goruldu: number;
   otpGonder: number;
   talep: number;
+  teklifSecildi: number;
   otpOran: number | null;
   talepOran: number | null;
+  teklifOran: number | null;
 };
 
 type HuniAdim = {
@@ -27,8 +29,10 @@ type PanelOzet = {
   goruldu: number;
   otpGonder: number;
   talep: number;
+  teklifSecildi: number;
   otpOran: number | null;
   talepOran: number | null;
+  teklifOran: number | null;
 };
 
 type OlayHacmi = {
@@ -65,6 +69,8 @@ const HUNI_ADIM_RENKLERI = [
   "#4a6fa5",
   "#3d8b7a",
   "#2f6b5f",
+  "#6b5b95",
+  "#88a0a8",
 ] as const;
 
 function HuniSvgYatay({ adimlar }: { adimlar: HuniAdim[] }) {
@@ -478,8 +484,8 @@ export default function PanelMusteriFunnelsPage() {
             Müşteri funnelleri
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Anasayfa A/B session hunisi, karşılaştırma ve olay hacmi.
-            {" "}
+            Anasayfa A/B session hunisi (talep sonrası OTP / teklif seçimi),
+            karşılaştırma ve olay hacmi.{" "}
             <span className="text-amber-800">
               `/a` ve `/b` noindex’tir (SEO dışı test); kanonik talep akışı `/`
               ve `/talep-olustur`.
@@ -575,14 +581,16 @@ export default function PanelMusteriFunnelsPage() {
       {hata && <p className="text-sm text-red-600">{hata}</p>}
 
       {!yukleniyor && !hata && ozet && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3">
           {[
             ["Session", ozet.session],
             ["Görülme", ozet.goruldu],
-            ["OTP", ozet.otpGonder],
             ["Talep", ozet.talep],
-            ["OTP%", yuzde(ozet.otpOran)],
+            ["OTP", ozet.otpGonder],
+            ["Teklif seç", ozet.teklifSecildi],
             ["Talep%", yuzde(ozet.talepOran)],
+            ["OTP/talep%", yuzde(ozet.otpOran)],
+            ["Seç/talep%", yuzde(ozet.teklifOran)],
           ].map(([k, v]) => (
             <Card key={String(k)} className="!py-3 !px-3">
               <p className="text-[11px] uppercase tracking-wide text-slate-500">
@@ -701,10 +709,12 @@ export default function PanelMusteriFunnelsPage() {
                 <th className="px-3 py-2">Funnel</th>
                 <th className="px-3 py-2">Link</th>
                 <th className="px-3 py-2 tabular-nums">Görülme</th>
-                <th className="px-3 py-2 tabular-nums">OTP</th>
                 <th className="px-3 py-2 tabular-nums">Talep</th>
-                <th className="px-3 py-2 tabular-nums">OTP%</th>
+                <th className="px-3 py-2 tabular-nums">OTP</th>
+                <th className="px-3 py-2 tabular-nums">Teklif seç</th>
                 <th className="px-3 py-2 tabular-nums">Talep%</th>
+                <th className="px-3 py-2 tabular-nums">OTP/talep%</th>
+                <th className="px-3 py-2 tabular-nums">Seç/talep%</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -726,11 +736,17 @@ export default function PanelMusteriFunnelsPage() {
                     </Link>
                   </td>
                   <td className="px-3 py-2 tabular-nums">{r.goruldu}</td>
-                  <td className="px-3 py-2 tabular-nums">{r.otpGonder}</td>
                   <td className="px-3 py-2 tabular-nums">{r.talep}</td>
-                  <td className="px-3 py-2 tabular-nums">{yuzde(r.otpOran)}</td>
+                  <td className="px-3 py-2 tabular-nums">{r.otpGonder}</td>
+                  <td className="px-3 py-2 tabular-nums">
+                    {r.teklifSecildi ?? 0}
+                  </td>
                   <td className="px-3 py-2 tabular-nums">
                     {yuzde(r.talepOran)}
+                  </td>
+                  <td className="px-3 py-2 tabular-nums">{yuzde(r.otpOran)}</td>
+                  <td className="px-3 py-2 tabular-nums">
+                    {yuzde(r.teklifOran ?? null)}
                   </td>
                 </tr>
               ))}

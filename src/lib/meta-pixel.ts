@@ -219,6 +219,7 @@ export async function metaCekiciOturumZenginlestir(): Promise<void> {
 
 /**
  * Müşteri talep formu tamamlandı → Meta standart olay «Lead».
+ * OTP henüz yok; teklif seçiminde `metaPixelContact` ateşlenir.
  */
 export async function metaPixelLead(params?: {
   content_name?: string;
@@ -244,6 +245,39 @@ export async function metaPixelLead(params?: {
   await metaUserDataAyarla(user);
   fbqCagir("track", "Lead", {
     content_name: params?.content_name ?? "musteri_talep",
+    value: params?.value ?? 1.0,
+    currency: params?.currency ?? "TRY",
+  });
+}
+
+/**
+ * Doğrulanmış telefon + teklif seçimi → Meta «Contact».
+ * Lead’den sonraki yüksek niyet; çekiciye bildirim giden an.
+ */
+export async function metaPixelContact(params?: {
+  content_name?: string;
+  value?: number;
+  currency?: string;
+  phone?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  externalId?: string | null;
+  email?: string | null;
+}): Promise<void> {
+  if (typeof window === "undefined") return;
+  if (!metaPixelYapilandirildi()) return;
+  if (!cerezAnalitikAktif()) return;
+  const user: MetaUserData = {
+    phone: params?.phone,
+    email: params?.email,
+    firstName: params?.firstName,
+    lastName: params?.lastName,
+    externalId: params?.externalId,
+  };
+  metaUserDataSakla(user);
+  await metaUserDataAyarla(user);
+  fbqCagir("track", "Contact", {
+    content_name: params?.content_name ?? "teklif_secildi",
     value: params?.value ?? 1.0,
     currency: params?.currency ?? "TRY",
   });

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getTalepById } from "@/lib/db";
+import { isDemoTalepId } from "@/lib/demo-oturum";
 import { bekleyenOtpBilgisi, otpGonder } from "@/lib/musteri-otp";
 import { funnelOlayKaydet } from "@/lib/funnel";
 import { guvenlikOlayiKaydet, otpFraudKontrol } from "@/lib/talep-fraud";
 import { ipHash, istekIp } from "@/lib/request-ip";
-import { telefonNormalize } from "@/lib/telefon";
+import { telefonMaskele, telefonNormalize } from "@/lib/telefon";
 import {
   otpBasariMesaji,
   otpBekleyenMesaji,
@@ -11,11 +13,10 @@ import {
   otpHataMesaji,
   sendOtp,
 } from "@/lib/otp-gonder";
-import { telefonMaskele } from "@/lib/telefon";
 import { musteriTelCookieAyarla } from "@/lib/musteri-auth";
 
 export async function POST(request: NextRequest) {
-  const { telefon } = await request.json();
+  const gelen = await request.json().catch(() => ({}));
   const ip = istekIp(request);
   const hash = ipHash(ip);
 
@@ -24,17 +25,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: fraud.hata }, { status: 429 });
   }
 
-  const sonuc = await otpGonder(telefon ?? "");
+  let telefonHam =
+    typeof gelen.telefon === "string" ? gelen.telefon : "";
+
+  const talepId =
+    typeof gelen.talepId === "string" ? gelen.talepId.trim() : "";
+  if (talepId && !isDemoTalepId(talepId)) {
+    const talep = await getTalepById(talepId);
+    if (!talep) {
+      return NextResponse.json({ error: "Talep bulunamadı." }, { status: 404 });
+    }
+    telefonHam = talep.telefon;
+  }
+
+  const sonuc = await otpGonder(telefonHam);
 
   if (!sonuc.ok) {
     if (sonuc.yenidenGonderSn != null) {
-      const bekleyen = await bekleyenOtpBilgisi(telefon ?? "");
+      const bekleyen = await bekleyenOtpBilgisi(telefonHam);
       return NextResponse.json({
         kodBekliyor: true,
         mesaj: otpBekleyenMesaji(),
         yenidenGonderSn: sonuc.yenidenGonderSn,
         gelistirmeKodu: bekleyen.gelistirmeKodu,
-        telefon: bekleyen.telefon ?? telefonNormalize(telefon ?? ""),
+        telefon: bekleyen.telefon ?? telefonNormalize(telefonHam),
+        telefonMaskeli: telefonMaskele(
+          bekleyen.telefon ?? telefonNormalize(telefonHam)
+        ),
       });
     }
     return NextResponse.json({ error: sonuc.hata }, { status: 400 });
@@ -44,6 +61,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({
       zatenDogrulandi: true,
       telefon: sonuc.telefon,
+      telefonMaskeli: telefonMaskele(sonuc.telefon),
       mesaj: "Bu numara bugün doğrulanmış. Tekrar SMS gerekmez.",
     });
     musteriTelCookieAyarla(response, sonuc.telefon);
@@ -66,27 +84,28 @@ export async function POST(request: NextRequest) {
   const smsMesaj = `acilcozumbul.com dogrulama kodunuz: ${sonuc.kod}. 5 dakika gecerlidir.`;
   const otp = await sendOtp(sonuc.telefon, sonuc.kod, {
     aliciTipi: "musteri",
-    talepId: "otp",
+    talepId: talepId || "otp",
     smsMesaj,
   });
 
-  const body: Record<string, unknown> = {
+  const yanit: Record<string, unknown> = {
     yenidenGonderSn: sonuc.yenidenGonderSn,
     smsGonderildi: otp.basarili,
     otpKanal: otp.kanal,
     telefon: sonuc.telefon,
+    telefonMaskeli: telefonMaskele(sonuc.telefon),
   };
 
   if (otp.basarili) {
-    body.mesaj = otpBasariMesaji(telefonMaskele(sonuc.telefon));
-    return NextResponse.json(body);
+    yanit.mesaj = otpBasariMesaji(telefonMaskele(sonuc.telefon));
+    return NextResponse.json(yanit);
   }
 
   if (sonuc.gelistirmeKodu) {
-    body.gelistirmeKodu = sonuc.gelistirmeKodu;
-    body.smsGonderildi = false;
-    body.mesaj = otpGelmediMesaji();
-    return NextResponse.json(body);
+    yanit.gelistirmeKodu = sonuc.gelistirmeKodu;
+    yanit.smsGonderildi = false;
+    yanit.mesaj = otpGelmediMesaji();
+    return NextResponse.json(yanit);
   }
 
   return NextResponse.json(

@@ -3,11 +3,14 @@ import {
   anlasamadiSonrasiIhaleyiSurdur,
   cekiciBildirimKrediTutari,
   cekiciTalebeBildirildiMi,
+  ihaleAcilSureMi,
   ihaleBitisHesapla,
   ihaleDatetimeLocal,
   ihaleSureTipiNormalize,
+  musteriYeniTeklifSmsGonderilsinMi,
   IHALE_OZEL_MAX_GUN,
   IHALE_SURE_DK,
+  MUSTERI_YENI_TEKLIF_SMS_ACIL_LIMIT,
   PANEL_BILDIRIM_KREDI,
   PREMIUM_SMS_BILDIRIM_KREDI,
   SMS_BILDIRIM_KREDI,
@@ -142,5 +145,32 @@ describe("ihaleBitisHesapla", () => {
   it("bilinmeyen tip acil’e düşer", () => {
     expect(ihaleSureTipiNormalize("xyz")).toBe("acil");
     expect(ihaleSureTipiNormalize("1_hafta")).toBe("1_hafta");
+  });
+});
+
+describe("musteriYeniTeklifSmsGonderilsinMi", () => {
+  it("acil ihalede ilk 3 teklifte SMS", () => {
+    const bas = new Date("2026-08-06T10:00:00.000Z");
+    const talep = talepFixture({
+      olusturulma: bas.toISOString(),
+      ihaleBitis: new Date(bas.getTime() + IHALE_SURE_DK * 60 * 1000).toISOString(),
+    });
+    expect(ihaleAcilSureMi(talep)).toBe(true);
+    expect(MUSTERI_YENI_TEKLIF_SMS_ACIL_LIMIT).toBe(3);
+    expect(musteriYeniTeklifSmsGonderilsinMi(talep, 1)).toBe(true);
+    expect(musteriYeniTeklifSmsGonderilsinMi(talep, 2)).toBe(true);
+    expect(musteriYeniTeklifSmsGonderilsinMi(talep, 3)).toBe(true);
+    expect(musteriYeniTeklifSmsGonderilsinMi(talep, 4)).toBe(false);
+  });
+
+  it("uzun ihalede yalnızca ilk teklifte SMS", () => {
+    const bas = new Date("2026-08-06T10:00:00.000Z");
+    const talep = talepFixture({
+      olusturulma: bas.toISOString(),
+      ihaleBitis: new Date(bas.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+    });
+    expect(ihaleAcilSureMi(talep)).toBe(false);
+    expect(musteriYeniTeklifSmsGonderilsinMi(talep, 1)).toBe(true);
+    expect(musteriYeniTeklifSmsGonderilsinMi(talep, 2)).toBe(false);
   });
 });

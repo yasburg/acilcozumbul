@@ -287,14 +287,15 @@ function PanelIcerik() {
             Talep hunisi (son {ozet.huni.gun} gün)
           </h3>
           <p className="text-xs text-slate-500 mb-4">
-            Form başlangıcı → OTP → talep → en az 1 teklif → kazanan
+            Form başlangıcı → talep → OTP (teklif seçimi) → en az 1 teklif →
+            kazanan
           </p>
           <div className="space-y-2">
             {[
               { label: "Form başladı", v: ozet.huni.formBasla },
+              { label: "Talep oluştu", v: ozet.huni.talepOlustur },
               { label: "OTP gönderildi", v: ozet.huni.otpGonder },
               { label: "OTP doğrulandı", v: ozet.huni.otpDogrulandi },
-              { label: "Talep oluştu", v: ozet.huni.talepOlustur },
               { label: "≥1 teklif", v: ozet.huni.teklifVar },
               { label: "Kazanan belli", v: ozet.huni.kazanan },
             ].map((adim, i, arr) => {

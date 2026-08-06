@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getTalepById } from "@/lib/db";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { ensureSeedData } from "@/lib/seed";
-import { getDogrulanmisTelefon } from "@/lib/musteri-auth";
-import { telefonNormalize } from "@/lib/telefon";
 import { koordinatGecerli } from "@/lib/koordinat";
 import { ihaleAcikMi } from "@/lib/ihale";
 import { sorunHedefKonumGerekliMi } from "@/lib/sorun-tipleri";
@@ -52,14 +50,6 @@ export async function PATCH(
   const talep = await getTalepById(id);
   if (!talep) {
     return NextResponse.json({ error: "Talep bulunamadı." }, { status: 404 });
-  }
-
-  const dogrulanmis = await getDogrulanmisTelefon();
-  if (!dogrulanmis || dogrulanmis !== telefonNormalize(talep.telefon)) {
-    return NextResponse.json(
-      { error: "Bu talebi güncellemek için telefon doğrulaması gerekli." },
-      { status: 403 }
-    );
   }
 
   if (!sorunHedefKonumGerekliMi(talep.sorunTipi) && !talep.hedefKonum) {

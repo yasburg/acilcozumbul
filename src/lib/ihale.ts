@@ -225,6 +225,36 @@ export function aktifTeklifler(talep: Talep): Teklif[] {
 }
 
 /**
+ * Acil ihale: süre ≈ 60 dk (+2 dk tolerans).
+ * Tip kolonu yok; olusturulma → ihaleBitis farkından çıkarılır.
+ */
+export function ihaleAcilSureMi(
+  talep: Pick<Talep, "olusturulma" | "ihaleBitis">
+): boolean {
+  const bas = new Date(talep.olusturulma).getTime();
+  const bit = new Date(talep.ihaleBitis).getTime();
+  if (!Number.isFinite(bas) || !Number.isFinite(bit) || bit <= bas) {
+    return true;
+  }
+  return bit - bas <= (IHALE_SURE_DK + 2) * 60 * 1000;
+}
+
+/** Acil ihalede müşteriye OTP SMS: ilk N teklif; diğerlerinde yalnızca ilk */
+export const MUSTERI_YENI_TEKLIF_SMS_ACIL_LIMIT = 3;
+
+export function musteriYeniTeklifSmsGonderilsinMi(
+  talep: Pick<Talep, "olusturulma" | "ihaleBitis" | "kazananCekiciId">,
+  aktifTeklifSayisi: number
+): boolean {
+  if (talep.kazananCekiciId) return false;
+  if (aktifTeklifSayisi < 1) return false;
+  const limit = ihaleAcilSureMi(talep)
+    ? MUSTERI_YENI_TEKLIF_SMS_ACIL_LIMIT
+    : 1;
+  return aktifTeklifSayisi <= limit;
+}
+
+/**
  * Anlaşılamayan kazananı hariç tutar; diğer teklifleri tekrar aktif eder.
  * Kalan teklif varsa aynı ihaleye devam; yoksa yeniden ihale açılır.
  */

@@ -20,11 +20,17 @@ import {
 } from "@/lib/musteri-bildirim";
 import { adSoyadSatirGoster } from "@/lib/kisisel-veri-gizle";
 import { posthogOlayYakala } from "@/lib/posthog-client";
-import { musteriFunnelOlay } from "@/lib/musteri-funnel";
-import { metaPixelLead } from "@/lib/meta-pixel";
-import { tiktokPixelLead } from "@/lib/tiktok-pixel";
+import { musteriFunnelOlay, musteriFunnelMi } from "@/lib/musteri-funnel";
+import {
+  musteriFunnelIdTalepOku,
+  musteriFunnelOlayGonder,
+} from "@/lib/musteri-funnel-client";
+import { gtagTeklifSecildiOlay } from "@/lib/gtag";
+import { metaPixelContact, metaPixelLead } from "@/lib/meta-pixel";
+import { tiktokPixelContact, tiktokPixelLead } from "@/lib/tiktok-pixel";
 import { whatsappKonumMesaji } from "@/lib/harita-yonlendirme";
 import { whatsappUrl } from "@/lib/telefon";
+import { MusteriTeklifSecOtp } from "@/components/musteri/MusteriTeklifSecOtp";
 
 type Durum =
   | "ihale_bekliyor"
@@ -147,10 +153,18 @@ function BekleIcerik() {
       ...extra,
     };
   }
+
+  function bekleFunnelId(): string {
+    const kayitli = musteriFunnelIdTalepOku(id);
+    if (kayitli && musteriFunnelMi(kayitli)) return kayitli;
+    return "a";
+  }
   const demoTalep = id.startsWith("demo-");
   const gizlilik = demoTalep ? "yari" : "yok";
   const cekiciAdGoster = adSoyadSatirGoster(cekiciAd, gizlilik);
   const [teklifBanner, setTeklifBanner] = useState<string | null>(null);
+  const [otpTeklifId, setOtpTeklifId] = useState<string | null>(null);
+  const [otpMaske, setOtpMaske] = useState("");
 
   useEffect(() => {
     if (!teklifBanner) return;
@@ -224,7 +238,7 @@ function BekleIcerik() {
     void musteriBildirimIzniIste();
   }, [id]);
 
-  /* Müşteri formu tamamlandı → Lead (formda da ateşlenir; çift sayım yok) */
+  /* Müşteri formu tamamlandı → Lead (OTP sonrası Contact ayrı; çift sayım yok) */
   useEffect(() => {
     if (demoTalep || demoParam) return;
     let sorun: string | null = null;
@@ -477,11 +491,20 @@ function BekleIcerik() {
     try {
       const res = await fetch(`/api/talep/${id}/teklif-sec`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ teklifId }),
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data.telefonDogrulamaGerekli) {
+          setOtpMaske(
+            typeof data.telefonMaskeli === "string" ? data.telefonMaskeli : ""
+          );
+          setOtpTeklifId(teklifId);
+          setMesaj("");
+          return;
+        }
         if (data.fiyatDegisti) {
           setMesaj(data.error);
         }
@@ -510,6 +533,42 @@ function BekleIcerik() {
           fiyat: data.fiyat,
         })
       );
+      void musteriFunnelOlayGonder(bekleFunnelId(), "teklif_secildi", {
+        talepId: id,
+        birKez: true,
+        props: musteriFunnelProps({
+          teklif_id: teklifId,
+          fiyat: data.fiyat,
+        }),
+        analitik: false,
+      });
+      let telefon: string | null = null;
+      try {
+        telefon = sessionStorage.getItem(`acil_bekle_tel_${id}`);
+      } catch {
+        /* ignore */
+      }
+      const fiyat =
+        typeof data.fiyat === "number" && Number.isFinite(data.fiyat)
+          ? data.fiyat
+          : undefined;
+      gtagTeklifSecildiOlay({
+        transactionId: id,
+        fiyat,
+        user: telefon ? { phone: telefon } : undefined,
+      });
+      void metaPixelContact({
+        content_name: sorunTipi || "teklif_secildi",
+        phone: telefon,
+        externalId: id,
+        value: fiyat ?? 1,
+      });
+      void tiktokPixelContact({
+        content_name: sorunTipi || "teklif_secildi",
+        phone: telefon,
+        externalId: id,
+        value: fiyat ?? 1,
+      });
     } catch (e) {
       setMesaj(e instanceof Error ? e.message : "Seçim başarısız.");
     } finally {
@@ -604,10 +663,26 @@ function BekleIcerik() {
     }
   }
 
+  function otpModal() {
+    if (!otpTeklifId) return null;
+    return (
+      <MusteriTeklifSecOtp
+        talepId={id}
+        telefonMaskeli={otpMaske}
+        onIptal={() => setOtpTeklifId(null)}
+        onDogrulandi={() => {
+          const tid = otpTeklifId;
+          setOtpTeklifId(null);
+          if (tid) void teklifSec(tid);
+        }}
+      />
+    );
+  }
+
   function smsBekleMesaji() {
     return (
       <p className="text-sm font-bold text-slate-800 mt-4 max-w-xs mx-auto leading-snug">
-        Lütfen bekleyiniz, size teklif gelince SMS atacağız.
+        Lütfen bekleyiniz; acil taleplerde ilk tekliflerde SMS atacağız.
       </p>
     );
   }
@@ -841,6 +916,7 @@ function BekleIcerik() {
           : `${minFiyat.toLocaleString("tr-TR")} – ${maxFiyat.toLocaleString("tr-TR")} TL`;
 
     return (
+      <>
       <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
         <div className="space-y-4 py-2">
           {gelenTeklifBanner()}
@@ -998,10 +1074,13 @@ function BekleIcerik() {
           {talebiIptalAlani()}
         </div>
       </MobileShell>
+      {otpModal()}
+      </>
     );
   }
 
   return (
+    <>
     <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
       <div className="flex flex-col items-center px-4 pb-8 pt-2">
         {gelenTeklifBanner()}
@@ -1107,5 +1186,7 @@ function BekleIcerik() {
         )}
       </div>
     </MobileShell>
+    {otpModal()}
+    </>
   );
 }

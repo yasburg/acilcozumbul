@@ -10,6 +10,7 @@ import {
   cekiciHaricMi,
   cekiciTalebeBildirildiMi,
   cekiciTeklifVerebilirMi,
+  musteriYeniTeklifSmsGonderilsinMi,
   SMS_BILDIRIM_KREDI,
 } from "@/lib/ihale";
 import { insertTeklif } from "@/lib/teklif-db";
@@ -199,8 +200,8 @@ export async function POST(
     `${request.nextUrl.protocol}//${request.nextUrl.host}`
   );
   const aktifSayi = aktifTeklifler(talep).length;
-  // İlk teklifte bir kez OTP SMS
-  if (aktifSayi === 1 && !talep.kazananCekiciId) {
+  // Acil: ilk 3 teklifte OTP SMS; diğer ihalelerde yalnızca ilk teklif
+  if (musteriYeniTeklifSmsGonderilsinMi(talep, aktifSayi)) {
     await notifyMusteri(talep, "yeni_teklif", baseUrl).catch(() => {});
   }
 

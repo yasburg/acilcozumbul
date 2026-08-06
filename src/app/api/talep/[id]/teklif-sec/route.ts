@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCekiciById, getTalepById, updateTalep } from "@/lib/db";
+import { getCekiciById, getTalepById } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import { teklifFiyatDegistiMi } from "@/lib/cekici-puan";
 import { kaybedenTeklifleriIsaretle } from "@/lib/ihale";
@@ -9,6 +9,10 @@ import {
   isDemoTalepId,
 } from "@/lib/demo-oturum";
 import { isSimulasyonTalep } from "@/lib/simulasyon-ihale-db";
+import { getDogrulanmisTelefon } from "@/lib/musteri-auth";
+import { telefonMaskele, telefonNormalize } from "@/lib/telefon";
+import { notifyCekiciSecildi } from "@/lib/sms";
+import { smsBaseUrl } from "@/lib/sms-base-url";
 
 export async function POST(
   request: NextRequest,
@@ -81,6 +85,19 @@ export async function POST(
     );
   }
 
+  const talepTel = telefonNormalize(talep.telefon);
+  const dogrulanmis = await getDogrulanmisTelefon();
+  if (!dogrulanmis || dogrulanmis !== talepTel) {
+    return NextResponse.json(
+      {
+        error: "Teklif seçmek için telefon doğrulaması gerekli.",
+        telefonDogrulamaGerekli: true,
+        telefonMaskeli: telefonMaskele(talep.telefon),
+      },
+      { status: 403 }
+    );
+  }
+
   if (talep.kazananCekiciId) {
     return NextResponse.json({ error: "Zaten bir çekici seçildi." }, { status: 409 });
   }
@@ -112,6 +129,16 @@ export async function POST(
   await kaybedenTeklifleriIsaretle(talep, teklif.id);
 
   const cekici = await getCekiciById(teklif.cekiciId);
+  if (cekici) {
+    const baseUrl = smsBaseUrl(
+      `${request.nextUrl.protocol}//${request.nextUrl.host}`
+    );
+    try {
+      await notifyCekiciSecildi(cekici, talep, baseUrl);
+    } catch (e) {
+      console.error("[teklif-sec] çekici bildirim", e);
+    }
+  }
 
   return NextResponse.json({
     cekiciAd: cekici?.ad ?? teklif.cekiciAd,
