@@ -56,6 +56,7 @@ export async function GET(
     kazananSecildi && talep.durum === "kazanan_belli" && talep.anlasmaDurumu !== "anlaşıldı";
   const yenidenAranıyor = talep.durum === "yeniden_ihalede";
   const tamamlandi = talep.durum === "anlaşıldı";
+  const iptal = talep.durum === "iptal";
   const ihaleAcik = ihaleAcikMi(talep);
 
   let cekiciAd: string | undefined;
@@ -98,6 +99,7 @@ export async function GET(
     anlasmaBekliyor,
     yenidenAranıyor,
     tamamlandi,
+    iptal,
     cekiciAd,
     cekiciProfilFotoUrl,
     /** Yalnızca kazanan seçildikten sonra — WhatsApp konum vb. */

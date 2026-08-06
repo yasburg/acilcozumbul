@@ -238,6 +238,7 @@ export function demoMusteriTalepDurumJson(
     anlasmaBekliyor,
     yenidenAranıyor: talep.durum === "yeniden_ihalede",
     tamamlandi: talep.durum === "anlaşıldı",
+    iptal: talep.durum === "iptal",
     cekiciAd,
     cekiciTelefon: kazananSecildi ? cekiciTelefon ?? null : null,
     kazananFiyat: kazananTeklif?.fiyat,

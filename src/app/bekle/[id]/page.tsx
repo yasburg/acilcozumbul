@@ -32,7 +32,8 @@ type Durum =
   | "cekici_bulundu"
   | "anlasma_bekliyor"
   | "anlasildi"
-  | "yeniden_araniyor";
+  | "yeniden_araniyor"
+  | "iptal";
 
 interface TeklifOzet {
   id: string;
@@ -115,6 +116,7 @@ function BekleIcerik() {
   const [kazananFiyat, setKazananFiyat] = useState<number | null>(null);
   const [islem, setIslem] = useState(false);
   const [mesaj, setMesaj] = useState("");
+  const [iptalOnay, setIptalOnay] = useState(false);
   const [ihaleBitis, setIhaleBitis] = useState<string | null>(null);
   const [memnuniyet, setMemnuniyet] = useState<MemnuniyetState | null>(null);
   const [memnuniyetYenile, setMemnuniyetYenile] = useState(0);
@@ -327,6 +329,11 @@ function BekleIcerik() {
           );
           if (data.memnuniyet) setMemnuniyet(data.memnuniyet);
           planla(30_000);
+          return;
+        }
+
+        if (data.iptal || data.durum === "iptal") {
+          setDurum("iptal");
           return;
         }
 
@@ -571,6 +578,109 @@ function BekleIcerik() {
     } finally {
       setIslem(false);
     }
+  }
+
+  async function talebiIptalEt() {
+    setIslem(true);
+    setMesaj("");
+    try {
+      const res = await fetch(`/api/talep/${id}/iptal`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string" ? data.error : "İptal edilemedi."
+        );
+      }
+      setIptalOnay(false);
+      setDurum("iptal");
+    } catch (e) {
+      setMesaj(e instanceof Error ? e.message : "İptal edilemedi.");
+      setIptalOnay(false);
+    } finally {
+      setIslem(false);
+    }
+  }
+
+  function smsBekleMesaji() {
+    return (
+      <p className="text-sm font-bold text-slate-800 mt-4 max-w-xs mx-auto leading-snug">
+        Lütfen bekleyiniz, size teklif gelince SMS atacağız.
+      </p>
+    );
+  }
+
+  function talebiIptalAlani() {
+    return (
+      <div className="w-full max-w-xs mx-auto mt-8 space-y-3">
+        {mesaj && (
+          <p className="text-sm text-red-600 text-center" role="alert">
+            {mesaj}
+          </p>
+        )}
+        {iptalOnay ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-3 space-y-3 text-center">
+            <p className="text-sm text-red-800 font-medium">
+              Talebi iptal etmek istediğinize emin misiniz?
+            </p>
+            <div className="flex flex-col gap-2">
+              <Btn
+                variant="danger"
+                className="!min-h-0 !py-3 !text-sm"
+                disabled={islem}
+                onClick={() => void talebiIptalEt()}
+              >
+                {islem ? "İptal ediliyor…" : "Evet, iptal et"}
+              </Btn>
+              <Btn
+                variant="secondary"
+                className="!min-h-0 !py-3 !text-sm"
+                disabled={islem}
+                onClick={() => setIptalOnay(false)}
+              >
+                Vazgeç
+              </Btn>
+            </div>
+          </div>
+        ) : (
+          <Btn
+            variant="danger"
+            className="!min-h-0 !py-3 !text-sm"
+            disabled={islem}
+            onClick={() => {
+              setMesaj("");
+              setIptalOnay(true);
+            }}
+          >
+            Talebi iptal et
+          </Btn>
+        )}
+      </div>
+    );
+  }
+
+  if (durum === "iptal") {
+    return (
+      <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
+        <div className="flex flex-col items-center px-4 py-12 text-center space-y-4">
+          <h2 className="text-xl font-bold text-slate-900">Talebiniz iptal edildi</h2>
+          <p className="text-sm text-slate-500 max-w-xs">
+            Yakındaki operatörlere bildirim gönderilmeyecek. Yeni bir talep için
+            ana sayfaya dönebilirsiniz.
+          </p>
+          <Btn
+            className="max-w-xs"
+            onClick={() => {
+              window.location.href = "/";
+            }}
+          >
+            Ana sayfaya dön
+          </Btn>
+        </div>
+      </MobileShell>
+    );
   }
 
   if (durum === "anlasma_bekliyor" || durum === "anlasildi") {
@@ -884,6 +994,8 @@ function BekleIcerik() {
               veya mevcut tekliflerden birini seçebilirsiniz.
             </p>
           </Card>
+
+          {talebiIptalAlani()}
         </div>
       </MobileShell>
     );
@@ -921,9 +1033,11 @@ function BekleIcerik() {
             )}
             <p className="text-xs text-slate-400 mt-8 max-w-xs">
               {operatorSayisi > 0
-                ? `${operatorSayisi} operatöre bildirim gönderildi. Yeni teklif gelince SMS alabilirsiniz.`
+                ? `${operatorSayisi} operatöre bildirim gönderildi.`
                 : "Yakındaki operatörler aranıyor. Teklifler geldikçe burada listelenecek."}
             </p>
+            {smsBekleMesaji()}
+            {talebiIptalAlani()}
           </div>
         ) : (
           <div className="w-full max-w-lg space-y-4">
@@ -967,6 +1081,7 @@ function BekleIcerik() {
                   ? `${operatorSayisi} operatöre bildirim gönderildi.`
                   : "Yakındaki operatörler aranıyor."}
               </p>
+              {smsBekleMesaji()}
             </div>
 
             {(sorunHedefKonumGerekliMi(sorunTipi ?? undefined) ||
@@ -986,6 +1101,8 @@ function BekleIcerik() {
                   }}
                 />
               )}
+
+            {talebiIptalAlani()}
           </div>
         )}
       </div>

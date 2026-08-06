@@ -402,6 +402,34 @@ export async function demoIslemTamamla(
   return t;
 }
 
+/** Müşteri — ihale aşamasında talebi iptal */
+export async function demoMusteriTalepIptal(
+  talepId: string,
+  request?: NextRequest
+): Promise<Talep> {
+  if (!isDemoTalepId(talepId)) {
+    throw new Error("Geçersiz demo talep.");
+  }
+  const ctx = await demoTalepGetir(talepId, request);
+  if (!ctx) throw new Error("Demo oturumu bulunamadı.");
+  if (ctx.talep.durum === "iptal") return ctx.talep;
+  if (
+    ctx.talep.durum !== "ihalede" &&
+    ctx.talep.durum !== "yeniden_ihalede"
+  ) {
+    throw new Error("Bu talep artık iptal edilemez.");
+  }
+  const yeni = await oturumGuncelle(ctx.oturum, (d) =>
+    talepGuncelle(d, talepId, (t) => ({
+      ...t,
+      durum: "iptal" as const,
+    }))
+  );
+  const t = demoTalepBul(yeni, talepId);
+  if (!t) throw new Error("Talep bulunamadı.");
+  return t;
+}
+
 /** Kazanan çekici müşteri telefonuna tıkladı */
 export async function demoMusteriAra(
   oturum: AktifDemoOturum,
