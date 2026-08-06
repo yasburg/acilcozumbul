@@ -77,8 +77,19 @@ export default function PanelSimulasyonPage() {
   const [busy, setBusy] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const [mesaj, setMesaj] = useState<string | null>(null);
+  const [planModalAcik, setPlanModalAcik] = useState(false);
+  const [seciliIller, setSeciliIller] = useState<string[]>([]);
 
   const hedefGun = gun === "bugun" ? bugun : yarin;
+
+  const planlanabilirSehirler = useMemo(
+    () => sehirOzet.filter((s) => s.aktifToplam === 0),
+    [sehirOzet]
+  );
+  const planlanmisSehirler = useMemo(
+    () => sehirOzet.filter((s) => s.aktifToplam > 0),
+    [sehirOzet]
+  );
 
   const yukle = useCallback(async (hedef?: string) => {
     setLoading(true);
@@ -252,8 +263,14 @@ export default function PanelSimulasyonPage() {
         <Btn
           type="button"
           className="!w-auto !min-h-0 !py-2.5 !px-4 !text-sm"
-          disabled={busy || !hedefGun}
-          onClick={() => void eylem({ eylem: "planla", hedefGun })}
+          disabled={busy || !hedefGun || loading}
+          onClick={() => {
+            const uygun = sehirOzet
+              .filter((s) => s.aktifToplam === 0)
+              .map((s) => s.il);
+            setSeciliIller(uygun);
+            setPlanModalAcik(true);
+          }}
         >
           Planla
         </Btn>
@@ -513,6 +530,130 @@ export default function PanelSimulasyonPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {planModalAcik && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="simulasyon-planla-baslik"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !busy) {
+              setPlanModalAcik(false);
+            }
+          }}
+        >
+          <Card className="w-full max-w-lg shadow-xl space-y-4 max-h-[min(90vh,36rem)] flex flex-col">
+            <div>
+              <h3
+                id="simulasyon-planla-baslik"
+                className="text-lg font-bold text-slate-900"
+              >
+                Şehir seç
+              </h3>
+              <p className="text-sm text-slate-600 mt-1">
+                {hedefGun} için planlanacak şehirleri seçin. Daha önce planı
+                olan şehirler seçilemez.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2 text-xs">
+              <button
+                type="button"
+                className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                disabled={busy || planlanabilirSehirler.length === 0}
+                onClick={() =>
+                  setSeciliIller(planlanabilirSehirler.map((s) => s.il))
+                }
+              >
+                Tümünü seç ({planlanabilirSehirler.length})
+              </button>
+              <button
+                type="button"
+                className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                disabled={busy || seciliIller.length === 0}
+                onClick={() => setSeciliIller([])}
+              >
+                Temizle
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 min-h-0 rounded-xl border border-slate-200 divide-y divide-slate-100">
+              {sehirOzet.length === 0 ? (
+                <p className="p-4 text-sm text-slate-500">
+                  Açık şehir yok.
+                </p>
+              ) : (
+                [...sehirOzet]
+                  .sort((a, b) => a.il.localeCompare(b.il, "tr"))
+                  .map((s) => {
+                    const planli = s.aktifToplam > 0;
+                    const secili = seciliIller.includes(s.il);
+                    return (
+                      <label
+                        key={s.il}
+                        className={`flex items-center gap-3 px-3 py-2.5 text-sm ${
+                          planli
+                            ? "bg-slate-50 text-slate-400 cursor-not-allowed"
+                            : "cursor-pointer hover:bg-slate-50 text-slate-800"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="rounded border-slate-300"
+                          checked={secili && !planli}
+                          disabled={busy || planli}
+                          onChange={(e) => {
+                            if (planli) return;
+                            setSeciliIller((prev) =>
+                              e.target.checked
+                                ? [...prev, s.il]
+                                : prev.filter((il) => il !== s.il)
+                            );
+                          }}
+                        />
+                        <span className="flex-1 font-medium">{s.il}</span>
+                        <span className="text-xs tabular-nums">
+                          {planli
+                            ? `${s.aktifToplam} plan`
+                            : `${s.cekiciSayisi} çekici`}
+                        </span>
+                      </label>
+                    );
+                  })
+              )}
+            </div>
+
+            {planlanmisSehirler.length > 0 && (
+              <p className="text-xs text-slate-500">
+                {planlanmisSehirler.length} şehir zaten planlı (pasif).
+              </p>
+            )}
+
+            <div className="flex flex-col-reverse sm:flex-row gap-2">
+              <Btn
+                variant="secondary"
+                disabled={busy}
+                onClick={() => setPlanModalAcik(false)}
+              >
+                Vazgeç
+              </Btn>
+              <Btn
+                disabled={busy || seciliIller.length === 0 || !hedefGun}
+                onClick={() => {
+                  const iller = [...seciliIller];
+                  setPlanModalAcik(false);
+                  void eylem({ eylem: "planla", hedefGun, iller });
+                }}
+              >
+                {seciliIller.length > 0
+                  ? `${seciliIller.length} şehir planla`
+                  : "Planla"}
+              </Btn>
+            </div>
+          </Card>
         </div>
       )}
     </div>

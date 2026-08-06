@@ -202,14 +202,16 @@ export async function simulasyonTalepIdSet(
 
 /**
  * Hedef gün için plan üret.
- * `forceIl` verilirse yalnızca o ilin planlı satırları silinip yeniden üretilir.
+ * `forceIl` / `iller` verilirse yalnızca o iller için üretir.
  * Aksi halde gün için hiç plan yoksa tüm açık iller için üretir.
  */
 export async function simulasyonGunPlanla(opts?: {
   hedefGun?: string;
   kaynagi?: "cron" | "manuel";
   forceIl?: string;
-  /** true: gün için kayıt olsa bile (forceIl yokken) yeni plan ekler */
+  /** Belirli iller için plan üret (açık illerle kesişim) */
+  iller?: string[];
+  /** true: gün için kayıt olsa bile (iller yokken) yeni plan ekler */
   force?: boolean;
   rand?: () => number;
 }): Promise<{ hedefGun: string; eklenen: number; atlandi: boolean }> {
@@ -223,6 +225,18 @@ export async function simulasyonGunPlanla(opts?: {
   const kaynagi = opts?.kaynagi ?? "cron";
   const rand = opts?.rand ?? Math.random;
 
+  const seciliIller = [
+    ...new Set(
+      [
+        ...(opts?.iller ?? []),
+        ...(opts?.forceIl ? [opts.forceIl] : []),
+      ]
+        .map((il) => il.trim())
+        .filter(Boolean)
+    ),
+  ];
+
+  /* İl yenile: o ilin planlı satırlarını silip yeniden üret */
   if (opts?.forceIl) {
     const { error } = await getSupabaseAdmin()
       .from("simulasyon_plan")
@@ -233,7 +247,7 @@ export async function simulasyonGunPlanla(opts?: {
     if (error && error.code !== "42P01" && error.code !== "PGRST205") {
       throw error;
     }
-  } else if (!opts?.force) {
+  } else if (seciliIller.length === 0 && !opts?.force) {
     const mevcut = await listSimulasyonPlanlar({ hedefGun });
     if (mevcut.length > 0) {
       return { hedefGun, eklenen: 0, atlandi: true };
@@ -242,9 +256,10 @@ export async function simulasyonGunPlanla(opts?: {
 
   const acikIller = await getAcikIller();
   const cekiciler = await getCekiciler();
-  const iller = opts?.forceIl
-    ? acikIller.filter((il) => il === opts.forceIl)
-    : acikIller;
+  const iller =
+    seciliIller.length > 0
+      ? acikIller.filter((il) => seciliIller.includes(il))
+      : acikIller;
 
   const nowIso = new Date().toISOString();
   const yeni: SimulasyonPlan[] = [];

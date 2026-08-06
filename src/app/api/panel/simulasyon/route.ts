@@ -206,12 +206,31 @@ export async function POST(request: NextRequest) {
       typeof body.il === "string" && body.il.trim() && ilGecerliMi(body.il.trim())
         ? body.il.trim()
         : undefined;
+    const iller = Array.isArray(body.iller)
+      ? [
+          ...new Set(
+            body.iller
+              .filter((il): il is string => typeof il === "string")
+              .map((il) => il.trim())
+              .filter((il) => il && ilGecerliMi(il))
+          ),
+        ]
+      : [];
 
     if (forceIl) {
       const sonuc = await simulasyonGunPlanla({
         hedefGun,
         kaynagi: "manuel",
         forceIl,
+      });
+      return NextResponse.json({ ok: true, ...sonuc });
+    }
+
+    if (iller.length > 0) {
+      const sonuc = await simulasyonGunPlanla({
+        hedefGun,
+        kaynagi: "manuel",
+        iller,
       });
       return NextResponse.json({ ok: true, ...sonuc });
     }
