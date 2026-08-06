@@ -57,7 +57,15 @@ export function cekiciMusaitMi(cekici: Cekici, now = new Date()): boolean {
   return dakika >= bas || dakika < bit;
 }
 
-export function musaitlikOzeti(cekici: Cekici): string {
+export function musaitlikOzeti(
+  cekici: Pick<
+    Cekici,
+    | "musaitlikAktif"
+    | "musaitlikBaslangic"
+    | "musaitlikBitis"
+    | "musaitlikGunler"
+  >
+): string {
   if (!cekici.musaitlikAktif) return "7/24 (kısıt yok)";
   const bas = cekici.musaitlikBaslangic ?? "?";
   const bit = cekici.musaitlikBitis ?? "?";

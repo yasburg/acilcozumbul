@@ -380,8 +380,8 @@
     "semantic_hash": ""
   },
   "src/app/api/panel/talepler/route.ts": {
-    "mtime": 1785585633.9149132,
-    "ast_hash": "7895ed181a40e3499a71c2f0f62fbae5",
+    "mtime": 1785971013.276614,
+    "ast_hash": "4dd4194cd6dcc2dfc69fb83eed35b276",
     "semantic_hash": ""
   },
   "src/app/api/talep/[id]/anlasma/route.ts": {
@@ -405,8 +405,8 @@
     "semantic_hash": ""
   },
   "src/app/api/talep/[id]/teklif-sec/route.ts": {
-    "mtime": 1785532668.936581,
-    "ast_hash": "c06e92370aaeff22e09eb2e661b39522",
+    "mtime": 1785970930.669661,
+    "ast_hash": "b2b9886fec1e73a6846ba8f0d59e0f97",
     "semantic_hash": ""
   },
   "src/app/api/talep/[id]/teklifler/route.ts": {
@@ -530,8 +530,8 @@
     "semantic_hash": ""
   },
   "src/app/panel/cekiciler/[id]/page.tsx": {
-    "mtime": 1785684752.4318469,
-    "ast_hash": "119a380fc99fbb8b12a23e8c1d14c058",
+    "mtime": 1786006514.977568,
+    "ast_hash": "af8b046f5afd4ae1a7164a8827c40d3f",
     "semantic_hash": ""
   },
   "src/app/panel/cekiciler/page.tsx": {
@@ -595,13 +595,13 @@
     "semantic_hash": ""
   },
   "src/app/panel/talepler/page.tsx": {
-    "mtime": 1785696412.7995567,
-    "ast_hash": "344aded79e344ae121d273a10d6d2f6b",
+    "mtime": 1785971027.1663883,
+    "ast_hash": "d414d907a5d147476a78f4119ed662c5",
     "semantic_hash": ""
   },
   "src/app/robots.ts": {
-    "mtime": 1785870337.324503,
-    "ast_hash": "6a5a186c8bbd3e8889ef27082111a578",
+    "mtime": 1785968139.538674,
+    "ast_hash": "85e0003fe2c57d3b24566e19f1462349",
     "semantic_hash": ""
   },
   "src/app/sitemap.ts": {
@@ -715,8 +715,8 @@
     "semantic_hash": ""
   },
   "src/components/PanelNav.tsx": {
-    "mtime": 1785934144.2014341,
-    "ast_hash": "9d0409494043eeef4b6f729b7f4eddab",
+    "mtime": 1785971005.705605,
+    "ast_hash": "1870c48c175e8e02dc527e952ce831af",
     "semantic_hash": ""
   },
   "src/components/PostHogProvider.tsx": {
@@ -910,8 +910,8 @@
     "semantic_hash": ""
   },
   "src/lib/cekici-musaitlik.ts": {
-    "mtime": 1780610350.916685,
-    "ast_hash": "7d7da74f4c3901e4623240f40ec2c09f",
+    "mtime": 1786006480.1762598,
+    "ast_hash": "585e5f46d98401edadb1e0271ee187dc",
     "semantic_hash": ""
   },
   "src/lib/cekici-puan.ts": {
@@ -1175,8 +1175,8 @@
     "semantic_hash": ""
   },
   "src/lib/memnuniyet.ts": {
-    "mtime": 1784482636.324544,
-    "ast_hash": "733c664a010b7852fa030d41abd2bf9f",
+    "mtime": 1785970939.2213624,
+    "ast_hash": "b3b21a7107f8be0fbc5851cfee9e01f8",
     "semantic_hash": ""
   },
   "src/lib/musteri-auth.ts": {
@@ -1510,8 +1510,8 @@
     "semantic_hash": ""
   },
   "supabase/README.md": {
-    "mtime": 1784754264.1652515,
-    "ast_hash": "6a806dc68b35e0888fba64a231e6347b",
+    "mtime": 1785970948.5545561,
+    "ast_hash": "7fc0b39331faca058825906220bf7792",
     "semantic_hash": ""
   },
   "acilcozumbul-banner.png": {
@@ -3327,6 +3327,46 @@
   "supabase/migrations/055_sms_talep_kisa_link.sql": {
     "mtime": 1785968071.724758,
     "ast_hash": "7c950b4f8a1db5a5bf7feea231baab34",
+    "semantic_hash": ""
+  },
+  "src/app/api/cron/simulasyon-calistir/route.ts": {
+    "mtime": 1785970924.7516088,
+    "ast_hash": "3f38481c1a8bf4763792a4f9da83cb2d",
+    "semantic_hash": ""
+  },
+  "src/app/api/cron/simulasyon-planla/route.ts": {
+    "mtime": 1785970924.7515998,
+    "ast_hash": "64026d3f06095fdf3f5a23fb28fef487",
+    "semantic_hash": ""
+  },
+  "src/app/api/panel/simulasyon/route.ts": {
+    "mtime": 1785972429.167255,
+    "ast_hash": "c1f4c93fc1c6ac02b05b85a5638341a7",
+    "semantic_hash": ""
+  },
+  "src/app/panel/simulasyon/page.tsx": {
+    "mtime": 1785972433.9031436,
+    "ast_hash": "3f8a363b3934acec20ef174d6e81e8be",
+    "semantic_hash": ""
+  },
+  "src/lib/simulasyon-ihale-db.ts": {
+    "mtime": 1785970958.9591978,
+    "ast_hash": "4f241b314c486b4aa3b829879559f609",
+    "semantic_hash": ""
+  },
+  "src/lib/simulasyon-ihale.test.ts": {
+    "mtime": 1785971067.597761,
+    "ast_hash": "6576665e7f644333dc20072ec27e8a56",
+    "semantic_hash": ""
+  },
+  "src/lib/simulasyon-ihale.ts": {
+    "mtime": 1785970878.8873286,
+    "ast_hash": "353a346b79671a763071ad6b58b71d93",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/056_simulasyon_ihale.sql": {
+    "mtime": 1785970878.549856,
+    "ast_hash": "a1a33fd83b28c27cfd033e1a46f7e4f6",
     "semantic_hash": ""
   }
 }

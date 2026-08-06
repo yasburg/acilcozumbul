@@ -5,12 +5,67 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Card, Btn } from "@/components/ui";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
+import { musaitlikOzeti } from "@/lib/cekici-musaitlik";
+import { cekiciPremiumSmsAktifMi } from "@/lib/ihale";
+import { ilceListesi } from "@/lib/il-ilce";
 import { formatKredi } from "@/lib/talep-utils";
 import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 import type { CekiciPanelOzet } from "@/lib/panel";
-import type { BelgeDurum } from "@/lib/types";
+import { SORUN_TIPLERI, gecerliSorunTipi } from "@/lib/sorun-tipleri";
+import type { BelgeDurum, HizmetBolgeleri } from "@/lib/types";
 
 type CekiciDetay = CekiciPanelOzet & { token: string };
+
+/** Şehirdeki seçilmeyen (hizmet vermediği) ilçeler */
+function hizmetDisiIlceOzeti(bolgeler: HizmetBolgeleri | undefined): string {
+  if (!bolgeler || Object.keys(bolgeler).length === 0) return "";
+  const satirlar: string[] = [];
+  for (const [il, secilen] of Object.entries(bolgeler)) {
+    const secili = new Set(
+      (secilen ?? []).map((i) => i.trim()).filter(Boolean)
+    );
+    if (secili.size === 0) continue;
+    const disi = ilceListesi(il).filter((i) => !secili.has(i));
+    if (disi.length === 0) continue;
+    satirlar.push(`${il}: ${disi.join(", ")}`);
+  }
+  return satirlar.join(" · ");
+}
+
+function hizmetSorunEtiketleri(ids: string[]): string {
+  const etiketMap = new Map(SORUN_TIPLERI.map((t) => [t.id, t.label]));
+  return ids
+    .filter(gecerliSorunTipi)
+    .map((id) => etiketMap.get(id) ?? id)
+    .join(", ");
+}
+
+function hizmetSorunAyir(hizmetSorunTipleri: string[] | undefined): {
+  verdikleri: string;
+  vermedikleri: string;
+} {
+  const secili = new Set(
+    (hizmetSorunTipleri ?? []).filter((id): id is (typeof SORUN_TIPLERI)[number]["id"] =>
+      gecerliSorunTipi(id)
+    )
+  );
+  const verdikleriIds = SORUN_TIPLERI.filter((t) => secili.has(t.id)).map(
+    (t) => t.id
+  );
+  const vermedikleriIds = SORUN_TIPLERI.filter((t) => !secili.has(t.id)).map(
+    (t) => t.id
+  );
+  return {
+    verdikleri:
+      verdikleriIds.length > 0
+        ? hizmetSorunEtiketleri(verdikleriIds)
+        : "Hiçbiri seçilmemiş",
+    vermedikleri:
+      vermedikleriIds.length > 0
+        ? hizmetSorunEtiketleri(vermedikleriIds)
+        : "Yok (tüm hizmetler açık)",
+  };
+}
 
 export default function PanelCekiciDetayPage() {
   const { id } = useParams<{ id: string }>();
@@ -138,6 +193,9 @@ export default function PanelCekiciDetayPage() {
   }
 
   const belgeDurum = (cekici.belgeDurum ?? "yok") as BelgeDurum;
+  const premiumSms = cekiciPremiumSmsAktifMi(cekici);
+  const hizmetDisi = hizmetDisiIlceOzeti(cekici.hizmetBolgeleri);
+  const sorunHizmet = hizmetSorunAyir(cekici.hizmetSorunTipleri);
 
   return (
     <div className="space-y-4 max-w-xl">
@@ -182,6 +240,20 @@ export default function PanelCekiciDetayPage() {
         <Row label="Şehir" value={cekici.sehir} />
         <Row label="Kredi" value={formatKredi(cekiciToplamKredi(cekici))} />
         <Row label="Durum" value={cekici.aktif ? "Aktif" : "Pasif"} />
+        <Row
+          label="Çalışma saatleri"
+          value={musaitlikOzeti(cekici)}
+        />
+        <Row
+          label="SMS tipi"
+          value={
+            premiumSms
+              ? "Premium (anlık OTP, 2 kredi)"
+              : "Normal (toplu SMS, 1 kredi)"
+          }
+        />
+        <Row label="Verdiği hizmetler" value={sorunHizmet.verdikleri} />
+        <Row label="Vermediği hizmetler" value={sorunHizmet.vermedikleri} />
         <Row label="Belge durumu" value={belgeDurumEtiket(belgeDurum)} />
         <Row
           label="Rozet"
@@ -204,6 +276,19 @@ export default function PanelCekiciDetayPage() {
                 : "Seçilmemiş"
           }
         />
+        {cekici.hizmetModu !== "konum" && (
+          <Row
+            label="Hizmet dışı ilçeler"
+            value={
+              hizmetDisi
+                ? hizmetDisi
+                : cekici.hizmetBolgeleri &&
+                    Object.keys(cekici.hizmetBolgeleri).length > 0
+                  ? "Yok (seçili şehirlerde tüm ilçeler)"
+                  : "—"
+            }
+          />
+        )}
         <Row label="Token" value={cekici.tokenOnizleme} mono />
       </Card>
 
@@ -348,9 +433,11 @@ function Row({
   mono?: boolean;
 }) {
   return (
-    <div className="flex justify-between gap-4 border-b border-slate-100 pb-2 last:border-0">
+    <div className="flex flex-col gap-0.5 border-b border-slate-100 pb-2 last:border-0 sm:flex-row sm:justify-between sm:gap-4">
       <span className="text-slate-500 shrink-0">{label}</span>
-      <span className={`text-slate-900 text-right ${mono ? "font-mono text-xs" : ""}`}>
+      <span
+        className={`text-slate-900 sm:text-right break-words min-w-0 ${mono ? "font-mono text-xs" : ""}`}
+      >
         {value}
       </span>
     </div>
