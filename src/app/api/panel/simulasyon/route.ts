@@ -209,10 +209,10 @@ export async function POST(request: NextRequest) {
     const iller = Array.isArray(body.iller)
       ? [
           ...new Set(
-            body.iller
+            (body.iller as unknown[])
               .filter((il): il is string => typeof il === "string")
               .map((il) => il.trim())
-              .filter((il) => il && ilGecerliMi(il))
+              .filter((il) => il.length > 0 && ilGecerliMi(il))
           ),
         ]
       : [];
