@@ -48,6 +48,7 @@ Ek kurtarma cron: `POST /api/cron/toplu-sms` + aynı `CRON_SECRET` (her 1–2 dk
 ## Simülasyon ihale
 
 `migrations/056_simulasyon_ihale.sql` — plan + side-table (çekici API’de flag yok).
+`migrations/057_simulasyon_ayar.sql` — günlük adet aralıkları (1–5 / 6–20 / 20+), panelden düzenlenir.
 
 - Akşam planlama: `POST /api/cron/simulasyon-planla` + `Authorization: Bearer CRON_SECRET` (günde 1)
 - Aç/kapat: `POST /api/cron/simulasyon-calistir` + aynı secret (her 5–10 dk)

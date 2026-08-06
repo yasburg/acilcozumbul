@@ -5,15 +5,20 @@ import { smsBaseUrl } from "@/lib/sms-base-url";
 import { sorunTipiBul } from "@/lib/sorun-tipleri";
 import {
   getSimulasyonPlanById,
+  getSimulasyonFormulAyar,
   listSimulasyonPlanlar,
   panelHedefGunler,
+  saveSimulasyonFormulAyar,
   simulasyonCalistir,
   simulasyonGunPlanla,
   updateSimulasyonPlan,
 } from "@/lib/simulasyon-ihale-db";
 import {
+  formulAyarEtiket,
+  formulAyarNormalize,
   sehirAktifCekiciSayisi,
   SIMULASYON_SORUN_TIPLERI,
+  type SimulasyonFormulAyar,
   type SimulasyonPlan,
   type SimulasyonSorunTipi,
 } from "@/lib/simulasyon-ihale";
@@ -91,7 +96,7 @@ export async function GET(request: NextRequest) {
   const { bugun, yarin } = panelHedefGunler();
   const hedef = gun || yarin;
 
-  const [bugunPlanlar, yarinPlanlar, secili, acikIller, cekiciler] =
+  const [bugunPlanlar, yarinPlanlar, secili, acikIller, cekiciler, formulAyar] =
     await Promise.all([
       listSimulasyonPlanlar({ hedefGun: bugun }),
       listSimulasyonPlanlar({ hedefGun: yarin }),
@@ -100,6 +105,7 @@ export async function GET(request: NextRequest) {
         : Promise.resolve(null),
       getAcikIller(),
       getCekiciler(),
+      getSimulasyonFormulAyar(),
     ]);
 
   const planlar =
@@ -109,10 +115,11 @@ export async function GET(request: NextRequest) {
     bugun,
     yarin,
     seciliGun: hedef,
+    formulAyar,
     formul: {
-      "1-5": "0 veya 1",
-      "6-20": "1 veya 2",
-      "20+": "2, 3 veya 4",
+      "1-5": formulAyarEtiket(formulAyar.dusuk),
+      "6-20": formulAyarEtiket(formulAyar.orta),
+      "20+": formulAyarEtiket(formulAyar.yuksek),
       sure: "acil (60 dk)",
       kapanis: "açılıştan 10–45 dk",
       sorunTipleri: SIMULASYON_SORUN_TIPLERI.map((id) => ({
@@ -288,6 +295,14 @@ export async function POST(request: NextRequest) {
       await updateSimulasyonPlan(p);
     }
     return NextResponse.json({ ok: true, iptal: mevcut.length, hedefGun });
+  }
+
+  if (eylem === "ayar_kaydet") {
+    const ayar = formulAyarNormalize(
+      (body.formulAyar ?? body.ayar) as Partial<SimulasyonFormulAyar>
+    );
+    const kaydedilen = await saveSimulasyonFormulAyar(ayar);
+    return NextResponse.json({ ok: true, formulAyar: kaydedilen });
   }
 
   return NextResponse.json({ error: "Geçersiz eylem." }, { status: 400 });

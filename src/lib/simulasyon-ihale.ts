@@ -93,20 +93,97 @@ export function sehirAktifCekiciSayisi(
 }
 
 /**
- * Günlük simülasyon adedi:
- * 0 → 0 | 1–5 → 0|1 | 6–20 → 1|2 | 20+ → 2|3|4
+ * Günlük simülasyon adedi (çekici sayısına göre grup + ayar aralığı).
+ * Varsayılan: 1–5 → 0–1 | 6–20 → 1–2 | 20+ → 2–4
  */
-export function simulasyonGunlukAdet(
-  cekiciSayisi: number,
+export type SimulasyonAdetAralik = { min: number; max: number };
+
+export type SimulasyonFormulAyar = {
+  /** 1–5 aktif çekici */
+  dusuk: SimulasyonAdetAralik;
+  /** 6–20 aktif çekici */
+  orta: SimulasyonAdetAralik;
+  /** 20+ aktif çekici */
+  yuksek: SimulasyonAdetAralik;
+};
+
+export const SIMULASYON_FORMUL_AYAR_VARSAYILAN: SimulasyonFormulAyar = {
+  dusuk: { min: 0, max: 1 },
+  orta: { min: 1, max: 2 },
+  yuksek: { min: 2, max: 4 },
+};
+
+const ADET_MIN = 0;
+const ADET_MAX = 20;
+
+export function aralikNormalize(
+  raw: Partial<SimulasyonAdetAralik> | null | undefined,
+  fallback: SimulasyonAdetAralik
+): SimulasyonAdetAralik {
+  let min = Number(raw?.min);
+  let max = Number(raw?.max);
+  if (!Number.isFinite(min)) min = fallback.min;
+  if (!Number.isFinite(max)) max = fallback.max;
+  min = Math.max(ADET_MIN, Math.min(ADET_MAX, Math.round(min)));
+  max = Math.max(ADET_MIN, Math.min(ADET_MAX, Math.round(max)));
+  if (max < min) {
+    const t = min;
+    min = max;
+    max = t;
+  }
+  return { min, max };
+}
+
+export function formulAyarNormalize(
+  raw: Partial<SimulasyonFormulAyar> | null | undefined
+): SimulasyonFormulAyar {
+  return {
+    dusuk: aralikNormalize(raw?.dusuk, SIMULASYON_FORMUL_AYAR_VARSAYILAN.dusuk),
+    orta: aralikNormalize(raw?.orta, SIMULASYON_FORMUL_AYAR_VARSAYILAN.orta),
+    yuksek: aralikNormalize(
+      raw?.yuksek,
+      SIMULASYON_FORMUL_AYAR_VARSAYILAN.yuksek
+    ),
+  };
+}
+
+export function formulAyarEtiket(a: SimulasyonAdetAralik): string {
+  if (a.min === a.max) return String(a.min);
+  if (a.max === a.min + 1) return `${a.min} veya ${a.max}`;
+  const parcalar: string[] = [];
+  for (let i = a.min; i <= a.max; i++) parcalar.push(String(i));
+  if (parcalar.length <= 3) {
+    return parcalar.slice(0, -1).join(", ") + " veya " + parcalar.at(-1);
+  }
+  return `${a.min}–${a.max}`;
+}
+
+/** min..max dahil rastgele tamsayı */
+export function rastgeleAralikAdet(
+  min: number,
+  max: number,
   rand: () => number = Math.random
 ): number {
+  const a = Math.min(min, max);
+  const b = Math.max(min, max);
+  if (a === b) return a;
+  return a + Math.floor(rand() * (b - a + 1));
+}
+
+export function simulasyonGunlukAdet(
+  cekiciSayisi: number,
+  rand: () => number = Math.random,
+  ayar: SimulasyonFormulAyar = SIMULASYON_FORMUL_AYAR_VARSAYILAN
+): number {
   if (cekiciSayisi <= 0) return 0;
-  if (cekiciSayisi <= 5) return rand() < 0.5 ? 0 : 1;
-  if (cekiciSayisi <= 20) return rand() < 0.5 ? 1 : 2;
-  const r = rand();
-  if (r < 1 / 3) return 2;
-  if (r < 2 / 3) return 3;
-  return 4;
+  const n = formulAyarNormalize(ayar);
+  if (cekiciSayisi <= 5) {
+    return rastgeleAralikAdet(n.dusuk.min, n.dusuk.max, rand);
+  }
+  if (cekiciSayisi <= 20) {
+    return rastgeleAralikAdet(n.orta.min, n.orta.max, rand);
+  }
+  return rastgeleAralikAdet(n.yuksek.min, n.yuksek.max, rand);
 }
 
 export function rastgeleEleman<T>(

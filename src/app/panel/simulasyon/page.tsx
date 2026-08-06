@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Btn, Card, SelectField } from "@/components/ui";
-import type { SimulasyonPlan } from "@/lib/simulasyon-ihale";
+import type { SimulasyonPlan, SimulasyonFormulAyar } from "@/lib/simulasyon-ihale";
+import { SIMULASYON_FORMUL_AYAR_VARSAYILAN } from "@/lib/simulasyon-ihale";
 
 type SehirOzet = {
   il: string;
@@ -28,6 +29,7 @@ type ApiCevap = {
     kapanis: string;
     sorunTipleri: { id: string; label: string }[];
   };
+  formulAyar?: SimulasyonFormulAyar;
   planlar: SimulasyonPlan[];
   sehirOzet?: SehirOzet[];
 };
@@ -71,6 +73,9 @@ export default function PanelSimulasyonPage() {
   const [gun, setGun] = useState<"bugun" | "yarin">("yarin");
   const [gorunum, setGorunum] = useState<Gorunum>("ozet");
   const [formul, setFormul] = useState<ApiCevap["formul"] | null>(null);
+  const [formulAyar, setFormulAyar] = useState<SimulasyonFormulAyar>(
+    SIMULASYON_FORMUL_AYAR_VARSAYILAN
+  );
   const [planlar, setPlanlar] = useState<SimulasyonPlan[]>([]);
   const [sehirOzet, setSehirOzet] = useState<SehirOzet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,6 +84,7 @@ export default function PanelSimulasyonPage() {
   const [mesaj, setMesaj] = useState<string | null>(null);
   const [planModalAcik, setPlanModalAcik] = useState(false);
   const [seciliIller, setSeciliIller] = useState<string[]>([]);
+  const [sehirArama, setSehirArama] = useState("");
 
   const hedefGun = gun === "bugun" ? bugun : yarin;
 
@@ -90,6 +96,12 @@ export default function PanelSimulasyonPage() {
     () => sehirOzet.filter((s) => s.aktifToplam > 0),
     [sehirOzet]
   );
+  const filtrelenmisSehirler = useMemo(() => {
+    const q = sehirArama.trim().toLocaleLowerCase("tr");
+    const liste = [...sehirOzet].sort((a, b) => a.il.localeCompare(b.il, "tr"));
+    if (!q) return liste;
+    return liste.filter((s) => s.il.toLocaleLowerCase("tr").includes(q));
+  }, [sehirOzet, sehirArama]);
 
   const yukle = useCallback(async (hedef?: string) => {
     setLoading(true);
@@ -108,6 +120,7 @@ export default function PanelSimulasyonPage() {
       setBugun(j.bugun);
       setYarin(j.yarin);
       setFormul(j.formul);
+      if (j.formulAyar) setFormulAyar(j.formulAyar);
       const liste =
         j.planlar ??
         (hedef === j.bugun ? j.bugunPlanlar : j.yarinPlanlar) ??
@@ -161,10 +174,15 @@ export default function PanelSimulasyonPage() {
           ? `Açılan: ${j.acilan ?? 0}, kapanan: ${j.kapanan ?? 0}`
           : body.eylem === "toplu_iptal"
             ? `İptal edilen plan: ${j.iptal ?? 0}`
-            : j.atlandi
-              ? "Zaten plan var (atlandı)."
-              : `Eklenen plan: ${j.eklenen ?? 0}`
+            : body.eylem === "ayar_kaydet"
+              ? "Formül aralıkları kaydedildi."
+              : j.atlandi
+                ? "Zaten plan var (atlandı)."
+                : `Eklenen plan: ${j.eklenen ?? 0}`
       );
+      if (body.eylem === "ayar_kaydet" && j.formulAyar) {
+        setFormulAyar(j.formulAyar);
+      }
       await yukle(hedefGun || undefined);
     } catch (e) {
       setHata(e instanceof Error ? e.message : "İşlem başarısız.");
@@ -208,19 +226,100 @@ export default function PanelSimulasyonPage() {
       </div>
 
       {formul && (
-        <Card className="!p-4 text-sm text-slate-600 space-y-1">
-          <p>
-            <span className="font-medium text-slate-800">Adet:</span> 1–5 çekici
-            → {formul["1-5"]}; 6–20 → {formul["6-20"]}; 20+ → {formul["20+"]}
-          </p>
-          <p>
-            <span className="font-medium text-slate-800">Süre:</span>{" "}
-            {formul.sure} · Kapanış: {formul.kapanis}
-          </p>
-          <p>
-            <span className="font-medium text-slate-800">Sorun:</span>{" "}
-            {formul.sorunTipleri.map((s) => s.label).join(" · ")}
-          </p>
+        <Card className="!p-4 space-y-3">
+          <div className="text-sm text-slate-600 space-y-1">
+            <p>
+              <span className="font-medium text-slate-800">Süre:</span>{" "}
+              {formul.sure} · Kapanış: {formul.kapanis}
+            </p>
+            <p>
+              <span className="font-medium text-slate-800">Sorun:</span>{" "}
+              {formul.sorunTipleri.map((s) => s.label).join(" · ")}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-800 mb-2">
+              Günlük talep aralığı (çekici grubuna göre)
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {(
+                [
+                  ["dusuk", "1–5 çekici"],
+                  ["orta", "6–20 çekici"],
+                  ["yuksek", "20+ çekici"],
+                ] as const
+              ).map(([key, label]) => (
+                <label
+                  key={key}
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 space-y-2"
+                >
+                  <span className="text-xs font-medium text-slate-600">
+                    {label}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      max={20}
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm tabular-nums"
+                      value={formulAyar[key].min}
+                      disabled={busy}
+                      onChange={(e) => {
+                        const min = Number(e.target.value);
+                        setFormulAyar((prev) => ({
+                          ...prev,
+                          [key]: { ...prev[key], min },
+                        }));
+                      }}
+                      aria-label={`${label} min`}
+                    />
+                    <span className="text-slate-400 text-sm">–</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={20}
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm tabular-nums"
+                      value={formulAyar[key].max}
+                      disabled={busy}
+                      onChange={(e) => {
+                        const max = Number(e.target.value);
+                        setFormulAyar((prev) => ({
+                          ...prev,
+                          [key]: { ...prev[key], max },
+                        }));
+                      }}
+                      aria-label={`${label} max`}
+                    />
+                  </div>
+                </label>
+              ))}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Btn
+                type="button"
+                className="!w-auto !min-h-0 !py-2 !px-3 !text-sm"
+                disabled={busy}
+                onClick={() =>
+                  void eylem({
+                    eylem: "ayar_kaydet",
+                    formulAyar,
+                  })
+                }
+              >
+                Aralıkları kaydet
+              </Btn>
+              <button
+                type="button"
+                className="text-xs text-slate-500 hover:underline disabled:opacity-50"
+                disabled={busy}
+                onClick={() =>
+                  setFormulAyar(SIMULASYON_FORMUL_AYAR_VARSAYILAN)
+                }
+              >
+                Varsayılana dön
+              </button>
+            </div>
+          </div>
         </Card>
       )}
 
@@ -269,6 +368,7 @@ export default function PanelSimulasyonPage() {
               .filter((s) => s.aktifToplam === 0)
               .map((s) => s.il);
             setSeciliIller(uygun);
+            setSehirArama("");
             setPlanModalAcik(true);
           }}
         >
@@ -542,6 +642,7 @@ export default function PanelSimulasyonPage() {
           onClick={(e) => {
             if (e.target === e.currentTarget && !busy) {
               setPlanModalAcik(false);
+              setSehirArama("");
             }
           }}
         >
@@ -558,6 +659,17 @@ export default function PanelSimulasyonPage() {
                 olan şehirler seçilemez.
               </p>
             </div>
+
+            <input
+              type="search"
+              placeholder="Şehir ara…"
+              value={sehirArama}
+              onChange={(e) => setSehirArama(e.target.value)}
+              disabled={busy}
+              autoFocus
+              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
+              aria-label="Şehir ara"
+            />
 
             <div className="flex flex-wrap gap-2 text-xs">
               <button
@@ -585,10 +697,12 @@ export default function PanelSimulasyonPage() {
                 <p className="p-4 text-sm text-slate-500">
                   Açık şehir yok.
                 </p>
+              ) : filtrelenmisSehirler.length === 0 ? (
+                <p className="p-4 text-sm text-slate-500">
+                  &quot;{sehirArama.trim()}&quot; ile eşleşen şehir yok.
+                </p>
               ) : (
-                [...sehirOzet]
-                  .sort((a, b) => a.il.localeCompare(b.il, "tr"))
-                  .map((s) => {
+                filtrelenmisSehirler.map((s) => {
                     const planli = s.aktifToplam > 0;
                     const secili = seciliIller.includes(s.il);
                     return (
@@ -636,7 +750,10 @@ export default function PanelSimulasyonPage() {
               <Btn
                 variant="secondary"
                 disabled={busy}
-                onClick={() => setPlanModalAcik(false)}
+                onClick={() => {
+                  setPlanModalAcik(false);
+                  setSehirArama("");
+                }}
               >
                 Vazgeç
               </Btn>
@@ -645,6 +762,7 @@ export default function PanelSimulasyonPage() {
                 onClick={() => {
                   const iller = [...seciliIller];
                   setPlanModalAcik(false);
+                  setSehirArama("");
                   void eylem({ eylem: "planla", hedefGun, iller });
                 }}
               >

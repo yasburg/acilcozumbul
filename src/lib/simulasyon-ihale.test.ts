@@ -46,22 +46,33 @@ describe("simulasyonGunlukAdet", () => {
     expect(simulasyonGunlukAdet(0)).toBe(0);
   });
 
-  it("1–5 → 0 veya 1", () => {
+  it("1–5 → 0 veya 1 (varsayılan)", () => {
     expect(simulasyonGunlukAdet(3, () => 0.1)).toBe(0);
     expect(simulasyonGunlukAdet(3, () => 0.9)).toBe(1);
     expect(simulasyonGunlukAdet(1, () => 0.9)).toBe(1);
     expect(simulasyonGunlukAdet(5, () => 0.1)).toBe(0);
   });
 
-  it("6–20 → 1 veya 2", () => {
+  it("6–20 → 1 veya 2 (varsayılan)", () => {
     expect(simulasyonGunlukAdet(6, () => 0.1)).toBe(1);
     expect(simulasyonGunlukAdet(20, () => 0.9)).toBe(2);
   });
 
-  it("20+ → 2, 3 veya 4", () => {
+  it("20+ → 2, 3 veya 4 (varsayılan)", () => {
     expect(simulasyonGunlukAdet(21, () => 0.1)).toBe(2);
     expect(simulasyonGunlukAdet(100, () => 0.5)).toBe(3);
     expect(simulasyonGunlukAdet(100, () => 0.9)).toBe(4);
+  });
+
+  it("özel aralık ayarını kullanır", () => {
+    const ayar = {
+      dusuk: { min: 2, max: 2 },
+      orta: { min: 0, max: 0 },
+      yuksek: { min: 5, max: 5 },
+    };
+    expect(simulasyonGunlukAdet(3, () => 0.5, ayar)).toBe(2);
+    expect(simulasyonGunlukAdet(10, () => 0.5, ayar)).toBe(0);
+    expect(simulasyonGunlukAdet(25, () => 0.5, ayar)).toBe(5);
   });
 });
 

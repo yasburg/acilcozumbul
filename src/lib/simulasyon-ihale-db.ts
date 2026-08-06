@@ -7,14 +7,17 @@ import { getSupabaseAdmin, supabaseDbAktif } from "./supabase/admin";
 import { insertTeklif, setKaybedenTeklifler, updateTeklifDurum } from "./teklif-db";
 import type { Teklif } from "./types";
 import {
+  formulAyarNormalize,
   rastgeleKapanisAt,
   sehirAktifCekiciSayisi,
+  SIMULASYON_FORMUL_AYAR_VARSAYILAN,
   SIMULASYON_GHOST_AD,
   SIMULASYON_GHOST_CEKICI_ID,
   simulasyonGunlukAdet,
   simulasyonSlotUret,
   simulasyonTalepOlustur,
   istanbulYarinAnahtari,
+  type SimulasyonFormulAyar,
   type SimulasyonPlan,
   type SimulasyonPlanDurum,
   type SimulasyonSorunTipi,
@@ -167,6 +170,67 @@ async function insertPlanlar(planlar: SimulasyonPlan[]): Promise<void> {
   if (error) throw error;
 }
 
+type AyarRow = {
+  id: string;
+  dusuk_min: number;
+  dusuk_max: number;
+  orta_min: number;
+  orta_max: number;
+  yuksek_min: number;
+  yuksek_max: number;
+  guncelleme: string;
+};
+
+function ayarFromRow(r: AyarRow): SimulasyonFormulAyar {
+  return formulAyarNormalize({
+    dusuk: { min: r.dusuk_min, max: r.dusuk_max },
+    orta: { min: r.orta_min, max: r.orta_max },
+    yuksek: { min: r.yuksek_min, max: r.yuksek_max },
+  });
+}
+
+export async function getSimulasyonFormulAyar(): Promise<SimulasyonFormulAyar> {
+  if (!supabaseDbAktif()) return { ...SIMULASYON_FORMUL_AYAR_VARSAYILAN };
+  const { data, error } = await getSupabaseAdmin()
+    .from("simulasyon_ayar")
+    .select("*")
+    .eq("id", "default")
+    .maybeSingle();
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return { ...SIMULASYON_FORMUL_AYAR_VARSAYILAN };
+    }
+    throw error;
+  }
+  if (!data) return { ...SIMULASYON_FORMUL_AYAR_VARSAYILAN };
+  return ayarFromRow(data as AyarRow);
+}
+
+export async function saveSimulasyonFormulAyar(
+  raw: Partial<SimulasyonFormulAyar>
+): Promise<SimulasyonFormulAyar> {
+  const ayar = formulAyarNormalize(raw);
+  if (!supabaseDbAktif()) return ayar;
+  const now = new Date().toISOString();
+  const { error } = await getSupabaseAdmin()
+    .from("simulasyon_ayar")
+    .upsert(
+      {
+        id: "default",
+        dusuk_min: ayar.dusuk.min,
+        dusuk_max: ayar.dusuk.max,
+        orta_min: ayar.orta.min,
+        orta_max: ayar.orta.max,
+        yuksek_min: ayar.yuksek.min,
+        yuksek_max: ayar.yuksek.max,
+        guncelleme: now,
+      },
+      { onConflict: "id" }
+    );
+  if (error) throw error;
+  return ayar;
+}
+
 export async function isSimulasyonTalep(talepId: string): Promise<boolean> {
   if (!supabaseDbAktif()) return false;
   const { data, error } = await getSupabaseAdmin()
@@ -256,6 +320,7 @@ export async function simulasyonGunPlanla(opts?: {
 
   const acikIller = await getAcikIller();
   const cekiciler = await getCekiciler();
+  const formulAyar = await getSimulasyonFormulAyar();
   const iller =
     seciliIller.length > 0
       ? acikIller.filter((il) => seciliIller.includes(il))
@@ -266,7 +331,7 @@ export async function simulasyonGunPlanla(opts?: {
 
   for (const il of iller) {
     const sayi = sehirAktifCekiciSayisi(cekiciler, il);
-    const adet = simulasyonGunlukAdet(sayi, rand);
+    const adet = simulasyonGunlukAdet(sayi, rand, formulAyar);
     for (let i = 0; i < adet; i++) {
       const slot = simulasyonSlotUret({
         il,
