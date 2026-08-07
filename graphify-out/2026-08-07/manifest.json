@@ -635,8 +635,8 @@
     "semantic_hash": ""
   },
   "src/components/CerezOnayBanner.tsx": {
-    "mtime": 1785948913.0750968,
-    "ast_hash": "28ae48c879e749d87db1841bf8903b33",
+    "mtime": 1786120451.4859867,
+    "ast_hash": "d387f45d728c112abbbd93671fb1f081",
     "semantic_hash": ""
   },
   "src/components/DemoHeaderBadge.tsx": {
@@ -780,8 +780,8 @@
     "semantic_hash": ""
   },
   "src/components/musteri/MusteriAnaSayfa.tsx": {
-    "mtime": 1786057073.4330523,
-    "ast_hash": "f2ca1153ee2123cf59946e2a8fa57496",
+    "mtime": 1786120451.4609246,
+    "ast_hash": "bf97f07465d3dbbd387b5022c377843c",
     "semantic_hash": ""
   },
   "src/components/panel/HizmetVerenSayimPanel.tsx": {
@@ -2730,8 +2730,8 @@
     "semantic_hash": ""
   },
   "src/app/panel/musteri-funnels/page.tsx": {
-    "mtime": 1786057126.2316108,
-    "ast_hash": "fcc9824efea2162ca91f2109b6a4464f",
+    "mtime": 1786057142.9678442,
+    "ast_hash": "6b1f417ab3b58560ff0691d3867f7cd5",
     "semantic_hash": ""
   },
   "src/lib/musteri-funnel-client.ts": {
@@ -3422,6 +3422,11 @@
   "src/lib/talep-iletisim.test.ts": {
     "mtime": 1786049894.0185847,
     "ast_hash": "5cc993296c226c3c5874eb9490851894",
+    "semantic_hash": ""
+  },
+  "src/lib/sticky-cta-offset.ts": {
+    "mtime": 1786120410.1233249,
+    "ast_hash": "5b9bcfcf01db3d1fbcda326af5704721",
     "semantic_hash": ""
   }
 }

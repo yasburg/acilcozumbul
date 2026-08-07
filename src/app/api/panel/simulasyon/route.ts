@@ -201,6 +201,24 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  try {
+    return await postSimulasyon(request);
+  } catch (e) {
+    console.error("[panel/simulasyon] POST", e);
+    const msg =
+      e instanceof Error
+        ? e.message
+        : e && typeof e === "object" && "message" in e
+          ? String((e as { message: unknown }).message)
+          : String(e);
+    return NextResponse.json(
+      { error: msg.slice(0, 500) || "İşlem başarısız." },
+      { status: 500 }
+    );
+  }
+}
+
+async function postSimulasyon(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const eylem = typeof body.eylem === "string" ? body.eylem.trim() : "";
 

@@ -167,11 +167,39 @@ export default function PanelSimulasyonPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.error ?? "İşlem başarısız.");
+      const ham = await r.text();
+      let j: Record<string, unknown> = {};
+      try {
+        j = ham ? (JSON.parse(ham) as Record<string, unknown>) : {};
+      } catch {
+        /* HTML / boş */
+      }
+      if (!r.ok) {
+        const apiHata =
+          typeof j.error === "string" && j.error.trim() ? j.error.trim() : null;
+        throw new Error(
+          apiHata ??
+            `İşlem başarısız (${r.status}).${
+              ham && !ham.trimStart().startsWith("{")
+                ? " Sunucu zaman aşımı veya HTML yanıtı — birkaç kez daha deneyin."
+                : ""
+            }`
+        );
+      }
+      const hatalar = Array.isArray(j.hatalar)
+        ? (j.hatalar as unknown[]).filter((x): x is string => typeof x === "string")
+        : [];
       setMesaj(
         body.eylem === "calistir"
-          ? `Açılan: ${j.acilan ?? 0}, kapanan: ${j.kapanan ?? 0}`
+          ? `Açılan: ${j.acilan ?? 0}, kapanan: ${j.kapanan ?? 0}${
+              Number(j.acilan) > 0
+                ? " · Kalan planlılar için tekrar «Şimdi aç»."
+                : ""
+            }${
+              hatalar.length
+                ? ` · Hata: ${hatalar.slice(0, 2).join(" · ")}`
+                : ""
+            }`
           : body.eylem === "toplu_iptal"
             ? `İptal edilen plan: ${j.iptal ?? 0}`
             : body.eylem === "ayar_kaydet"
@@ -181,7 +209,7 @@ export default function PanelSimulasyonPage() {
                 : `Eklenen plan: ${j.eklenen ?? 0}`
       );
       if (body.eylem === "ayar_kaydet" && j.formulAyar) {
-        setFormulAyar(j.formulAyar);
+        setFormulAyar(j.formulAyar as SimulasyonFormulAyar);
       }
       await yukle(hedefGun || undefined);
     } catch (e) {
@@ -416,6 +444,7 @@ export default function PanelSimulasyonPage() {
           className="!w-auto !min-h-0 !py-2.5 !px-4 !text-sm"
           disabled={busy}
           onClick={() => void eylem({ eylem: "calistir" })}
+          title="Zamanı gelen planları açar / kapanacakları kapatır (tur başına ~15)"
         >
           Şimdi aç / kapat
         </Btn>

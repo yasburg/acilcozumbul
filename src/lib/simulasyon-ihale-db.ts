@@ -389,9 +389,8 @@ export async function simulasyonPlanAc(
 
   const kapanis = rastgeleKapanisAt(simdi, ihaleBitis, rand);
 
-  const bildirilenIds = await notifyCekiciler(talep, baseUrl);
-  talep.bildirilenCekiciIds = bildirilenIds;
-
+  /* SMS senkron beklenmez — onlarca çekicide panel/cron timeout oluyordu */
+  talep.bildirilenCekiciIds = [];
   await addTalep(talep);
 
   const { error: sideErr } = await getSupabaseAdmin()
@@ -410,6 +409,18 @@ export async function simulasyonPlanAc(
   plan.ihaleBitisAt = ihaleBitis.toISOString();
   plan.hataMesaj = null;
   await updateSimulasyonPlan(plan);
+
+  void notifyCekiciler(talep, baseUrl)
+    .then(async (ids) => {
+      if (!ids.length) return;
+      const t = await getTalepById(talepId);
+      if (!t) return;
+      t.bildirilenCekiciIds = ids;
+      await updateTalep(t);
+    })
+    .catch((e) => {
+      console.error("[simulasyon] notify", plan.id, e);
+    });
 
   return { talepId };
 }
@@ -507,7 +518,7 @@ export async function simulasyonAcilacakPlanlar(
     .eq("durum", "planli")
     .lte("planlanan_acilis_at", simdi.toISOString())
     .order("planlanan_acilis_at", { ascending: true })
-    .limit(50);
+    .limit(15);
   if (error) {
     if (error.code === "42P01" || error.code === "PGRST205") return [];
     throw error;
