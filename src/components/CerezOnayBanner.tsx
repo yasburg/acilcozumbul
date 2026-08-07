@@ -154,7 +154,7 @@ export function CerezOnayBanner() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-[100] pointer-events-none pb-[env(safe-area-inset-bottom)]"
+      className="fixed inset-x-0 z-[100] pointer-events-none bottom-[var(--acil-sticky-cta-h,env(safe-area-inset-bottom,0px))]"
       role="dialog"
       aria-labelledby="cerez-banner-baslik"
       aria-describedby="cerez-banner-aciklama"

@@ -5,6 +5,10 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
+import {
+  stickyCtaOffsetAyarla,
+  stickyCtaOffsetTemizle,
+} from "@/lib/sticky-cta-offset";
 import { SorunSecimi } from "@/components/SorunSecimi";
 import { AnaSayfaOzellikSeridi } from "@/components/AnaSayfaOzellikSeridi";
 import { AnaSayfaFiyatHesaplamaTeaser } from "@/components/AnaSayfaFiyatHesaplamaTeaser";
@@ -238,8 +242,26 @@ function AdimAltNav({
   onGeri: () => void;
   onDevam: () => void;
 }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const guncelle = () => stickyCtaOffsetAyarla(el.offsetHeight);
+    guncelle();
+    const ro = new ResizeObserver(guncelle);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      stickyCtaOffsetTemizle();
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]">
+    <div
+      ref={rootRef}
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]"
+    >
       <div className="mx-auto flex max-w-lg gap-3">
         <Btn
           type="button"
@@ -293,8 +315,26 @@ function HedefAltNav({
   devamGlow?: boolean;
   devamIcerik: React.ReactNode;
 }) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const guncelle = () => stickyCtaOffsetAyarla(el.offsetHeight);
+    guncelle();
+    const ro = new ResizeObserver(guncelle);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      stickyCtaOffsetTemizle();
+    };
+  }, [hedefSeciliMi, yasalOnayHata]);
+
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]">
+    <div
+      ref={rootRef}
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]"
+    >
       <div className="mx-auto max-w-lg space-y-2">
         {!hedefSeciliMi && (
           <p

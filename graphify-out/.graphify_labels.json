@@ -118,7 +118,6 @@
   "116": "turkiye-il-nufus.ts",
   "117": "sitemap.ts",
   "118": "fatura-pdf.ts",
-  "119": "CekiciKayitLanding.tsx",
   "120": "page.tsx",
   "121": "funnel.ts",
   "122": "SosyalMedyaIkonlari.tsx",
@@ -135,15 +134,9 @@
   "133": "layout.tsx",
   "134": "fatura-pdf.ts",
   "135": "PanelCekiciHarita.tsx",
-  "136": "kayit-cark-db.ts",
   "137": "route.ts",
-  "139": "page.tsx",
-  "140": "OnayliCekiciHesap.tsx",
   "141": "musteri-profil.ts",
   "142": "teklif-db.ts",
   "143": "KonumGuncellemeGostergesi.tsx",
-  "144": "page.tsx",
-  "145": "page.tsx",
-  "146": "IhaleSureSecimi.tsx",
   "308": "request.ts"
 }
