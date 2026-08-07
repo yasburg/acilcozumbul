@@ -954,6 +954,9 @@ function MusteriAnaSayfaIcerik({
 
     setStep(hedef);
     setError("");
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
   }
 
   function yasalOnayaKaydir() {
@@ -1730,6 +1733,9 @@ function MusteriAnaSayfaIcerik({
     if (idx > 0) {
       setStep(steps[idx - 1]!.key);
       setError("");
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: "auto" });
+      });
       return;
     }
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -2012,7 +2018,11 @@ function MusteriAnaSayfaIcerik({
             )}
           </div>
           <AdimAltNav
-            devamMetin="Devam Et"
+            devamMetin={
+              fotografData || fotografOnizleme
+                ? "Devam et"
+                : "Fotoğrafsız devam et"
+            }
             onGeri={oncekiAdimaDon}
             onDevam={() => {
               if (!fotografAdimiDevam()) return;
@@ -2097,7 +2107,10 @@ function MusteriAnaSayfaIcerik({
               value={form.aracModeli}
               onChange={(e) => update("aracModeli", e.target.value)}
               invalid={aracModeliHatasi}
-              autoFocus
+              ref={(el) => {
+                if (!el) return;
+                el.focus({ preventScroll: true });
+              }}
             />
           </div>
           <AdimAltNav
@@ -2129,12 +2142,16 @@ function MusteriAnaSayfaIcerik({
                 Sorununuzu açıklayın
               </span>
               <textarea
+                ref={(el) => {
+                  if (!el) return;
+                  /* autoFocus ortayı kaydırır; üstte kalsın */
+                  el.focus({ preventScroll: true });
+                }}
                 rows={3}
                 placeholder="Sorununuzu kısaca yazın…"
                 value={form.sorunDetay}
                 onChange={(e) => update("sorunDetay", e.target.value)}
                 aria-invalid={sorunDetayHatasi || undefined}
-                autoFocus
                 className={`w-full rounded-xl bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 resize-none ${
                   sorunDetayHatasi
                     ? "border-red-500 ring-red-500/30 focus:ring-red-500/40"
