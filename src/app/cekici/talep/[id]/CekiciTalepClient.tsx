@@ -325,7 +325,9 @@ export default function CekiciTalepClient() {
     ? googleMapsKonumUrl(hedefKoordinat)
     : null;
 
+  /** İl/ilçe yaklaşık konumda yol süresi kafa karıştırır — yalnız GPS */
   const rotaSureGoster =
+    musteriKonumGpsMi &&
     !!musteriKoordinat &&
     (teklifVerebilir || (talep?.teklifVerdim && talep.ihaleAcik && !talep.kazandim));
 
@@ -604,68 +606,71 @@ export default function CekiciTalepClient() {
                   </p>
                 )}
               </Card>
-              {gizlilik !== "yok" ? (
-                <Btn variant="success" disabled>
-                  📞 {gizlilik === "tam" ? "Telefon gizli" : "Telefon maskeli"}
-                </Btn>
-              ) : (
-                <a
-                  href={telefonHref}
-                  onClick={() => void musteriAraKaydet()}
-                >
-                  <Btn variant="success">📞 Müşteriye Ara</Btn>
-                </a>
-              )}
-              {hedefHaritaHref && (
-                <a
-                  href={hedefHaritaHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() =>
-                    posthogOlayYakala("cekici_hedef_konum_ac", {
-                      rol: "cekici",
-                      talep_id: id,
-                    })
-                  }
-                >
-                  <Btn variant="outline">
-                    📍 Müşterinin aracı götürmek istediği konumu aç
+              <div className="flex flex-col gap-3">
+                {gizlilik !== "yok" ? (
+                  <Btn variant="success" disabled>
+                    📞{" "}
+                    {gizlilik === "tam" ? "Telefon gizli" : "Telefon maskeli"}
                   </Btn>
-                </a>
-              )}
-              {whatsappCanliKonumHref && (
-                <a
-                  href={whatsappCanliKonumHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() =>
-                    posthogOlayYakala("cekici_whatsapp_canli_konum_iste", {
-                      rol: "cekici",
-                      talep_id: id,
-                    })
-                  }
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-6 py-4 text-base font-semibold text-white shadow-md transition hover:bg-[#1ebe57] touch-manipulation active:scale-[0.98]"
-                >
-                  WhatsApp’tan canlı konum iste
-                </a>
-              )}
-              {whatsappHedefTeyitHref && (
-                <a
-                  href={whatsappHedefTeyitHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() =>
-                    posthogOlayYakala("cekici_whatsapp_hedef_teyit", {
-                      rol: "cekici",
-                      talep_id: id,
-                    })
-                  }
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-6 py-4 text-base font-semibold text-white shadow-md transition hover:bg-[#1ebe57] touch-manipulation active:scale-[0.98]"
-                >
-                  WhatsApp’tan konumu teyit et
-                </a>
-              )}
-              {musteriKoordinat && (
+                ) : (
+                  <a
+                    href={telefonHref}
+                    onClick={() => void musteriAraKaydet()}
+                  >
+                    <Btn variant="success">📞 Müşteriye Ara</Btn>
+                  </a>
+                )}
+                {hedefHaritaHref && (
+                  <a
+                    href={hedefHaritaHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      posthogOlayYakala("cekici_hedef_konum_ac", {
+                        rol: "cekici",
+                        talep_id: id,
+                      })
+                    }
+                  >
+                    <Btn variant="outline">
+                      📍 Müşterinin aracı götürmek istediği konumu aç
+                    </Btn>
+                  </a>
+                )}
+                {whatsappCanliKonumHref && (
+                  <a
+                    href={whatsappCanliKonumHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      posthogOlayYakala("cekici_whatsapp_canli_konum_iste", {
+                        rol: "cekici",
+                        talep_id: id,
+                      })
+                    }
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-6 py-4 text-base font-semibold text-white shadow-md transition hover:bg-[#1ebe57] touch-manipulation active:scale-[0.98]"
+                  >
+                    WhatsApp’tan canlı konum iste
+                  </a>
+                )}
+                {whatsappHedefTeyitHref && (
+                  <a
+                    href={whatsappHedefTeyitHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      posthogOlayYakala("cekici_whatsapp_hedef_teyit", {
+                        rol: "cekici",
+                        talep_id: id,
+                      })
+                    }
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-6 py-4 text-base font-semibold text-white shadow-md transition hover:bg-[#1ebe57] touch-manipulation active:scale-[0.98]"
+                  >
+                    WhatsApp’tan konumu teyit et
+                  </a>
+                )}
+              </div>
+              {musteriKonumGpsMi && musteriKoordinat && (
                 <CekiciRotaPanel
                   key={`rota-${id}`}
                   musteriKonum={musteriKoordinat}
@@ -677,10 +682,6 @@ export default function CekiciTalepClient() {
               <div className="h-24" aria-hidden />
             </>
           )}
-
-          <Link href="/cekici/kredi">
-            <Btn variant="outline">Kredi Satın Al</Btn>
-          </Link>
         </div>
       )}
     </MobileShell>
