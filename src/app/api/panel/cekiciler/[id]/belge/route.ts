@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCekiciById, updateCekiciBelgeDurum } from "@/lib/db";
+import { rozetBelgeSonucSmsKuyrugaAl } from "@/lib/cekici-karar-sms";
 import { ensureSeedData } from "@/lib/seed";
+import { smsBaseUrl } from "@/lib/sms-base-url";
 import type { BelgeDurum } from "@/lib/types";
 
 export async function PATCH(
@@ -38,10 +40,24 @@ export async function PATCH(
       return NextResponse.json({ error: "Red nedeni girin." }, { status: 400 });
     }
 
+    const redNedeni =
+      durum === "reddedildi" ? String(body.belgeRedNedeni).trim() : null;
+
     const kaydedilen = await updateCekiciBelgeDurum(id, {
       belgeDurum: durum,
-      belgeRedNedeni:
-        durum === "reddedildi" ? String(body.belgeRedNedeni).trim() : null,
+      belgeRedNedeni: redNedeni,
+    });
+
+    const baseUrl = smsBaseUrl(
+      `${request.nextUrl.protocol}//${request.nextUrl.host}`
+    );
+    const sms = await rozetBelgeSonucSmsKuyrugaAl({
+      telefon: cekici.telefon,
+      ad: cekici.ad,
+      durum: kaydedilen === "onaylandi" ? "onaylandi" : "reddedildi",
+      redNedeni,
+      baseUrl,
+      gonderenEposta: "panel:rozet-belge",
     });
 
     return NextResponse.json({
@@ -50,6 +66,8 @@ export async function PATCH(
           ? "Belgeler onaylandı. Çekici rozet satın alabilir."
           : "Belgeler reddedildi.",
       belgeDurum: kaydedilen,
+      smsKuyruk: sms.ok,
+      smsIsId: sms.isId ?? null,
     });
   } catch (e) {
     const mesaj = e instanceof Error ? e.message : "Belge güncellenemedi.";

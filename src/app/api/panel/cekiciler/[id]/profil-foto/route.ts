@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCekiciById, updateCekiciProfilFotoDurum } from "@/lib/db";
+import { profilFotoSonucSmsKuyrugaAl } from "@/lib/cekici-karar-sms";
 import { ensureSeedData } from "@/lib/seed";
+import { smsBaseUrl } from "@/lib/sms-base-url";
 import type { ProfilFotoDurum } from "@/lib/types";
 
 export async function PATCH(
@@ -45,12 +47,26 @@ export async function PATCH(
       return NextResponse.json({ error: "Red nedeni girin." }, { status: 400 });
     }
 
+    const redNedeni =
+      durum === "reddedildi"
+        ? String(body.profilFotoRedNedeni).trim()
+        : null;
+
     const kaydedilen = await updateCekiciProfilFotoDurum(id, {
       profilFotoDurum: durum,
-      profilFotoRedNedeni:
-        durum === "reddedildi"
-          ? String(body.profilFotoRedNedeni).trim()
-          : null,
+      profilFotoRedNedeni: redNedeni,
+    });
+
+    const baseUrl = smsBaseUrl(
+      `${request.nextUrl.protocol}//${request.nextUrl.host}`
+    );
+    const sms = await profilFotoSonucSmsKuyrugaAl({
+      telefon: cekici.telefon,
+      ad: cekici.ad,
+      durum: kaydedilen === "onaylandi" ? "onaylandi" : "reddedildi",
+      redNedeni,
+      baseUrl,
+      gonderenEposta: "panel:profil-foto",
     });
 
     return NextResponse.json({
@@ -59,6 +75,8 @@ export async function PATCH(
           ? "Profil fotoğrafı onaylandı."
           : "Profil fotoğrafı reddedildi.",
       profilFotoDurum: kaydedilen,
+      smsKuyruk: sms.ok,
+      smsIsId: sms.isId ?? null,
     });
   } catch (e) {
     const mesaj = e instanceof Error ? e.message : "Güncellenemedi.";
