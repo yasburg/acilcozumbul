@@ -25,6 +25,11 @@ export function YasalOnayKutusu({
       ? "Hizmet veren (çekici, lastikçi, anahtarcı) olarak"
       : "Müşteri olarak";
 
+  const paylasimMetin =
+    rol === "hizmet-veren"
+      ? "telefon numaramın, profil bilgilerimin ve puanımın müşterilerle; müşteri telefon ve talep bilgilerinin de benimle paylaşılmasını"
+      : "telefon numaramın ve talepte verdiğim bilgilerin hizmet verenlerle; hizmet verenin telefon, profil ve puan bilgilerinin de benimle paylaşılmasını";
+
   return (
     <label
       className={`flex items-start gap-2.5 rounded-xl border cursor-pointer ${
@@ -55,8 +60,11 @@ export function YasalOnayKutusu({
           kucukMetin ? "text-[11px]" : "text-sm leading-relaxed"
         }`}
       >
-        {rolMetin} Platformu kullanmak için aşağıdaki metinleri okudum ve kabul
-        ediyorum:{" "}
+        {rolMetin} aşağıdaki metinleri okudum, kabul ediyorum; {paylasimMetin};
+        hizmet için SMS ve sabit hat üzerinden sesli mesaj/arama
+        yapılabileceğini; kampanya ve bilgilendirme amaçlı ticari elektronik
+        ileti (SMS) gönderilmesine 6563 sayılı Kanun kapsamında onay verdiğimi
+        kabul ederim:{" "}
         {YASAL_LINKLER.map((l, i) => (
           <span key={l.href}>
             {i > 0 && (i === YASAL_LINKLER.length - 1 ? " ve " : ", ")}
@@ -65,7 +73,7 @@ export function YasalOnayKutusu({
             </Link>
           </span>
         ))}
-        .
+        . Ticari ileti onayımı dilediğim zaman geri alabilirim.
       </span>
     </label>
   );

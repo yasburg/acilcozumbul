@@ -12,7 +12,7 @@ export const YASAL_SIRKET = {
   platformDomain: "acilcozumbul.com",
 } as const;
 
-export const YASAL_GUNCELLEME = "4 Haziran 2026";
+export const YASAL_GUNCELLEME = "8 Ağustos 2026";
 
 export const YASAL_LINKLER = [
   { href: "/kullanim-kosullari", label: "Kullanım Koşulları" },

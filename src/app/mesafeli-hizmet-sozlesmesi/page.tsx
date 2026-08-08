@@ -83,12 +83,21 @@ export default function MesafeliHizmetSozlesmesiPage() {
         />
       </YasalBolum>
 
-      <YasalBolum baslik="8. Kişisel veriler">
+      <YasalBolum baslik="8. Kişisel veriler ve iletişim">
         <p>
           <Link href="/gizlilik-politikasi" className="text-amber-700 underline">
             Gizlilik Politikası (KVKK)
           </Link>{" "}
-          işbu sözleşmenin ayrılmaz parçasıdır.
+          ve{" "}
+          <Link href="/kullanim-kosullari" className="text-amber-700 underline">
+            Kullanım Koşulları
+          </Link>{" "}
+          işbu sözleşmenin ayrılmaz parçasıdır. Alıcı; kredi ve Platform
+          hizmetinin ifası için telefon numarasının müşterilerle paylaşılmasını;
+          SMS, sabit hat üzerinden sesli mesaj/arama ve kampanya/bilgilendirme
+          ticari elektronik iletilerinin gönderilmesini kabul eder. Ticari
+          ileti onayının geri alınması, işbu sözleşmenin ifasına ilişkin zorunlu
+          bildirimleri engellemez.
         </p>
       </YasalBolum>
 
