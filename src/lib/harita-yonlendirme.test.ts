@@ -3,6 +3,9 @@ import {
   appleMapsRotaUrl,
   googleMapsRotaUrl,
   haritaSecenekleri,
+  WHATSAPP_MANUEL_KONUM_MESAJI,
+  whatsappCanliKonumIsteMesaji,
+  whatsappHedefTeyitMesaji,
   whatsappKonumMesaji,
 } from "./harita-yonlendirme";
 
@@ -42,5 +45,36 @@ describe("harita-yonlendirme", () => {
     expect(metin).toContain("maps.google.com");
     expect(metin).toContain("41.01");
     expect(metin).toContain("Kadıköy");
+  });
+
+  it("whatsappKonumMesaji manuel konumda kısa metin", () => {
+    expect(
+      whatsappKonumMesaji({
+        lat: 41.01,
+        lng: 28.97,
+        adres: "Başakşehir",
+        kaynak: "manuel",
+      })
+    ).toBe(WHATSAPP_MANUEL_KONUM_MESAJI);
+  });
+
+  it("whatsappCanliKonumIsteMesaji hedef linki ekler", () => {
+    const metin = whatsappCanliKonumIsteMesaji({
+      hizmetVerenAd: "Yasin",
+      hedef: { lat: 41.1, lng: 28.8 },
+    });
+    expect(metin).toContain("Yasin");
+    expect(metin).toContain("tam konumunuz gözükmüyor");
+    expect(metin).toContain("maps.google.com");
+    expect(metin).toContain("Doğru mudur");
+  });
+
+  it("whatsappHedefTeyitMesaji hedef linki içerir", () => {
+    const metin = whatsappHedefTeyitMesaji({
+      hizmetVerenAd: "Yasin",
+      hedef: { lat: 41.1, lng: 28.8 },
+    });
+    expect(metin).toContain("hedef konum");
+    expect(metin).toContain("41.1");
   });
 });

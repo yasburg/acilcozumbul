@@ -397,8 +397,8 @@ export function HedefOneriHarita({
           </span>
         </div>
       )}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-100 aspect-[4/3] sm:aspect-[16/10]">
-        <div ref={containerRef} className="h-full w-full" />
+      <div className="relative z-0 isolate overflow-hidden rounded-xl border border-slate-200 bg-slate-100 aspect-[4/3] sm:aspect-[16/10]">
+        <div ref={containerRef} className="h-full w-full [&_.leaflet-container]:!z-0" />
       </div>
       <p className="text-xs text-slate-500 text-center">
         Numaraya dokunarak hedef seçin. A = arıza konumu.

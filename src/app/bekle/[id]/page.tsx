@@ -133,6 +133,7 @@ function BekleIcerik() {
     lat: number;
     lng: number;
     adres: string;
+    kaynak?: "gps" | "manuel";
   } | null>(null);
   const [hedefKonum, setHedefKonum] = useState<{
     lat: number;
@@ -290,16 +291,27 @@ function BekleIcerik() {
         }
                         if (data.konum) {
                           setMusteriKonum((prev) => {
-                            const k = data.konum as {
+                            const raw = data.konum as {
                               lat: number;
                               lng: number;
                               adres: string;
+                              kaynak?: "gps" | "manuel";
+                            };
+                            const k = {
+                              lat: raw.lat,
+                              lng: raw.lng,
+                              adres: raw.adres,
+                              ...(raw.kaynak === "gps" ||
+                              raw.kaynak === "manuel"
+                                ? { kaynak: raw.kaynak }
+                                : {}),
                             };
                             if (
                               prev &&
                               Math.abs(prev.lat - k.lat) < 1e-7 &&
                               Math.abs(prev.lng - k.lng) < 1e-7 &&
-                              prev.adres === k.adres
+                              prev.adres === k.adres &&
+                              prev.kaynak === k.kaynak
                             ) {
                               return prev;
                             }
@@ -783,6 +795,7 @@ function BekleIcerik() {
               lat: takipKonum.lat,
               lng: takipKonum.lng,
               adres: takipKonum.adres,
+              kaynak: takipKonum.kaynak,
             })
           )
         : null;

@@ -224,7 +224,7 @@ export function MusteriCekiciTakipHarita({
 
       <div
         ref={haritaElRef}
-        className="h-56 w-full rounded-xl overflow-hidden border border-emerald-100 bg-slate-100 [&_.leaflet-container]:h-full [&_.leaflet-container]:w-full [&_.acil-takip-pin]:border-0 [&_.acil-takip-pin]:bg-transparent"
+        className="relative z-0 isolate h-56 w-full rounded-xl overflow-hidden border border-emerald-100 bg-slate-100 [&_.leaflet-container]:!z-0 [&_.leaflet-container]:h-full [&_.leaflet-container]:w-full [&_.acil-takip-pin]:border-0 [&_.acil-takip-pin]:bg-transparent"
         role="img"
         aria-label="Çekici canlı konum haritası"
       />

@@ -18,7 +18,14 @@ import {
   soyadGoster,
   telefonGoster,
 } from "@/lib/kisisel-veri-gizle";
+import {
+  googleMapsKonumUrl,
+  whatsappCanliKonumIsteMesaji,
+  whatsappHedefTeyitMesaji,
+} from "@/lib/harita-yonlendirme";
+import { whatsappUrl } from "@/lib/telefon";
 import { posthogOlayBirKez, posthogOlayYakala } from "@/lib/posthog-client";
+import type { KonumKaynak } from "@/lib/types";
 
 interface TalepDurum {
   id: string;
@@ -49,7 +56,12 @@ interface TalepDurum {
   ad?: string;
   soyad?: string;
   telefon?: string;
-  konum?: { adres?: string; lat: number; lng: number };
+  konum?: {
+    adres?: string;
+    lat: number;
+    lng: number;
+    kaynak?: KonumKaynak;
+  };
   hedefKonum?: { adres?: string; lat: number; lng: number };
   sorun?: string;
   aracModeli?: string;
@@ -280,6 +292,38 @@ export default function CekiciTalepClient() {
     if (!talep?.hedefKonum || !koordinatGecerli(talep.hedefKonum)) return null;
     return { lat: talep.hedefKonum.lat, lng: talep.hedefKonum.lng };
   }, [talep?.hedefKonum?.lat, talep?.hedefKonum?.lng]);
+
+  const musteriKonumGpsMi = talep?.konum?.kaynak === "gps";
+  const hizmetVerenAd = cekici?.ad?.trim() || "hizmet veren";
+
+  const whatsappCanliKonumHref =
+    gizlilik === "yok" && talep?.telefon && !musteriKonumGpsMi
+      ? whatsappUrl(
+          talep.telefon,
+          whatsappCanliKonumIsteMesaji({
+            hizmetVerenAd,
+            hedef: hedefKoordinat,
+          })
+        )
+      : null;
+
+  const whatsappHedefTeyitHref =
+    gizlilik === "yok" &&
+    talep?.telefon &&
+    musteriKonumGpsMi &&
+    hedefKoordinat
+      ? whatsappUrl(
+          talep.telefon,
+          whatsappHedefTeyitMesaji({
+            hizmetVerenAd,
+            hedef: hedefKoordinat,
+          })
+        )
+      : null;
+
+  const hedefHaritaHref = hedefKoordinat
+    ? googleMapsKonumUrl(hedefKoordinat)
+    : null;
 
   const rotaSureGoster =
     !!musteriKoordinat &&
@@ -570,6 +614,55 @@ export default function CekiciTalepClient() {
                   onClick={() => void musteriAraKaydet()}
                 >
                   <Btn variant="success">📞 Müşteriye Ara</Btn>
+                </a>
+              )}
+              {hedefHaritaHref && (
+                <a
+                  href={hedefHaritaHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() =>
+                    posthogOlayYakala("cekici_hedef_konum_ac", {
+                      rol: "cekici",
+                      talep_id: id,
+                    })
+                  }
+                >
+                  <Btn variant="outline">
+                    📍 Müşterinin aracı götürmek istediği konumu aç
+                  </Btn>
+                </a>
+              )}
+              {whatsappCanliKonumHref && (
+                <a
+                  href={whatsappCanliKonumHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() =>
+                    posthogOlayYakala("cekici_whatsapp_canli_konum_iste", {
+                      rol: "cekici",
+                      talep_id: id,
+                    })
+                  }
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-6 py-4 text-base font-semibold text-white shadow-md transition hover:bg-[#1ebe57] touch-manipulation active:scale-[0.98]"
+                >
+                  WhatsApp’tan canlı konum iste
+                </a>
+              )}
+              {whatsappHedefTeyitHref && (
+                <a
+                  href={whatsappHedefTeyitHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() =>
+                    posthogOlayYakala("cekici_whatsapp_hedef_teyit", {
+                      rol: "cekici",
+                      talep_id: id,
+                    })
+                  }
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-6 py-4 text-base font-semibold text-white shadow-md transition hover:bg-[#1ebe57] touch-manipulation active:scale-[0.98]"
+                >
+                  WhatsApp’tan konumu teyit et
                 </a>
               )}
               {musteriKoordinat && (

@@ -22,13 +22,8 @@ export function YasalOnayKutusu({
 }: Props) {
   const rolMetin =
     rol === "hizmet-veren"
-      ? "Hizmet veren (çekici, lastikçi, anahtarcı) olarak"
+      ? "Hizmet veren olarak"
       : "Müşteri olarak";
-
-  const paylasimMetin =
-    rol === "hizmet-veren"
-      ? "telefon numaramın, profil bilgilerimin ve puanımın müşterilerle; müşteri telefon ve talep bilgilerinin de benimle paylaşılmasını"
-      : "telefon numaramın ve talepte verdiğim bilgilerin hizmet verenlerle; hizmet verenin telefon, profil ve puan bilgilerinin de benimle paylaşılmasını";
 
   return (
     <label
@@ -60,11 +55,7 @@ export function YasalOnayKutusu({
           kucukMetin ? "text-[11px]" : "text-sm leading-relaxed"
         }`}
       >
-        {rolMetin} aşağıdaki metinleri okudum, kabul ediyorum; {paylasimMetin};
-        hizmet için SMS ve sabit hat üzerinden sesli mesaj/arama
-        yapılabileceğini; kampanya ve bilgilendirme amaçlı ticari elektronik
-        ileti (SMS) gönderilmesine 6563 sayılı Kanun kapsamında onay verdiğimi
-        kabul ederim:{" "}
+        {rolMetin}{" "}
         {YASAL_LINKLER.map((l, i) => (
           <span key={l.href}>
             {i > 0 && (i === YASAL_LINKLER.length - 1 ? " ve " : ", ")}
@@ -73,7 +64,9 @@ export function YasalOnayKutusu({
             </Link>
           </span>
         ))}
-        . Ticari ileti onayımı dilediğim zaman geri alabilirim.
+        {" "}
+        metinlerini okudum, kabul ediyorum; kampanya SMS’i dahil ticari
+        elektronik ileti almaya onay veriyorum.
       </span>
     </label>
   );

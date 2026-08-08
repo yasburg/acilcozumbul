@@ -624,7 +624,8 @@ function MusteriDonusumSayfaIcerik({
     lat: number,
     lng: number,
     adres: string,
-    hedef: boolean
+    hedef: boolean,
+    kaynak?: "gps" | "manuel"
   ) {
     if (hedef) {
       setHedefBilinmiyor(false);
@@ -642,6 +643,7 @@ function MusteriDonusumSayfaIcerik({
         lat,
         lng,
         adres,
+        ...(kaynak ? { konumKaynak: kaynak } : {}),
       }));
     }
   }
@@ -690,7 +692,13 @@ function MusteriDonusumSayfaIcerik({
       const { latitude, longitude } = pos.coords;
       const adres = await reverseGeocode(latitude, longitude);
       if (gpsIstekRef.current !== istekId) return;
-      await konumKaydet(latitude, longitude, adres, hedef);
+      await konumKaydet(
+        latitude,
+        longitude,
+        adres,
+        hedef,
+        hedef ? undefined : "gps"
+      );
       if (!hedef) {
         setArizaAdresDuzenle(false);
         setBilgiMesaj("✓ GPS konumu alındı.");
@@ -734,7 +742,13 @@ function MusteriDonusumSayfaIcerik({
         if (mevcut.trim().length >= 4) {
           const g = await geocodeAdres(mevcut);
           if (g) {
-            await konumKaydet(g.lat, g.lng, g.adres, hedef);
+            await konumKaydet(
+              g.lat,
+              g.lng,
+              g.adres,
+              hedef,
+              hedef ? undefined : "manuel"
+            );
             setBilgiMesaj("Adres haritada işaretlendi.");
             return;
           }
@@ -749,7 +763,8 @@ function MusteriDonusumSayfaIcerik({
         data.lat,
         data.lng,
         (data.adres ?? "") + uyari,
-        hedef
+        hedef,
+        hedef ? undefined : "manuel"
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Yaklaşık konum alınamadı.");
@@ -774,7 +789,13 @@ function MusteriDonusumSayfaIcerik({
     const g = await geocodeAdres(adres);
     setAdresGeocodeYukleniyor(false);
     if (g) {
-      await konumKaydet(g.lat, g.lng, g.adres, hedef);
+      await konumKaydet(
+        g.lat,
+        g.lng,
+        g.adres,
+        hedef,
+        hedef ? undefined : "manuel"
+      );
       return true;
     }
     setBilgiMesaj(
@@ -862,7 +883,7 @@ function MusteriDonusumSayfaIcerik({
           );
           return;
         }
-        await konumKaydet(g.lat, g.lng, g.adres, false);
+        await konumKaydet(g.lat, g.lng, g.adres, false, "manuel");
         lat = g.lat;
         lng = g.lng;
       }
@@ -1357,7 +1378,12 @@ function MusteriDonusumSayfaIcerik({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          konum: { lat: form.lat, lng: form.lng, adres: form.adres },
+          konum: {
+            lat: form.lat,
+            lng: form.lng,
+            adres: form.adres,
+            kaynak: form.konumKaynak === "gps" ? "gps" : "manuel",
+          },
           ...(hedefBilinmiyor ? { hedefBilinmiyor: true } : {}),
           ...(hedefGerekli
             ? {
@@ -1721,7 +1747,13 @@ function MusteriDonusumSayfaIcerik({
                           if (form.adres.trim().length >= 6 && !form.lat) {
                             void geocodeAdres(form.adres).then((g) => {
                               if (g)
-                                void konumKaydet(g.lat, g.lng, g.adres, false);
+                                void konumKaydet(
+                                  g.lat,
+                                  g.lng,
+                                  g.adres,
+                                  false,
+                                  "manuel"
+                                );
                             });
                           }
                         }}

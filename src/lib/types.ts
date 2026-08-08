@@ -18,10 +18,14 @@ export type ListeDurumu =
   | "tercih_edilmedi"
   | "anlasildi";
 
+export type KonumKaynak = "gps" | "manuel";
+
 export interface Konum {
   lat: number;
   lng: number;
   adres: string;
+  /** gps: cihaz konumu; manuel: il/ilçe dropdown veya yazılan adres */
+  kaynak?: KonumKaynak;
 }
 
 export interface Teklif {

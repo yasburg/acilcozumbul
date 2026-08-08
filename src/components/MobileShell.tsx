@@ -111,7 +111,7 @@ export function MobileShell({
       <header
         id="app-shell-header"
         className={[
-          "sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur-md shadow-sm",
+          "sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-md shadow-sm",
           headerCompact ? "px-3 py-1.5" : "px-3 py-2",
         ].join(" ")}
       >

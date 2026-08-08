@@ -23,7 +23,7 @@ import {
 import { talepFotografYukle } from "@/lib/talep-fotograf";
 import { smsBaseUrl } from "@/lib/sms-base-url";
 import { telefonGecerliMi, telefonNormalize } from "@/lib/telefon";
-import type { Talep } from "@/lib/types";
+import type { KonumKaynak, Talep } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
   await ensureSeedData();
@@ -146,6 +146,11 @@ export async function POST(request: NextRequest) {
       ? `${sorunMetni} · Araç: ${modelMetni}`
       : sorunMetni;
 
+  const konumKaynak: KonumKaynak | undefined =
+    konum.kaynak === "gps" || konum.kaynak === "manuel"
+      ? konum.kaynak
+      : undefined;
+
   const talep: Talep = {
     id: talepId,
     ad: adMetin,
@@ -155,6 +160,7 @@ export async function POST(request: NextRequest) {
       lat: konum.lat ?? 0,
       lng: konum.lng ?? 0,
       adres: konum.adres.trim(),
+      ...(konumKaynak ? { kaynak: konumKaynak } : {}),
     },
     konumIl: konumIl ?? undefined,
     konumIlce: konumIlce ?? undefined,

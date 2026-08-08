@@ -144,15 +144,29 @@ select {
   font-size: 16px;
 }
 
+/* transform kullanma: fixed sticky CTA’lar containing block’a bağlanıp ortada görünür */
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
+}
+
+/* Tailwind pulse (2s) frekansı +%50 → süre 2/1.5 ≈ 1.33s */
+@keyframes devam-glow-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-devam-glow {
+  animation: devam-glow-pulse 1.333s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .animate-fade-in {

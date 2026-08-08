@@ -1,4 +1,9 @@
 import { latLngStr, type LatLng } from "./koordinat";
+import type { KonumKaynak } from "./types";
+
+/** İl/ilçe ile seçilen (hassas olmayan) konumda WhatsApp canlı paylaşım için */
+export const WHATSAPP_MANUEL_KONUM_MESAJI =
+  "Merhaba, şimdi konumumu paylaşıyorum.";
 
 export type HaritaUygulamasi = "google" | "apple";
 
@@ -78,7 +83,9 @@ export function whatsappKonumMesaji(opts: {
   lat: number;
   lng: number;
   adres?: string;
+  kaynak?: KonumKaynak;
 }): string {
+  if (opts.kaynak === "manuel") return WHATSAPP_MANUEL_KONUM_MESAJI;
   const satirlar = [
     "Merhaba, konumum:",
     googleMapsKonumUrl({ lat: opts.lat, lng: opts.lng }),
@@ -86,5 +93,32 @@ export function whatsappKonumMesaji(opts: {
   const adres = opts.adres?.trim();
   if (adres) satirlar.push(`Adres: ${adres}`);
   return satirlar.join("\n");
+}
+
+/** GPS yok / il-ilçe: müşteriden canlı konum iste */
+export function whatsappCanliKonumIsteMesaji(opts: {
+  hizmetVerenAd: string;
+  hedef?: LatLng | null;
+}): string {
+  const ad = opts.hizmetVerenAd.trim() || "hizmet veren";
+  let metin =
+    `Merhaba, ben Acil Çözüm Bul üzerinden ulaşıyorum. İsmim ${ad}, sistemde tam konumunuz gözükmüyor. Lütfen buradan konum atın.`;
+  if (opts.hedef && Number.isFinite(opts.hedef.lat) && Number.isFinite(opts.hedef.lng)) {
+    metin += ` Ayrıca seçilen hedef konum: ${googleMapsKonumUrl(opts.hedef)} gözüküyor. Doğru mudur?`;
+  }
+  metin += " Teşekkürler.";
+  return metin;
+}
+
+/** GPS var + hedef: müşteriden hedef konumu teyit et */
+export function whatsappHedefTeyitMesaji(opts: {
+  hizmetVerenAd: string;
+  hedef: LatLng;
+}): string {
+  const ad = opts.hizmetVerenAd.trim() || "hizmet veren";
+  return (
+    `Merhaba, ben Acil Çözüm Bul üzerinden ulaşıyorum. İsmim ${ad}. ` +
+    `Sistemde seçilen hedef konum: ${googleMapsKonumUrl(opts.hedef)} gözüküyor. Doğru mudur? Teşekkürler.`
+  );
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, Suspense } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -243,8 +244,14 @@ function AdimAltNav({
   onDevam: () => void;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     const el = rootRef.current;
     if (!el) return;
     const guncelle = () => stickyCtaOffsetAyarla(el.offsetHeight);
@@ -255,9 +262,11 @@ function AdimAltNav({
       ro.disconnect();
       stickyCtaOffsetTemizle();
     };
-  }, []);
+  }, [mounted]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       ref={rootRef}
       className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]"
@@ -276,7 +285,7 @@ function AdimAltNav({
           className={[
             "flex-[2]",
             devamGlow && !devamDisabled
-              ? "ring-2 ring-amber-300/90 shadow-[0_0_16px_4px_rgba(245,158,11,0.55)] animate-pulse"
+              ? "ring-2 ring-amber-300/90 shadow-[0_0_16px_4px_rgba(245,158,11,0.55)] animate-devam-glow"
               : "",
           ]
             .filter(Boolean)
@@ -287,7 +296,8 @@ function AdimAltNav({
           {devamMetin}
         </Btn>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -316,8 +326,14 @@ function HedefAltNav({
   devamIcerik: React.ReactNode;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     const el = rootRef.current;
     if (!el) return;
     const guncelle = () => stickyCtaOffsetAyarla(el.offsetHeight);
@@ -328,9 +344,11 @@ function HedefAltNav({
       ro.disconnect();
       stickyCtaOffsetTemizle();
     };
-  }, [hedefSeciliMi, yasalOnayHata]);
+  }, [mounted, hedefSeciliMi, yasalOnayHata]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       ref={rootRef}
       className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]"
@@ -371,7 +389,7 @@ function HedefAltNav({
             className={[
               "flex-[2]",
               devamGlow && !devamDisabled
-                ? "ring-2 ring-amber-300/90 shadow-[0_0_16px_4px_rgba(245,158,11,0.55)] animate-pulse"
+                ? "ring-2 ring-amber-300/90 shadow-[0_0_16px_4px_rgba(245,158,11,0.55)] animate-devam-glow"
                 : "",
             ]
               .filter(Boolean)
@@ -383,7 +401,8 @@ function HedefAltNav({
           </Btn>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -972,7 +991,8 @@ function MusteriAnaSayfaIcerik({
     lat: number,
     lng: number,
     adres: string,
-    hedef: boolean
+    hedef: boolean,
+    kaynak?: "gps" | "manuel"
   ) {
     if (hedef) {
       setHedefBilinmiyor(false);
@@ -989,6 +1009,7 @@ function MusteriAnaSayfaIcerik({
         lat,
         lng,
         adres,
+        ...(kaynak ? { konumKaynak: kaynak } : {}),
       }));
       const { il, ilce } = parseIlIlce(adres);
       if (il) setSeciliSehir(il);
@@ -1058,7 +1079,13 @@ function MusteriAnaSayfaIcerik({
       const { latitude, longitude } = pos.coords;
       const adres = await reverseGeocode(latitude, longitude);
       if (gpsIstekRef.current !== istekId) return;
-      await konumKaydet(latitude, longitude, adres, hedef);
+      await konumKaydet(
+        latitude,
+        longitude,
+        adres,
+        hedef,
+        hedef ? undefined : "gps"
+      );
       if (!hedef) {
         setArizaAdresDuzenle(false);
         setError("");
@@ -1072,6 +1099,7 @@ function MusteriAnaSayfaIcerik({
           lat: latitude,
           lng: longitude,
           adres,
+          konumKaynak: "gps",
         };
         musteriFormTaslakKaydet({
           v: 1,
@@ -1131,7 +1159,13 @@ function MusteriAnaSayfaIcerik({
         if (mevcut.trim().length >= 4) {
           const g = await geocodeAdres(mevcut);
           if (g) {
-            await konumKaydet(g.lat, g.lng, g.adres, hedef);
+            await konumKaydet(
+              g.lat,
+              g.lng,
+              g.adres,
+              hedef,
+              hedef ? undefined : "manuel"
+            );
             setBilgiMesaj("Adres haritada işaretlendi.");
             return;
           }
@@ -1146,7 +1180,8 @@ function MusteriAnaSayfaIcerik({
         data.lat,
         data.lng,
         (data.adres ?? "") + uyari,
-        hedef
+        hedef,
+        hedef ? undefined : "manuel"
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Yaklaşık konum alınamadı.");
@@ -1171,7 +1206,13 @@ function MusteriAnaSayfaIcerik({
     const g = await geocodeAdres(adres);
     setAdresGeocodeYukleniyor(false);
     if (g) {
-      await konumKaydet(g.lat, g.lng, g.adres, hedef);
+      await konumKaydet(
+        g.lat,
+        g.lng,
+        g.adres,
+        hedef,
+        hedef ? undefined : "manuel"
+      );
       return true;
     }
     setBilgiMesaj(
@@ -1259,7 +1300,7 @@ function MusteriAnaSayfaIcerik({
           );
           return;
         }
-        await konumKaydet(g.lat, g.lng, g.adres, false);
+        await konumKaydet(g.lat, g.lng, g.adres, false, "manuel");
         lat = g.lat;
         lng = g.lng;
       }
@@ -1631,7 +1672,12 @@ function MusteriAnaSayfaIcerik({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          konum: { lat: form.lat, lng: form.lng, adres: form.adres },
+          konum: {
+            lat: form.lat,
+            lng: form.lng,
+            adres: form.adres,
+            kaynak: form.konumKaynak === "gps" ? "gps" : "manuel",
+          },
           ...(hedefBilinmiyor ? { hedefBilinmiyor: true } : {}),
           ...(hedefGerekli
             ? {
@@ -2288,6 +2334,7 @@ function MusteriAnaSayfaIcerik({
                     lat: 0,
                     lng: 0,
                     adres: "",
+                    konumKaynak: undefined,
                   }));
                   setSeciliSehir(varsayilanSehir ?? "");
                   setSeciliIlce(varsayilanIlce ?? "");
@@ -2445,15 +2492,29 @@ function MusteriAnaSayfaIcerik({
                               `${seciliIlce}, ${seciliSehir}, Türkiye`
                             );
                             if (g) {
-                              await konumKaydet(g.lat, g.lng, g.adres, false);
+                              await konumKaydet(
+                                g.lat,
+                                g.lng,
+                                g.adres,
+                                false,
+                                "manuel"
+                              );
                             } else {
-                              setForm((f) => ({ ...f, adres: adresMetni }));
+                              setForm((f) => ({
+                                ...f,
+                                adres: adresMetni,
+                                konumKaynak: "manuel",
+                              }));
                             }
                           } finally {
                             setAdresGeocodeYukleniyor(false);
                           }
-                        } else if (!form.adres.trim()) {
-                          setForm((f) => ({ ...f, adres: adresMetni }));
+                        } else {
+                          setForm((f) => ({
+                            ...f,
+                            adres: form.adres.trim() || adresMetni,
+                            konumKaynak: "manuel",
+                          }));
                         }
                         adimGit("sorun");
                         return;
@@ -2532,15 +2593,29 @@ function MusteriAnaSayfaIcerik({
                           `${seciliIlce}, ${seciliSehir}, Türkiye`
                         );
                         if (g) {
-                          await konumKaydet(g.lat, g.lng, g.adres, false);
+                          await konumKaydet(
+                            g.lat,
+                            g.lng,
+                            g.adres,
+                            false,
+                            "manuel"
+                          );
                         } else {
-                          setForm((f) => ({ ...f, adres: adresMetni }));
+                          setForm((f) => ({
+                            ...f,
+                            adres: adresMetni,
+                            konumKaynak: "manuel",
+                          }));
                         }
                       } finally {
                         setAdresGeocodeYukleniyor(false);
                       }
-                    } else if (!form.adres.trim()) {
-                      setForm((f) => ({ ...f, adres: adresMetni }));
+                    } else {
+                      setForm((f) => ({
+                        ...f,
+                        adres: form.adres.trim() || adresMetni,
+                        konumKaynak: "manuel",
+                      }));
                     }
                     adimGit("sorun");
                     return;

@@ -4,6 +4,7 @@ import {
   ihaleSureTipiNormalize,
   type IhaleSureTipi,
 } from "@/lib/ihale";
+import type { KonumKaynak } from "@/lib/types";
 
 const STORAGE_KEY = "acilcozum_musteri_form_taslak";
 
@@ -14,6 +15,8 @@ export type MusteriFormAlanlari = {
   lat: number;
   lng: number;
   adres: string;
+  /** Arıza konumu GPS mi, il/ilçe-adres mi */
+  konumKaynak?: KonumKaynak;
   hedefLat: number;
   hedefLng: number;
   hedefAdres: string;
@@ -107,6 +110,10 @@ function metin(v: unknown): string {
 function formDogrula(raw: unknown): MusteriFormAlanlari | null {
   if (!raw || typeof raw !== "object") return null;
   const f = raw as Record<string, unknown>;
+  const konumKaynak =
+    f.konumKaynak === "gps" || f.konumKaynak === "manuel"
+      ? f.konumKaynak
+      : undefined;
   return {
     ad: metin(f.ad),
     soyad: metin(f.soyad),
@@ -114,6 +121,7 @@ function formDogrula(raw: unknown): MusteriFormAlanlari | null {
     lat: sayi(f.lat),
     lng: sayi(f.lng),
     adres: metin(f.adres),
+    ...(konumKaynak ? { konumKaynak } : {}),
     hedefLat: sayi(f.hedefLat),
     hedefLng: sayi(f.hedefLng),
     hedefAdres: metin(f.hedefAdres),
