@@ -98,7 +98,7 @@ export function anaSayfaSehirBaglantilari(): { ad: string; href: string }[] {
 
 /** Ana sayfa (`/`) — Türkiye geneli; şehir/ilçe SEO’su path’lerde */
 export const ANA_SAYFA_HERO =
-  "Türkiye’nin Acil Yol Yardım Pazaryeri | Acil Çözüm Bul";
+  "Türkiye’nin Acil Yol Yardım Platformu | Acil Çözüm Bul";
 
 export function anaSayfaSeoIcerik(): SeoLandingIcerik {
   return {
@@ -110,7 +110,7 @@ export function anaSayfaSeoIcerik(): SeoLandingIcerik {
       "En hızlı ve uygun çözümü yakındaki hizmet verenlerden alın. Şehrinizi veya otomatik konumu seçin; çekici, lastikçi, akü, anahtarcı ve yakıt yardımı için gelen teklifleri karşılaştırıp size uygun olanı seçin.",
     bolgeBaslik: "Nasıl çalışır?",
     paragraflar: [
-      "Acil Çözüm Bul bir pazar yeridir: tek bir firmaya bağlı kalmadan, çevrenizdeki kayıtlı ekiplerden fiyat ve tahmini varış süresi teklifi alırsınız. Üyelik veya ön ödeme gerekmez; hizmet bedelini seçtiğiniz firmayla aranızda kararlaştırırsınız.",
+      "Acil Çözüm Bul bir platformdur: tek bir firmaya bağlı kalmadan, çevrenizdeki kayıtlı ekiplerden fiyat ve tahmini varış süresi teklifi alırsınız. Üyelik veya ön ödeme gerekmez; hizmet bedelini seçtiğiniz firmayla aranızda kararlaştırırsınız.",
       "Önce şehrinizi (veya GPS ile konumunuzu) seçin, ardından ihtiyacınızı belirtin. Talebiniz yakındaki hizmet verenlere iletilir; gelen teklifleri aynı ekranda görürsünüz. Sabit «X dakikada gelir» veya sabit fiyat listesi yayınlamayız — gerçek teklifleri siz seçersiniz.",
       "İstanbul ve diğer illerde ilçe bazlı sayfalar da vardır. Şehir seçince ilgili sayfaya geçersiniz; ilçe seçince bölgeye özel içerik ve talep akışı açılır.",
     ],
@@ -257,7 +257,7 @@ function istanbulSehirHubIcerik(): SeoLandingIcerik {
       {
         soru: "Tek bir çekici firması mısınız?",
         cevap:
-          "Hayır. Acil Çözüm Bul bir pazar yeridir: birden fazla hizmet verenden teklif alıp karşılaştırırsınız. Böylece yalnızca tek numaraya bağlı kalmazsınız.",
+          "Hayır. Acil Çözüm Bul bir platformdur: birden fazla hizmet verenden teklif alıp karşılaştırırsınız. Böylece yalnızca tek numaraya bağlı kalmazsınız.",
       },
     ],
     ctaEtiket: "İstanbul’da talep oluştur",
@@ -334,7 +334,7 @@ export function ilceHubIcerik(
       "İlçe bazında sabit fiyat listesi yoktur; teklifler anlık müsaitliğe göre gelir.",
     guvenBaslik: "Gizlilik",
     guvenNotu:
-      "Platform bir yerel işletme rehberi değildir; pazar yeri olarak teklifleri karşılaştırırsınız.",
+      "Platform bir yerel işletme rehberi değildir; birden fazla firmadan teklifleri karşılaştırırsınız.",
     faqBaslik: "Sık sorulan sorular",
     faq: [
       {

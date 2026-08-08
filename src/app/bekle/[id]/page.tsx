@@ -697,7 +697,7 @@ function BekleIcerik() {
 
   function talebiIptalAlani() {
     return (
-      <div className="w-full max-w-xs mx-auto mt-8 space-y-3">
+      <div className="w-full max-w-xs mx-auto mt-auto pt-10 pb-2 space-y-2">
         {mesaj && (
           <p className="text-sm text-red-600 text-center" role="alert">
             {mesaj}
@@ -717,28 +717,28 @@ function BekleIcerik() {
               >
                 {islem ? "İptal ediliyor…" : "Evet, iptal et"}
               </Btn>
-              <Btn
-                variant="secondary"
-                className="!min-h-0 !py-3 !text-sm"
+              <button
+                type="button"
                 disabled={islem}
                 onClick={() => setIptalOnay(false)}
+                className="w-full text-center text-sm font-medium text-slate-400 hover:text-slate-500 touch-manipulation py-2 disabled:opacity-50"
               >
                 Vazgeç
-              </Btn>
+              </button>
             </div>
           </div>
         ) : (
-          <Btn
-            variant="danger"
-            className="!min-h-0 !py-3 !text-sm"
+          <button
+            type="button"
             disabled={islem}
             onClick={() => {
               setMesaj("");
               setIptalOnay(true);
             }}
+            className="w-full text-center text-sm font-medium text-slate-400 hover:text-slate-500 touch-manipulation py-2 disabled:opacity-50"
           >
             Talebi iptal et
-          </Btn>
+          </button>
         )}
       </div>
     );
@@ -1101,29 +1101,31 @@ function BekleIcerik() {
         )}
 
         {!animasyonBitti && teklifler.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[55dvh] text-center w-full">
-            <IhaleBekleAnimasyon
-              operatorSayisi={operatorSayisi}
-              onTamamlandi={() => setAnimasyonBitti(true)}
-            />
-            <p className="text-slate-500 text-sm mt-6 mb-2">
-              Operatörler bilgilendiriliyor…
-            </p>
-            {ihaleBitis && (
-              <p className="text-xs text-slate-400">
-                İhale bitiş:{" "}
-                {new Date(ihaleBitis).toLocaleTimeString("tr-TR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+          <div className="flex flex-col min-h-[70dvh] text-center w-full">
+            <div className="flex flex-1 flex-col items-center justify-center">
+              <IhaleBekleAnimasyon
+                operatorSayisi={operatorSayisi}
+                onTamamlandi={() => setAnimasyonBitti(true)}
+              />
+              <p className="text-slate-500 text-sm mt-6 mb-2">
+                Operatörler bilgilendiriliyor…
               </p>
-            )}
-            <p className="text-xs text-slate-400 mt-8 max-w-xs">
-              {operatorSayisi > 0
-                ? `${operatorSayisi} operatöre bildirim gönderildi.`
-                : "Yakındaki operatörler aranıyor. Teklifler geldikçe burada listelenecek."}
-            </p>
-            {smsBekleMesaji()}
+              {ihaleBitis && (
+                <p className="text-xs text-slate-400">
+                  İhale bitiş:{" "}
+                  {new Date(ihaleBitis).toLocaleTimeString("tr-TR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              )}
+              <p className="text-xs text-slate-400 mt-8 max-w-xs">
+                {operatorSayisi > 0
+                  ? `${operatorSayisi} operatöre bildirim gönderildi.`
+                  : "Yakındaki operatörler aranıyor. Teklifler geldikçe burada listelenecek."}
+              </p>
+              {smsBekleMesaji()}
+            </div>
             {talebiIptalAlani()}
           </div>
         ) : (

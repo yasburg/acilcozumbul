@@ -1,16 +1,16 @@
 # Graph Report - acilcozumbul  (2026-08-08)
 
 ## Corpus Check
-- 633 files · ~683,066 words
+- 633 files · ~683,085 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3021 nodes · 9818 edges · 137 communities (113 shown, 24 thin omitted)
+- 3021 nodes · 9818 edges · 138 communities (114 shown, 24 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 45 edges (avg confidence: 0.63)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8cc94924`
+- Built from commit: `60aeaa44`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -131,6 +131,7 @@
 - [[_COMMUNITY_fatura-pdf.ts|fatura-pdf.ts]]
 - [[_COMMUNITY_netgsmSmsMesajGecerliMi|netgsmSmsMesajGecerliMi]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
+- [[_COMMUNITY_route.ts|route.ts]]
 - [[_COMMUNITY_SosyalMedyaIkonlari.tsx|SosyalMedyaIkonlari.tsx]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
 - [[_COMMUNITY_layout.tsx|layout.tsx]]
@@ -175,7 +176,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (137 total, 24 thin omitted)
+## Communities (138 total, 24 thin omitted)
 
 ### Community 0 - "demo-oturum.ts"
 Cohesion: 0.06
@@ -259,7 +260,7 @@ Nodes (26): dogrulanmisUserDataSakla(), cerezAnalitikAktif(), GTAG_CONSENT_DENIE
 
 ### Community 21 - "MusteriCekiciTakipHarita.tsx"
 Cohesion: 0.19
-Nodes (16): GET(), SatinAlmaOzetDto, FILTRELER, Ozet, SatinAlmaKart(), tipRozetSinif(), listeleAbonelikIslemleriTahsilat(), listeleKrediOdemeler() (+8 more)
+Nodes (17): GET(), SatinAlmaOzetDto, FILTRELER, Ozet, SatinAlmaKart(), tipRozetSinif(), listeleAbonelikIslemleriTahsilat(), listeleKrediOdemeler() (+9 more)
 
 ### Community 22 - "compilerOptions"
 Cohesion: 0.10
@@ -294,8 +295,8 @@ Cohesion: 0.15
 Nodes (12): API yüzeyi, Güvenlik ve izolasyon, Kapsam dışı (ilk PR), Kayıt akışı önerisi (video senaryosu), Mevcut kodla ilişki, Problem, Test planı, UI değişiklikleri (+4 more)
 
 ### Community 30 - "demo-responses.ts"
-Cohesion: 0.16
-Nodes (38): POST(), GET(), rotaKoordinatlari(), POST(), GET(), listeDurumuBelirle(), toOzet(), sehirKullanimAcikMiDb() (+30 more)
+Cohesion: 0.28
+Nodes (22): GET(), rotaKoordinatlari(), POST(), listeDurumuBelirle(), toOzet(), sehirKullanimAcikMiDb(), sehirBeklemeMesaji(), demoListeDurumuBelirle() (+14 more)
 
 ### Community 32 - "kayit-kodu.ts"
 Cohesion: 0.11
@@ -371,7 +372,7 @@ Nodes (6): admin, anon, authEmail(), main(), service, url
 
 ### Community 60 - "route.ts"
 Cohesion: 0.17
-Nodes (22): POST(), POST(), GET(), GET(), GET(), BekleIcerik(), cekiciPuanOzetleri(), getCekiciById() (+14 more)
+Nodes (20): POST(), POST(), GET(), GET(), GET(), BekleIcerik(), cekiciPuanOzetleri(), getCekiciById() (+12 more)
 
 ### Community 61 - "fixtures.ts"
 Cohesion: 0.20
@@ -566,8 +567,8 @@ Cohesion: 0.33
 Nodes (5): ACB rebrand önizleme, Deploy, DNS (Squarespace), Ortam değişkenleri (staging), Staging — stage.acilcozumbul.com
 
 ### Community 116 - "turkiye-il-nufus.ts"
-Cohesion: 0.44
-Nodes (8): POST(), GET(), krediOdemeTipiCoz(), getAbonelikIslemById(), getFaturaLinkByKrediOdemeId(), abonelikIslemIdFromDetay(), adSoyadAyir(), satinAlmaTipEtiket()
+Cohesion: 0.50
+Nodes (7): POST(), GET(), krediOdemeTipiCoz(), getAbonelikIslemById(), getFaturaLinkByKrediOdemeId(), abonelikIslemIdFromDetay(), adSoyadAyir()
 
 ### Community 117 - "sitemap.ts"
 Cohesion: 0.57
@@ -580,6 +581,10 @@ Nodes (3): GET(), istemciIp(), ozelIp()
 ### Community 119 - "netgsmSmsMesajGecerliMi"
 Cohesion: 0.67
 Nodes (4): NETGSM_TR_CIFTE, netgsmSmsBirimHesapla(), netgsmSmsMesajGecerliMi(), netgsmSmsParcaSayisi()
+
+### Community 121 - "route.ts"
+Cohesion: 0.21
+Nodes (18): POST(), GET(), bugunBaslangicIso(), getTaleplerBugun(), demoKatil(), demoPanelVerisi(), demoKatilMesaji(), cekiciBildirimKrediTutari() (+10 more)
 
 ### Community 122 - "SosyalMedyaIkonlari.tsx"
 Cohesion: 0.21

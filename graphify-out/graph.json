@@ -2020,7 +2020,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_talep_id_katil_route",
-      "community": 30,
+      "community": 121,
       "norm_label": "route.ts"
     },
     {
@@ -2030,7 +2030,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_app_api_cekici_talep_id_katil_route_post",
-      "community": 30,
+      "community": 121,
       "norm_label": "post()"
     },
     {
@@ -2130,7 +2130,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_cekici_talepler_route",
-      "community": 30,
+      "community": 121,
       "norm_label": "route.ts"
     },
     {
@@ -2160,7 +2160,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "src_app_api_cekici_talepler_route_get",
-      "community": 30,
+      "community": 121,
       "norm_label": "get()"
     },
     {
@@ -14600,7 +14600,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "src_lib_db_bugunbaslangiciso",
-      "community": 30,
+      "community": 121,
       "norm_label": "bugunbaslangiciso()"
     },
     {
@@ -14830,7 +14830,7 @@
       "source_location": "L358",
       "_origin": "ast",
       "id": "src_lib_db_gettaleplerbugun",
-      "community": 30,
+      "community": 121,
       "norm_label": "gettaleplerbugun()"
     },
     {
@@ -15410,7 +15410,7 @@
       "source_location": "L583",
       "_origin": "ast",
       "id": "src_lib_demo_oturum_demokatil",
-      "community": 30,
+      "community": 121,
       "norm_label": "demokatil()"
     },
     {
@@ -15470,7 +15470,7 @@
       "source_location": "L735",
       "_origin": "ast",
       "id": "src_lib_demo_oturum_demopanelverisi",
-      "community": 30,
+      "community": 121,
       "norm_label": "demopanelverisi()"
     },
     {
@@ -15540,7 +15540,7 @@
       "source_location": "L256",
       "_origin": "ast",
       "id": "src_lib_demo_responses_demokatilmesaji",
-      "community": 30,
+      "community": 121,
       "norm_label": "demokatilmesaji()"
     },
     {
@@ -18010,7 +18010,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_lib_ihale_cekicipremiumsmsaktifmi",
-      "community": 30,
+      "community": 121,
       "norm_label": "cekicipremiumsmsaktifmi()"
     },
     {
@@ -18020,7 +18020,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_lib_ihale_cekicibildirimkreditutari",
-      "community": 30,
+      "community": 121,
       "norm_label": "cekicibildirimkreditutari()"
     },
     {
@@ -18030,7 +18030,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_lib_ihale_cekiciyeterlibildirimkredisi",
-      "community": 30,
+      "community": 121,
       "norm_label": "cekiciyeterlibildirimkredisi()"
     },
     {
@@ -18060,7 +18060,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "src_lib_ihale_cekicitalepsmsadayimi",
-      "community": 30,
+      "community": 121,
       "norm_label": "cekicitalepsmsadayimi()"
     },
     {
@@ -18130,7 +18130,7 @@
       "source_location": "L174",
       "_origin": "ast",
       "id": "src_lib_ihale_ihaleacikmi",
-      "community": 60,
+      "community": 30,
       "norm_label": "ihaleacikmi()"
     },
     {
@@ -19980,7 +19980,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_kredi_bakiye_test",
-      "community": 30,
+      "community": 121,
       "norm_label": "kredi-bakiye.test.ts"
     },
     {
@@ -19990,7 +19990,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_kredi_bakiye",
-      "community": 30,
+      "community": 121,
       "norm_label": "kredi-bakiye.ts"
     },
     {
@@ -20000,7 +20000,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_lib_kredi_bakiye_kredibakiyeli",
-      "community": 30,
+      "community": 121,
       "norm_label": "kredibakiyeli"
     },
     {
@@ -20010,7 +20010,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_lib_kredi_bakiye_cekicitoplamkredi",
-      "community": 30,
+      "community": 121,
       "norm_label": "cekicitoplamkredi()"
     },
     {
@@ -20020,7 +20020,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_kredi_bakiye_cekicikredidus",
-      "community": 30,
+      "community": 121,
       "norm_label": "cekicikredidus()"
     },
     {
@@ -20050,7 +20050,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_lib_kredi_bakiye_abonelikkrediyukle",
-      "community": 30,
+      "community": 121,
       "norm_label": "abonelikkrediyukle()"
     },
     {
@@ -22740,7 +22740,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_lib_panel_satin_almalar_satinalmatipetiket",
-      "community": 116,
+      "community": 21,
       "norm_label": "satinalmatipetiket()"
     },
     {
@@ -24920,7 +24920,7 @@
       "source_location": "L414",
       "_origin": "ast",
       "id": "src_lib_sms_provider_sendsms",
-      "community": 60,
+      "community": 121,
       "norm_label": "sendsms()"
     },
     {
@@ -27170,7 +27170,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_lib_talep_utils_isbugun",
-      "community": 30,
+      "community": 121,
       "norm_label": "isbugun()"
     },
     {
@@ -28910,7 +28910,7 @@
       "source_location": "L278",
       "_origin": "ast",
       "id": "src_lib_types_talepozet",
-      "community": 30,
+      "community": 121,
       "norm_label": "talepozet"
     },
     {
@@ -63377,7 +63377,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/app/bekle/[id]/page.tsx",
-      "source_location": "L1174",
+      "source_location": "L1176",
       "weight": 1.0,
       "source": "src_app_bekle_id_page_bekleicerik",
       "target": "src_lib_sorun_tipleri_sorunhedefkonumgereklimi"
@@ -135776,5 +135776,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8cc949249e8daa1f3e06b34985e37c1484f3f965"
+  "built_at_commit": "60aeaa4467e2b842a170abf18752288ca94690c0"
 }

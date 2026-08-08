@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   publisher: SITE_ADI,
   applicationName: SITE_ADI,
   category: "travel",
-  classification: "Yol yardım ve çekici pazaryeri",
+  classification: "Yol yardım ve çekici platformu",
   alternates: {
     canonical: "/",
     languages: { "tr-TR": "/" },
