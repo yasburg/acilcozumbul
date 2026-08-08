@@ -65,6 +65,7 @@ import {
   musteriFormTaslakKaydet,
   musteriFormTaslakOku,
   musteriFormTaslakSil,
+  type MusteriFormAlanlari,
 } from "@/lib/musteri-form-taslak";
 import type { IhaleSureTipi } from "@/lib/ihale";
 import { ihaleBitisHesapla } from "@/lib/ihale";
@@ -229,7 +230,7 @@ function MusteriDonusumSayfaIcerik({
     telefon: "",
   });
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<MusteriFormAlanlari>({
     ad: "",
     soyad: "",
     telefon: "",

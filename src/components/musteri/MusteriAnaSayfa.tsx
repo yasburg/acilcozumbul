@@ -511,7 +511,7 @@ function MusteriAnaSayfaIcerik({
     telefon: "",
   });
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<MusteriFormAlanlari>({
     ad: "",
     soyad: "",
     telefon: "",
