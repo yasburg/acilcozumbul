@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   sesliWebhookDtmfIsle,
+  sesliWebhookPushButton,
   sesliWebhookSecretGecerliMi,
+  sesliWebhookState,
   type NetgsmSesliWebhookPayload,
 } from "@/lib/netgsm-sesli-webhook";
+import { sesliMesajRaporKaydet } from "@/lib/sesli-mesaj-log";
 
 export const dynamic = "force-dynamic";
 
@@ -30,9 +33,15 @@ async function bodyOku(
     };
     const push = get("push_button") ?? get("detail.push_button");
     return {
+      bulkid: get("bulkid"),
+      caller: get("caller"),
       relationid: get("relationid"),
       callee: get("callee"),
+      state: get("state"),
+      answer_time: get("answer_time"),
+      bilsec: get("bilsec"),
       push_button: push,
+      detail: push != null ? { push_button: push } : undefined,
     };
   }
   /* Netgsm bazen content-type olmadan JSON POST eder */
@@ -59,6 +68,25 @@ export async function POST(request: NextRequest) {
 
   const body = await bodyOku(request);
   try {
+    const pushButton = sesliWebhookPushButton(body);
+    const state = sesliWebhookState(body);
+    const bilsecRaw = body.bilsec;
+    const bilsec =
+      bilsecRaw == null || bilsecRaw === ""
+        ? null
+        : Number(String(bilsecRaw).trim());
+    await sesliMesajRaporKaydet({
+      telefon: body.callee != null ? String(body.callee) : undefined,
+      bulkid: body.bulkid != null ? String(body.bulkid) : undefined,
+      relationid:
+        body.relationid != null ? String(body.relationid) : undefined,
+      state,
+      pushButton: pushButton != null ? String(pushButton) : null,
+      answerTime: body.answer_time != null ? String(body.answer_time) : null,
+      bilsec: Number.isFinite(bilsec) ? bilsec : null,
+      raw: body as Record<string, unknown>,
+    });
+
     const sonuc = await sesliWebhookDtmfIsle(body);
     if (sonuc.islem === "otp_sms") {
       console.info(

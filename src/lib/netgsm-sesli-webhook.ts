@@ -91,11 +91,32 @@ export function sesliDtmfSmsOnlyKeyInfo(): VoiceKeyInfo {
 }
 
 export type NetgsmSesliWebhookPayload = {
-  relationid?: string | null;
+  bulkid?: number | string | null;
+  caller?: string | null;
   callee?: string | null;
+  state?: number | string | null;
+  type?: number | string | null;
+  relationid?: string | null;
+  answer_time?: string | null;
+  bilsec?: number | string | null;
   push_button?: number | string | null;
-  detail?: { push_button?: number | string | null } | null;
+  detail?: {
+    push_button?: number | string | null;
+    survey_push_button_desc?: string | null;
+    survey_taskid?: string | null;
+    record_link?: string | null;
+  } | null;
 };
+
+export function sesliWebhookState(
+  body: NetgsmSesliWebhookPayload
+): number | null {
+  const raw = body.state;
+  if (raw == null || raw === "") return null;
+  const n = typeof raw === "number" ? raw : Number(String(raw).trim());
+  if (!Number.isFinite(n)) return null;
+  return n;
+}
 
 export function sesliWebhookPushButton(
   body: NetgsmSesliWebhookPayload
@@ -116,10 +137,13 @@ export async function sesliWebhookDtmfIsle(
   islem: "otp_sms" | "yok" | "bulunamadi";
   cekiciId?: string;
   pushButton: number | null;
+  state: number | null;
 }> {
   const pushButton = sesliWebhookPushButton(body);
+  const state = sesliWebhookState(body);
+
   if (pushButton !== SESLI_DTMF_OTP_TUS) {
-    return { islem: "yok", pushButton };
+    return { islem: "yok", pushButton, state };
   }
 
   let cekiciId = sesliRelationCekiciIdParse(body.relationid ?? undefined);
@@ -132,12 +156,17 @@ export async function sesliWebhookDtmfIsle(
   }
 
   if (!cekici) {
-    return { islem: "bulunamadi", cekiciId: cekiciId ?? undefined, pushButton };
+    return {
+      islem: "bulunamadi",
+      cekiciId: cekiciId ?? undefined,
+      pushButton,
+      state,
+    };
   }
 
   cekici.bildirimSeviye = 2;
   cekici.premiumSmsAktif = true;
   await updateCekici(cekici);
 
-  return { islem: "otp_sms", cekiciId: cekici.id, pushButton };
+  return { islem: "otp_sms", cekiciId: cekici.id, pushButton, state };
 }
