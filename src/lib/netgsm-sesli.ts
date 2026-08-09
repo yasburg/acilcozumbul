@@ -147,8 +147,8 @@ export function basitSesliXml(params: {
 
   const urlRaw = params.url?.trim() ?? "";
   const urlSafe = urlRaw.replace(/[<>"']/g, "").slice(0, 500);
-  const urlXml =
-    key === 1 && urlSafe ? `<url>${xmlEscapeText(urlSafe)}</url>` : "";
+  /* key=0 iken de durum raporu için url gönderilebilir */
+  const urlXml = urlSafe ? `<url>${xmlEscapeText(urlSafe)}</url>` : "";
 
   return `<?xml version="1.0"?>
 <mainbody>

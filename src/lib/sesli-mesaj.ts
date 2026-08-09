@@ -11,6 +11,7 @@ import {
   sesliDtmfOtpKeyInfo,
   sesliWebhookUrl,
 } from "./netgsm-sesli-webhook";
+import { sesliMesajGonderimKaydet } from "./sesli-mesaj-log";
 import { telefonGecerliMi } from "./telefon";
 
 export type SesliMesajSablonId =
@@ -92,25 +93,37 @@ export async function sesliMesajGonder(
     return { basarili: false, hata: `AudioID yok: ${sablonId}` };
   }
 
-  const dtmf =
-    sablonId === "cekici_yeni_talep" && sesliCekiciDtmfAktifMi()
-      ? (() => {
-          const url = sesliWebhookUrl();
-          if (!url) return undefined;
-          return {
-            key: 1 as const,
-            url,
-            keyinfo: [sesliDtmfOtpKeyInfo()],
-          };
-        })()
-      : undefined;
+  const webhookUrl = sesliWebhookUrl();
+  const dtmfAcik =
+    sablonId === "cekici_yeni_talep" &&
+    sesliCekiciDtmfAktifMi() &&
+    Boolean(webhookUrl);
 
-  return sendVoiceByAudioId({
+  const sonuc = await sendVoiceByAudioId({
     telefon,
     audioId: sablon.audioId,
     relationid: opts?.relationid,
-    ...dtmf,
+    ...(webhookUrl
+      ? {
+          url: webhookUrl,
+          ...(dtmfAcik
+            ? { key: 1 as const, keyinfo: [sesliDtmfOtpKeyInfo()] }
+            : { key: 0 as const }),
+        }
+      : {}),
   });
+
+  void sesliMesajGonderimKaydet({
+    sablonId,
+    telefon,
+    basarili: sonuc.basarili,
+    hata: sonuc.hata,
+    bulkid: sonuc.bulkid,
+    relationid: opts?.relationid,
+    audioId: sablon.audioId,
+  });
+
+  return sonuc;
 }
 
 /** Çekici yeni talep seslisi: aynı numaraya en az bu kadar aralık (ms) */
