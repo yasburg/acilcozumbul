@@ -389,7 +389,6 @@ export async function simulasyonPlanAc(
 
   const kapanis = rastgeleKapanisAt(simdi, ihaleBitis, rand);
 
-  /* SMS senkron beklenmez — onlarca çekicide panel/cron timeout oluyordu */
   talep.bildirilenCekiciIds = [];
   await addTalep(talep);
 
@@ -410,17 +409,19 @@ export async function simulasyonPlanAc(
   plan.hataMesaj = null;
   await updateSimulasyonPlan(plan);
 
-  void notifyCekiciler(talep, baseUrl)
-    .then(async (ids) => {
-      if (!ids.length) return;
+  /* SMS + sesli senkron: void bırakınca serverless/cron istek bitince aramalar yarım kalıyordu */
+  try {
+    const ids = await notifyCekiciler(talep, baseUrl);
+    if (ids.length) {
       const t = await getTalepById(talepId);
-      if (!t) return;
-      t.bildirilenCekiciIds = ids;
-      await updateTalep(t);
-    })
-    .catch((e) => {
-      console.error("[simulasyon] notify", plan.id, e);
-    });
+      if (t) {
+        t.bildirilenCekiciIds = ids;
+        await updateTalep(t);
+      }
+    }
+  } catch (e) {
+    console.error("[simulasyon] notify", plan.id, e);
+  }
 
   return { talepId };
 }
