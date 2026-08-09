@@ -154,6 +154,12 @@ export function ArizaFotografAlani({
         })}
       </div>
 
+      {!zorunlu && (
+        <p className="text-sm text-slate-500 text-center leading-snug">
+          Fotoğrafsız devam edebilirsiniz.
+        </p>
+      )}
+
       {hata && (
         <p className="text-sm text-red-600" role="alert">
           {hata}

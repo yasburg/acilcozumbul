@@ -2224,7 +2224,7 @@ function MusteriAnaSayfaIcerik({
             Aracınızın tipini seçin (isteğe bağlı).
           </p>
           <div
-            className="grid grid-cols-1 gap-1.5"
+            className="grid grid-cols-2 gap-2"
             role="listbox"
             aria-label="Araç tipi"
           >
@@ -2237,31 +2237,26 @@ function MusteriAnaSayfaIcerik({
                   role="option"
                   aria-selected={secili}
                   onClick={() => update("aracTipi", secili ? "" : t.id)}
-                  className={`w-full text-left rounded-xl border px-3.5 py-2.5 flex items-center gap-2.5 transition touch-manipulation ${
+                  className={`w-full rounded-2xl border px-3 py-4 flex flex-col items-center justify-center gap-2 text-center transition touch-manipulation min-h-[6.5rem] ${
                     secili
                       ? "border-amber-500 bg-amber-50 ring-2 ring-amber-500/25"
                       : "border-slate-200 bg-white hover:border-amber-300"
                   }`}
                 >
                   <span
-                    className={`inline-flex size-8 shrink-0 items-center justify-center ${
+                    className={`inline-flex size-10 items-center justify-center ${
                       secili ? "text-amber-700" : "text-slate-500"
                     }`}
                   >
-                    <AracTipiIkon tip={t.id} className="size-8" />
+                    <AracTipiIkon tip={t.id} className="size-10" />
                   </span>
                   <span
-                    className={`font-medium text-sm flex-1 min-w-0 ${
+                    className={`font-medium text-sm leading-snug ${
                       secili ? "text-amber-900" : "text-slate-800"
                     }`}
                   >
                     {t.etiket}
                   </span>
-                  {secili ? (
-                    <span className="shrink-0 text-amber-600 text-base">
-                      ✓
-                    </span>
-                  ) : null}
                 </button>
               );
             })}
@@ -2393,6 +2388,12 @@ function MusteriAnaSayfaIcerik({
               rows={4}
               className="whitespace-pre-line"
             />
+          )}
+
+          {form.sorunTipi !== "diger" && (
+            <p className="text-sm text-slate-500 text-center leading-snug">
+              Burayı doldurmadan ilerleyebilirsiniz.
+            </p>
           )}
 
           <AdimAltNav
