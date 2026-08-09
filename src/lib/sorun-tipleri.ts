@@ -93,7 +93,7 @@ export const SORUN_FOTOGRAF_TIPLERI: SorunTipiId[] = [
   "diger",
 ];
 
-/** Çekici / kurtarma — araç modeli alanı gösterilen tipler (opsiyonel) */
+/** Çekici / kurtarma — araç tipi + durumu alanı gösterilen tipler */
 export const SORUN_ARAC_MODELI_TIPLERI: SorunTipiId[] = [
   "ariza",
   "kaza",
@@ -175,15 +175,24 @@ export function sorunFotografGerekliMi(_sorunTipi?: string): boolean {
   return false;
 }
 
-/** Araç modeli artık zorunlu değil; alan isteğe bağlı gösterilir */
-export function sorunAracModeliGerekliMi(_sorunTipi?: string): boolean {
-  return false;
+/** Araç durumu; alan gösterilen tiplerde zorunlu */
+export function sorunAracModeliGerekliMi(sorunTipi?: string): boolean {
+  return sorunAracModeliAlaniGoster(sorunTipi);
 }
 
 export function sorunAracModeliAlaniGoster(sorunTipi?: string): boolean {
   if (!sorunTipi?.trim()) return false;
   const id = talepSorunTipi({ sorunTipi: sorunTipi });
   return SORUN_ARAC_MODELI_TIPLERI.includes(id);
+}
+
+/** Lastik patladı — lastik durumu adımı */
+export function sorunLastikDurumuAlaniGoster(sorunTipi?: string): boolean {
+  return talepSorunTipi({ sorunTipi: sorunTipi }) === "lastik";
+}
+
+export function sorunLastikDurumuGerekliMi(sorunTipi?: string): boolean {
+  return sorunLastikDurumuAlaniGoster(sorunTipi);
 }
 
 export function sorunMetniOlustur(sorunTipi: string, sorunDetay?: string): string {

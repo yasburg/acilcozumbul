@@ -199,14 +199,18 @@ export const SifreAlani = forwardRef<
 
 export function TextArea({
   label,
+  className = "",
   ...props
-}: TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  label: string;
+  className?: string;
+}) {
   return (
     <label className="block space-y-1.5">
       <span className="text-sm font-medium text-slate-700">{label}</span>
       <textarea
         rows={4}
-        className="w-full rounded-xl bg-white border border-slate-200 px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none"
+        className={`w-full rounded-xl bg-white border border-slate-200 px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none ${className}`}
         {...props}
       />
     </label>

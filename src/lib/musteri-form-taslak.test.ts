@@ -28,10 +28,12 @@ function bosTaslak(
       sorunDetay: "",
       aracTipi: "",
       aracModeli: "",
+      aracDurumu: "",
+      lastikDurumu: "",
     },
     yasalOnay: false,
-    fotografOnizleme: null,
-    fotografData: null,
+    fotografOnizleme: [null, null],
+    fotografData: [null, null],
     ...patch,
   };
 }
@@ -83,7 +85,7 @@ describe("musteriFormTaslak", () => {
     expect(musteriFormTaslakOku()?.step).toBe("konum");
     expect(musteriFormAdimDonusumNormalize("konum")).toBe("sorun");
     expect(musteriFormAdimDonusumNormalize("detay")).toBe("sorun");
-    expect(musteriFormAdimDonusumNormalize("bilgi")).toBe("hedef");
+    expect(musteriFormAdimDonusumNormalize("bilgi")).toBe("bilgi");
   });
 
   it("boş taslağı ayırt eder", () => {
@@ -111,7 +113,7 @@ describe("musteriFormTaslak", () => {
     vi.stubGlobal("sessionStorage", {
       getItem: (k: string) => store.get(k) ?? null,
       setItem: (k: string, v: string) => {
-        if (v.includes('"fotografData":"x')) throw new Error("QuotaExceeded");
+        if (v.includes('"fotografData":["x')) throw new Error("QuotaExceeded");
         store.set(k, v);
       },
       removeItem: (k: string) => {
@@ -122,12 +124,12 @@ describe("musteriFormTaslak", () => {
       bosTaslak({
         step: "hedef",
         form: { ...bosTaslak().form, sorunTipi: "aku" },
-        fotografData: "x".repeat(200),
-        fotografOnizleme: "y".repeat(200),
+        fotografData: ["x".repeat(200), null],
+        fotografOnizleme: ["y".repeat(200), null],
       })
     );
     const t = musteriFormTaslakOku();
     expect(t?.form.sorunTipi).toBe("aku");
-    expect(t?.fotografData).toBeNull();
+    expect(t?.fotografData).toEqual([null, null]);
   });
 });

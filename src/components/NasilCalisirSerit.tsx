@@ -14,6 +14,8 @@ type FormAdimi =
   | "fotograf"
   | "arac_tipi"
   | "arac_modeli"
+  | "arac_durumu"
+  | "lastik_durumu"
   | "ek_detay"
   | "ihale"
   | "hedef";
@@ -38,7 +40,7 @@ const NASIL_ADIMLAR: NasilAdim[] = [
   {
     ikon: "💬",
     baslik: "Ücretsiz teklif alın",
-    aciklama: "Telefon doğrulayıp fiyatları görün",
+    aciklama: "Telefon doğrulayıp ücretsiz teklif alın",
   },
   {
     ikon: "✅",
@@ -49,19 +51,21 @@ const NASIL_ADIMLAR: NasilAdim[] = [
 
 function formAdimindenAnchor(adim: FormAdimi): number {
   if (adim === "sorun") return 0;
-  if (adim === "hedef") return 1;
   if (
-    adim === "bilgi" ||
     adim === "konum" ||
     adim === "detay" ||
     adim === "fotograf" ||
     adim === "arac_tipi" ||
     adim === "arac_modeli" ||
+    adim === "arac_durumu" ||
+    adim === "lastik_durumu" ||
     adim === "ek_detay" ||
-    adim === "ihale"
+    adim === "ihale" ||
+    adim === "hedef"
   ) {
-    return 2;
+    return 1;
   }
+  if (adim === "bilgi") return 2;
   return 0;
 }
 

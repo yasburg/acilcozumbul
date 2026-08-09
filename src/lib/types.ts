@@ -191,13 +191,15 @@ export interface Talep {
   hedefKonum?: Konum;
   /** Bekleme ekranında hedef bir kez değiştirildiyse true */
   hedefKonumDegistirildi?: boolean;
-  /** Müşteri hedefi sonra seçecek — tahmini sürelere +30 dk */
+  /** Müşteri hedefi sonra seçecek */
   hedefBilinmiyor?: boolean;
   sorun: string;
   sorunTipi?: string;
   sorunDetay?: string;
   /** Örn. Audi A3 sedan — çekici taleplerinde */
   aracModeli?: string;
+  /** lastik: yama | degisim */
+  lastikDurumu?: string;
   /** Arıza / lastik / kaza fotoğraf URL'leri */
   fotografUrls?: string[];
   durum: TalepDurumu;

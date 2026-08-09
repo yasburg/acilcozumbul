@@ -25,6 +25,7 @@ import {
 } from "@/lib/harita-yonlendirme";
 import { whatsappUrl } from "@/lib/telefon";
 import { posthogOlayBirKez, posthogOlayYakala } from "@/lib/posthog-client";
+import { LASTIK_DURUMU_BILGI } from "@/lib/lastik-durumu";
 import type { KonumKaynak } from "@/lib/types";
 
 interface TalepDurum {
@@ -42,6 +43,7 @@ interface TalepDurum {
     sorunOzet: string;
     hedefBolge?: string;
     aracModeli?: string;
+    lastikDurumu?: string;
   };
   teklifUcretsiz?: boolean;
   erisimYok?: boolean;
@@ -63,11 +65,30 @@ interface TalepDurum {
     kaynak?: KonumKaynak;
   };
   hedefKonum?: { adres?: string; lat: number; lng: number };
+  /** Müşteri hedefi henüz seçmedi */
+  hedefBilinmiyor?: boolean;
   sorun?: string;
   aracModeli?: string;
+  lastikDurumu?: string;
   fotografUrls?: string[];
   onayliCekici?: boolean;
   musteriArandiAt?: string;
+}
+
+function LastikDurumuIhaleNotu({ etiket }: { etiket: string }) {
+  return (
+    <div className="mt-2 space-y-2">
+      <p className="text-sm font-medium text-slate-800">
+        🛞 {etiket}
+      </p>
+      <div
+        className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950 leading-relaxed"
+        role="note"
+      >
+        {LASTIK_DURUMU_BILGI}
+      </div>
+    </div>
+  );
 }
 
 export default function CekiciTalepClient() {
@@ -468,11 +489,26 @@ export default function CekiciTalepClient() {
                     → {talep.onizleme!.hedefBolge}
                   </p>
                 )}
+                {talep.hedefBilinmiyor && (
+                  <div
+                    className="mb-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950 leading-relaxed"
+                    role="note"
+                  >
+                    <p className="font-semibold">Hedef belirsiz</p>
+                    <p className="mt-0.5">
+                      Aracın götürüleceği yer belirli değil. Teklifinizi ona
+                      göre veriniz.
+                    </p>
+                  </div>
+                )}
                 <p className="text-sm text-slate-600">{talep.onizleme!.sorunOzet}</p>
                 {talep.onizleme!.aracModeli && (
                   <p className="text-sm text-slate-700 mt-2">
                     🚗 {talep.onizleme!.aracModeli}
                   </p>
+                )}
+                {talep.onizleme!.lastikDurumu && (
+                  <LastikDurumuIhaleNotu etiket={talep.onizleme!.lastikDurumu} />
                 )}
                 {talep.fotografUrls && talep.fotografUrls.length > 0 && (
                   <div className="mt-3 space-y-2">
@@ -571,6 +607,18 @@ export default function CekiciTalepClient() {
                     → Hedef: {adresGoster(talep.hedefKonum.adres, gizlilik)}
                   </p>
                 )}
+                {talep.hedefBilinmiyor && !talep.hedefKonum && (
+                  <div
+                    className="mb-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950 leading-relaxed"
+                    role="note"
+                  >
+                    <p className="font-semibold">Hedef belirsiz</p>
+                    <p className="mt-0.5">
+                      Aracın götürüleceği yer belirli değil. Teklifinizi ona
+                      göre veriniz.
+                    </p>
+                  </div>
+                )}
                 <p className="text-sm text-slate-500 border-t border-slate-100 pt-3 mt-3">
                   {talep.sorun}
                 </p>
@@ -578,6 +626,9 @@ export default function CekiciTalepClient() {
                   <p className="text-sm text-slate-700 mt-2">
                     🚗 {talep.aracModeli}
                   </p>
+                )}
+                {talep.lastikDurumu && (
+                  <LastikDurumuIhaleNotu etiket={talep.lastikDurumu} />
                 )}
                 {talep.fotografUrls && talep.fotografUrls.length > 0 && (
                   <div className="mt-3 space-y-2">

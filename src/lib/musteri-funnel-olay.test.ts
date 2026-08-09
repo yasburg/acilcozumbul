@@ -15,10 +15,10 @@ describe("musteri-funnel-olay", () => {
         { funnel: "a", olay: "form_adim_konum", session_id: "s1" },
         { funnel: "a", olay: "form_adim_sorun", session_id: "s1" },
         { funnel: "a", olay: "service_selected", session_id: "s1" },
-        { funnel: "a", olay: "talep_olustur", session_id: "s1" },
         { funnel: "a", olay: "form_adim_bilgi", session_id: "s1" },
         { funnel: "a", olay: "otp_gonder", session_id: "s1" },
         { funnel: "a", olay: "otp_dogrulandi", session_id: "s1" },
+        { funnel: "a", olay: "talep_olustur", session_id: "s1" },
         { funnel: "a", olay: "teklif_secildi", session_id: "s1" },
         { funnel: "b", olay: "goruldu", session_id: "s2" },
         { funnel: "b", olay: "form_adim_sorun", session_id: "s2" },
@@ -33,13 +33,14 @@ describe("musteri-funnel-olay", () => {
     expect(huni.find((a) => a.adim === "teklif_secildi")?.sessionSayisi).toBe(
       1
     );
-    // Talep → iletişim → OTP
+    // İletişim → OTP → talep
     const talepIdx = huni.findIndex((a) => a.adim === "talep_olustur");
     const bilgiIdx = huni.findIndex((a) => a.adim === "form_adim_bilgi");
     const otpIdx = huni.findIndex((a) => a.adim === "otp_gonder");
     expect(talepIdx).toBeGreaterThan(-1);
-    expect(bilgiIdx).toBeGreaterThan(talepIdx);
+    expect(bilgiIdx).toBeGreaterThan(-1);
     expect(otpIdx).toBeGreaterThan(bilgiIdx);
+    expect(talepIdx).toBeGreaterThan(otpIdx);
     // s2 hizmete ulaştığı için kümülatif konumda da sayılır
     expect(huni.find((a) => a.adim === "form_adim_konum")?.sessionSayisi).toBe(
       2
@@ -55,16 +56,16 @@ describe("musteri-funnel-olay", () => {
     }
   });
 
-  it("ortak hunide detay talep öncesi, OTP talep sonrasındadır", () => {
+  it("ortak hunide detay → iletişim → OTP → talep sırası", () => {
     expect(MUSTERI_FUNNEL_HUNI_ORTAK.map((a) => a.id)).toEqual([
       "goruldu",
       "ilk_etkilesim",
       "form_adim_sorun",
       "form_adim_detay",
-      "talep_olustur",
       "form_adim_bilgi",
       "otp_gonder",
       "otp_dogrulandi",
+      "talep_olustur",
       "teklif_secildi",
     ]);
   });
@@ -78,10 +79,13 @@ describe("musteri-funnel-olay", () => {
       ids.indexOf("form_adim_hedef")
     );
     expect(ids.indexOf("form_adim_hedef")).toBeLessThan(
-      ids.indexOf("talep_olustur")
-    );
-    expect(ids.indexOf("talep_olustur")).toBeLessThan(
       ids.indexOf("form_adim_bilgi")
+    );
+    expect(ids.indexOf("form_adim_bilgi")).toBeLessThan(
+      ids.indexOf("otp_gonder")
+    );
+    expect(ids.indexOf("otp_dogrulandi")).toBeLessThan(
+      ids.indexOf("talep_olustur")
     );
   });
 

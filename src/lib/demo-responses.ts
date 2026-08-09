@@ -8,11 +8,12 @@ import {
   ihaleAcikMi,
   aktifTeklifler,
 } from "./ihale";
-import { talepBolge, talepSorunOzet } from "./talep-utils";
+import { cekiciTalepOnizleme } from "./talep-utils";
 import { teklifleriSirala } from "./teklif-siralama";
 import { demoRakipCekiciId } from "./demo-fixtures";
 import { musteriTeklifSureKirilim, sorunHedefKonumGerekliMi } from "./sorun-tipleri";
 import { cekiciToplamKredi } from "./kredi-bakiye";
+import { talepLastikDurumuEtiket } from "./lastik-durumu";
 import type { Cekici, Talep } from "./types";
 
 function rotaKoordinatlari(talep: Talep) {
@@ -43,8 +44,14 @@ export function demoCekiciTalepGetJson(talep: Talep, cekici: Cekici) {
       telefon: talep.telefon,
       konum: talep.konum,
       hedefKonum: talep.hedefKonum,
+      hedefBilinmiyor: Boolean(talep.hedefBilinmiyor),
       sorun: talep.sorun,
       aracModeli: talep.aracModeli,
+      lastikDurumu:
+        talepLastikDurumuEtiket({
+          lastikDurumu: talep.lastikDurumu,
+          sorun: talep.sorun,
+        }) ?? undefined,
       fotografUrls: talep.fotografUrls,
       olusturulma: talep.olusturulma,
       benimTeklif: benimTeklifim,
@@ -94,11 +101,9 @@ export function demoCekiciTalepGetJson(talep: Talep, cekici: Cekici) {
       ihaleAcik: ihaleAcikMi(talep),
       ihaleBitis: talep.ihaleBitis,
       benimTeklif: benimTeklifim,
-      onizleme: {
-        bolge: talepBolge(talep),
-        sorunOzet: talepSorunOzet(talep.sorun),
-        hedefBolge: talep.hedefKonum?.adres.split(",").slice(-2).join(",").trim(),
-      },
+      hedefBilinmiyor: Boolean(talep.hedefBilinmiyor),
+      onizleme: cekiciTalepOnizleme(talep),
+      fotografUrls: talep.fotografUrls,
       ...rotaKoordinatlari(talep),
       kredi: cekiciToplamKredi(cekici),
       onayliCekici: Boolean(cekici.rozetAktif),
@@ -134,12 +139,8 @@ export function demoCekiciTalepGetJson(talep: Talep, cekici: Cekici) {
     durum: talep.durum,
     ihaleAcik: true,
     ihaleBitis: talep.ihaleBitis,
-    onizleme: {
-      bolge: talepBolge(talep),
-      sorunOzet: talepSorunOzet(talep.sorun),
-      hedefBolge: talep.hedefKonum?.adres.split(",").slice(-2).join(",").trim(),
-      aracModeli: talep.aracModeli,
-    },
+    hedefBilinmiyor: Boolean(talep.hedefBilinmiyor),
+    onizleme: cekiciTalepOnizleme(talep),
     fotografUrls: talep.fotografUrls,
     teklifUcretsiz: true,
     ...rotaKoordinatlari(talep),
@@ -272,9 +273,6 @@ export function demoTeklifMesaji(
     kredi: cekiciToplamKredi(cekici),
     demoModu: true,
     mesaj: "Demo: Teklifiniz kaydedildi (gerçek veri değişmedi).",
-    onizleme: {
-      bolge: talepBolge(talep),
-      sorunOzet: talepSorunOzet(talep.sorun),
-    },
+    onizleme: cekiciTalepOnizleme(talep),
   };
 }

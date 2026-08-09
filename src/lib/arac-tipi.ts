@@ -30,3 +30,11 @@ export function aracModeliMetniOlustur(
   if (model) return model;
   return undefined;
 }
+
+/** Tip + araç durumu (çekiciye giden metin) */
+export function aracDurumuMetniOlustur(
+  aracTipi: string,
+  aracDurumuEtiket: string
+): string | undefined {
+  return aracModeliMetniOlustur(aracTipi, aracDurumuEtiket);
+}

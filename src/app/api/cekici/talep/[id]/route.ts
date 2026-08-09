@@ -12,8 +12,9 @@ import {
   ihaleAcikMi,
 } from "@/lib/ihale";
 import { koordinatGecerli } from "@/lib/koordinat";
-import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
+import { cekiciTalepOnizleme } from "@/lib/talep-utils";
 import type { Talep } from "@/lib/types";
+import { talepLastikDurumuEtiket } from "@/lib/lastik-durumu";
 import { demoTalepGetir, isDemoTalepId } from "@/lib/demo-oturum";
 import { demoCekiciTalepGetJson } from "@/lib/demo-responses";
 import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
@@ -94,8 +95,14 @@ export async function GET(
       telefon: talep.telefon,
       konum: talep.konum,
       hedefKonum: talep.hedefKonum,
+      hedefBilinmiyor: Boolean(talep.hedefBilinmiyor),
       sorun: talep.sorun,
       aracModeli: talep.aracModeli,
+      lastikDurumu:
+        talepLastikDurumuEtiket({
+          lastikDurumu: talep.lastikDurumu,
+          sorun: talep.sorun,
+        }) ?? undefined,
       fotografUrls: talep.fotografUrls,
       olusturulma: talep.olusturulma,
       benimTeklif: benimTeklifim,
@@ -142,11 +149,9 @@ export async function GET(
       ihaleAcik: ihaleAcikMi(talep),
       ihaleBitis: talep.ihaleBitis,
       benimTeklif: benimTeklifim,
-      onizleme: {
-        bolge: talepBolge(talep),
-        sorunOzet: talepSorunOzet(talep.sorun),
-        hedefBolge: talep.hedefKonum?.adres.split(",").slice(-2).join(",").trim(),
-      },
+      hedefBilinmiyor: Boolean(talep.hedefBilinmiyor),
+      onizleme: cekiciTalepOnizleme(talep),
+      fotografUrls: talep.fotografUrls,
       ...rotaKoordinatlari(talep),
       kredi: cekiciToplamKredi(cekici),
       onayliCekici: Boolean(cekici.rozetAktif),
@@ -180,12 +185,8 @@ export async function GET(
     durum: talep.durum,
     ihaleAcik: true,
     ihaleBitis: talep.ihaleBitis,
-    onizleme: {
-      bolge: talepBolge(talep),
-      sorunOzet: talepSorunOzet(talep.sorun),
-      hedefBolge: talep.hedefKonum?.adres.split(",").slice(-2).join(",").trim(),
-      aracModeli: talep.aracModeli,
-    },
+    hedefBilinmiyor: Boolean(talep.hedefBilinmiyor),
+    onizleme: cekiciTalepOnizleme(talep),
     fotografUrls: talep.fotografUrls,
     teklifUcretsiz: true,
     ...rotaKoordinatlari(talep),
