@@ -9,7 +9,7 @@ import { YASAL_SIRKET } from "@/lib/yasal-sirket";
 
 export const metadata = sayfaMetadata({
   title: "İptal ve İade Politikası",
-  description: `${YASAL_SIRKET.platformAdi} iptal ve iade politikası — kredi tabanlı hizmetler.`,
+  description: `${YASAL_SIRKET.platformAdi} iptal ve iade politikası — kredi ve abonelik.`,
   path: "/iptal-ve-iade",
 });
 
@@ -19,10 +19,10 @@ export default function IptalVeIadePage() {
       <YasalBolum baslik="1. Genel">
         <p>
           Bu politika, {YASAL_SIRKET.platformAdi} üzerinden hizmet verenlerin satın
-          aldığı dijital kredi paketleri ve Platform aracılığıyla sunulan dijital
-          hizmetlere uygulanır. Platform, yol yardımı talebi ile saha hizmeti arasında
-          aracılık yapar; çekici/lastikçi ile müşteri arasındaki fiziksel hizmet
-          bedeli bu politikanın dışındadır.
+          aldığı dijital kredi paketleri, aylık abonelikler ve Platform aracılığıyla
+          sunulan dijital hizmetlere uygulanır. Platform, yol yardımı talebi ile saha
+          hizmeti arasında aracılık yapar; çekici/lastikçi ile müşteri arasındaki
+          fiziksel hizmet bedeli bu politikanın dışındadır.
         </p>
       </YasalBolum>
 
@@ -42,15 +42,32 @@ export default function IptalVeIadePage() {
         />
       </YasalBolum>
 
-      <YasalBolum baslik="3. Ödeme iptali">
+      <YasalBolum baslik="3. Abonelik — cayma ve iade yok">
         <p>
-          Banka veya ödeme kuruluşu tarafından onaylanmamış işlemlerde kredi tanımlanmaz.
-          Teknik hata ile çift tahsilat tespit edilirse düzeltme veya kredi iadesi
-          yapılabilir; nakit iade yalnızca kanuni zorunluluk halinde değerlendirilir.
+          Aylık abonelik, ödeme onayıyla derhal ifa edilen dijital hizmet ve dönem
+          kredisi tanımıdır. Abonelik, siz iptal edene kadar her ay otomatik
+          yenilenir. Abonelik bedeli için cayma hakkı kullanılamaz; nakit iade
+          yapılmaz.
+        </p>
+        <YasalListe
+          items={[
+            "Abonelik istediğiniz zaman iptal edilebilir; iptal gelecek dönem yenilemelerini durdurur, ödenmiş dönem bedelini iade etmez.",
+            "Abonelikle tanımlanan dönem kredisi (bonus dahil) dönem sonunda veya iptal sonrası dönem bitiminde sıfırlanır; nakde çevrilmez.",
+            "«Kredi satın al» ile ayrıca alınan krediler abonelik iptalinden etkilenmez; bunlar da iade edilmez.",
+          ]}
+        />
+      </YasalBolum>
+
+      <YasalBolum baslik="4. Ödeme iptali">
+        <p>
+          Banka veya ödeme kuruluşu tarafından onaylanmamış işlemlerde kredi veya
+          abonelik tanımlanmaz. Teknik hata ile çift tahsilat tespit edilirse düzeltme
+          veya kredi iadesi yapılabilir; nakit iade yalnızca kanuni zorunluluk halinde
+          değerlendirilir.
         </p>
       </YasalBolum>
 
-      <YasalBolum baslik="4. Müşteri talepleri">
+      <YasalBolum baslik="5. Müşteri talepleri">
         <p>
           Müşteri tarafında Platform kullanımı talep oluşturma aşamasında ücretsizdir.
           Oluşturulan talebin iptali uygulama içinden mümkün olabilir; bu, saha
@@ -59,10 +76,10 @@ export default function IptalVeIadePage() {
         </p>
       </YasalBolum>
 
-      <YasalBolum baslik="5. Hesap fesih">
+      <YasalBolum baslik="6. Hesap fesih">
         <p>
-          Hizmet veren hesabının kapatılması halinde kullanılmayan kredi bakiyesi
-          iade edilmez;{" "}
+          Hizmet veren hesabının kapatılması halinde kullanılmayan kredi bakiyesi ve
+          abonelik dönemi kredisi iade edilmez;{" "}
           <Link href="/kullanim-kosullari" className="text-amber-700 underline">
             Kullanım Koşulları
           </Link>{" "}
@@ -74,7 +91,7 @@ export default function IptalVeIadePage() {
         </p>
       </YasalBolum>
 
-      <YasalBolum baslik="6. İletişim">
+      <YasalBolum baslik="7. İletişim">
         <p>
           İptal ve iade talepleri: {YASAL_SIRKET.eposta}. Şirket: {YASAL_SIRKET.unvan},
           Vergi No: {YASAL_SIRKET.vergiNo}.

@@ -153,6 +153,7 @@ export async function POST(request: NextRequest) {
     kayitTarihi: new Date().toISOString(),
     dogumTarihi: dogum.deger,
     premiumSmsAktif: true,
+    bildirimSeviye: 3,
     davetEdenId:
       kayitHazir.sonuc.uygulandi && kayitHazir.sonuc.tip === "davet"
         ? kayitHazir.sonuc.davet.davetEden.id

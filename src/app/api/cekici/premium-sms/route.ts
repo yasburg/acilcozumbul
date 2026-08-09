@@ -3,10 +3,12 @@ import { getCurrentCekici } from "@/lib/auth";
 import { updateCekici } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import {
+  BILDIRIM_SEVIYE_ETIKET,
+  BILDIRIM_SEVIYE_VARSAYILAN,
+  bildirimSeviyeNormalize,
   cekiciBildirimKrediTutari,
-  cekiciPremiumSmsAktifMi,
-  PANEL_BILDIRIM_KREDI,
-  PREMIUM_SMS_BILDIRIM_KREDI,
+  cekiciBildirimSeviye,
+  type BildirimSeviye,
 } from "@/lib/ihale";
 import { cekiciGirisSifreKontrol } from "@/lib/cekici-auth";
 import { smsDurumu } from "@/lib/sms-provider";
@@ -19,17 +21,26 @@ export async function GET() {
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
   }
 
+  const seviye = cekiciBildirimSeviye(cekici);
   return NextResponse.json({
-    premiumSmsAktif: cekiciPremiumSmsAktifMi(cekici),
+    bildirimSeviye: seviye,
     bildirimKredi: cekiciBildirimKrediTutari(cekici),
-    panelKredi: PANEL_BILDIRIM_KREDI,
-    premiumKredi: PREMIUM_SMS_BILDIRIM_KREDI,
+    paketler: ([1, 2, 3] as BildirimSeviye[]).map((s) => ({
+      seviye: s,
+      kredi: s,
+      ...BILDIRIM_SEVIYE_ETIKET[s],
+    })),
+    varsayilan: BILDIRIM_SEVIYE_VARSAYILAN,
+    /** Geriye uyum */
+    premiumSmsAktif: seviye >= 2,
+    panelKredi: 1,
+    premiumKredi: 2,
     telefon: telefonMaskele(cekici.telefon),
     smsGercek: smsDurumu().gercekGonderim,
   });
 }
 
-/** Premium SMS aç/kapa — hesap şifresi gerekir (SMS yok) */
+/** Bildirim paketi değiştir — hesap şifresi gerekir */
 export async function PUT(request: NextRequest) {
   await ensureSeedData();
   const cekici = await getCurrentCekici();
@@ -38,8 +49,20 @@ export async function PUT(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const premiumSmsAktif = Boolean(body.premiumSmsAktif);
   const sifre = String(body.sifre ?? "");
+
+  let seviye: BildirimSeviye;
+  if (body.bildirimSeviye != null) {
+    seviye = bildirimSeviyeNormalize(body.bildirimSeviye);
+  } else if (typeof body.premiumSmsAktif === "boolean") {
+    /* Eski istemci: aç → 3 (önerilen), kapa → 1 */
+    seviye = body.premiumSmsAktif ? 3 : 1;
+  } else {
+    return NextResponse.json(
+      { error: "bildirimSeviye gerekli (1, 2 veya 3)." },
+      { status: 400 }
+    );
+  }
 
   if (!sifre.trim()) {
     return NextResponse.json(
@@ -50,27 +73,18 @@ export async function PUT(request: NextRequest) {
 
   const sifreOk = await cekiciGirisSifreKontrol(cekici, sifre);
   if (!sifreOk) {
-    return NextResponse.json(
-      { error: "Şifre hatalı." },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Şifre hatalı." }, { status: 401 });
   }
 
-  cekici.premiumSmsAktif = premiumSmsAktif;
+  cekici.bildirimSeviye = seviye;
+  cekici.premiumSmsAktif = seviye >= 2;
   await updateCekici(cekici);
 
-  if (!premiumSmsAktif) {
-    return NextResponse.json({
-      premiumSmsAktif: false,
-      bildirimKredi: PANEL_BILDIRIM_KREDI,
-      mesaj: "Premium SMS kapatıldı. Talepler toplu SMS ile 1 kredi.",
-    });
-  }
-
+  const etiket = BILDIRIM_SEVIYE_ETIKET[seviye];
   return NextResponse.json({
-    premiumSmsAktif: true,
-    bildirimKredi: PREMIUM_SMS_BILDIRIM_KREDI,
-    mesaj:
-      "Premium SMS açıldı. Yeni talepler anlık OTP SMS ile gelir (bildirim başına 2 kredi).",
+    bildirimSeviye: seviye,
+    bildirimKredi: seviye,
+    premiumSmsAktif: seviye >= 2,
+    mesaj: `Bildirim paketi güncellendi: ${etiket.baslik} (${seviye} kredi).`,
   });
 }

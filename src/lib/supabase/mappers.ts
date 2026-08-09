@@ -53,6 +53,7 @@ export type CekiciRow = {
   musaitlik_bitis?: string | null;
   musaitlik_gunler?: number[] | null;
   premium_sms_aktif?: boolean | null;
+  bildirim_seviye?: number | null;
   davet_kodu?: string | null;
   davet_eden_id?: string | null;
   tester_hesap?: boolean | null;
@@ -141,6 +142,12 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     musaitlikBitis: r.musaitlik_bitis ?? undefined,
     musaitlikGunler: r.musaitlik_gunler ?? undefined,
     premiumSmsAktif: r.premium_sms_aktif !== false,
+    bildirimSeviye: (() => {
+      const s = r.bildirim_seviye;
+      if (s === 1 || s === 2 || s === 3) return s;
+      if (r.premium_sms_aktif === false) return 1 as const;
+      return 3 as const;
+    })(),
     davetKodu: r.davet_kodu ?? undefined,
     davetEdenId: r.davet_eden_id ?? undefined,
     testerHesap: Boolean(r.tester_hesap),
@@ -196,7 +203,17 @@ export function cekiciToRow(
     musaitlik_baslangic: c.musaitlikBaslangic ?? null,
     musaitlik_bitis: c.musaitlikBitis ?? null,
     musaitlik_gunler: c.musaitlikGunler ?? null,
-    premium_sms_aktif: c.premiumSmsAktif !== false,
+    bildirim_seviye: (() => {
+      const s = c.bildirimSeviye;
+      if (s === 1 || s === 2 || s === 3) return s;
+      if (c.premiumSmsAktif === false) return 1;
+      return 3;
+    })(),
+    premium_sms_aktif: (() => {
+      const s = c.bildirimSeviye;
+      if (s === 1 || s === 2 || s === 3) return s >= 2;
+      return c.premiumSmsAktif !== false;
+    })(),
     tester_hesap: c.testerHesap ?? false,
     kayit_funnel: c.kayitFunnel ?? null,
     kurulum_tamam: c.kurulumTamam !== false,

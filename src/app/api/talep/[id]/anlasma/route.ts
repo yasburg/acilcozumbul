@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCekiciById, getTalepById, updateTalep } from "@/lib/db";
-import { notifyCekiciIptal, notifyCekiciler, notifyMusteri } from "@/lib/sms";
-import { smsBaseUrl } from "@/lib/sms-base-url";
+import { notifyCekiciIptal } from "@/lib/sms";
 import { ensureSeedData } from "@/lib/seed";
 import { anlasamadiSonrasiIhaleyiSurdur } from "@/lib/ihale";
 import { refreshCekiciPuanOzet } from "@/lib/puan-ozet-db";
@@ -30,10 +29,6 @@ export async function POST(
     );
   }
 
-  const baseUrl = smsBaseUrl(
-    `${request.nextUrl.protocol}//${request.nextUrl.host}`
-  );
-
   if (sonuc === "anlasti") {
     talep.durum = "anlaşıldı";
     talep.anlasmaDurumu = "anlaşıldı";
@@ -53,18 +48,6 @@ export async function POST(
   }
 
   const { kalanAktif } = anlasamadiSonrasiIhaleyiSurdur(talep, cekiciId);
-  const haric = talep.haricTutulanCekiciIds ?? [];
-
-  if (kalanAktif === 0) {
-    const yeniBildirimler = await notifyCekiciler(talep, baseUrl, haric, {
-      yenidenArama: true,
-    });
-    talep.bildirilenCekiciIds = [
-      ...new Set([...talep.bildirilenCekiciIds, ...yeniBildirimler]),
-    ];
-    await notifyMusteri(talep, "yeniden_arama", baseUrl);
-  }
-
   await updateTalep(talep);
 
   if (kalanAktif > 0) {
@@ -78,9 +61,11 @@ export async function POST(
     });
   }
 
+  // İhale yeniden açılır; kimseye yeniden SMS / sesli mesaj gitmez
   return NextResponse.json({
     durum: "yeniden_ihalede",
-    mesaj: "Başka teklif kalmadı. İhale yeniden açıldı.",
+    mesaj:
+      "Başka teklif kalmadı. İhale yeniden açıldı; yeni bildirim gönderilmedi.",
     tekliflereDon: false,
     kalanTeklifSayisi: 0,
     yenidenAranıyor: true,

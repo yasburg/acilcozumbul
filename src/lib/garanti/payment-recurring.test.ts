@@ -25,7 +25,7 @@ describe("garanti recurring xml", () => {
   it("aylık Recurring bloğu ekler", () => {
     const recurring = aylikRecurringOpts("20260801");
     expect(recurring).toEqual({
-      totalPaymentNum: 12,
+      totalPaymentNum: 999,
       frequencyType: "M",
       frequencyInterval: 1,
       startDate: "20260801",
@@ -48,7 +48,7 @@ describe("garanti recurring xml", () => {
 
     expect(xml).toContain("<Recurring>");
     expect(xml).toContain("<FrequencyType>M</FrequencyType>");
-    expect(xml).toContain("<TotalPaymentNum>12</TotalPaymentNum>");
+    expect(xml).toContain("<TotalPaymentNum>999</TotalPaymentNum>");
     expect(xml).toContain("<FrequencyInterval>1</FrequencyInterval>");
     expect(xml).toContain("<StartDate>20260801</StartDate>");
     expect(xml).toContain("<Type>sales</Type>");

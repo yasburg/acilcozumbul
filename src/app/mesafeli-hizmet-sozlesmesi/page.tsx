@@ -32,25 +32,28 @@ export default function MesafeliHizmetSozlesmesiPage() {
 
       <YasalBolum baslik="2. Alıcı">
         <p>
-          Platforma kayıt olan ve kredi satın alan hizmet veren (çekici, lastikçi,
-          anahtarcı vb.) gerçek veya tüzel kişi.
+          Platforma kayıt olan ve kredi veya abonelik satın alan hizmet veren (çekici,
+          lastikçi, anahtarcı vb.) gerçek veya tüzel kişi.
         </p>
       </YasalBolum>
 
       <YasalBolum baslik="3. Sözleşme konusu">
         <p>
           İşbu sözleşme, elektronik ortamda satın alınan dijital kredi paketlerinin
-          Platform hesabına tanımlanması ve bu kredilerle talep bilgilerine erişim,
-          teklif verme ve iletişim hizmetlerinin sunulmasına ilişkindir. Fiziksel yol
-          yardımı hizmeti bu sözleşmenin konusu değildir.
+          ve aylık aboneliklerin Platform hesabına tanımlanması ve bu kredilerle talep
+          bilgilerine erişim, teklif verme ve iletişim hizmetlerinin sunulmasına
+          ilişkindir. Fiziksel yol yardımı hizmeti bu sözleşmenin konusu değildir.
         </p>
       </YasalBolum>
 
       <YasalBolum baslik="4. Bedel ve ödeme">
         <p>
-          Paket fiyatları ödeme sayfasında KDV dahil/hariç olarak gösterilir. Ödeme
-          kredi/banka kartı ile Garanti BBVA sanal POS altyapısı üzerinden tahsil
-          edilir. Hizmet (kredi tanımı) ödemenin onaylanmasıyla derhal ifa edilir.
+          Paket ve abonelik fiyatları ödeme sayfasında KDV dahil/hariç olarak
+          gösterilir. Ödeme kredi/banka kartı ile Garanti BBVA sanal POS altyapısı
+          üzerinden tahsil edilir. Hizmet (kredi / abonelik tanımı) ödemenin
+          onaylanmasıyla derhal ifa edilir. Aylık abonelik, Alıcı iptal edene kadar
+          her ay aynı bedelle yenilenir; iptal işlemi Platform üzerinden
+          yapılabilir.
         </p>
       </YasalBolum>
 
@@ -58,7 +61,7 @@ export default function MesafeliHizmetSozlesmesiPage() {
         <p>
           Tüketici, dijital içeriğin ifasına onay vererek ve cayma hakkının
           kullanılamayacağını kabul ederek işlemi tamamlar (Yönetmelik m.15/1-ğ).
-          Detaylar{" "}
+          Kredi satın alımı ve abonelik bedeli için iade yapılmaz. Detaylar{" "}
           <Link href="/iptal-ve-iade" className="text-amber-700 underline">
             İptal ve İade Politikası
           </Link>
@@ -68,8 +71,9 @@ export default function MesafeliHizmetSozlesmesiPage() {
 
       <YasalBolum baslik="6. Teslimat">
         <p>
-          Kredi, ödeme onayı sonrası dakikalar içinde kullanıcı paneline yansır.
-          Gecikme halinde {YASAL_SIRKET.eposta} üzerinden bildirim yapılmalıdır.
+          Kredi ve abonelik, ödeme onayı sonrası dakikalar içinde kullanıcı paneline
+          yansır. Gecikme halinde {YASAL_SIRKET.eposta} üzerinden bildirim
+          yapılmalıdır.
         </p>
       </YasalBolum>
 

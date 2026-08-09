@@ -91,7 +91,7 @@ export default function OdemeOnayPage() {
             {rozet
               ? "Onaylı çekici rozetiniz aktifleştirildi."
               : abonelik
-                ? "Aboneliğiniz aktif. Krediler hesabınıza yüklendi; her ay otomatik yenilenir."
+                ? "Aboneliğiniz aktif. Krediler yüklendi; istediğiniz zaman iptal edene kadar her ay yenilenir."
                 : "Kredileriniz hesabınıza yüklendi."}
           </p>
         </div>

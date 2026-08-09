@@ -31,12 +31,14 @@ function teklif(
 }
 
 describe("ihale kredi sabitleri", () => {
-  it("panel 1, premium SMS 2 kredi", () => {
+  it("bildirim seviyeleri 1 / 2 / 3 kredi", () => {
     expect(PANEL_BILDIRIM_KREDI).toBe(1);
     expect(SMS_BILDIRIM_KREDI).toBe(1);
     expect(PREMIUM_SMS_BILDIRIM_KREDI).toBe(2);
-    expect(cekiciBildirimKrediTutari({})).toBe(2);
-    expect(cekiciBildirimKrediTutari({ premiumSmsAktif: true })).toBe(2);
+    expect(cekiciBildirimKrediTutari({})).toBe(3);
+    expect(cekiciBildirimKrediTutari({ bildirimSeviye: 3 })).toBe(3);
+    expect(cekiciBildirimKrediTutari({ bildirimSeviye: 2 })).toBe(2);
+    expect(cekiciBildirimKrediTutari({ bildirimSeviye: 1 })).toBe(1);
     expect(cekiciBildirimKrediTutari({ premiumSmsAktif: false })).toBe(1);
   });
 

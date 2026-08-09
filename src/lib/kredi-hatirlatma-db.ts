@@ -13,6 +13,7 @@ import {
   type KrediHatirlatmaKaynak,
 } from "./kredi-hatirlatma";
 import { smsYalnizTesterCekicilerMi } from "./sms";
+import { sesliMesajFireAndForget } from "./sesli-mesaj";
 import { sendSms } from "./sms-provider";
 import { telefonNormalize } from "./telefon";
 import type { Cekici, Talep } from "./types";
@@ -317,6 +318,13 @@ async function gonderBirCekiciye(opts: {
     if (!sonuc.basarili) {
       return { ok: false, token: kayit.token, hata: sonuc.hata };
     }
+    // SMS sayacı (max 3 / 24s) ile aynı kapı — yalnızca başarılı hatırlatmada sesli
+    sesliMesajFireAndForget(
+      "cekici_yetersiz_kredi",
+      opts.cekici.telefon,
+      `yetersiz-kredi ${opts.cekici.id}`,
+      { relationid: `kredi:${opts.cekici.id}` }
+    );
     return { ok: true, token: kayit.token };
   } catch (e) {
     const hata = e instanceof Error ? e.message : "Gönderim hatası";

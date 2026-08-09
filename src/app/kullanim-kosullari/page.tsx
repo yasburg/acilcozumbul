@@ -47,11 +47,11 @@ export default function KullanimKosullariPage() {
         />
       </YasalBolum>
 
-      <YasalBolum baslik="4. Kredi sistemi (hizmet verenler)">
+      <YasalBolum baslik="4. Kredi ve abonelik (hizmet verenler)">
         <p>
           Hizmet verenlerin talep detaylarını ve iletişim bilgilerini görmesi, Platform
-          üzerinden satın alınan dijital kredi birimleri ile mümkündür. Kredi
-          satın alımı,{" "}
+          üzerinden satın alınan dijital kredi birimleri ve/veya aylık abonelik ile
+          mümkündür. Kredi satın alımı ve abonelik,{" "}
           <Link href="/mesafeli-hizmet-sozlesmesi" className="text-amber-700 underline">
             Mesafeli Hizmet Sözleşmesi
           </Link>{" "}
@@ -59,8 +59,9 @@ export default function KullanimKosullariPage() {
           <Link href="/iptal-ve-iade" className="text-amber-700 underline">
             İptal ve İade Politikası
           </Link>{" "}
-          kapsamındadır. Kullanılmış veya hesaba tanımlanmış krediler için iade
-          yapılmaz.
+          kapsamındadır. Hesaba tanımlanan krediler ve abonelik bedeli için iade
+          yapılmaz. Aylık abonelik, siz iptal edene kadar her ay yenilenir; iptal
+          gelecek yenilemeleri durdurur, ödenmiş dönem iade edilmez.
         </p>
       </YasalBolum>
 

@@ -155,6 +155,7 @@ export async function POST(request: NextRequest) {
     aktif: true,
     kayitTarihi: new Date().toISOString(),
     premiumSmsAktif: true,
+    bildirimSeviye: 3,
     kayitFunnel: funnel,
     kurulumTamam: false,
     davetEdenId:

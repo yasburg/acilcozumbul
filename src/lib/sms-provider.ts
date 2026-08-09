@@ -421,7 +421,7 @@ export async function sendSms(
     link?: string;
     /** false ise kredi düşülmez (manuel katılım sonrası SMS) */
     krediDus?: boolean;
-    /** Düşülecek kredi (varsayılan panel = 1; premium SMS = 2) */
+    /** Düşülecek kredi (bildirim seviyesi: 1 / 2 / 3) */
     krediMiktar?: number;
     /** varsayılan xml; dogrulama + premium talep → otp */
     kanal?: SmsKanal;

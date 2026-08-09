@@ -156,6 +156,10 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
                   <MobilNavLink href="/panel/sms" label="SMS Sağlık" />
                   <MobilNavLink href="/panel/sms/toplu" label="Toplu SMS" />
                   <MobilNavLink
+                    href="/panel/hizmet-veren-duyurulari"
+                    label="Hizmet veren duyuruları"
+                  />
+                  <MobilNavLink
                     href="/panel/sms/sablonlar"
                     label="SMS şablonları"
                   />
@@ -183,6 +187,10 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
                   />
                   <MobilNavLink href="/panel/davetler" label="Davet" />
                   <MobilNavLink href="/panel/demo" label="Demo" />
+                  <MobilNavLink
+                    href="/panel/sesli-mesaj"
+                    label="Sesli mesaj"
+                  />
                   <MobilNavLink href="/panel/kampanyalar" label="Kampanya" />
                   <MobilNavLink
                     href="/panel/kayit-funnels"

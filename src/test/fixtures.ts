@@ -45,6 +45,8 @@ export function cekiciFixture(overrides: Partial<Cekici> = {}): Cekici {
     aktif: true,
     kayitTarihi: new Date().toISOString(),
     menzilKm: 30,
+    bildirimSeviye: 3,
+    premiumSmsAktif: true,
     ...overrides,
   };
 }

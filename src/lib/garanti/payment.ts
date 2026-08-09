@@ -13,6 +13,12 @@ export type GarantiRecurringOpts = {
   startDate: string;
 };
 
+/**
+ * Garanti TotalPaymentNum max 3 hane (999). Gerçek “sınırsız” yok;
+ * 999 ≈ 83 yıl aylık — pratikte iptale kadar. İptalde Type=D ile durdurulur.
+ */
+export const GARANTI_RECURRING_MAX_ODEME = 999;
+
 export type GarantiKrediOdemeIstegi = {
   orderId: string;
   amountKurus: number;
@@ -49,7 +55,7 @@ export function garantiRecurringStartDate(d = new Date()): string {
 
 export function aylikRecurringOpts(startDate?: string): GarantiRecurringOpts {
   return {
-    totalPaymentNum: 12,
+    totalPaymentNum: GARANTI_RECURRING_MAX_ODEME,
     frequencyType: "M",
     frequencyInterval: 1,
     startDate: startDate ?? garantiRecurringStartDate(),

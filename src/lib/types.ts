@@ -147,10 +147,15 @@ export interface Cekici {
   /** 1=Pzt … 7=Paz; boş = her gün */
   musaitlikGunler?: number[];
   /**
-   * Varsayılan açık. true: anlık OTP SMS (2 kredi).
-   * false: toplu XML SMS (1 kredi). undefined → açık.
+   * @deprecated `bildirimSeviye` kullanın. Geriye uyum: seviye>=2 → true.
    */
   premiumSmsAktif?: boolean;
+  /**
+   * 1 = standart SMS (~dakika, 1 kredi)
+   * 2 = hızlı SMS (~3 sn, 2 kredi)
+   * 3 = sesli arama + hızlı SMS (3 kredi, varsayılan / önerilen)
+   */
+  bildirimSeviye?: 1 | 2 | 3;
   /** Paylaşılabilir davet / kupon kodu */
   davetKodu?: string;
   /** Kayıtta kullanılan davet kodunun sahibi */

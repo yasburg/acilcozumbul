@@ -125,15 +125,17 @@ export async function getCekiciler(): Promise<Cekici[]> {
   return (data as CekiciRow[]).map(cekiciFromRow);
 }
 
-/** Bildirim adayları — kaba SQL filtresi (aktif + yeterli kredi) */
+/** Bildirim adayları — kaba SQL filtresi (aktif + satın alınan veya abonelik kredisi) */
 export async function getCekicilerBildirimAdaylari(
   minKredi: number
 ): Promise<Cekici[]> {
+  const min = Math.max(0, Number(minKredi) || 0);
+  /* Toplam = kredi + abonelik_kredi; PostgREST toplam sütunu yok → OR ile kaba filtre */
   const { data, error } = await getSupabaseAdmin()
     .from("cekiciler")
     .select("*")
     .eq("aktif", true)
-    .gte("kredi", minKredi);
+    .or(`kredi.gte.${min},abonelik_kredi.gte.${min}`);
   if (error) throw error;
   return (data as CekiciRow[]).map(cekiciFromRow);
 }

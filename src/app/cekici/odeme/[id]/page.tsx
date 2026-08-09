@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
@@ -386,10 +387,24 @@ export default function OdemePage() {
       {odemeTipi === "abonelik" && (
         <Card className="border-amber-200 bg-amber-50 mb-4">
           <p className="text-sm text-amber-950 leading-relaxed">
-            Abonelik her ay otomatik yenilenir (Garanti). İstediğiniz zaman kredi
-            sayfasından iptal edebilirsiniz; kalan krediniz silinmez.
+            Abonelik, iptal edene kadar her ay otomatik yenilenir. İstediğiniz
+            zaman kredi sayfasından iptal edebilirsiniz; iptal gelecek
+            yenilemeleri durdurur, ödenmiş dönem iade edilmez. Abonelik kredisi
+            dönem bitince sıfırlanır; «Kredi satın al» ile aldığınız ekstra
+            krediler kalır.
           </p>
         </Card>
+      )}
+
+      {(odemeTipi === "kredi" || odemeTipi === "abonelik") && (
+        <p className="text-[11px] text-slate-500 leading-snug mb-4">
+          {odemeTipi === "abonelik" ? "Abonelik" : "Kredi"} alımlarında iade
+          yapılmaz. Ödeme ile{" "}
+          <Link href="/iptal-ve-iade" className="text-amber-700 underline">
+            İptal ve İade Politikası
+          </Link>
+          ’nı kabul etmiş olursunuz.
+        </p>
       )}
 
       {error && !odemeAnimasyon && (

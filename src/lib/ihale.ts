@@ -7,25 +7,89 @@ import { cekiciTalepSorununaUygunMu } from "./cekici-sorun";
 import { cekiciToplamKredi } from "./kredi-bakiye";
 import type { Cekici, Talep, Teklif } from "./types";
 
-/** Panel bildirimi (SMS yok) başına kredi */
-export const PANEL_BILDIRIM_KREDI = 1;
-/** Premium anlık SMS bildirimi başına kredi */
-export const PREMIUM_SMS_BILDIRIM_KREDI = 2;
+export type BildirimSeviye = 1 | 2 | 3;
+
+/** 1 kredi — standart (toplu) SMS, birkaç dakika */
+export const BILDIRIM_SEVIYE_STANDART: BildirimSeviye = 1;
+/** 2 kredi — hızlı OTP SMS (3 sn) */
+export const BILDIRIM_SEVIYE_HIZLI: BildirimSeviye = 2;
+/** 3 kredi — sesli arama + hızlı SMS (önerilen / varsayılan) */
+export const BILDIRIM_SEVIYE_SESLI: BildirimSeviye = 3;
+export const BILDIRIM_SEVIYE_VARSAYILAN: BildirimSeviye = BILDIRIM_SEVIYE_SESLI;
+
+/** @deprecated BILDIRIM_SEVIYE_STANDART */
+export const PANEL_BILDIRIM_KREDI = BILDIRIM_SEVIYE_STANDART;
+/** @deprecated BILDIRIM_SEVIYE_HIZLI */
+export const PREMIUM_SMS_BILDIRIM_KREDI = BILDIRIM_SEVIYE_HIZLI;
 /** Geriye uyum — panel bildirimi ile aynı */
 export const SMS_BILDIRIM_KREDI = PANEL_BILDIRIM_KREDI;
 
-/** Varsayılan açık; yalnızca açıkça kapatılmışsa false */
-export function cekiciPremiumSmsAktifMi(
-  cekici: Pick<Cekici, "premiumSmsAktif">
-): boolean {
-  return cekici.premiumSmsAktif !== false;
+export function bildirimSeviyeNormalize(raw: unknown): BildirimSeviye {
+  const n = typeof raw === "number" ? raw : Number(raw);
+  if (n === 1 || n === 2 || n === 3) return n;
+  return BILDIRIM_SEVIYE_VARSAYILAN;
 }
 
-export function cekiciBildirimKrediTutari(cekici: Pick<Cekici, "premiumSmsAktif">): number {
-  return cekiciPremiumSmsAktifMi(cekici)
-    ? PREMIUM_SMS_BILDIRIM_KREDI
-    : PANEL_BILDIRIM_KREDI;
+/** Çekicinin bildirim paketi; yoksa varsayılan 3 (eski boolean’dan türet) */
+export function cekiciBildirimSeviye(
+  cekici: Pick<Cekici, "bildirimSeviye" | "premiumSmsAktif">
+): BildirimSeviye {
+  if (
+    cekici.bildirimSeviye === 1 ||
+    cekici.bildirimSeviye === 2 ||
+    cekici.bildirimSeviye === 3
+  ) {
+    return cekici.bildirimSeviye;
+  }
+  if (cekici.premiumSmsAktif === false) return BILDIRIM_SEVIYE_STANDART;
+  return BILDIRIM_SEVIYE_VARSAYILAN;
 }
+
+/** Hızlı SMS (OTP) — seviye 2+ */
+export function cekiciBildirimHizliSmsMi(
+  cekici: Pick<Cekici, "bildirimSeviye" | "premiumSmsAktif">
+): boolean {
+  return cekiciBildirimSeviye(cekici) >= BILDIRIM_SEVIYE_HIZLI;
+}
+
+/** Sesli arama — seviye 3 */
+export function cekiciBildirimSesliMi(
+  cekici: Pick<Cekici, "bildirimSeviye" | "premiumSmsAktif">
+): boolean {
+  return cekiciBildirimSeviye(cekici) >= BILDIRIM_SEVIYE_SESLI;
+}
+
+/** @deprecated cekiciBildirimHizliSmsMi */
+export function cekiciPremiumSmsAktifMi(
+  cekici: Pick<Cekici, "bildirimSeviye" | "premiumSmsAktif">
+): boolean {
+  return cekiciBildirimHizliSmsMi(cekici);
+}
+
+export function cekiciBildirimKrediTutari(
+  cekici: Pick<Cekici, "bildirimSeviye" | "premiumSmsAktif">
+): number {
+  return cekiciBildirimSeviye(cekici);
+}
+
+export const BILDIRIM_SEVIYE_ETIKET: Record<
+  BildirimSeviye,
+  { baslik: string; aciklama: string; onerilen?: boolean }
+> = {
+  1: {
+    baslik: "Standart SMS",
+    aciklama: "Birkaç dakika içinde SMS bildirimi · 1 kredi",
+  },
+  2: {
+    baslik: "Hızlı SMS",
+    aciklama: "3 saniye içinde SMS bildirimi · 2 kredi",
+  },
+  3: {
+    baslik: "Sesli Arama + Hızlı SMS (Önerilen)",
+    aciklama: "Sesli arama ve 3 saniye içinde SMS · 3 kredi",
+    onerilen: true,
+  },
+};
 
 export function cekiciYeterliBildirimKredisi(
   kredi: number,

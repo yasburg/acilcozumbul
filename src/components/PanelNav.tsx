@@ -49,6 +49,11 @@ const LINKS: {
     roller: ["admin"],
   },
   { href: "/panel/sms/toplu", label: "Toplu SMS", roller: ["admin"] },
+  {
+    href: "/panel/hizmet-veren-duyurulari",
+    label: "Hizmet veren duyuruları",
+    roller: ["admin"],
+  },
   { href: "/panel/sms/sablonlar", label: "SMS şablonları", roller: ["admin"] },
   { href: "/panel/kredi-takip", label: "Kredi takip", roller: ["admin"] },
   {
@@ -75,6 +80,7 @@ const LINKS: {
   },
   { href: "/panel/davetler", label: "Davet kodları", roller: ["admin"] },
   { href: "/panel/demo", label: "Demo", roller: ["admin"] },
+  { href: "/panel/sesli-mesaj", label: "Sesli mesaj", roller: ["admin"] },
   { href: "/panel/kampanyalar", label: "Kampanyalar", roller: ["admin"] },
   { href: "/panel/kayit-funnels", label: "Kayıt funnels", roller: ["admin"] },
   {

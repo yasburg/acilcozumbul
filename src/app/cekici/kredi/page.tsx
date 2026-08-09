@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
@@ -218,7 +219,7 @@ export default function KrediPage() {
         <p className="text-sm font-medium text-slate-700">Paket seçin</p>
         <p className="text-xs text-slate-500 -mt-2">
           {kaynak === "abonelik"
-            ? "Minimum 499 TL · Her ay otomatik yenilenir (Garanti)"
+            ? "Minimum 499 TL · İstediğiniz zaman iptal edene kadar her ay yenilenir"
             : "Minimum 499 TL · Tek seferlik yükleme · Teklif vermek ücretsiz"}
         </p>
         <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 space-y-1">
@@ -274,15 +275,25 @@ export default function KrediPage() {
         {kaynak === "abonelik" && (
           <>
             <p className="text-sm font-medium text-slate-700 text-center -mt-1">
-              Aboneliği istediğiniz zaman iptal edebilirsiniz.
+              Aboneliği istediğiniz zaman iptal edebilirsiniz; iptal edene kadar
+              her ay yenilenir.
             </p>
             <p className="text-[11px] text-slate-400 leading-snug">
               Kullanılmayan abonelik kredisi (bonus dahil) ay yenilenince veya
               iptal sonrası dönem bitince sıfırlanır. «Kredi satın al» ile
-              aldığınız ekstra krediler kalır.
+              aldığınız ekstra krediler kalır. Ödenmiş abonelik bedeli iade
+              edilmez.
             </p>
           </>
         )}
+
+        <p className="text-[11px] text-slate-400 leading-snug text-center">
+          {kaynak === "abonelik" ? "Abonelik" : "Kredi"} alımlarında iade
+          yapılmaz.{" "}
+          <Link href="/iptal-ve-iade" className="text-amber-700 underline">
+            İptal ve İade
+          </Link>
+        </p>
 
         <Card className="bg-slate-50">
           <div className="flex justify-between text-sm mt-2">
