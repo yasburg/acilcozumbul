@@ -128,7 +128,7 @@ export async function sesliWebhookDtmfIsle(
   if (!cekici && body.callee) {
     const tel = telefonNormalize(String(body.callee));
     cekici = await getCekiciByTelefon(tel);
-    cekiciId = cekici?.id;
+    cekiciId = cekici?.id ?? null;
   }
 
   if (!cekici) {
