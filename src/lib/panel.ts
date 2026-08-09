@@ -2,6 +2,8 @@ import type { Cekici } from "./types";
 
 export type CekiciPanelOzet = Omit<Cekici, "sifre" | "token" | "authUserId"> & {
   tokenOnizleme: string;
+  /** Verilen teklif adedi (panel listesi) */
+  teklifSayisi?: number;
 };
 
 export function cekiciPanelOzet(cekici: Cekici): CekiciPanelOzet {

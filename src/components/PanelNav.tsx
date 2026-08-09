@@ -51,6 +51,11 @@ const LINKS: {
   { href: "/panel/sms/toplu", label: "Toplu SMS", roller: ["admin"] },
   { href: "/panel/sms/sablonlar", label: "SMS şablonları", roller: ["admin"] },
   { href: "/panel/kredi-takip", label: "Kredi takip", roller: ["admin"] },
+  {
+    href: "/panel/kredi-dagitim",
+    label: "Kredi dağıtım",
+    roller: ["admin"],
+  },
   { href: "/panel/kurulum-sms", label: "Kurulum takip", roller: ["admin"] },
   { href: "/panel/sehir-acilis", label: "Şehir açılış", roller: ["admin"] },
   {

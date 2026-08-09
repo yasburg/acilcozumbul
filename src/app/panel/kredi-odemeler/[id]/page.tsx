@@ -25,6 +25,7 @@ type Detay = {
   ad: string;
   soyad: string;
   cekiciTelefon: string;
+  cekiciSehir?: string;
   miktar: number;
   tutar: number;
   paketTl: number;
@@ -146,6 +147,7 @@ export default function PanelSatinAlmaDetayPage() {
         <Satir label="Ad" value={kayit.ad} />
         <Satir label="Soyad" value={kayit.soyad} />
         <Satir label="Telefon" value={kayit.cekiciTelefon} />
+        <Satir label="Şehir" value={kayit.cekiciSehir} />
         <Satir label="E-posta" value={kayit.faturaEposta} />
         <Satir label="Adres" value={kayit.faturaAdres} />
         <Satir label="TC kimlik" value={kayit.faturaTcKimlik} />

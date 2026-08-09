@@ -171,3 +171,27 @@ export async function countTekliflerByCekici(cekiciId: string): Promise<{
   }
   return { toplam: rows.length, kazanilan, fiyatDegistiren };
 }
+
+/** Tüm çekiciler için teklif adedi (sayfalı tarama) */
+export async function countTeklifSayilariByCekici(): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  const sb = getSupabaseAdmin();
+  const page = 1000;
+  let from = 0;
+  for (;;) {
+    const { data, error } = await sb
+      .from("teklifler")
+      .select("cekici_id")
+      .range(from, from + page - 1);
+    if (error) throw error;
+    const rows = data ?? [];
+    for (const r of rows) {
+      const id = String((r as { cekici_id?: string }).cekici_id ?? "");
+      if (!id) continue;
+      map.set(id, (map.get(id) ?? 0) + 1);
+    }
+    if (rows.length < page) break;
+    from += page;
+  }
+  return map;
+}

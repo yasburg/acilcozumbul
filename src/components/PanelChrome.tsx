@@ -161,6 +161,10 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
                   />
                   <MobilNavLink href="/panel/kredi-takip" label="Kredi takip" />
                   <MobilNavLink
+                    href="/panel/kredi-dagitim"
+                    label="Kredi dağıtım"
+                  />
+                  <MobilNavLink
                     href="/panel/kurulum-sms"
                     label="Kurulum takip"
                   />

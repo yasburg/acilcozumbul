@@ -6,7 +6,10 @@ import { useParams, useRouter } from "next/navigation";
 import { Card, Btn } from "@/components/ui";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
 import { musaitlikOzeti } from "@/lib/cekici-musaitlik";
-import { cekiciPremiumSmsAktifMi } from "@/lib/ihale";
+import {
+  BILDIRIM_SEVIYE_ETIKET,
+  cekiciBildirimSeviye,
+} from "@/lib/ihale";
 import { ilceListesi } from "@/lib/il-ilce";
 import { formatKredi } from "@/lib/talep-utils";
 import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
@@ -193,7 +196,7 @@ export default function PanelCekiciDetayPage() {
   }
 
   const belgeDurum = (cekici.belgeDurum ?? "yok") as BelgeDurum;
-  const premiumSms = cekiciPremiumSmsAktifMi(cekici);
+  const bildirimSeviye = cekiciBildirimSeviye(cekici);
   const hizmetDisi = hizmetDisiIlceOzeti(cekici.hizmetBolgeleri);
   const sorunHizmet = hizmetSorunAyir(cekici.hizmetSorunTipleri);
 
@@ -239,18 +242,18 @@ export default function PanelCekiciDetayPage() {
         />
         <Row label="Şehir" value={cekici.sehir} />
         <Row label="Kredi" value={formatKredi(cekiciToplamKredi(cekici))} />
+        <Row
+          label="Teklif"
+          value={String(Number(cekici.teklifSayisi) || 0)}
+        />
         <Row label="Durum" value={cekici.aktif ? "Aktif" : "Pasif"} />
         <Row
           label="Çalışma saatleri"
           value={musaitlikOzeti(cekici)}
         />
         <Row
-          label="SMS tipi"
-          value={
-            premiumSms
-              ? "Premium (anlık OTP, 2 kredi)"
-              : "Normal (toplu SMS, 1 kredi)"
-          }
+          label="Bildirim paketi"
+          value={`${bildirimSeviye} — ${BILDIRIM_SEVIYE_ETIKET[bildirimSeviye].baslik}`}
         />
         <Row label="Verdiği hizmetler" value={sorunHizmet.verdikleri} />
         <Row label="Vermediği hizmetler" value={sorunHizmet.vermedikleri} />

@@ -54,6 +54,7 @@ export async function GET(
       ad,
       soyad,
       cekiciTelefon: cekici?.telefon ?? "—",
+      cekiciSehir: cekici?.sehir?.trim() || "",
       miktar: islem.kredi,
       tutar: islem.tutarTl,
       paketTl: islem.tutarTl,
@@ -89,6 +90,7 @@ export async function GET(
     tipEtiket: satinAlmaTipEtiket(tip),
     ad,
     soyad,
+    cekiciSehir: cekici?.sehir?.trim() || "",
     faturaEposta: kayit.faturaEposta || cekici?.faturaEposta || "",
     fatura: fatura
       ? {

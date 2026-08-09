@@ -16,6 +16,7 @@ import { DESTEKLENEN_ILLER, IL_ILCELER } from "@/lib/il-ilce";
 
 const PANEL_GIZLE_KEY = "acil_panel_kisisel_veri_gizli";
 const PANEL_SAYI_GIZLE_KEY = "acil_panel_cekici_sayi_gizli";
+const PANEL_SEHIR_GRUPLA_KEY = "acil_panel_cekici_sehir_grupla";
 const SEHIR_YOK = "Belirtilmemiş";
 const TOPLAM_SEHIR = DESTEKLENEN_ILLER.length;
 const TOPLAM_ILCE = DESTEKLENEN_ILLER.reduce(
@@ -28,8 +29,12 @@ function kapsamaYuzde(parca: number, toplam: number): number {
   return Math.round((parca / toplam) * 1000) / 10;
 }
 
-type SehirSiralama = "adet" | "alfa";
+type SehirSiralama = "adet" | "alfa" | "teklif_desc" | "teklif_asc" | "kayit";
 type Gorunum = "liste" | "ozet" | "harita";
+
+function teklifAdet(c: CekiciPanelOzet): number {
+  return Number(c.teklifSayisi) || 0;
+}
 
 function sehirEtiketi(sehir: string | undefined | null): string {
   const s = (sehir ?? "").trim();
@@ -37,13 +42,48 @@ function sehirEtiketi(sehir: string | undefined | null): string {
 }
 
 function sehirKarsilastir(
-  a: { sehir: string; adet: number },
-  b: { sehir: string; adet: number },
+  a: { sehir: string; adet: number; teklifToplam?: number },
+  b: { sehir: string; adet: number; teklifToplam?: number },
   siralama: SehirSiralama
 ): number {
   if (siralama === "alfa") return a.sehir.localeCompare(b.sehir, "tr");
+  if (siralama === "teklif_desc") {
+    const diff = (b.teklifToplam ?? 0) - (a.teklifToplam ?? 0);
+    if (diff !== 0) return diff;
+    return a.sehir.localeCompare(b.sehir, "tr");
+  }
+  if (siralama === "teklif_asc") {
+    const diff = (a.teklifToplam ?? 0) - (b.teklifToplam ?? 0);
+    if (diff !== 0) return diff;
+    return a.sehir.localeCompare(b.sehir, "tr");
+  }
+  if (siralama === "kayit") {
+    return a.sehir.localeCompare(b.sehir, "tr");
+  }
   if (b.adet !== a.adet) return b.adet - a.adet;
   return a.sehir.localeCompare(b.sehir, "tr");
+}
+
+function cekiciKarsilastir(
+  a: CekiciPanelOzet,
+  b: CekiciPanelOzet,
+  siralama: SehirSiralama
+): number {
+  if (siralama === "teklif_desc") {
+    const diff = teklifAdet(b) - teklifAdet(a);
+    if (diff !== 0) return diff;
+  } else if (siralama === "teklif_asc") {
+    const diff = teklifAdet(a) - teklifAdet(b);
+    if (diff !== 0) return diff;
+  } else if (siralama === "alfa") {
+    const diff = a.ad.localeCompare(b.ad, "tr");
+    if (diff !== 0) return diff;
+  } else if (siralama === "kayit" || siralama === "adet") {
+    const diff =
+      new Date(b.kayitTarihi).getTime() - new Date(a.kayitTarihi).getTime();
+    if (diff !== 0) return diff;
+  }
+  return a.ad.localeCompare(b.ad, "tr") || a.id.localeCompare(b.id);
 }
 
 /** Benzersiz ilçe anahtarı — aynı ad farklı illerde çakışmasın */
@@ -101,6 +141,9 @@ function CekiciKart({
               {formatKredi(c.kredi)} kredi
             </p>
             <p className="text-slate-500">{c.sehir}</p>
+            <p className="text-xs text-slate-500 tabular-nums mt-0.5">
+              {teklifAdet(c)} teklif
+            </p>
           </div>
         </div>
         <p className="text-xs text-slate-400 mt-2">
@@ -124,11 +167,15 @@ export default function PanelCekicilerPage() {
   const [sehirFiltre, setSehirFiltre] = useState("");
   const [siralama, setSiralama] = useState<SehirSiralama>("adet");
   const [gorunum, setGorunum] = useState<Gorunum>("ozet");
+  const [sehirGrupla, setSehirGrupla] = useState(false);
 
   useEffect(() => {
     try {
       setGizli(window.localStorage.getItem(PANEL_GIZLE_KEY) === "1");
       setSayiGizli(window.localStorage.getItem(PANEL_SAYI_GIZLE_KEY) === "1");
+      const gruplaKayit = window.localStorage.getItem(PANEL_SEHIR_GRUPLA_KEY);
+      if (gruplaKayit === "1") setSehirGrupla(true);
+      if (gruplaKayit === "0") setSehirGrupla(false);
     } catch {
       /* ignore */
     }
@@ -146,13 +193,21 @@ export default function PanelCekicilerPage() {
   );
 
   const sehirAdetleri = useMemo(() => {
-    const map = new Map<string, number>();
+    const map = new Map<string, { adet: number; teklifToplam: number }>();
     for (const c of cekiciler) {
       const sehir = sehirEtiketi(c.sehir);
-      map.set(sehir, (map.get(sehir) ?? 0) + 1);
+      const onceki = map.get(sehir) ?? { adet: 0, teklifToplam: 0 };
+      map.set(sehir, {
+        adet: onceki.adet + 1,
+        teklifToplam: onceki.teklifToplam + teklifAdet(c),
+      });
     }
     return [...map.entries()]
-      .map(([sehir, adet]) => ({ sehir, adet }))
+      .map(([sehir, v]) => ({
+        sehir,
+        adet: v.adet,
+        teklifToplam: v.teklifToplam,
+      }))
       .sort((a, b) => sehirKarsilastir(a, b, siralama));
   }, [cekiciler, siralama]);
 
@@ -166,12 +221,27 @@ export default function PanelCekicilerPage() {
       else map.set(sehir, [c]);
     }
     return [...map.entries()]
-      .map(([sehir, cekiciler]) => ({
-        sehir,
-        cekiciler,
-        adet: cekiciler.length,
-      }))
+      .map(([sehir, grupCekiciler]) => {
+        const sirali = [...grupCekiciler].sort((a, b) =>
+          cekiciKarsilastir(a, b, siralama)
+        );
+        return {
+          sehir,
+          cekiciler: sirali,
+          adet: sirali.length,
+          teklifToplam: sirali.reduce((n, c) => n + teklifAdet(c), 0),
+        };
+      })
       .sort((a, b) => sehirKarsilastir(a, b, siralama));
+  }, [cekiciler, sehirFiltre, siralama]);
+
+  const listeDuz = useMemo(() => {
+    return cekiciler
+      .filter((c) => {
+        if (!sehirFiltre) return true;
+        return sehirEtiketi(c.sehir) === sehirFiltre;
+      })
+      .sort((a, b) => cekiciKarsilastir(a, b, siralama));
   }, [cekiciler, sehirFiltre, siralama]);
 
   const ozetSatirlar = useMemo(() => {
@@ -214,6 +284,16 @@ export default function PanelCekicilerPage() {
     setSayiGizli(sonraki);
     try {
       window.localStorage.setItem(PANEL_SAYI_GIZLE_KEY, sonraki ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function sehirGruplamayiDegistir() {
+    const sonraki = !sehirGrupla;
+    setSehirGrupla(sonraki);
+    try {
+      window.localStorage.setItem(PANEL_SEHIR_GRUPLA_KEY, sonraki ? "1" : "0");
     } catch {
       /* ignore */
     }
@@ -314,10 +394,27 @@ export default function PanelCekicilerPage() {
                 setSiralama(e.target.value as SehirSiralama)
               }
             >
-              <option value="adet">Çoktan aza</option>
+              <option value="adet">Kayıt sayısı (çok → az)</option>
+              <option value="teklif_desc">Teklif (çok → az)</option>
+              <option value="teklif_asc">Teklif (az → çok)</option>
+              <option value="kayit">Kayıt tarihi (yeni → eski)</option>
               <option value="alfa">Alfabetik</option>
             </SelectField>
           </div>
+          {gorunum === "liste" && (
+            <button
+              type="button"
+              onClick={sehirGruplamayiDegistir}
+              aria-pressed={sehirGrupla}
+              className={`rounded-xl px-3 py-2.5 text-sm font-semibold border transition self-end ${
+                sehirGrupla
+                  ? "border-amber-300 bg-amber-50 text-amber-900"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+              }`}
+            >
+              {sehirGrupla ? "Şehir gruplu" : "Şehir grupla"}
+            </button>
+          )}
           <div
             className="flex rounded-xl border border-slate-200 bg-white p-1"
             role="group"
@@ -390,10 +487,13 @@ export default function PanelCekicilerPage() {
                     <th className="px-4 py-3 font-medium text-right">
                       Kayıt sayısı
                     </th>
+                    <th className="px-4 py-3 font-medium text-right">
+                      Teklif
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {ozetSatirlar.map(({ sehir, adet }) => (
+                  {ozetSatirlar.map(({ sehir, adet, teklifToplam }) => (
                     <tr
                       key={sehir}
                       className="border-b border-slate-50 last:border-0"
@@ -401,6 +501,9 @@ export default function PanelCekicilerPage() {
                       <td className="px-4 py-3 text-slate-900">{sehir}</td>
                       <td className="px-4 py-3 text-right tabular-nums text-slate-700">
                         {adet}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                        {teklifToplam}
                       </td>
                     </tr>
                   ))}
@@ -410,6 +513,9 @@ export default function PanelCekicilerPage() {
                     <td className="px-4 py-3">Toplam</td>
                     <td className="px-4 py-3 text-right tabular-nums">
                       {gosterilenAdet}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {ozetSatirlar.reduce((n, s) => n + s.teklifToplam, 0)}
                     </td>
                   </tr>
                 </tfoot>
@@ -459,7 +565,7 @@ export default function PanelCekicilerPage() {
       {!loading &&
         cekiciler.length > 0 &&
         gorunum === "liste" &&
-        gruplar.length === 0 && (
+        (sehirGrupla ? gruplar.length === 0 : listeDuz.length === 0) && (
           <Card>
             <p className="text-slate-600 text-sm">Bu şehirde çekici yok.</p>
           </Card>
@@ -467,23 +573,31 @@ export default function PanelCekicilerPage() {
 
       {gorunum === "liste" && (
         <div className="space-y-6">
-          {gruplar.map((grup) => (
-            <section key={grup.sehir} className="space-y-3">
-              <div className="flex items-baseline justify-between gap-2 border-b border-slate-200 pb-2">
-                <h3 className="text-lg font-semibold text-slate-900">
-                  {grup.sehir}
-                </h3>
-                <span className="text-sm font-medium text-slate-500 tabular-nums">
-                  {grup.adet} çekici
-                </span>
-              </div>
-              <div className="space-y-3">
-                {grup.cekiciler.map((c) => (
-                  <CekiciKart key={c.id} c={c} seviye={seviye} />
-                ))}
-              </div>
-            </section>
-          ))}
+          {sehirGrupla
+            ? gruplar.map((grup) => (
+                <section key={grup.sehir} className="space-y-3">
+                  <div className="flex items-baseline justify-between gap-2 border-b border-slate-200 pb-2">
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      {grup.sehir}
+                    </h3>
+                    <span className="text-sm font-medium text-slate-500 tabular-nums">
+                      {grup.adet} çekici · {grup.teklifToplam} teklif
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {grup.cekiciler.map((c) => (
+                      <CekiciKart key={c.id} c={c} seviye={seviye} />
+                    ))}
+                  </div>
+                </section>
+              ))
+            : listeDuz.length > 0 && (
+                <div className="space-y-3">
+                  {listeDuz.map((c) => (
+                    <CekiciKart key={c.id} c={c} seviye={seviye} />
+                  ))}
+                </div>
+              )}
 
           {testerler.length > 0 && (
             <section className="space-y-3 rounded-2xl border border-violet-200 bg-violet-50/30 p-4">

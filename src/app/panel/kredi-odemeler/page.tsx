@@ -15,6 +15,7 @@ type Ozet = {
   tipEtiket: string;
   cekiciAd: string;
   cekiciTelefon: string;
+  cekiciSehir?: string;
   miktar: number;
   tutar: number;
   faturaEposta: string;
@@ -49,6 +50,9 @@ function SatinAlmaKart({ k }: { k: Ozet }) {
           <div>
             <p className="font-semibold">{k.cekiciAd}</p>
             <p className="text-sm text-slate-600">{k.cekiciTelefon}</p>
+            {k.cekiciSehir ? (
+              <p className="text-sm text-slate-600">{k.cekiciSehir}</p>
+            ) : null}
             <p className="text-xs text-slate-500 mt-1">{k.faturaEposta}</p>
             <div className="mt-2 flex flex-wrap gap-1">
               <span

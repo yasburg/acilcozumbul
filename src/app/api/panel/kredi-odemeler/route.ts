@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { listeleAbonelikIslemleriTahsilat } from "@/lib/abonelik-db";
 import { getCekiciById } from "@/lib/db";
 import { listeleFaturaLinkSon } from "@/lib/fatura-link-db";
+import { orderIdTemizle } from "@/lib/garanti/payment";
 import { listeleKrediOdemeler } from "@/lib/kredi-odeme";
 import {
   abonelikIslemDetayId,
@@ -21,6 +22,7 @@ export type SatinAlmaOzetDto = {
   cekiciId: string;
   cekiciAd: string;
   cekiciTelefon: string;
+  cekiciSehir: string;
   miktar: number;
   tutar: number;
   paketTl: number;
@@ -55,6 +57,17 @@ export async function GET(request: NextRequest) {
       .filter((x): x is string => Boolean(x))
   );
 
+  const cekiciCache = new Map<
+    string,
+    Awaited<ReturnType<typeof getCekiciById>>
+  >();
+  async function cekiciAl(id: string) {
+    if (!cekiciCache.has(id)) {
+      cekiciCache.set(id, await getCekiciById(id));
+    }
+    return cekiciCache.get(id);
+  }
+
   const ozet: SatinAlmaOzetDto[] = [];
 
   for (const k of krediListe) {
@@ -63,6 +76,7 @@ export async function GET(request: NextRequest) {
       : "kredi";
     if (!satinAlmaTipFiltreyeUyar(tip, filtre)) continue;
 
+    const cekici = await cekiciAl(k.cekiciId);
     ozet.push({
       id: k.id,
       kaynak: "kredi_odeme",
@@ -71,6 +85,7 @@ export async function GET(request: NextRequest) {
       cekiciId: k.cekiciId,
       cekiciAd: k.cekiciAd,
       cekiciTelefon: k.cekiciTelefon,
+      cekiciSehir: cekici?.sehir?.trim() || "",
       miktar: k.miktar,
       tutar: k.tutar,
       paketTl: k.paketTl,
@@ -84,13 +99,20 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Yenilemeler kredi_odemeler'de yok; created zaten orada (çift sayma yok)
+  // Yenilemeler kredi_odemeler'de yok. Created genelde orada; yoksa (kayıt hatası) yine göster.
+  const krediIdsTemiz = new Set(krediListe.map((k) => orderIdTemizle(k.id)));
   for (const i of abonelikIslemleri) {
-    if (i.tip !== "renewal") continue;
-    const tip: SatinAlmaTip = "abonelik_yenileme";
+    const yenileme = i.tip === "renewal";
+    const eksikCreated =
+      i.tip === "created" &&
+      Boolean(i.garantiOrderId) &&
+      !krediIdsTemiz.has(orderIdTemizle(i.garantiOrderId as string));
+    if (!yenileme && !eksikCreated) continue;
+
+    const tip: SatinAlmaTip = yenileme ? "abonelik_yenileme" : "abonelik";
     if (!satinAlmaTipFiltreyeUyar(tip, filtre)) continue;
 
-    const cekici = await getCekiciById(i.cekiciId);
+    const cekici = await cekiciAl(i.cekiciId);
     ozet.push({
       id: abonelikIslemDetayId(i.id),
       kaynak: "abonelik_islem",
@@ -99,6 +121,7 @@ export async function GET(request: NextRequest) {
       cekiciId: i.cekiciId,
       cekiciAd: cekici?.ad ?? "—",
       cekiciTelefon: cekici?.telefon ?? "—",
+      cekiciSehir: cekici?.sehir?.trim() || "",
       miktar: i.kredi,
       tutar: i.tutarTl,
       paketTl: i.tutarTl,

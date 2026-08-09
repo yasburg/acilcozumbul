@@ -3,6 +3,7 @@ import { getCekiciById } from "@/lib/db";
 import { silCekiciCascade } from "@/lib/cekici-sil";
 import { cekiciPanelOzet } from "@/lib/panel";
 import { ensureSeedData } from "@/lib/seed";
+import { countTekliflerByCekici } from "@/lib/teklif-db";
 
 export async function GET(
   _request: Request,
@@ -14,8 +15,14 @@ export async function GET(
   if (!cekici) {
     return NextResponse.json({ error: "Çekici bulunamadı." }, { status: 404 });
   }
+  const teklif = await countTekliflerByCekici(id).catch(() => ({
+    toplam: 0,
+    kazanilan: 0,
+    fiyatDegistiren: 0,
+  }));
   return NextResponse.json({
     ...cekiciPanelOzet(cekici),
+    teklifSayisi: teklif.toplam,
     token: cekici.token,
   });
 }
