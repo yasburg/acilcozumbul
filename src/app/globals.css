@@ -1,22 +1,50 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #ffffff;
+  --foreground: #1b2d2a;
   --card: #ffffff;
   --border: #e2e8f0;
   --muted: #64748b;
   --accent: #d97706;
+
+  /* ACB design tokens — emergency UI foundation */
+  --acb-green: #089b2d;
+  --acb-green-hover: #077f25;
+  --acb-dark: #1b2d2a;
+  --acb-soft: #eaf0ce;
+  --acb-orange: #ff9b42;
+  --acb-orange-hover: #e8872f;
+  --acb-white: #ffffff;
+  --acb-muted: color-mix(in srgb, #1b2d2a 55%, white);
+  --acb-border: color-mix(in srgb, #1b2d2a 14%, white);
+  --acb-radius-sm: 0.75rem;
+  --acb-radius: 1rem;
+  --acb-radius-lg: 1.25rem;
+  --acb-touch: 2.75rem; /* 44px */
+  --acb-cta: 3.25rem; /* 52px */
+  --acb-shadow: 0 1px 2px rgb(27 45 42 / 0.06);
+  --acb-shadow-cta: 0 4px 14px rgb(8 155 45 / 0.28);
+  --acb-shadow-emergency: 0 4px 14px rgb(255 155 66 / 0.3);
+  --acb-transition: 160ms ease;
+  --acb-primary: var(--acb-green);
+  --acb-primary-hover: var(--acb-green-hover);
+  --acb-primary-fg: #ffffff;
+  --acb-emergency: var(--acb-orange);
+  --acb-emergency-hover: var(--acb-orange-hover);
 }
 
 /* Staging ACB rebrand — html.brand-acb (NEXT_PUBLIC_APP_ENV=staging) */
 html.brand-acb {
-  --background: #eaf0ce;
+  --background: #ffffff;
   --foreground: #1b2d2a;
   --card: #ffffff;
   --border: color-mix(in srgb, #1b2d2a 14%, white);
   --muted: color-mix(in srgb, #1b2d2a 55%, white);
   --accent: #089b2d;
+  --acb-primary: #089b2d;
+  --acb-primary-hover: #077f25;
+  --acb-soft: #eaf0ce;
 
   /* Amber (CTAs / brand accents) → green */
   --color-amber-50: #eaf8ee;
@@ -70,8 +98,8 @@ html.brand-acb {
   --color-yellow-900: #7a3706;
   --color-yellow-950: #4a2103;
 
-  /* Page shells */
-  --color-slate-50: #eaf0ce;
+  /* Page shells — keep surfaces white; dark text via slate-900 remap */
+  --color-slate-50: #ffffff;
   --color-slate-900: #1b2d2a;
 }
 
@@ -171,6 +199,118 @@ select {
 
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
+}
+
+/* Intro splash — cover before hydration, then React overlay takes over */
+html.acb-intro-pending body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  background: #fff;
+  pointer-events: none;
+}
+
+/* Opening logo — hero → compact top nav morph */
+.acb-opening-logo {
+  position: fixed;
+  z-index: 55;
+  left: 50%;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transform: translateX(-50%);
+  overflow: hidden;
+  border-radius: 1.15rem;
+  will-change: top, width, height;
+  transition:
+    top 0.55s cubic-bezier(0.76, 0, 0.24, 1),
+    width 0.55s cubic-bezier(0.76, 0, 0.24, 1),
+    height 0.55s cubic-bezier(0.76, 0, 0.24, 1),
+    border-radius 0.55s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.acb-opening-logo--hero {
+  top: max(10vh, calc(env(safe-area-inset-top) + 1.75rem));
+  width: min(56vw, 13.5rem);
+  height: min(56vw, 13.5rem);
+}
+
+.acb-opening-logo--nav {
+  top: max(0.35rem, env(safe-area-inset-top));
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.7rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acb-opening-logo {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* Subtle “more below” hop — chevron + label together, pause between loops */
+@keyframes acb-scroll-hint-hop {
+  0%,
+  18% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-3px);
+  }
+  42% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.acb-scroll-hint {
+  animation: acb-scroll-hint-hop 2.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acb-scroll-hint {
+    animation: none;
+  }
+}
+
+/* Intro splash — white veil + logo fade out together */
+.acb-intro-splash {
+  will-change: opacity;
+  opacity: 1;
+}
+
+.acb-intro-splash__mark {
+  line-height: 0;
+}
+
+.acb-intro-splash__mark svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.acb-intro-splash--exit {
+  animation: acb-intro-fade-out 640ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes acb-intro-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acb-intro-splash--exit {
+    animation-duration: 240ms;
+  }
 }
 
 @keyframes popup-in {

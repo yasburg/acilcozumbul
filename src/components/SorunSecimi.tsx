@@ -3,14 +3,8 @@
 import { SORUN_TIPLERI } from "@/lib/sorun-tipleri";
 import { SorunAkisOzeti } from "@/components/SorunAkisOzeti";
 import { Btn, TextArea } from "@/components/ui";
+import { AcbIcons, SorunIkon } from "@/lib/acb-icons";
 import type { ReactNode } from "react";
-
-const GLOW_SECILI =
-  "border-amber-400 bg-amber-50 ring-2 ring-amber-300/80 shadow-[0_0_14px_3px_rgba(245,158,11,0.55)]";
-const GLOW_SECIMSIZ =
-  "border-amber-300/70 bg-white ring-1 ring-amber-200/60 shadow-[0_0_12px_2px_rgba(245,158,11,0.28)] hover:border-amber-400 hover:shadow-[0_0_14px_3px_rgba(245,158,11,0.4)]";
-const KUTU_NORMAL =
-  "border-slate-200 bg-white hover:border-amber-300";
 
 interface SorunSecimiProps {
   seciliTip: string;
@@ -30,6 +24,8 @@ interface SorunSecimiProps {
   konumIcerik?: ReactNode;
   /** Compact: daha alçak kartlar (müşteri landing) */
   kompaktKart?: boolean;
+  /** 2 sütunlu hızlı seçim ızgarası (acil akış) */
+  izgara?: boolean;
 }
 
 export function SorunSecimi({
@@ -45,20 +41,55 @@ export function SorunSecimi({
   onAdresDuzelt,
   konumIcerik,
   kompaktKart = false,
+  izgara = false,
 }: SorunSecimiProps) {
-  const kartPy = kompaktKart ? "py-2.5 px-3.5" : "py-3 px-4";
-  const gap = kompaktKart ? "gap-1" : "gap-1.5";
+  const kartPy = kompaktKart ? "py-3 px-3.5" : "py-3.5 px-4";
+  const gap = kompaktKart ? "gap-2" : "gap-2.5";
   const altIcerikVar = !!(konumIcerik || konumAdres?.trim());
+  const Check = AcbIcons.check;
 
-  /** Sade tip seçimi: tick + glow, akış özeti yok */
+  /** Sade tip seçimi: tick + soft selected surface */
   if (sadeceTipSecimi && !altIcerikVar) {
+    if (izgara) {
+      return (
+        <div className={kompaktKart ? "space-y-2.5" : "space-y-3"}>
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            {SORUN_TIPLERI.map((tip) => {
+              const secili = seciliTip === tip.id;
+              return (
+                <button
+                  key={tip.id}
+                  type="button"
+                  data-sorun-id={tip.id}
+                  onClick={() => onTipSec(tip.id)}
+                  aria-pressed={secili}
+                  className={`flex min-h-[5.25rem] flex-col items-center justify-center gap-2 rounded-[var(--acb-radius-lg)] border px-2 py-3.5 text-center touch-manipulation transition scroll-mt-24 active:scale-[0.98] ${
+                    secili
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)]"
+                      : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_40%,white)]"
+                  }`}
+                >
+                  <SorunIkon id={tip.id} className="size-7" active={secili} />
+                  <span
+                    className={`text-[13px] font-semibold leading-tight ${
+                      secili ? "text-[var(--acb-dark)]" : "text-slate-800"
+                    }`}
+                  >
+                    {tip.shortLabel ?? tip.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className={kompaktKart ? "space-y-2.5" : "space-y-4"}>
-        <p className="text-sm font-semibold text-slate-800">Sorununuz nedir?</p>
         <div className={`grid grid-cols-1 ${gap}`}>
           {SORUN_TIPLERI.map((tip) => {
             const secili = seciliTip === tip.id;
-            const birSecimVar = Boolean(seciliTip);
             return (
               <button
                 key={tip.id}
@@ -66,26 +97,26 @@ export function SorunSecimi({
                 data-sorun-id={tip.id}
                 onClick={() => onTipSec(tip.id)}
                 aria-pressed={secili}
-                className={`w-full text-left rounded-xl border ${kartPy} transition touch-manipulation flex items-center gap-2.5 scroll-mt-24 ${
+                className={`w-full text-left rounded-[var(--acb-radius)] border ${kartPy} transition touch-manipulation flex items-center gap-3 scroll-mt-24 ${
                   secili
-                    ? GLOW_SECILI
-                    : birSecimVar
-                      ? KUTU_NORMAL
-                      : GLOW_SECIMSIZ
+                    ? "border-[var(--acb-green)] bg-[var(--acb-soft)]"
+                    : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_40%,white)]"
                 }`}
               >
-                <span className="text-lg shrink-0">{tip.icon}</span>
+                <SorunIkon id={tip.id} className="size-5 shrink-0" active={secili} />
                 <span
                   className={`font-medium text-sm flex-1 min-w-0 ${
-                    secili ? "text-amber-900" : "text-slate-800"
+                    secili ? "text-[var(--acb-dark)]" : "text-slate-800"
                   }`}
                 >
                   {tip.label}
                 </span>
                 {secili ? (
-                  <span className="shrink-0 text-amber-600 text-base" aria-hidden>
-                    ✓
-                  </span>
+                  <Check
+                    className="size-5 shrink-0 text-[var(--acb-green)]"
+                    strokeWidth={1.75}
+                    aria-hidden
+                  />
                 ) : null}
               </button>
             );
@@ -97,7 +128,6 @@ export function SorunSecimi({
 
   return (
     <div className={kompaktKart ? "space-y-2.5" : "space-y-4"}>
-      <p className="text-sm font-semibold text-slate-800">Sorununuz nedir?</p>
       <div className={`grid grid-cols-1 ${gap}`}>
         {SORUN_TIPLERI.map((tip) => {
           const secili = seciliTip === tip.id;
@@ -108,34 +138,38 @@ export function SorunSecimi({
               <div
                 key={tip.id}
                 data-sorun-id={tip.id}
-                className={`rounded-xl border overflow-hidden scroll-mt-24 ${GLOW_SECILI}`}
+                className={`rounded-[var(--acb-radius)] border overflow-hidden scroll-mt-24 border-[var(--acb-green)] bg-[var(--acb-soft)]`}
               >
                 <button
                   type="button"
                   onClick={() => onTipSec(tip.id)}
-                  className={`w-full text-left ${kartPy} flex items-center gap-2.5`}
+                  className={`w-full text-left ${kartPy} flex items-center gap-3`}
                 >
-                  <span className="text-lg shrink-0">{tip.icon}</span>
-                  <span className="font-medium text-sm flex-1 min-w-0 text-amber-900">
+                  <SorunIkon id={tip.id} className="size-5 shrink-0" active />
+                  <span className="font-medium text-sm flex-1 min-w-0 text-[var(--acb-dark)]">
                     {tip.label}
                   </span>
-                  <span className="shrink-0 text-amber-600 text-base">✓</span>
+                  <Check
+                    className="size-5 shrink-0 text-[var(--acb-green)]"
+                    strokeWidth={1.75}
+                    aria-hidden
+                  />
                 </button>
                 <div className="px-3.5 pb-2.5 pt-0 space-y-2">
                   {konumIcerik ??
                     (konumAdres?.trim() ? (
-                      <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
-                        <p className="text-[10px] text-emerald-700 uppercase tracking-wide mb-0.5">
-                          Arıza konumu (GPS)
+                      <div className="rounded-[var(--acb-radius-sm)] border border-[var(--acb-border)] bg-white px-3 py-2.5">
+                        <p className="text-[10px] text-[var(--acb-muted)] uppercase tracking-wide mb-0.5">
+                          Arıza konumu
                         </p>
-                        <p className="text-sm text-emerald-900 leading-snug">
+                        <p className="text-sm text-[var(--acb-dark)] leading-snug">
                           {konumAdres}
                         </p>
                         {onAdresDuzelt && (
                           <button
                             type="button"
                             onClick={onAdresDuzelt}
-                            className="mt-1.5 text-xs text-emerald-800 underline font-medium"
+                            className="mt-1.5 text-xs text-[var(--acb-dark)] underline font-medium"
                           >
                             Adresi düzelt
                           </button>
@@ -164,22 +198,26 @@ export function SorunSecimi({
               type="button"
               data-sorun-id={tip.id}
               onClick={() => onTipSec(tip.id)}
-              className={`w-full text-left rounded-xl border ${kartPy} transition flex items-center gap-2.5 scroll-mt-24 ${
+              className={`w-full text-left rounded-[var(--acb-radius)] border ${kartPy} transition flex items-center gap-3 scroll-mt-24 ${
                 secili
-                  ? GLOW_SECILI
-                  : "border-slate-200 bg-white hover:border-amber-300"
+                  ? "border-[var(--acb-green)] bg-[var(--acb-soft)]"
+                  : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_40%,white)]"
               }`}
             >
-              <span className="text-lg shrink-0">{tip.icon}</span>
+              <SorunIkon id={tip.id} className="size-5 shrink-0" active={secili} />
               <span
                 className={`font-medium text-sm flex-1 min-w-0 ${
-                  secili ? "text-amber-900" : "text-slate-800"
+                  secili ? "text-[var(--acb-dark)]" : "text-slate-800"
                 }`}
               >
                 {tip.label}
               </span>
               {secili ? (
-                <span className="shrink-0 text-amber-600 text-base">✓</span>
+                <Check
+                  className="size-5 shrink-0 text-[var(--acb-green)]"
+                  strokeWidth={1.75}
+                  aria-hidden
+                />
               ) : null}
             </button>
           );

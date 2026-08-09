@@ -506,7 +506,7 @@ export default function CekiciTalepClient() {
                   onToplamSure={toplamSureAyarla}
                 />
               )}
-              <p className="text-sm text-emerald-700 text-center font-medium">
+              <p className="text-sm text-[var(--acb-green)] text-center font-semibold">
                 Teklif vermek ücretsizdir.
               </p>
               <Field
@@ -528,8 +528,13 @@ export default function CekiciTalepClient() {
                 value={mesaj}
                 onChange={(e) => setMesaj(e.target.value)}
               />
-              <Btn onClick={teklifVer} disabled={islem}>
-                {islem ? "Gönderiliyor…" : "Teklif Ver (Ücretsiz)"}
+              <Btn
+                variant="emergency"
+                onClick={teklifVer}
+                disabled={islem}
+                className="!text-base !tracking-wide"
+              >
+                {islem ? "Gönderiliyor…" : "TEKLİF VER"}
               </Btn>
             </>
           )}

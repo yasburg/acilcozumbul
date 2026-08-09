@@ -10,6 +10,7 @@ import {
 import { MetaPixel } from "@/components/MetaPixel";
 import { TikTokPixel } from "@/components/TikTokPixel";
 import { PostHogProvider } from "@/components/PostHogProvider";
+import { IntroSplash } from "@/components/acb/IntroSplash";
 import {
   SEO_ACIKLAMA,
   SEO_ANAHTARLAR,
@@ -127,6 +128,7 @@ export default function RootLayout({
     <html
       lang="tr"
       className={`${geist.variable} h-full${isAcbBrand ? " brand-acb" : ""}`}
+      suppressHydrationWarning
     >
       <head>
         {/*
@@ -141,8 +143,15 @@ export default function RootLayout({
             }}
           />
         ) : null}
+        <script
+          id="acb-intro-pending"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(sessionStorage.getItem("acb_intro_splash_seen")!=="1")document.documentElement.classList.add("acb-intro-pending")}catch(e){document.documentElement.classList.add("acb-intro-pending")}})();`,
+          }}
+        />
       </head>
       <body className="min-h-dvh font-sans antialiased">
+        <IntroSplash />
         <GoogleTagManagerNoscript />
         <GoogleTagManager />
         <GoogleAnalytics />

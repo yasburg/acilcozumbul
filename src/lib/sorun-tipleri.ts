@@ -1,7 +1,10 @@
 export interface SorunTipi {
   id: string;
   label: string;
+  /** Lucide icon key — render via `SorunIkon` / `SORUN_ICON_MAP` */
   icon: string;
+  /** Kısa etiket (grid / progressive flow) */
+  shortLabel?: string;
 }
 
 /** SMS / hizmet filtresi için geçerli sorun tipi kimlikleri */
@@ -20,15 +23,15 @@ export const TUM_SORUN_TIP_IDLERI = [
 export type SorunTipiId = (typeof TUM_SORUN_TIP_IDLERI)[number];
 
 export const SORUN_TIPLERI: SorunTipi[] = [
-  { id: "cekici", label: "Çekici / kurtarma lazım", icon: "🚛" },
-  { id: "ariza", label: "Araç arızası / çalışmıyor", icon: "⚠️" },
-  { id: "lastik", label: "Lastik patladı", icon: "🛞" },
-  { id: "aku", label: "Akü bitti", icon: "🔋" },
-  { id: "yakit", label: "Yakıt bitti", icon: "⛽" },
-  { id: "kaza", label: "Kaza / çarpışma", icon: "💥" },
-  { id: "kilit", label: "Araç kilitlendi / Anahtar çalışmıyor", icon: "🔑" },
-  { id: "arac-tasima", label: "Araç taşıma", icon: "🛻" },
-  { id: "diger", label: "Diğer", icon: "✏️" },
+  { id: "cekici", label: "Çekici / kurtarma lazım", icon: "towing", shortLabel: "Çekici" },
+  { id: "ariza", label: "Araç arızası / çalışmıyor", icon: "towing", shortLabel: "Arıza" },
+  { id: "lastik", label: "Lastik patladı", icon: "tire", shortLabel: "Lastik" },
+  { id: "aku", label: "Akü bitti", icon: "battery", shortLabel: "Akü" },
+  { id: "yakit", label: "Yakıt bitti", icon: "fuel", shortLabel: "Yakıt" },
+  { id: "kaza", label: "Kaza / çarpışma", icon: "towing", shortLabel: "Kaza" },
+  { id: "kilit", label: "Araç kilitlendi / Anahtar çalışmıyor", icon: "locksmith", shortLabel: "Anahtar" },
+  { id: "arac-tasima", label: "Araç taşıma", icon: "transport", shortLabel: "Araç Taşıma" },
+  { id: "diger", label: "Diğer", icon: "search", shortLabel: "Diğer" },
 ];
 
 export function sorunTipiBul(id: string): SorunTipi | undefined {
@@ -79,8 +82,26 @@ export function talepSorunTipi(talep: { sorunTipi?: string }): SorunTipiId {
 /** Talep gönderme CTA — teklif iste (çağır değil) */
 export const UCRETSIZ_TEKLIF_CTA = "Ücretsiz teklif iste";
 
-export function sorunCagriButonEtiketi(_sorunTipi?: string): string {
-  return UCRETSIZ_TEKLIF_CTA;
+/** Acil talep gönder — kontekstüel etiket */
+export function sorunCagriButonEtiketi(sorunTipi?: string): string {
+  const id = sorunTipi?.trim();
+  switch (id) {
+    case "cekici":
+    case "ariza":
+    case "kaza":
+    case "arac-tasima":
+      return "ÇEKİCİ ARA";
+    case "lastik":
+      return "Lastik Yardımı İste";
+    case "aku":
+      return "Akü Yardımı İste";
+    case "yakit":
+      return "Yakıt Yardımı İste";
+    case "kilit":
+      return "Anahtar Yardımı İste";
+    default:
+      return "Yardım İste";
+  }
 }
 
 /** Fotoğraf istenen sorun tipleri (çekici / arıza / kaza / diğer) */

@@ -49,16 +49,30 @@ export function Btn({
   type = "button",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "success" | "outline" | "danger";
+  variant?:
+    | "primary"
+    | "secondary"
+    | "success"
+    | "outline"
+    | "danger"
+    | "emergency"
+    | "dark";
 }) {
   const base =
-    "w-full min-h-[52px] rounded-2xl py-4 px-6 font-semibold text-base transition touch-manipulation cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed";
+    "w-full min-h-[var(--acb-cta,52px)] rounded-[var(--acb-radius,1rem)] py-4 px-6 font-semibold text-base transition-[background-color,box-shadow,transform,opacity] duration-[var(--acb-transition,160ms)] touch-manipulation cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
   const variants = {
-    primary: "bg-amber-500 text-white shadow-md shadow-amber-500/25 hover:bg-amber-600",
-    secondary: "bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200",
-    success: "bg-emerald-600 text-white shadow-md shadow-emerald-500/25",
-    outline: "bg-white border-2 border-amber-500 text-amber-700",
-    danger: "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100",
+    primary:
+      "bg-[var(--acb-primary,#089b2d)] text-[var(--acb-primary-fg,#fff)] shadow-[var(--acb-shadow-cta)] hover:bg-[var(--acb-primary-hover,#077f25)] focus-visible:ring-[var(--acb-primary,#089b2d)]",
+    secondary:
+      "bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200 focus-visible:ring-slate-400",
+    success:
+      "bg-[var(--acb-green,#089b2d)] text-white shadow-[var(--acb-shadow-cta)] hover:bg-[var(--acb-green-hover,#077f25)] focus-visible:ring-[var(--acb-green)]",
+    outline:
+      "bg-white border-2 border-[var(--acb-primary,#089b2d)] text-[var(--acb-dark,#1b2d2a)] focus-visible:ring-[var(--acb-primary)]",
+    danger: "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 focus-visible:ring-red-400",
+    emergency:
+      "bg-[var(--acb-emergency,#ff9b42)] text-white shadow-[var(--acb-shadow-emergency)] hover:bg-[var(--acb-emergency-hover,#e8872f)] focus-visible:ring-[var(--acb-emergency)]",
+    dark: "bg-[var(--acb-dark,#1b2d2a)] text-white hover:opacity-95 focus-visible:ring-[var(--acb-dark)]",
   };
   return (
     <button

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui";
+import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
+import { CircleHelp, MessageCircle } from "lucide-react";
 
 const STORAGE_KEY = "acil_nasil_calisir_kapali";
 const ADIM_SURE_MS = 3000;
@@ -19,31 +21,51 @@ type FormAdimi =
   | "hedef";
 
 type NasilAdim = {
-  ikon: string;
+  ikon: "help" | "location" | "offers" | "check";
   baslik: string;
   aciklama: string;
 };
 
+function NasilIkon({ ikon }: { ikon: NasilAdim["ikon"] }) {
+  const cls = "size-5";
+  if (ikon === "help") {
+    return <CircleHelp className={cls} strokeWidth={ACB_ICON_STROKE} aria-hidden />;
+  }
+  if (ikon === "location") {
+    return (
+      <AcbIcons.location className={cls} strokeWidth={ACB_ICON_STROKE} aria-hidden />
+    );
+  }
+  if (ikon === "offers") {
+    return (
+      <MessageCircle className={cls} strokeWidth={ACB_ICON_STROKE} aria-hidden />
+    );
+  }
+  return (
+    <AcbIcons.check className={cls} strokeWidth={ACB_ICON_STROKE} aria-hidden />
+  );
+}
+
 const NASIL_ADIMLAR: NasilAdim[] = [
   {
-    ikon: "🛞",
-    baslik: "Sorun seçin",
-    aciklama: "Lastik, akü, çekici… ne lazımsa seçin",
+    ikon: "help",
+    baslik: "Yardım iste",
+    aciklama: "Tek dokunuşla acil talep başlat",
   },
   {
-    ikon: "📍",
-    baslik: "Konum ve hedef",
-    aciklama: "Neredesiniz, aracınız nereye gidecek",
+    ikon: "location",
+    baslik: "Konumunu paylaş",
+    aciklama: "Neredesin — yakındaki ekipler görsün",
   },
   {
-    ikon: "💬",
-    baslik: "Ücretsiz teklif alın",
-    aciklama: "Telefon doğrulayıp fiyatları görün",
+    ikon: "offers",
+    baslik: "Teklifleri gör",
+    aciklama: "Fiyat ve süreyi karşılaştır",
   },
   {
-    ikon: "✅",
-    baslik: "Birini seçin",
-    aciklama: "Size en uygun teklifi seçin, en kısa sürede gelsin",
+    ikon: "check",
+    baslik: "Birini seç",
+    aciklama: "Uygun teklifi seç, yardım yola çıksın",
   },
 ];
 
@@ -180,7 +202,7 @@ export function NasilCalisirSerit({ aktifFormAdimi = "sorun" }: Props) {
                             : "border-slate-200 bg-white text-slate-400 hover:border-amber-300 hover:text-slate-600",
                       ].join(" ")}
                     >
-                      <span className="relative">{adim.ikon}</span>
+                      <NasilIkon ikon={adim.ikon} />
                     </button>
                   </div>
                   <p

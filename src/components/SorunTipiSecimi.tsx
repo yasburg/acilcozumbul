@@ -1,6 +1,7 @@
 "use client";
 
 import type { SorunTipi } from "@/lib/sorun-tipleri";
+import { AcbIcons, ACB_ICON_STROKE, SorunIkon } from "@/lib/acb-icons";
 
 interface SorunTipiSecimiProps {
   tumTipler: SorunTipi[];
@@ -18,6 +19,7 @@ export function SorunTipiSecimi({
   onTemizle,
 }: SorunTipiSecimiProps) {
   const seciliSet = new Set(seciliTipler);
+  const Check = AcbIcons.check;
 
   return (
     <div className="space-y-3">
@@ -57,17 +59,19 @@ export function SorunTipiSecimi({
               onClick={() => onToggle(tip.id)}
               className={`flex items-center gap-3 text-left text-sm px-3 py-3 rounded-xl border transition ${
                 secili
-                  ? "border-amber-400 bg-amber-50 text-amber-900 font-medium"
+                  ? "border-[var(--acb-green)] bg-[var(--acb-soft)] text-[var(--acb-dark)] font-medium"
                   : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
               }`}
             >
-              <span className="text-xl shrink-0" aria-hidden>
-                {tip.icon}
-              </span>
+              <SorunIkon id={tip.id} className="size-5 shrink-0" active={secili} />
               <span className="flex-1 leading-snug">{tip.label}</span>
-              {secili && (
-                <span className="text-amber-600 text-xs shrink-0">✓</span>
-              )}
+              {secili ? (
+                <Check
+                  className="size-4 shrink-0 text-[var(--acb-green)]"
+                  strokeWidth={ACB_ICON_STROKE}
+                  aria-hidden
+                />
+              ) : null}
             </button>
           );
         })}

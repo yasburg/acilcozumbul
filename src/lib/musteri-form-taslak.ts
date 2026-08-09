@@ -32,6 +32,7 @@ export type MusteriFormAlanlari = {
  * arac_modeli/ek_detay/ihale alt adımlarına böler (geriye dönük uyum için tutulur).
  */
 export type MusteriFormAdim =
+  | "giris"
   | "bilgi"
   | "konum"
   | "sorun"
@@ -39,6 +40,7 @@ export type MusteriFormAdim =
   | "fotograf"
   | "arac_tipi"
   | "arac_modeli"
+  | "hareket"
   | "ek_detay"
   | "ihale"
   | "hedef";
@@ -54,9 +56,13 @@ export type MusteriFormTaslak = {
   hedefBilinmiyor?: boolean;
   ihaleSureTipi?: IhaleSureTipi;
   ihaleOzelBitis?: string;
+  /** Araç hareket ediyor mu */
+  aracHareket?: "evet" | "hayir" | "";
+  aracMarka?: string;
 };
 
 const ADIMLAR: ReadonlySet<string> = new Set([
+  "giris",
   "bilgi",
   "konum",
   "sorun",
@@ -64,6 +70,7 @@ const ADIMLAR: ReadonlySet<string> = new Set([
   "fotograf",
   "arac_tipi",
   "arac_modeli",
+  "hareket",
   "ek_detay",
   "ihale",
   "hedef",
@@ -157,6 +164,13 @@ export function musteriFormTaslakOku(): MusteriFormTaslak | null {
       ihaleSureTipi: ihaleSureTipiNormalize(p.ihaleSureTipi),
       ihaleOzelBitis:
         typeof p.ihaleOzelBitis === "string" ? p.ihaleOzelBitis : undefined,
+      aracHareket:
+        p.aracHareket === "evet" || p.aracHareket === "hayir"
+          ? p.aracHareket
+          : p.aracHareket === ""
+            ? ""
+            : undefined,
+      aracMarka: typeof p.aracMarka === "string" ? p.aracMarka : undefined,
     };
   } catch {
     return null;
@@ -196,7 +210,7 @@ export function musteriFormTaslakSil(): void {
 export function musteriFormTaslakBosMu(t: MusteriFormTaslak): boolean {
   const f = t.form;
   return (
-    (t.step === "sorun" || t.step === "konum") &&
+    (t.step === "sorun" || t.step === "konum" || t.step === "giris") &&
     !t.yasalOnay &&
     !f.ad &&
     !f.soyad &&

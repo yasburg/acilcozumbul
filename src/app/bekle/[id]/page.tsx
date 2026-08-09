@@ -6,8 +6,10 @@ import { MobileShell } from "@/components/MobileShell";
 import { DemoHeaderBadge } from "@/components/DemoHeaderBadge";
 import { Btn, Card } from "@/components/ui";
 import { MemnuniyetFormu } from "@/components/MemnuniyetFormu";
-import { PuanGostergesi } from "@/components/PuanGostergesi";
-import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
+import { ProviderOfferCard } from "@/components/acb/ProviderOfferCard";
+import { MusteriKonumHarita } from "@/components/acb/MusteriKonumHarita";
+import { LiveRequestStatus } from "@/components/acb/LiveRequestStatus";
+import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
 import { teklifleriSirala } from "@/lib/teklif-siralama";
 import { IhaleBekleAnimasyon } from "@/components/IhaleBekleAnimasyon";
 import { MusteriCekiciTakipHarita } from "@/components/MusteriCekiciTakipHarita";
@@ -812,10 +814,25 @@ function BekleIcerik() {
                 className="size-20 rounded-full object-cover border-2 border-emerald-200 mx-auto mb-4 bg-slate-100"
               />
             ) : (
-              <div className="text-5xl mb-4">{anlasildi ? "✅" : "🚛"}</div>
+              <div
+                className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-[var(--acb-soft)] text-[var(--acb-dark)]"
+                aria-hidden
+              >
+                {anlasildi ? (
+                  <AcbIcons.check
+                    className="size-8 text-[var(--acb-green)]"
+                    strokeWidth={ACB_ICON_STROKE}
+                  />
+                ) : (
+                  <AcbIcons.towing
+                    className="size-8"
+                    strokeWidth={ACB_ICON_STROKE}
+                  />
+                )}
+              </div>
             )}
-            <h2 className="text-xl font-bold text-slate-900">
-              {anlasildi ? "Anlaşma sağlandı" : "Çekici Seçildi!"}
+            <h2 className="text-xl font-bold text-[var(--acb-dark)]">
+              {anlasildi ? "Anlaşma sağlandı" : "Yardım yola çıktı"}
             </h2>
             <p className="text-slate-600 mt-2 text-sm">
               <strong>{cekiciAdGoster}</strong>
@@ -864,19 +881,27 @@ function BekleIcerik() {
 
           {!anlasildi && (
             <>
+              {cekiciTelefon ? (
+                <a
+                  href={`tel:${cekiciTelefon.replace(/\s/g, "")}`}
+                  className="flex w-full min-h-[var(--acb-cta)] items-center justify-center rounded-[var(--acb-radius)] bg-[var(--acb-green)] px-6 text-base font-semibold text-white shadow-[var(--acb-shadow-cta)] touch-manipulation"
+                >
+                  Çekiciyi Ara
+                </a>
+              ) : null}
               <Btn
                 variant="success"
                 onClick={() => anlasmaBildir("anlasti")}
                 disabled={islem}
               >
-                ✅ Çekici ile anlaştım
+                Çekici ile anlaştım
               </Btn>
               <Btn
                 variant="danger"
                 onClick={() => anlasmaBildir("anlasamadi")}
                 disabled={islem}
               >
-                ❌ Anlaşamadım — başka çekici ara
+                Anlaşamadım — başka çekici ara
               </Btn>
             </>
           )}
@@ -905,7 +930,7 @@ function BekleIcerik() {
               {degerlendirildi && (
                 <Card className="bg-emerald-50 border-emerald-200 text-center py-4">
                   <p className="text-sm text-emerald-800 font-medium">
-                    ✓ Değerlendirmeniz alındı, teşekkürler!
+                    Değerlendirmeniz alındı, teşekkürler.
                   </p>
                 </Card>
               )}
@@ -936,35 +961,42 @@ function BekleIcerik() {
           ? `${minFiyat.toLocaleString("tr-TR")} TL`
           : `${minFiyat.toLocaleString("tr-TR")} – ${maxFiyat.toLocaleString("tr-TR")} TL`;
 
+    const konumGecerli =
+      musteriKonum && koordinatGecerli(musteriKonum) ? musteriKonum : null;
+
     return (
       <>
       <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
-        <div className="space-y-4 py-2">
+        <div className="space-y-3 py-2">
           {gelenTeklifBanner()}
+
+          {konumGecerli ? (
+            <MusteriKonumHarita
+              lat={konumGecerli.lat}
+              lng={konumGecerli.lng}
+              heightClass="h-40 sm:h-48"
+            />
+          ) : null}
+
           <div
-            className="sticky z-[9] -mx-4 px-4 pt-1 pb-3 mb-1 bg-slate-50/95 backdrop-blur-md border-b border-slate-200/90 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.25)]"
+            className="sticky z-[9] -mx-4 space-y-2 bg-slate-50/95 px-4 py-2 backdrop-blur-md border-b border-slate-200/90"
             style={{ top: headerYukseklik }}
           >
             <div className="text-center">
-              <h2 className="text-xl font-bold text-slate-900">Gelen Teklifler</h2>
-              <p className="text-slate-500 text-sm mt-1">
-                Onaylı çekici teklifleri üstte listelenir
-              </p>
-              {teklifler.length > 0 && (
-                <div className="mt-3 rounded-xl border border-amber-200/80 bg-amber-50/90 px-3 py-2.5">
-                  <p className="text-sm font-semibold text-amber-950">
-                    {teklifler.length} teklif
-                    {fiyatOzet ? (
-                      <span className="font-normal text-amber-900">
-                        {" "}
-                        · Fiyat aralığı:{" "}
-                        <span className="font-semibold tabular-nums">{fiyatOzet}</span>
-                      </span>
-                    ) : null}
-                  </p>
-                </div>
-              )}
+              <h2 className="text-lg font-bold text-[var(--acb-dark)]">
+                Gelen Teklifler
+              </h2>
+              {fiyatOzet ? (
+                <p className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--acb-green)]">
+                  {fiyatOzet}
+                </p>
+              ) : null}
             </div>
+            <LiveRequestStatus
+              operatorSayisi={operatorSayisi}
+              teklifSayisi={teklifler.length}
+              ihaleBitis={ihaleBitis}
+            />
           </div>
 
           {mesaj && (
@@ -973,116 +1005,47 @@ function BekleIcerik() {
             </Card>
           )}
 
-          <div className="space-y-3">
-            {teklifleriSirala(teklifler).map((t) => {
-              const geldiOnce = teklifNeKadarOnce(t.tarih, simdiMs);
-              const gelisDk = t.gelisSureDk ?? t.tahminiSureDk;
-              const cekmeDk = t.cekmeSureDk ?? null;
-              return (
-                <Card
-                  key={t.id}
-                  className={`border-slate-200 overflow-hidden ${
-                    t.fiyatDegisti ? "border-red-200 bg-red-50/30" : ""
-                  }`}
-                >
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      <PuanGostergesi
-                        label="Tercih puanı"
-                        puan={t.tercihPuani}
-                        yuzde={t.tercihYuzde}
-                        yuzdeEtiket="müşteri tercihi"
-                        variant="amber"
-                      />
-                      <PuanGostergesi
-                        label="Hizmet puanı"
-                        puan={t.hizmetPuani}
-                        altMetin={
-                          t.hizmetDegerlendirmeAdet
-                            ? `${t.hizmetDegerlendirmeAdet} değerlendirme`
-                            : undefined
-                        }
-                        variant="blue"
-                      />
-                      <PuanGostergesi
-                        label="Fiyat garantisi"
-                        puan={t.fiyatGarantiPuani}
-                        yuzde={t.fiyatGarantiYuzde}
-                        yuzdeEtiket="sabit fiyat"
-                        variant="emerald"
-                      />
-                    </div>
-
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        {t.profilFotoUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={t.profilFotoUrl}
-                            alt=""
-                            className="size-9 rounded-full object-cover border border-slate-200 bg-slate-100 shrink-0"
-                          />
-                        ) : null}
-                        <p className="font-semibold text-slate-900">
-                          {adSoyadSatirGoster(t.cekiciAd, gizlilik)}
-                        </p>
-                        {t.onayliCekici && <OnayliCekiciRozeti kucuk />}
-                      </div>
-                      <p className="text-2xl font-bold text-amber-600 mt-1">
-                        {t.fiyat} TL
-                      </p>
-                      {t.fiyatDegisti && t.ilkFiyat !== t.fiyat && (
-                        <p className="text-xs text-red-600 mt-1 font-medium">
-                          ⚠️ İlk teklif {t.ilkFiyat} TL idi — fiyat değiştirildi
-                        </p>
-                      )}
-                      <div className="mt-1 space-y-0.5 text-xs text-slate-500">
-                        <p>
-                          Yanınıza ~{gelisDk} dk
-                          {geldiOnce ? (
-                            <span className="text-slate-400">
-                              {" "}
-                              · {geldiOnce}
-                            </span>
-                          ) : null}
-                        </p>
-                        {cekmeDk != null ? (
-                          <p>
-                            Çekilecek yere ~{cekmeDk} dk
-                            {hedefBilinmiyor ? (
-                              <span className="text-slate-400">
-                                {" "}
-                                · hedef belirsiz
-                              </span>
-                            ) : null}
-                          </p>
-                        ) : null}
-                      </div>
-                      {t.mesaj?.trim() && (
-                        <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-                          {t.mesaj}
-                        </p>
-                      )}
-                    </div>
-
-                    {t.fiyatDegisti ? (
-                      <div className="rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-800 leading-relaxed">
-                        Bu çekici teklif fiyatını sonradan değiştirdi. Güvenlik
-                        nedeniyle bu teklifle anlaşamazsınız.
-                      </div>
-                    ) : (
-                      <Btn
-                        onClick={() => teklifSec(t.id)}
-                        disabled={islem || !t.secilebilir}
-                        className="!py-3 text-sm"
-                      >
-                        Bu teklifi seç
-                      </Btn>
-                    )}
-                  </div>
-                </Card>
-              );
-            })}
+          {/* Bottom-sheet style offer stack under the map */}
+          <div
+            className="-mx-4 rounded-t-[var(--acb-radius-lg)] border border-b-0 border-[var(--acb-border)] bg-white px-4 pt-3 pb-2 shadow-[0_-6px_20px_rgb(27_45_42/0.06)]"
+            role="region"
+            aria-label="Teklif listesi"
+          >
+            <div
+              className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-300"
+              aria-hidden
+            />
+            <p className="mb-3 text-center text-xs font-medium text-[var(--acb-muted)]">
+              Fiyat ve varış süresine göre seç — belgeliler üstte
+            </p>
+            <div className="space-y-3">
+              {teklifleriSirala(teklifler).map((t) => {
+                const geldiOnce = teklifNeKadarOnce(t.tarih, simdiMs);
+                const gelisDk = t.gelisSureDk ?? t.tahminiSureDk;
+                const cekmeDk = t.cekmeSureDk ?? null;
+                return (
+                  <ProviderOfferCard
+                    key={t.id}
+                    ad={adSoyadSatirGoster(t.cekiciAd, gizlilik)}
+                    fiyat={t.fiyat}
+                    gelisDk={gelisDk}
+                    cekmeDk={cekmeDk}
+                    hedefBilinmiyor={hedefBilinmiyor}
+                    onayli={!!t.onayliCekici}
+                    profilFotoUrl={t.profilFotoUrl}
+                    hizmetPuani={t.hizmetPuani}
+                    degerlendirmeAdet={t.hizmetDegerlendirmeAdet}
+                    geldiOnce={geldiOnce}
+                    mesaj={t.mesaj}
+                    fiyatDegisti={t.fiyatDegisti}
+                    ilkFiyat={t.ilkFiyat}
+                    secilebilir={t.secilebilir}
+                    disabled={islem}
+                    onAccept={() => teklifSec(t.id)}
+                  />
+                );
+              })}
+            </div>
           </div>
 
           <Card>
@@ -1114,75 +1077,62 @@ function BekleIcerik() {
         )}
 
         {!animasyonBitti && teklifler.length === 0 ? (
-          <div className="flex flex-col min-h-[70dvh] text-center w-full">
-            <div className="flex flex-1 flex-col items-center justify-center">
-              <IhaleBekleAnimasyon
+          <div className="flex min-h-[70dvh] w-full flex-col">
+            <div className="flex flex-1 flex-col items-stretch gap-3 pt-1">
+              {musteriKonum && koordinatGecerli(musteriKonum) ? (
+                <MusteriKonumHarita
+                  lat={musteriKonum.lat}
+                  lng={musteriKonum.lng}
+                  heightClass="h-40 sm:h-48"
+                />
+              ) : null}
+              <LiveRequestStatus
                 operatorSayisi={operatorSayisi}
-                onTamamlandi={() => setAnimasyonBitti(true)}
+                teklifSayisi={0}
+                ihaleBitis={ihaleBitis}
+                searching
+                baslik="Yakındaki çekicileri arıyoruz."
               />
-              <p className="text-slate-500 text-sm mt-6 mb-2">
-                Operatörler bilgilendiriliyor…
-              </p>
-              {ihaleBitis && (
-                <p className="text-xs text-slate-400">
-                  İhale bitiş:{" "}
-                  {new Date(ihaleBitis).toLocaleTimeString("tr-TR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              )}
-              <p className="text-xs text-slate-400 mt-8 max-w-xs">
-                {operatorSayisi > 0
-                  ? `${operatorSayisi} operatöre bildirim gönderildi.`
-                  : "Yakındaki operatörler aranıyor. Teklifler geldikçe burada listelenecek."}
-              </p>
-              {smsBekleMesaji()}
+              <div className="flex flex-1 flex-col items-center justify-center text-center px-2">
+                <IhaleBekleAnimasyon
+                  operatorSayisi={operatorSayisi}
+                  onTamamlandi={() => setAnimasyonBitti(true)}
+                />
+                {smsBekleMesaji()}
+              </div>
             </div>
             {talebiIptalAlani()}
           </div>
         ) : (
-          <div className="w-full max-w-lg space-y-4">
+          <div className="w-full max-w-lg space-y-3">
+            {musteriKonum && koordinatGecerli(musteriKonum) ? (
+              <MusteriKonumHarita
+                lat={musteriKonum.lat}
+                lng={musteriKonum.lng}
+                heightClass="h-36 sm:h-44"
+              />
+            ) : null}
+            <LiveRequestStatus
+              operatorSayisi={operatorSayisi}
+              teklifSayisi={teklifler.length}
+              ihaleBitis={ihaleBitis}
+              searching={teklifler.length === 0}
+            />
             <div className="text-center">
-              <div className="relative w-20 h-20 mx-auto mb-4">
-                <div className="absolute inset-0 rounded-full border-4 border-amber-200 animate-ping opacity-40" />
-                <div className="absolute inset-0 flex items-center justify-center text-4xl">
-                  🚛
-                </div>
-              </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-1">
+              <h2 className="text-xl font-bold text-[var(--acb-dark)] mb-1">
                 {teklifler.length > 0
                   ? "Teklifler geliyor"
                   : "Çekiciler teklif veriyor"}
               </h2>
-              <p className="text-slate-500 text-sm mb-2">
-                {teklifler.length > 0
-                  ? `${teklifler.length} teklif alındı`
-                  : "Teklifler bekleniyor…"}
-              </p>
-              {ihaleBitis && (
-                <p className="text-xs text-slate-400 mb-2">
-                  İhale bitiş:{" "}
-                  {new Date(ihaleBitis).toLocaleTimeString("tr-TR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              )}
-              <div className="flex gap-1.5 justify-center mb-2">
+              <div className="mb-2 flex justify-center gap-1.5">
                 {[0, 1, 2].map((i) => (
                   <span
                     key={i}
-                    className="w-2 h-2 rounded-full bg-amber-500 animate-bounce"
+                    className="h-2 w-2 animate-bounce rounded-full bg-[var(--acb-orange)]"
                     style={{ animationDelay: `${i * 0.15}s` }}
                   />
                 ))}
               </div>
-              <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                {operatorSayisi > 0
-                  ? `${operatorSayisi} operatöre bildirim gönderildi.`
-                  : "Yakındaki operatörler aranıyor."}
-              </p>
               {smsBekleMesaji()}
             </div>
 

@@ -2,7 +2,8 @@ import type { SorunTipiId } from "./sorun-tipleri";
 import { sorunHedefKonumGerekliMi, talepSorunTipi } from "./sorun-tipleri";
 
 export type SorunAkisAdim = {
-  ikon: string;
+  /** Lucide / AcbIcons key */
+  ikon: "location" | "detail" | "target" | "offers" | "check";
   kisa: string;
 };
 
@@ -13,18 +14,18 @@ export type SorunAkisAciklama = {
 };
 
 const YERINDE_ADIMLAR: SorunAkisAdim[] = [
-  { ikon: "📍", kisa: "Konum" },
-  { ikon: "📝", kisa: "Detay" },
-  { ikon: "💬", kisa: "Teklifler" },
-  { ikon: "✅", kisa: "Seç" },
+  { ikon: "location", kisa: "Konum" },
+  { ikon: "detail", kisa: "Detay" },
+  { ikon: "offers", kisa: "Teklifler" },
+  { ikon: "check", kisa: "Seç" },
 ];
 
 const CEKICI_ADIMLAR: SorunAkisAdim[] = [
-  { ikon: "📍", kisa: "Konum" },
-  { ikon: "📝", kisa: "Detay" },
-  { ikon: "🏁", kisa: "Hedef" },
-  { ikon: "💬", kisa: "Teklifler" },
-  { ikon: "✅", kisa: "Seç" },
+  { ikon: "location", kisa: "Konum" },
+  { ikon: "detail", kisa: "Detay" },
+  { ikon: "target", kisa: "Hedef" },
+  { ikon: "offers", kisa: "Teklifler" },
+  { ikon: "check", kisa: "Seç" },
 ];
 
 export const SORUN_AKIS_ACIKLAMA: Record<SorunTipiId, SorunAkisAciklama> = {
@@ -79,13 +80,10 @@ export function sorunAkisAciklama(
   sorunTipi?: string
 ): SorunAkisAciklama | null {
   if (!sorunTipi?.trim()) return null;
-  const id = talepSorunTipi({ sorunTipi: sorunTipi });
+  const id = talepSorunTipi({ sorunTipi });
   return SORUN_AKIS_ACIKLAMA[id] ?? null;
 }
 
-/** Adım sayısı — hedef adımı atlanan tiplerde 4, diğerlerinde 5 */
-export function sorunAkisAdimSayisi(sorunTipi?: string): number {
-  const aciklama = sorunAkisAciklama(sorunTipi);
-  if (aciklama) return aciklama.adimlar.length;
-  return sorunHedefKonumGerekliMi(sorunTipi) ? 5 : 4;
+export function sorunAkisHedefVarMi(sorunTipi?: string): boolean {
+  return sorunHedefKonumGerekliMi(sorunTipi);
 }

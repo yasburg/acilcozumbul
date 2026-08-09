@@ -26,6 +26,7 @@ import {
   type GizlilikSeviye,
 } from "@/lib/kisisel-veri-gizle";
 import { posthogOlayBirKez, posthogOlayYakala } from "@/lib/posthog-client";
+import { StatusChip, panelDurumChip } from "@/components/acb/StatusChip";
 
 type Tab = "musteriler" | "hesabim" | "ayarlar";
 
@@ -73,22 +74,6 @@ interface PanelData {
   baskasiAldi?: TalepOzet[];
 }
 
-const BADGE: Record<
-  string,
-  { label: string; className: string }
-> = {
-  acik: { label: "Açık ihale", className: "bg-amber-50 text-amber-700" },
-  gizli: { label: "Kilitli", className: "bg-slate-100 text-slate-500" },
-  teklif_verdim: { label: "Teklif verdim", className: "bg-blue-50 text-blue-700" },
-  kazandim: { label: "Kazandım", className: "bg-emerald-50 text-emerald-700" },
-  kaybettim: { label: "Kaybettim", className: "bg-slate-100 text-slate-600" },
-  tercih_edilmedi: {
-    label: "Tercih edilmedi",
-    className: "bg-red-50 text-red-600",
-  },
-  anlasildi: { label: "Tamamlandı", className: "bg-slate-100 text-slate-500" },
-};
-
 function TalepKarti({
   talep,
   kilitle = false,
@@ -99,29 +84,30 @@ function TalepKarti({
   gizlilik?: GizlilikSeviye;
 }) {
   const durum = talep.listeDurumu ?? "acik";
-  const badge = BADGE[durum] ?? BADGE.kaybettim;
+  const chipId = panelDurumChip(durum);
   const ad = adGoster(talep.ad, gizlilik);
   const soyad = soyadKisaltGoster(talep.soyad, gizlilik);
   const telefon = telefonGoster(talep.telefon, gizlilik);
   const bolge = adresGoster(talep.bolge, gizlilik);
+  const teklifVerilebilir = !kilitle && durum === "acik";
 
   const icerik = (
     <Card
       className={`transition ${
         kilitle
           ? "opacity-90 cursor-default"
-          : "hover:border-amber-300 active:scale-[0.99]"
-      }`}
+          : "hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)] active:scale-[0.99]"
+      } ${teklifVerilebilir ? "border-[color-mix(in_srgb,var(--acb-orange)_40%,white)]" : ""}`}
     >
       <div className="flex justify-between items-start gap-2">
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-slate-900">
+          <p className="font-semibold text-[var(--acb-dark)]">
             {ad} {soyad}
           </p>
           {!kilitle && (
             <>
-              <p className="text-sm text-slate-500 mt-0.5">📍 {bolge}</p>
-              <p className="text-sm text-slate-600 mt-1 whitespace-pre-wrap break-words">
+              <p className="text-sm text-[var(--acb-muted)] mt-0.5">📍 {bolge}</p>
+              <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap break-words">
                 {talep.sorunOzet}
               </p>
             </>
@@ -133,21 +119,31 @@ function TalepKarti({
             <p className="text-sm text-slate-500 mt-1">Müşteri sizi tercih etmedi</p>
           )}
           {talep.telefon && durum === "kazandim" && (
-            <p className="text-amber-700 font-mono text-sm mt-2">{telefon}</p>
+            <p className="text-[var(--acb-green)] font-mono text-sm font-semibold mt-2">
+              {telefon}
+            </p>
           )}
         </div>
-        <span
-          className={`shrink-0 text-xs font-medium px-2 py-1 rounded-full ${badge.className}`}
-        >
-          {badge.label}
-        </span>
+        <StatusChip id={chipId} />
       </div>
-      <p className="text-xs text-slate-400 mt-2">
-        {new Date(talep.olusturulma).toLocaleTimeString("tr-TR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </p>
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <p className="text-xs text-[var(--acb-muted)]">
+          {new Date(talep.olusturulma).toLocaleTimeString("tr-TR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </p>
+        {teklifVerilebilir ? (
+          <span className="inline-flex min-h-9 items-center rounded-[var(--acb-radius-sm)] bg-[var(--acb-orange)] px-3 text-xs font-bold text-white">
+            TEKLİF VER
+          </span>
+        ) : null}
+        {durum === "kazandim" && !kilitle ? (
+          <span className="inline-flex min-h-9 items-center rounded-[var(--acb-radius-sm)] bg-[var(--acb-green)] px-3 text-xs font-bold text-white">
+            Müşteriyi ara
+          </span>
+        ) : null}
+      </div>
     </Card>
   );
 
@@ -524,7 +520,7 @@ export default function CekiciPanelTabs() {
       <div className="flex max-w-lg mx-auto">
         {(
           [
-            { key: "musteriler" as Tab, label: "İhaleler", icon: "✅" },
+            { key: "musteriler" as Tab, label: "İhaleler", icon: "🚛" },
             { key: "hesabim" as Tab, label: "Hesabım", icon: "👤" },
             { key: "ayarlar" as Tab, label: "Ayarlar", icon: "⚙️" },
           ] as const
@@ -533,13 +529,15 @@ export default function CekiciPanelTabs() {
             key={t.key}
             type="button"
             onClick={() => tabDegistir(t.key)}
-            className={`flex-1 py-3 text-center text-sm font-medium transition ${
+            className={`flex-1 min-h-[var(--acb-touch)] py-2.5 text-center text-sm font-semibold transition touch-manipulation ${
               tab === t.key
-                ? "text-amber-600 border-t-2 border-amber-500 -mt-px"
-                : "text-slate-500"
+                ? "text-[var(--acb-green)] border-t-2 border-[var(--acb-green)] -mt-px"
+                : "text-[var(--acb-muted)]"
             }`}
           >
-            <span className="block text-lg">{t.icon}</span>
+            <span className="block text-lg leading-none" aria-hidden>
+              {t.icon}
+            </span>
             {t.label}
           </button>
         ))}

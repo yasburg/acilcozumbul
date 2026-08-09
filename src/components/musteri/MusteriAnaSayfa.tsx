@@ -11,20 +11,23 @@ import {
   stickyCtaOffsetTemizle,
 } from "@/lib/sticky-cta-offset";
 import { SorunSecimi } from "@/components/SorunSecimi";
+import { EmergencyHero } from "@/components/acb/EmergencyHero";
+import { FlowProgress } from "@/components/acb/FlowProgress";
+import { OpeningLogo } from "@/components/acb/OpeningLogo";
+import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
 import { AnaSayfaOzellikSeridi } from "@/components/AnaSayfaOzellikSeridi";
 import { AnaSayfaFiyatHesaplamaTeaser } from "@/components/AnaSayfaFiyatHesaplamaTeaser";
 import { AnaSayfaHizmetVerCta } from "@/components/AnaSayfaHizmetVerCta";
 import { AnaSayfaHizliBaglantilar } from "@/components/AnaSayfaHizliBaglantilar";
 import { Btn, Field, Card, Spinner, TextArea, SelectField } from "@/components/ui";
+import { ACB_CTA } from "@/lib/design-tokens";
 import { KULLANIMA_ACIK_ILLER } from "@/lib/cekici-sehir-acilis";
 import { ilceListesi } from "@/lib/il-ilce";
 import { illerSecimSirasi, sehirdeYazi } from "@/lib/turkiye-il-nufus";
 import {
   hizmetQuerydenSorunTipi,
-  sorunAracModeliAlaniGoster,
   sorunAracModeliGerekliMi,
   sorunCagriButonEtiketi,
-  sorunFotografAlaniGoster,
   sorunFotografGerekliMi,
   sorunHedefKonumGerekliMi,
   sorunMetniOlustur,
@@ -64,7 +67,6 @@ import {
   ISTANBUL_ANA_HERO,
   SehirSeoIcerikBolumu,
 } from "@/components/seo/SehirSeoIcerikBolumu";
-import { seoHizmetListesi } from "@/lib/seo-hizmetler";
 import { musteriKonumYolu } from "@/lib/seo-talep";
 import type { HedefOneriKaynak } from "@/lib/konum-oneri";
 import {
@@ -114,35 +116,6 @@ const HedefOneriHarita = dynamic(
   }
 );
 
-const NasilCalisirSerit = dynamic(
-  () =>
-    import("@/components/NasilCalisirSerit").then((m) => ({
-      default: m.NasilCalisirSerit,
-    })),
-  {
-    ssr: true,
-    loading: () => (
-      <div className="mb-4 min-h-[9.5rem] rounded-xl border border-amber-100 bg-amber-50/40" aria-hidden />
-    ),
-  }
-);
-
-const HizmetVerenSayimAlani = dynamic(
-  () =>
-    import("@/components/HizmetVerenSayimAlani").then((m) => ({
-      default: m.HizmetVerenSayimAlani,
-    })),
-  {
-    ssr: false,
-    loading: () => (
-      <div
-        className="mb-0 min-h-[2.75rem] rounded-xl border border-emerald-100 bg-emerald-50/40"
-        aria-hidden
-      />
-    ),
-  }
-);
-
 const ArizaFotografAlani = dynamic(
   () =>
     import("@/components/ArizaFotografAlani").then((m) => ({
@@ -157,37 +130,49 @@ const ArizaFotografAlani = dynamic(
 );
 
 type Step =
+  | "giris"
   | "konum"
   | "sorun"
   | "fotograf"
   | "arac_tipi"
   | "arac_modeli"
+  | "hareket"
   | "ek_detay"
   | "ihale"
   | "hedef";
 
 /** Sabit kanonik sıra — aktifAdimlar() bundan filtreler, göreli sıra hep aynı */
 const TUM_ADIMLAR: Step[] = [
+  "giris",
   "konum",
   "sorun",
   "fotograf",
   "arac_tipi",
   "arac_modeli",
+  "hareket",
   "ek_detay",
   "ihale",
   "hedef",
 ];
 
-/** Konum → sorun → [fotoğraf/araç tipi/araç modeli/ek detay/ihale] → hedef */
+/**
+ * Giriş → konum → sorun → araç → hareket → özet → [hedef]
+ * Fotoğraf / araç tipi / ihale süresi progressive akışta sorulmaz.
+ */
 function aktifAdimlar(sorunTipi: string, hedefGerekli: boolean): Step[] {
+  void sorunTipi;
   return TUM_ADIMLAR.filter((adim) => {
-    if (adim === "fotograf") return sorunFotografAlaniGoster(sorunTipi);
-    if (adim === "arac_tipi" || adim === "arac_modeli") {
-      return sorunAracModeliAlaniGoster(sorunTipi);
+    if (adim === "ihale" || adim === "fotograf" || adim === "arac_tipi") {
+      return false;
     }
     if (adim === "hedef") return hedefGerekli;
     return true;
   });
+}
+
+/** Progress göstergesinde giriş ekranı sayılmaz */
+function progressAdimlari(sorunTipi: string, hedefGerekli: boolean): Step[] {
+  return aktifAdimlar(sorunTipi, hedefGerekli).filter((a) => a !== "giris");
 }
 
 /** Eski tek «detay» adımının bölündüğü alt adımlar */
@@ -195,16 +180,19 @@ const DETAY_ALT_ADIMLARI: Step[] = [
   "fotograf",
   "arac_tipi",
   "arac_modeli",
+  "hareket",
   "ek_detay",
   "ihale",
 ];
 
 const ADIM_OLAYLARI: Partial<Record<Step, string>> = {
+  giris: "form_adim_giris",
   sorun: "form_adim_sorun",
   konum: "form_adim_konum",
   fotograf: "form_adim_fotograf",
   arac_tipi: "form_adim_arac_tipi",
   arac_modeli: "form_adim_arac_modeli",
+  hareket: "form_adim_hareket",
   ek_detay: "form_adim_ek_detay",
   ihale: "form_adim_ihale",
   hedef: "form_adim_hedef",
@@ -226,6 +214,69 @@ type MusteriAnaSayfaProps = {
 
 function sorunProps(sorunTipi: string): Record<string, unknown> {
   return sorunTipi ? { sorun_tipi: sorunTipi } : {};
+}
+
+/** Konum adımı — kalıcı CTA (GPS alınana kadar) */
+function AcilYardimStickyCta({
+  onClick,
+  disabled,
+  yukleniyor,
+  label = ACB_CTA.konumKullan,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  yukleniyor?: boolean;
+  label?: string;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const el = rootRef.current;
+    if (!el) return;
+    const guncelle = () => stickyCtaOffsetAyarla(el.offsetHeight);
+    guncelle();
+    const ro = new ResizeObserver(guncelle);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      stickyCtaOffsetTemizle();
+    };
+  }, [mounted]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      ref={rootRef}
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--acb-border)] bg-white/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]"
+    >
+      <div className="mx-auto max-w-lg">
+        <Btn
+          type="button"
+          variant="primary"
+          onClick={onClick}
+          disabled={disabled}
+          className="!font-bold !tracking-wide"
+        >
+          {yukleniyor ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <Spinner className="size-4 border-white/40 border-t-white" />
+              Konum alınıyor…
+            </span>
+          ) : (
+            label
+          )}
+        </Btn>
+      </div>
+    </div>,
+    document.body
+  );
 }
 
 /** Konum sonrası tüm adımlarda ortak sticky alt nav (Geri + Devam) */
@@ -285,7 +336,7 @@ function AdimAltNav({
           className={[
             "flex-[2]",
             devamGlow && !devamDisabled
-              ? "ring-2 ring-amber-300/90 shadow-[0_0_16px_4px_rgba(245,158,11,0.55)] animate-devam-glow"
+              ? "ring-2 ring-[color-mix(in_srgb,var(--acb-green)_45%,transparent)] shadow-[var(--acb-shadow-cta)]"
               : "",
           ]
             .filter(Boolean)
@@ -459,7 +510,11 @@ function MusteriAnaSayfaIcerik({
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [step, setStep] = useState<Step>("konum");
+  const [step, setStep] = useState<Step>("giris");
+  const [aracMarka, setAracMarka] = useState("");
+  const [aracModelOnly, setAracModelOnly] = useState("");
+  const [aracHareket, setAracHareket] = useState<"evet" | "hayir" | "">("");
+  const [konumSheetAcik, setKonumSheetAcik] = useState(false);
   const [seciliSehir, setSeciliSehir] = useState(varsayilanSehir ?? "");
   const [seciliIlce, setSeciliIlce] = useState(varsayilanIlce ?? "");
   const [acikIller, setAcikIller] = useState<string[]>([
@@ -541,7 +596,7 @@ function MusteriAnaSayfaIcerik({
   const [hedefAramaMetni, setHedefAramaMetni] = useState("");
   const [taslakHazir, setTaslakHazir] = useState(false);
   const taslakAnlikRef = useRef({
-    step: "konum" as Step,
+    step: "giris" as Step,
     form,
     yasalOnay: false,
     fotografOnizleme: null as string | null,
@@ -549,6 +604,8 @@ function MusteriAnaSayfaIcerik({
     hedefBilinmiyor: false,
     ihaleSureTipi: "acil" as IhaleSureTipi,
     ihaleOzelBitis: "",
+    aracHareket: "" as "evet" | "hayir" | "",
+    aracMarka: "",
   });
 
   /** App/sekme dönüşünde formu geri yükle (sessionStorage) */
@@ -589,6 +646,21 @@ function MusteriAnaSayfaIcerik({
       }
       if (t.ihaleSureTipi) setIhaleSureTipi(t.ihaleSureTipi);
       if (t.ihaleOzelBitis) setIhaleOzelBitis(t.ihaleOzelBitis);
+      if (t.aracHareket === "evet" || t.aracHareket === "hayir") {
+        setAracHareket(t.aracHareket);
+      }
+      if (t.aracMarka) {
+        setAracMarka(t.aracMarka);
+        const full = t.form.aracModeli.trim();
+        const prefix = t.aracMarka.trim();
+        const model =
+          prefix && full.toLowerCase().startsWith(prefix.toLowerCase())
+            ? full.slice(prefix.length).trim()
+            : full;
+        setAracModelOnly(model);
+      } else if (t.form.aracModeli) {
+        setAracModelOnly(t.form.aracModeli);
+      }
       if (t.form.adres) {
         const { il, ilce } = parseIlIlce(t.form.adres);
         if (il) setSeciliSehir(il);
@@ -722,6 +794,8 @@ function MusteriAnaSayfaIcerik({
     hedefBilinmiyor,
     ihaleSureTipi,
     ihaleOzelBitis,
+    aracHareket,
+    aracMarka,
   };
 
   /** Seçimler + alanlar: her değişimde ve arka plana geçince kaydet */
@@ -737,6 +811,8 @@ function MusteriAnaSayfaIcerik({
       hedefBilinmiyor,
       ihaleSureTipi,
       ihaleOzelBitis: ihaleOzelBitis || undefined,
+      aracHareket,
+      aracMarka,
     };
     if (musteriFormTaslakBosMu(taslak)) {
       musteriFormTaslakSil();
@@ -753,6 +829,8 @@ function MusteriAnaSayfaIcerik({
     hedefBilinmiyor,
     ihaleSureTipi,
     ihaleOzelBitis,
+    aracHareket,
+    aracMarka,
   ]);
 
   useEffect(() => {
@@ -769,6 +847,8 @@ function MusteriAnaSayfaIcerik({
         hedefBilinmiyor: a.hedefBilinmiyor,
         ihaleSureTipi: a.ihaleSureTipi,
         ihaleOzelBitis: a.ihaleOzelBitis || undefined,
+        aracHareket: a.aracHareket,
+        aracMarka: a.aracMarka,
       };
       if (musteriFormTaslakBosMu(taslak)) musteriFormTaslakSil();
       else musteriFormTaslakKaydet(taslak);
@@ -1667,6 +1747,15 @@ function MusteriAnaSayfaIcerik({
     setLoading(true);
     const hedefGerekli =
       sorunHedefKonumGerekliMi(form.sorunTipi) && !hedefBilinmiyor;
+    const hareketNotu =
+      aracHareket === "evet"
+        ? "Araç hareket ediyor"
+        : aracHareket === "hayir"
+          ? "Araç hareket etmiyor"
+          : "";
+    const sorunDetayGonder = [form.sorunDetay.trim(), hareketNotu]
+      .filter(Boolean)
+      .join(" · ");
     try {
       const res = await fetch("/api/talep", {
         method: "POST",
@@ -1689,10 +1778,10 @@ function MusteriAnaSayfaIcerik({
               }
             : {}),
           sorunTipi: form.sorunTipi,
-          sorunDetay: form.sorunDetay,
+          sorunDetay: sorunDetayGonder,
           aracModeli: aracModeliMetniOlustur(form.aracTipi, form.aracModeli),
           fotograf: fotografData || undefined,
-          sorun: sorunMetniOlustur(form.sorunTipi, form.sorunDetay),
+          sorun: sorunMetniOlustur(form.sorunTipi, sorunDetayGonder),
           ihaleSureTipi,
           ...(ihaleSureTipi === "ozel" && ihaleOzelBitis
             ? { ihaleOzelBitis }
@@ -1829,43 +1918,17 @@ function MusteriAnaSayfaIcerik({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca hedef adımına girildiğinde
   }, [step, cozumOneriAktif]);
 
-  const adimIlerlemeCubugu = (
-    <div className="flex w-full gap-1">
-      {steps.map((s, i) => {
-        const aktifIdx = steps.findIndex((x) => x.key === step);
-        const gecildi = i < aktifIdx;
-        const buradayiz = i === aktifIdx;
-        return (
-          <button
-            key={s.key}
-            type="button"
-            onClick={() => adimGit(s.key)}
-            className={[
-              "flex-1 h-1.5 rounded-full transition",
-              buradayiz
-                ? "bg-amber-500 shadow-[0_0_10px_2px_rgba(245,158,11,0.65)] animate-pulse"
-                : gecildi
-                  ? "bg-amber-500"
-                  : "bg-slate-200",
-            ].join(" ")}
-            aria-label={`Adım ${s.label}`}
-            aria-current={buradayiz ? "step" : undefined}
-          />
-        );
-      })}
-    </div>
-  );
+  const progressSteps = progressAdimlari(form.sorunTipi, hedefKonumGerekli);
+  const progressCurrent =
+    Math.max(1, progressSteps.indexOf(step as (typeof progressSteps)[number]) + 1);
 
-  const adimUstBilgi = (compact: boolean) => (
-    <div className="w-full space-y-1.5">
-      <HizmetVerenSayimAlani
-        sorunTipi={form.sorunTipi || null}
-        sehirAd={seciliSehir || null}
-        compact={compact}
+  const adimUstBilgi = (_compact: boolean) =>
+    step === "giris" ? null : (
+      <FlowProgress
+        current={progressCurrent}
+        total={progressSteps.length}
       />
-      {adimIlerlemeCubugu}
-    </div>
-  );
+    );
 
   const seoIcerik = seoIcerikProp ?? anaSayfaSeoIcerik();
   const seoLinkSehir = seoSehirAd || seciliSehir;
@@ -1879,53 +1942,75 @@ function MusteriAnaSayfaIcerik({
     (seoLinkSehir === ISTANBUL_IL
       ? seoLinkler.filter((l) => l.ad !== ISTANBUL_IL)
       : seoLinkler);
-  const digerSecenekler =
-    seoLinkSehir === ISTANBUL_IL
-      ? seoHizmetListesi().map((h) => ({
-          href: `/istanbul/${h.slug}`,
-          label: `İstanbul ${h.etiket}`,
-        }))
-      : anaSayfaSehirBaglantilari().map((l) => ({
-          href: l.href,
-          label: l.ad,
-        }));
   const seoHero =
     seoHeroBaslik ??
     (seoLinkSehir === ISTANBUL_IL ? ISTANBUL_ANA_HERO : seoIcerik.h1);
 
-  const hizmetVerenHeader = (
-    <Link
-      href="/kayit/b"
-      className="inline-flex h-7 items-center justify-center rounded-lg bg-amber-500 px-2.5 text-xs font-semibold text-white shadow-sm shadow-amber-500/20 transition touch-manipulation hover:bg-amber-600 active:scale-[0.98] sm:h-8 sm:px-3.5 sm:text-sm"
+  const girisEkrani = step === "giris";
+  /** YARDIM AL sonrası: footer yok, 100vh, sayfa scroll yok (teklif sayfasına kadar) */
+  const akisKilitli = !girisEkrani;
+
+  useEffect(() => {
+    if (!akisKilitli) return;
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtml = html.style.overflow;
+    const prevBody = body.style.overflow;
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    window.scrollTo(0, 0);
+    return () => {
+      html.style.overflow = prevHtml;
+      body.style.overflow = prevBody;
+    };
+  }, [akisKilitli]);
+
+  useEffect(() => {
+    if (!akisKilitli) return;
+    window.scrollTo(0, 0);
+  }, [step, akisKilitli]);
+
+  const navGeri = girisEkrani ? null : (
+    <button
+      type="button"
+      onClick={oncekiAdimaDon}
+      className="inline-flex min-h-[var(--acb-touch)] items-center px-1 text-sm font-semibold text-[var(--acb-muted)] touch-manipulation"
     >
-      Hizmet Ver
-    </Link>
+      Geri
+    </button>
   );
+
+  const navTrailing = girisEkrani ? null : adimUstBilgi(true);
 
   return (
     <MobileShell
-      subtitle={undefined}
-      subtitleAlign={step === "konum" ? "right" : "center"}
-      brandAlign={step === "konum" ? "left" : "right"}
-      backLabel={step === "konum" ? undefined : "Geri"}
-      onBack={step === "konum" ? undefined : oncekiAdimaDon}
-      headerBadge={step === "konum" ? adimUstBilgi(true) : undefined}
-      headerCenter={step === "konum" ? undefined : adimUstBilgi(true)}
-      headerEnd={step === "konum" ? hizmetVerenHeader : undefined}
-      onBrandClick={() => {
-        setStep("konum");
-        setError("");
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }}
-      footer={<YasalSiteFooter />}
-      footerClassName={
-        step === "hedef"
-          ? "pb-56"
-          : step !== "konum"
-            ? "pb-28"
-            : undefined
-      }
+      hideHeader
+      showBrand={false}
+      lockViewport={akisKilitli}
+      footer={girisEkrani ? <YasalSiteFooter /> : undefined}
     >
+      <OpeningLogo
+        forceDocked={!girisEkrani}
+        scrollDock={girisEkrani}
+        onClick={() => {
+          setStep("giris");
+          setKonumSheetAcik(false);
+          setError("");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        leading={navGeri}
+        trailing={navTrailing}
+      />
+      {step === "konum" && !arizaKonumGpsAlindi && gpsGuvenli ? (
+        <AcilYardimStickyCta
+          onClick={() => {
+            setError("");
+            void konumAl(false);
+          }}
+          disabled={gpsYukleniyor}
+          yukleniyor={gpsYukleniyor}
+        />
+      ) : null}
       {konumIzniToast && (
         <div
           role="status"
@@ -1938,39 +2023,41 @@ function MusteriAnaSayfaIcerik({
         </div>
       )}
 
-      {step === "konum" && (
-        <div className="mb-4 space-y-3">
-          <div className="space-y-2.5">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold leading-snug tracking-tight text-slate-900">
-                Yolda mı kaldınız?
-              </h1>
-              <p className="mt-1.5 text-base sm:text-lg font-bold leading-snug text-slate-800">
-                Kayıt olmadan 2 dakikada{" "}
-                <span className="text-amber-600">10+ çekiciden teklif alın.</span>
-              </p>
-              <p className="mt-1.5 text-sm leading-snug text-slate-600">
-                Fiyatları karşılaştırın, uygun olanı siz seçin.
-              </p>
+      {step === "giris" && (
+        <>
+          <EmergencyHero
+            onYardimAl={() => {
+              setError("");
+              setKonumSheetAcik(true);
+              window.scrollTo(0, 0);
+              adimGit("konum");
+              posthogOlayYakala("yardim_al_tiklandi", {});
+              musteriFunnelOlayBirKez(funnelId, "form_adim_giris", {
+                props: {},
+              });
+            }}
+          />
+          <div className="mt-10 space-y-8 border-t border-[var(--acb-border)] pt-8">
+            <div id="nasil-calisir">
+              <AnaSayfaOzellikSeridi />
             </div>
-            <div className="text-xs text-slate-700 leading-snug space-y-0.5">
-              <p>
-                <span className="text-emerald-600 font-semibold">✓</span>{" "}
-                Ücretsiz
-                {" "}
-                <span className="text-emerald-600 font-semibold">✓</span> Ödeme
-                yok
-              </p>
-              <p>
-                <span className="text-emerald-600 font-semibold">✓</span>{" "}
-                Bilgileriniz yalnızca seçtiğiniz çekici ile paylaşılır
-              </p>
-            </div>
+            <AnaSayfaFiyatHesaplamaTeaser />
+            <AnaSayfaHizmetVerCta />
+            {!varsayilanSehir ? <AnaSayfaHizliBaglantilar /> : null}
+            <SehirSeoIcerikBolumu
+              sehirAd={seoLinkSehir || ISTANBUL_IL}
+              icerik={seoIcerik}
+              heroBaslik={seoHero}
+              baglantilar={seoLinkler}
+              bolgeLinkleri={seoBolgeChip}
+              yogunluk={varsayilanSehir ? "kompakt" : "genis"}
+              ozetGoster={!varsayilanSehir}
+            />
           </div>
-        </div>
+        </>
       )}
 
-      {error && (
+      {error && step !== "giris" && (
         <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
@@ -1984,22 +2071,29 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {step === "sorun" && (
-        <div className="space-y-4 animate-fade-in pb-28">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold leading-snug tracking-tight text-slate-900">
-              {seciliIlce && seciliSehir
-                ? `${seciliIlce}, ${sehirdeYazi(seciliSehir)} ne arıyorsunuz?`
-                : seciliSehir
-                  ? `${sehirdeYazi(seciliSehir)} ne arıyorsunuz?`
-                  : "Ne arıyorsunuz?"}
+        <div className="space-y-5 flex-1 min-h-0 overflow-hidden animate-fade-in">
+          <div className="space-y-2">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+              Nasıl yardımcı olalım?
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Yakındaki hizmet verenler teklif göndersin.
+            <p className="text-sm text-[var(--acb-muted)]">
+              Bir hizmet seç — devam edelim.
             </p>
+            {form.adres ? (
+              <p className="inline-flex items-start gap-1.5 pt-1 text-sm font-medium text-[var(--acb-dark)]">
+                <AcbIcons.location
+                  className="mt-0.5 size-4 shrink-0 text-[var(--acb-muted)]"
+                  strokeWidth={ACB_ICON_STROKE}
+                  aria-hidden
+                />
+                <span>{form.adres}</span>
+              </p>
+            ) : null}
           </div>
           <SorunSecimi
             seciliTip={form.sorunTipi}
             detay={form.sorunDetay}
+            izgara
             onTipSec={(id) => {
               update("sorunTipi", id);
               posthogOlayYakala("sorun_secildi", { sorun_tipi: id });
@@ -2016,19 +2110,22 @@ function MusteriAnaSayfaIcerik({
                 content_id: id,
                 content_name: label,
               });
+              const sonraki = sonrakiAdim("sorun");
+              if (sonraki) {
+                window.setTimeout(() => adimGit(sonraki), 180);
+              }
             }}
             onDetayChange={(v) => update("sorunDetay", v)}
             sadeceTipSecimi
           />
-          <NasilCalisirSerit aktifFormAdimi={step} />
           <AdimAltNav
-            devamMetin="Devam Et"
+            devamMetin={form.sorunTipi ? "Devam et" : "Önce hizmet seç"}
             devamDisabled={!form.sorunTipi}
             devamGlow={!!form.sorunTipi}
             onGeri={oncekiAdimaDon}
             onDevam={() => {
               if (!form.sorunTipi) {
-                setError("Lütfen sorununuzu seçin.");
+                setError("Lütfen bir hizmet seçin.");
                 return;
               }
               setError("");
@@ -2040,7 +2137,7 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {step === "fotograf" && (
-        <div className="space-y-4 animate-fade-in pb-28">
+        <div className="space-y-4 flex-1 min-h-0 overflow-hidden animate-fade-in">
           <h2 className="text-xl font-bold">Arıza Fotoğrafı</h2>
           <p className="text-slate-500 text-sm">
             Bir fotoğraf ekleyin — çekici doğru teklif verebilsin (isteğe
@@ -2080,7 +2177,7 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {step === "arac_tipi" && (
-        <div className="space-y-4 animate-fade-in pb-28">
+        <div className="space-y-4 flex-1 min-h-0 overflow-hidden animate-fade-in">
           <h2 className="text-xl font-bold">Araç Tipi</h2>
           <p className="text-slate-500 text-sm">
             Aracınızın tipini seçin (isteğe bağlı).
@@ -2129,7 +2226,7 @@ function MusteriAnaSayfaIcerik({
             })}
           </div>
           <AdimAltNav
-            devamMetin="Devam Et"
+            devamMetin="Modeli gir"
             onGeri={oncekiAdimaDon}
             onDevam={() => {
               const sonraki = sonrakiAdim("arac_tipi");
@@ -2140,27 +2237,52 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {step === "arac_modeli" && (
-        <div className="space-y-4 animate-fade-in pb-28">
-          <h2 className="text-xl font-bold">Araç Modeli</h2>
-          <p className="text-slate-500 text-sm">
-            Aracın modelini yazın — çekici doğru teklif verebilsin (isteğe
-            bağlı).
-          </p>
-          <div ref={aracModeliRef} className="scroll-mt-44">
+        <div className="space-y-5 flex-1 min-h-0 overflow-hidden animate-fade-in">
+          <div className="space-y-2">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+              Aracın hangisi?
+            </h2>
+            <p className="text-sm text-[var(--acb-muted)]">
+              Marka ve model yeterli.
+            </p>
+          </div>
+          <div ref={aracModeliRef} className="space-y-3 scroll-mt-44">
             <Field
-              label="Araç modeli (isteğe bağlı)"
-              placeholder="Örn. Audi A3, Renault Clio"
-              value={form.aracModeli}
-              onChange={(e) => update("aracModeli", e.target.value)}
-              invalid={aracModeliHatasi}
+              label="Marka"
+              placeholder="Örn. Renault"
+              value={aracMarka}
+              onChange={(e) => {
+                const marka = e.target.value;
+                setAracMarka(marka);
+                update(
+                  "aracModeli",
+                  [marka.trim(), aracModelOnly.trim()]
+                    .filter(Boolean)
+                    .join(" ")
+                );
+              }}
               ref={(el) => {
                 if (!el) return;
                 el.focus({ preventScroll: true });
               }}
             />
+            <Field
+              label="Model"
+              placeholder="Örn. Clio"
+              value={aracModelOnly}
+              onChange={(e) => {
+                const model = e.target.value;
+                setAracModelOnly(model);
+                update(
+                  "aracModeli",
+                  [aracMarka.trim(), model.trim()].filter(Boolean).join(" ")
+                );
+              }}
+              invalid={aracModeliHatasi}
+            />
           </div>
           <AdimAltNav
-            devamMetin="Devam Et"
+            devamMetin="Devam et"
             onGeri={oncekiAdimaDon}
             onDevam={() => {
               if (!aracModeliAdimiDevam()) return;
@@ -2171,14 +2293,114 @@ function MusteriAnaSayfaIcerik({
         </div>
       )}
 
+      {step === "hareket" && (
+        <div className="space-y-5 flex-1 min-h-0 overflow-hidden animate-fade-in">
+          <div className="space-y-2">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+              Aracın hareket ediyor mu?
+            </h2>
+            <p className="text-sm text-[var(--acb-muted)]">
+              Doğru ekip için bilmemiz yeterli.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            {(
+              [
+                { id: "evet" as const, label: "Hareket ediyor" },
+                { id: "hayir" as const, label: "Hareket etmiyor" },
+              ] as const
+            ).map((opt) => {
+              const secili = aracHareket === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    setAracHareket(opt.id);
+                    window.setTimeout(() => {
+                      const sonraki = sonrakiAdim("hareket");
+                      if (sonraki) adimGit(sonraki);
+                    }, 160);
+                  }}
+                  className={`min-h-[4.5rem] rounded-[var(--acb-radius-lg)] border px-5 py-4 text-left text-lg font-semibold touch-manipulation transition active:scale-[0.99] ${
+                    secili
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] text-[var(--acb-dark)]"
+                      : "border-[var(--acb-border)] bg-white text-[var(--acb-dark)] hover:border-[color-mix(in_srgb,var(--acb-green)_40%,white)]"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+          <AdimAltNav
+            devamMetin={aracHareket ? "Devam et" : "Önce seç"}
+            devamDisabled={!aracHareket}
+            devamGlow={!!aracHareket}
+            onGeri={oncekiAdimaDon}
+            onDevam={() => {
+              if (!aracHareket) {
+                setError("Lütfen bir seçenek işaretleyin.");
+                return;
+              }
+              setError("");
+              const sonraki = sonrakiAdim("hareket");
+              if (sonraki) adimGit(sonraki);
+            }}
+          />
+        </div>
+      )}
+
       {step === "ek_detay" && (
-        <div className="space-y-4 animate-fade-in pb-28">
-          <h2 className="text-xl font-bold">Sorun Detayı</h2>
-          <p className="text-slate-500 text-sm">
-            {hedefKonumGerekli
-              ? "Arıza hakkında ek bilgi verin — çekici doğru teklif verebilsin."
-              : "Bulunduğunuz yerde hizmet alacaksınız — ek bilgi verin."}
-          </p>
+        <div className="space-y-5 flex-1 min-h-0 overflow-hidden animate-fade-in">
+          <div className="space-y-2">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+              Her şey hazır.
+            </h2>
+            <p className="text-sm text-[var(--acb-muted)]">
+              {hedefKonumGerekli
+                ? "Özeti kontrol et — ardından çekilecek yeri seç."
+                : "Özeti kontrol et ve yardım bul."}
+            </p>
+          </div>
+
+          <Card className="!border-[var(--acb-border)] !rounded-[var(--acb-radius-lg)] space-y-4 !p-5">
+            {form.adres ? (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--acb-muted)]">
+                  Konum
+                </p>
+                <p className="mt-1 text-base font-semibold text-[var(--acb-dark)] leading-snug">
+                  {form.adres}
+                </p>
+              </div>
+            ) : null}
+            {form.sorunTipi ? (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--acb-muted)]">
+                  Hizmet
+                </p>
+                <p className="mt-1 text-base font-semibold text-[var(--acb-dark)]">
+                  {sorunTipiBul(form.sorunTipi)?.shortLabel ??
+                    sorunTipiBul(form.sorunTipi)?.label ??
+                    form.sorunTipi}
+                </p>
+              </div>
+            ) : null}
+            {(form.aracModeli || aracMarka) && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--acb-muted)]">
+                  Araç
+                </p>
+                <p className="mt-1 text-base font-semibold text-[var(--acb-dark)]">
+                  {form.aracModeli || aracMarka}
+                  {aracHareket
+                    ? ` · ${aracHareket === "evet" ? "Hareket ediyor" : "Hareket etmiyor"}`
+                    : ""}
+                </p>
+              </div>
+            )}
+          </Card>
 
           {form.sorunTipi === "diger" ? (
             <label className="block space-y-1.5">
@@ -2220,20 +2442,66 @@ function MusteriAnaSayfaIcerik({
             />
           )}
 
+          {!hedefKonumGerekli ? (
+            <div ref={yasalOnayRef} className="scroll-mt-28 space-y-2">
+              <YasalOnayKutusu
+                checked={yasalOnay}
+                onChange={(checked) => {
+                  setYasalOnay(checked);
+                  if (checked) {
+                    setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
+                  }
+                }}
+                invalid={!!bilgiAlanMesajlari.yasalOnay}
+              />
+              {bilgiAlanMesajlari.yasalOnay && (
+                <p className="text-sm text-red-600" role="alert">
+                  {bilgiAlanMesajlari.yasalOnay}
+                </p>
+              )}
+            </div>
+          ) : null}
+
           <AdimAltNav
-            devamMetin="Devam Et"
+            devamMetin={
+              loading ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Spinner className="size-4 border-white/40 border-t-white" />
+                  Gönderiliyor…
+                </span>
+              ) : hedefKonumGerekli ? (
+                "Çekilecek yeri seç"
+              ) : (
+                ACB_CTA.yardimBul
+              )
+            }
+            devamDisabled={loading}
+            devamGlow={!hedefKonumGerekli && yasalOnay}
             onGeri={oncekiAdimaDon}
             onDevam={() => {
               if (!ekDetayAdimiDevam()) return;
               const sonraki = sonrakiAdim("ek_detay");
-              if (sonraki) adimGit(sonraki);
+              if (sonraki) {
+                adimGit(sonraki);
+                return;
+              }
+              if (!yasalOnay) {
+                setBilgiAlanMesajlari((m) => ({
+                  ...m,
+                  yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
+                }));
+                setError("Talep göndermek için yasal metinleri onaylayın.");
+                yasalOnayaKaydir();
+                return;
+              }
+              void cekiciBul();
             }}
           />
         </div>
       )}
 
       {step === "ihale" && (
-        <div className="space-y-4 animate-fade-in pb-40">
+        <div className="space-y-4 flex-1 min-h-0 overflow-hidden animate-fade-in">
           <h2 className="text-xl font-bold">İhale Süresi</h2>
           <p className="text-slate-500 text-sm">
             Teklif toplama süresini seçin — süre dolunca en uygun teklifi
@@ -2309,17 +2577,30 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {step === "konum" && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="flex flex-1 min-h-0 flex-col space-y-5 overflow-hidden animate-fade-in">
+          <div className="space-y-2">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+              Önce konumunu bulalım.
+            </h2>
+            <p className="text-sm text-[var(--acb-muted)]">
+              En hızlı yol: konumunu kullan.
+            </p>
+          </div>
           {arizaKonumGpsAlindi && form.adres ? (
-            <Card className="bg-emerald-50 border-emerald-200">
-              <p className="text-xs text-emerald-700 uppercase tracking-wide mb-1">
-                Arıza konumu (GPS)
+            <Card className="!bg-[var(--acb-soft)] !border-[color-mix(in_srgb,var(--acb-green)_35%,white)] !rounded-[var(--acb-radius-lg)]">
+              <p className="mb-1 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--acb-green)]">
+                <AcbIcons.location
+                  className="size-3.5"
+                  strokeWidth={ACB_ICON_STROKE}
+                  aria-hidden
+                />
+                Konumunuz
               </p>
-              <p className="text-sm text-emerald-900 leading-relaxed">
+              <p className="text-sm font-semibold text-[var(--acb-dark)] leading-relaxed">
                 {form.adres}
               </p>
               {(seciliIlce || seciliSehir) && (
-                <p className="mt-1 text-xs text-emerald-800">
+                <p className="mt-1 text-xs text-[var(--acb-muted)]">
                   {[seciliIlce, seciliSehir].filter(Boolean).join(", ")}
                 </p>
               )}
@@ -2342,35 +2623,61 @@ function MusteriAnaSayfaIcerik({
                   setBilgiMesaj("");
                   setKonumBasarisiz(false);
                 }}
-                className="mt-2 text-xs text-emerald-800 underline font-medium"
+                className="mt-2 min-h-[var(--acb-touch)] text-sm text-[var(--acb-dark)] underline font-semibold touch-manipulation"
               >
                 Konumu değiştir
               </button>
             </Card>
           ) : (
             <div className="space-y-3">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3">
-                <div className="grid grid-cols-1 gap-2.5">
+              <div className="rounded-[var(--acb-radius-lg)] border border-[var(--acb-border)] bg-white px-4 py-5 space-y-4 shadow-[var(--acb-shadow)]">
+                {gpsGuvenli ? (
+                  <div className="space-y-2">
+                    <Btn
+                      type="button"
+                      variant="primary"
+                      onClick={() => {
+                        setError("");
+                        void konumAl(false);
+                      }}
+                      disabled={gpsYukleniyor}
+                      className="!min-h-[3.5rem] !text-base !font-bold"
+                    >
+                      {gpsYukleniyor
+                        ? konumIzniBekleniyor
+                          ? "Konum izni bekleniyor…"
+                          : "Konum alınıyor…"
+                        : ACB_CTA.konumKullan}
+                    </Btn>
+                    {konumBasarisiz ? <ChromeAcSecenegi /> : null}
+                  </div>
+                ) : (
+                  <GpsHttpsBanner compact />
+                )}
+
+                <details
+                  className="group rounded-[var(--acb-radius)] border border-[var(--acb-border)] bg-[var(--acb-soft)]/40 open:bg-white"
+                  open={konumSheetAcik || undefined}
+                >
+                  <summary className="cursor-pointer list-none px-3.5 py-3 text-sm font-semibold text-[var(--acb-dark)] touch-manipulation [&::-webkit-details-marker]:hidden flex items-center justify-between gap-2 min-h-[var(--acb-touch)]">
+                    <span>{ACB_CTA.adresAra}</span>
+                    <span
+                      className="text-[var(--acb-muted)] transition group-open:rotate-180"
+                      aria-hidden
+                    >
+                      ▾
+                    </span>
+                  </summary>
+                  <div className="border-t border-[var(--acb-border)] px-3.5 pb-3.5 pt-3 space-y-2.5">
                   <div className="grid grid-cols-2 gap-2.5 items-end">
                     <div className="min-w-0 space-y-1.5">
                       <span className="block text-sm font-semibold text-slate-800">
                         Şehriniz
                       </span>
                       <div className="relative">
-                        {!seciliSehir ? (
-                          <span
-                            className="pointer-events-none absolute -inset-1 rounded-xl bg-amber-400/35 blur-md animate-pulse"
-                            aria-hidden
-                          />
-                        ) : null}
                         <SelectField
                           aria-label="Şehir"
-                          className={[
-                            "!py-2.5 !px-3 !pr-9 relative text-[0.9375rem]",
-                            !seciliSehir
-                              ? "border-amber-400 ring-2 ring-amber-300/80 shadow-[0_0_14px_3px_rgba(245,158,11,0.55)]"
-                              : "",
-                          ].join(" ")}
+                          className="!py-2.5 !px-3 !pr-9 relative text-[0.9375rem]"
                           value={seciliSehir}
                           onChange={(e) => {
                             const il = e.target.value;
@@ -2470,7 +2777,7 @@ function MusteriAnaSayfaIcerik({
                     </div>
                   </div>
                   <Btn
-                    className="!w-full !min-h-0 !rounded-xl !py-2.5 !px-5 !text-sm"
+                    className="!w-full"
                     onClick={async () => {
                       setError("");
                       if (gpsYukleniyor) gpsIptal();
@@ -2540,38 +2847,19 @@ function MusteriAnaSayfaIcerik({
                         …
                       </span>
                     ) : (
-                      "Ücretsiz Teklif Al"
+                      "Devam et"
                     )}
                   </Btn>
-                </div>
+                  </div>
+                </details>
               </div>
-
-              {gpsGuvenli ? (
-                <div className="space-y-2">
-                  <Btn
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setError("");
-                      void konumAl(false);
-                    }}
-                    disabled={gpsYukleniyor}
-                    className="w-full !py-3 text-sm"
-                  >
-                    📍 Konum kullan
-                  </Btn>
-                  {konumBasarisiz ? <ChromeAcSecenegi /> : null}
-                </div>
-              ) : (
-                <GpsHttpsBanner compact />
-              )}
             </div>
           )}
 
           {arizaKonumGpsAlindi && form.adres ? (
             <div className="space-y-2">
               <Btn
-                className="w-full"
+                className="w-full !min-h-[3.5rem] !text-base !font-bold"
                 onClick={async () => {
                   setError("");
                   if (gpsYukleniyor) gpsIptal();
@@ -2639,7 +2927,7 @@ function MusteriAnaSayfaIcerik({
                     Adres işleniyor…
                   </span>
                 ) : (
-                  "Ücretsiz Teklif Al"
+                  "Devam et"
                 )}
               </Btn>
             </div>
@@ -2647,11 +2935,11 @@ function MusteriAnaSayfaIcerik({
 
           {(gpsYukleniyor || adresGeocodeYukleniyor) && (
             <div
-              className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+              className="flex items-start gap-3 rounded-[var(--acb-radius)] border border-[color-mix(in_srgb,var(--acb-orange)_40%,white)] bg-[color-mix(in_srgb,var(--acb-orange)_12%,white)] px-4 py-3"
               role="status"
             >
               <Spinner className="mt-0.5" />
-              <div className="text-sm text-amber-900 leading-relaxed min-w-0">
+              <div className="text-sm text-[var(--acb-dark)] leading-relaxed min-w-0">
                 {gpsYukleniyor ? (
                   <>
                     <p className="font-medium">
@@ -2659,7 +2947,7 @@ function MusteriAnaSayfaIcerik({
                         ? "Konum izni bekleniyor…"
                         : "Konumunuz alınıyor…"}
                     </p>
-                    <p className="text-xs text-amber-800 mt-1">
+                    <p className="text-xs text-[var(--acb-muted)] mt-1">
                       İzin penceresinde «İzin Ver»e dokunun; konum otomatik
                       yazılacak.
                     </p>
@@ -2671,46 +2959,11 @@ function MusteriAnaSayfaIcerik({
             </div>
           )}
 
-          <>
-            <AnaSayfaOzellikSeridi />
-            <AnaSayfaFiyatHesaplamaTeaser />
-            <AnaSayfaHizmetVerCta />
-            {!varsayilanSehir ? <AnaSayfaHizliBaglantilar /> : null}
-          </>
-
-          <div className="pt-6 border-t border-slate-200 space-y-8">
-            <SehirSeoIcerikBolumu
-              sehirAd={seoLinkSehir || ISTANBUL_IL}
-              icerik={seoIcerik}
-              heroBaslik={seoHero}
-              baglantilar={seoLinkler}
-              bolgeLinkleri={seoBolgeChip}
-              yogunluk={varsayilanSehir ? "kompakt" : "genis"}
-              ozetGoster={!varsayilanSehir}
-            />
-            <section>
-              <h2 className="text-xl font-semibold text-slate-900">
-                Diğer seçenekler
-              </h2>
-              <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
-                {digerSecenekler.map((l) => (
-                  <li key={l.href}>
-                    <Link
-                      href={l.href}
-                      className="text-amber-800 underline underline-offset-2 hover:text-amber-950"
-                    >
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </div>
         </div>
       )}
 
       {step === "hedef" && (
-        <div className="space-y-4 pb-48">
+        <div className="flex-1 min-h-0 overflow-hidden space-y-4">
           <h2 className="text-xl font-bold">Nereye Çekilecek?</h2>
           <p className="text-slate-500 text-sm">
             {sorunLabel

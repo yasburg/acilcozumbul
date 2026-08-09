@@ -6,6 +6,7 @@ import {
   type HizmetVerenSayimOzet,
 } from "@/lib/hizmet-veren-sayim";
 import { sorunTipiBul } from "@/lib/sorun-tipleri";
+import { SorunIkon } from "@/lib/acb-icons";
 
 export function HizmetVerenSayimPanel({
   ozet,
@@ -54,9 +55,12 @@ export function HizmetVerenSayimPanel({
                     className="border-b border-slate-50 last:border-0"
                   >
                     <td className="py-2.5 pr-3">
-                      <span className="mr-1.5" aria-hidden>
-                        {tip?.icon}
-                      </span>
+                      {tip ? (
+                        <SorunIkon
+                          id={tip.id}
+                          className="mr-1.5 inline-block size-4 align-[-2px]"
+                        />
+                      ) : null}
                       <span className="text-slate-800">
                         {tip?.label ?? s.sorunTipi}
                       </span>
