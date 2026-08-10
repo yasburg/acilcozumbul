@@ -35,7 +35,6 @@ const geist = Geist({
   preload: true,
 });
 
-const brandIcon = ACB_BRAND.logoIcon;
 const brandOg = isAcbBrand
   ? ACB_BRAND.logoSocial
   : "/acilcozumbul-logo-yazili.png";
@@ -91,11 +90,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: brandIcon, type: "image/png", sizes: "1276x1276" },
-      { url: "/acilcozumbul-logo-icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: ACB_BRAND.logoFavicon32, type: "image/png", sizes: "32x32" },
+      { url: ACB_BRAND.logoFavicon192, type: "image/png", sizes: "192x192" },
     ],
-    apple: [{ url: brandIcon, type: "image/png", sizes: "1276x1276" }],
-    shortcut: brandIcon,
+    apple: [
+      { url: ACB_BRAND.logoFavicon192, type: "image/png", sizes: "180x180" },
+    ],
+    shortcut: ACB_BRAND.logoFavicon32,
   },
   appleWebApp: {
     capable: true,

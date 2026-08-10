@@ -29,21 +29,13 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      /** Eski favicon URL’leri — immutable kaldırıldı; yeni ACB ikona yönlendir */
       {
-        source: "/acilcozumbul-logo-icon-192.png",
+        source: "/brand/acb/favicon-:size.png",
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-      {
-        source: "/acilcozumbul-logo-icon-192.webp",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
+            value: "public, max-age=604800, stale-while-revalidate=86400",
           },
         ],
       },
@@ -72,6 +64,16 @@ const nextConfig: NextConfig = {
         source: "/kayit",
         destination: "/kayit/a",
         permanent: false,
+      },
+      {
+        source: "/acilcozumbul-logo-icon-192.png",
+        destination: "/brand/acb/favicon-192.png",
+        permanent: true,
+      },
+      {
+        source: "/acilcozumbul-logo-icon-192.webp",
+        destination: "/brand/acb/favicon-192.png",
+        permanent: true,
       },
       /** Canonical: slash’sız URL */
       {

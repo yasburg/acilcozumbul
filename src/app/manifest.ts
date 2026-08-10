@@ -14,14 +14,14 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "tr",
     icons: [
       {
-        src: ACB_BRAND.logoIcon,
-        sizes: "1276x1276",
+        src: ACB_BRAND.logoFavicon192,
+        sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/acilcozumbul-logo-icon-192.png",
-        sizes: "192x192",
+        src: ACB_BRAND.logoFavicon512,
+        sizes: "512x512",
         type: "image/png",
         purpose: "any",
       },
