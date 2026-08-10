@@ -71,23 +71,14 @@ export function ArizaFotografAlani({
 
   return (
     <div className="space-y-3">
-      {!baslikGizle && (
-        <>
-          <p
-            className={`text-sm font-medium ${invalid ? "text-red-700" : "text-slate-800"}`}
-          >
-            Araç ve arıza fotoğrafı yükleyiniz
-            {zorunlu ? (
-              <span className="text-red-600 font-medium"> (zorunlu)</span>
-            ) : (
-              <span className="text-slate-500 font-normal"> (isteğe bağlı)</span>
-            )}
-          </p>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            En fazla {max} fotoğraf — çekici doğru teklif verebilsin.
-          </p>
-        </>
-      )}
+      {!baslikGizle && zorunlu ? (
+        <p
+          className={`text-sm font-medium ${invalid ? "text-red-700" : "text-slate-800"}`}
+        >
+          Araç ve arıza fotoğrafı yükleyiniz
+          <span className="text-red-600 font-medium"> (zorunlu)</span>
+        </p>
+      ) : null}
 
       {fotograflar.length > 0 && (
         <div className="grid grid-cols-2 gap-2">
@@ -155,12 +146,6 @@ export function ArizaFotografAlani({
       ) : (
         <p className="text-xs text-slate-500 text-center">
           En fazla {max} fotoğraf eklenebilir.
-        </p>
-      )}
-
-      {!zorunlu && (
-        <p className="text-sm text-slate-500 text-center leading-snug">
-          Fotoğrafsız devam edebilirsiniz.
         </p>
       )}
 

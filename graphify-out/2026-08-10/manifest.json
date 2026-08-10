@@ -595,8 +595,8 @@
     "semantic_hash": ""
   },
   "src/app/panel/talepler/page.tsx": {
-    "mtime": 1785971027.1663883,
-    "ast_hash": "d414d907a5d147476a78f4119ed662c5",
+    "mtime": 1786351151.620257,
+    "ast_hash": "3b609c6cc3e1df13e7f44e8d42da93bb",
     "semantic_hash": ""
   },
   "src/app/robots.ts": {
@@ -990,8 +990,8 @@
     "semantic_hash": ""
   },
   "src/lib/demo-oturum.ts": {
-    "mtime": 1786006833.1978133,
-    "ast_hash": "d0958761e3e249ab7771bafbcfeafaf6",
+    "mtime": 1786351144.87137,
+    "ast_hash": "c9ef5a5f3330a786d591b0a1991a5f7f",
     "semantic_hash": ""
   },
   "src/lib/demo-responses.ts": {
@@ -1320,8 +1320,8 @@
     "semantic_hash": ""
   },
   "src/lib/supabase/mappers.ts": {
-    "mtime": 1786323754.214145,
-    "ast_hash": "758f055764c0182b0f6dc16a91fcdbf7",
+    "mtime": 1786351133.4112437,
+    "ast_hash": "8fd1b342362a988bb91448a8a35f39a1",
     "semantic_hash": ""
   },
   "src/lib/supabase/middleware.ts": {
@@ -1365,8 +1365,8 @@
     "semantic_hash": ""
   },
   "src/lib/types.ts": {
-    "mtime": 1786323754.2149591,
-    "ast_hash": "2a371881d09f6072e26f41503f1b25b8",
+    "mtime": 1786351120.0840592,
+    "ast_hash": "9a518aee25b53e2c9fe4bdf266f27c00",
     "semantic_hash": ""
   },
   "src/lib/yasal-sirket.ts": {
@@ -2555,13 +2555,13 @@
     "semantic_hash": ""
   },
   "src/lib/panel-talep.test.ts": {
-    "mtime": 1785585681.7514205,
-    "ast_hash": "c9bcf9e377e610e691398a90cad4eebe",
+    "mtime": 1786351167.6404507,
+    "ast_hash": "b39a6767f73de151c81d34202217c60b",
     "semantic_hash": ""
   },
   "src/lib/panel-talep.ts": {
-    "mtime": 1785585593.783456,
-    "ast_hash": "a4ed0d1a012738c03e20454df25c1df6",
+    "mtime": 1786351133.7842724,
+    "ast_hash": "8d1c7eb460bcfa289d48b7d49a9f35b4",
     "semantic_hash": ""
   },
   "src/lib/kayit-funnel-olay.test.ts": {
@@ -3370,8 +3370,8 @@
     "semantic_hash": ""
   },
   "src/app/api/talep/[id]/iptal/route.ts": {
-    "mtime": 1786040698.122497,
-    "ast_hash": "81708a6005ee5cb3af72e4d2da129423",
+    "mtime": 1786351143.377273,
+    "ast_hash": "2754f5149c5855b9da7fb43f18009d85",
     "semantic_hash": ""
   },
   "supabase/migrations/057_simulasyon_ayar.sql": {
@@ -3692,6 +3692,11 @@
   "supabase/migrations/063_sesli_mesaj_log.sql": {
     "mtime": 1786323322.433676,
     "ast_hash": "62025e4bb7909b4a308a5d6c9b41d94a",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/065_talep_iptal_at.sql": {
+    "mtime": 1786351117.0659118,
+    "ast_hash": "f3d8bd4fa38f69558e4682536dfadc3d",
     "semantic_hash": ""
   }
 }
