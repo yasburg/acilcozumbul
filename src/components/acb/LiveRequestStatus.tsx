@@ -16,7 +16,7 @@ export function LiveRequestStatus({
   return (
     <div className="space-y-3">
       {baslik ? (
-        <h2 className="text-2xl font-bold leading-tight tracking-tight text-[var(--acb-dark)] sm:text-[1.75rem]">
+        <h2 className="acb-display text-2xl font-bold text-[var(--acb-dark)] sm:text-[1.75rem]">
           {baslik}
         </h2>
       ) : null}

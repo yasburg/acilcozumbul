@@ -28,10 +28,14 @@ function bosTaslak(
       sorunDetay: "",
       aracTipi: "",
       aracModeli: "",
+      aracDurumu: "",
+      lastikDurumu: "",
+      yakitTipi: "",
+      kilitDurumu: "",
     },
     yasalOnay: false,
-    fotografOnizleme: null,
-    fotografData: null,
+    fotografOnizleme: [],
+    fotografData: [],
     ...patch,
   };
 }
@@ -84,6 +88,7 @@ describe("musteriFormTaslak", () => {
     expect(musteriFormAdimDonusumNormalize("konum")).toBe("sorun");
     expect(musteriFormAdimDonusumNormalize("detay")).toBe("sorun");
     expect(musteriFormAdimDonusumNormalize("bilgi")).toBe("hedef");
+    expect(musteriFormAdimDonusumNormalize("telefon")).toBe("hedef");
   });
 
   it("boş taslağı ayırt eder", () => {
@@ -111,7 +116,7 @@ describe("musteriFormTaslak", () => {
     vi.stubGlobal("sessionStorage", {
       getItem: (k: string) => store.get(k) ?? null,
       setItem: (k: string, v: string) => {
-        if (v.includes('"fotografData":"x')) throw new Error("QuotaExceeded");
+        if (v.includes('"fotografData":["x')) throw new Error("QuotaExceeded");
         store.set(k, v);
       },
       removeItem: (k: string) => {
@@ -122,12 +127,25 @@ describe("musteriFormTaslak", () => {
       bosTaslak({
         step: "hedef",
         form: { ...bosTaslak().form, sorunTipi: "aku" },
-        fotografData: "x".repeat(200),
-        fotografOnizleme: "y".repeat(200),
+        fotografData: ["x".repeat(200)],
+        fotografOnizleme: ["y".repeat(200)],
       })
     );
     const t = musteriFormTaslakOku();
     expect(t?.form.sorunTipi).toBe("aku");
-    expect(t?.fotografData).toBeNull();
+    expect(t?.fotografData).toEqual([]);
+  });
+
+  it("eski tek string fotoğrafı diziye çevirir", () => {
+    sessionStorage.setItem(
+      "acilcozum_musteri_form_taslak",
+      JSON.stringify({
+        ...bosTaslak({ form: { ...bosTaslak().form, sorunTipi: "aku" } }),
+        fotografData: "data:image/jpeg;base64,abc",
+        fotografOnizleme: "data:image/jpeg;base64,abc",
+      })
+    );
+    const t = musteriFormTaslakOku();
+    expect(t?.fotografData).toEqual(["data:image/jpeg;base64,abc"]);
   });
 });

@@ -196,8 +196,18 @@ export interface Talep {
   sorun: string;
   sorunTipi?: string;
   sorunDetay?: string;
-  /** Örn. Audi A3 sedan — çekici taleplerinde */
+  /** Örn. Audi A3 sedan — veya tip + durum birleşik metin */
   aracModeli?: string;
+  /** sedan | suv | … */
+  aracTipi?: string;
+  /** calisiyor | calismiyor_bosa_aliniyor | … */
+  aracDurumu?: string;
+  /** lastik: yama | degisim */
+  lastikDurumu?: string;
+  /** yakit: benzin | dizel | lpg | elektrik */
+  yakitTipi?: string;
+  /** kilit: iceride | kayip | … */
+  kilitDurumu?: string;
   /** Arıza / lastik / kaza fotoğraf URL'leri */
   fotografUrls?: string[];
   durum: TalepDurumu;

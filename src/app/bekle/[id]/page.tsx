@@ -704,7 +704,7 @@ function BekleIcerik() {
   function smsBekleMesaji() {
     return (
       <p className="text-sm font-bold text-slate-800 mt-4 max-w-xs mx-auto leading-snug">
-        Lütfen bekleyiniz; acil taleplerde ilk tekliflerde SMS atacağız.
+        Lütfen bekleyiniz; teklifler birazdan ekranınıza gelecektir.
       </p>
     );
   }

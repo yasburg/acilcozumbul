@@ -17,9 +17,20 @@ import {
   sorunAracModeliGerekliMi,
   sorunFotografGerekliMi,
   sorunHedefKonumGerekliMi,
+  sorunLastikDurumuGerekliMi,
   sorunMetniOlustur,
   sorunTipiBul,
+  sorunYakitTipiGerekliMi,
+  sorunKilitDurumuGerekliMi,
 } from "@/lib/sorun-tipleri";
+import {
+  lastikDurumuEtiket,
+  lastikDurumuGecerliMi,
+} from "@/lib/lastik-durumu";
+import { yakitTipiEtiket, yakitTipiGecerliMi } from "@/lib/yakit-tipi";
+import { kilitDurumuEtiket, kilitDurumuGecerliMi } from "@/lib/kilit-durumu";
+import { aracTipiGecerliMi } from "@/lib/arac-tipi";
+import { aracDurumuGecerliMi } from "@/lib/arac-durumu";
 import { talepFotografYukle } from "@/lib/talep-fotograf";
 import { smsBaseUrl } from "@/lib/sms-base-url";
 import { telefonGecerliMi, telefonNormalize } from "@/lib/telefon";
@@ -40,10 +51,36 @@ export async function POST(request: NextRequest) {
     sorunDetay,
     sorun,
     aracModeli,
+    aracTipi: aracTipiRaw,
+    aracDurumu: aracDurumuRaw,
+    lastikDurumu: lastikDurumuRaw,
+    yakitTipi: yakitTipiRaw,
+    kilitDurumu: kilitDurumuRaw,
     fotograf,
+    fotograflar: fotograflarRaw,
     ihaleSureTipi: ihaleSureTipiRaw,
     ihaleOzelBitis: ihaleOzelBitisRaw,
   } = body;
+
+  const MAX_TALEP_FOTOGRAF = 5;
+  const fotografListesi: string[] = (() => {
+    if (Array.isArray(fotograflarRaw)) {
+      return fotograflarRaw
+        .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+        .map((x) => x.trim())
+        .slice(0, MAX_TALEP_FOTOGRAF);
+    }
+    if (Array.isArray(fotograf)) {
+      return fotograf
+        .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+        .map((x) => x.trim())
+        .slice(0, MAX_TALEP_FOTOGRAF);
+    }
+    if (typeof fotograf === "string" && fotograf.trim()) {
+      return [fotograf.trim()];
+    }
+    return [];
+  })();
 
   const hedefBilinmiyor = Boolean(hedefBilinmiyorRaw);
 
@@ -52,8 +89,58 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Geçerli bir sorun seçin." }, { status: 400 });
   }
 
-  const sorunMetni =
+  const sorunMetniHam =
     sorun?.trim() || sorunMetniOlustur(tip, sorunDetay?.trim());
+
+  const lastikDurumu =
+    typeof lastikDurumuRaw === "string" ? lastikDurumuRaw.trim() : "";
+  if (sorunLastikDurumuGerekliMi(tip)) {
+    if (!lastikDurumuGecerliMi(lastikDurumu)) {
+      return NextResponse.json(
+        { error: "Lastik durumunu seçin." },
+        { status: 400 }
+      );
+    }
+  }
+  const lastikEtiket = lastikDurumuGecerliMi(lastikDurumu)
+    ? lastikDurumuEtiket(lastikDurumu)
+    : null;
+  const yakitTipi =
+    typeof yakitTipiRaw === "string" ? yakitTipiRaw.trim() : "";
+  if (sorunYakitTipiGerekliMi(tip)) {
+    if (!yakitTipiGecerliMi(yakitTipi)) {
+      return NextResponse.json(
+        { error: "Yakıt tipini seçin." },
+        { status: 400 }
+      );
+    }
+  }
+  const yakitEtiket = yakitTipiGecerliMi(yakitTipi)
+    ? yakitTipiEtiket(yakitTipi)
+    : null;
+  const kilitDurumu =
+    typeof kilitDurumuRaw === "string" ? kilitDurumuRaw.trim() : "";
+  if (sorunKilitDurumuGerekliMi(tip)) {
+    if (!kilitDurumuGecerliMi(kilitDurumu)) {
+      return NextResponse.json(
+        { error: "Kilit durumunu seçin." },
+        { status: 400 }
+      );
+    }
+  }
+  const kilitEtiket = kilitDurumuGecerliMi(kilitDurumu)
+    ? kilitDurumuEtiket(kilitDurumu)
+    : null;
+  let sorunMetni = sorunMetniHam;
+  if (lastikEtiket && !sorunMetni.includes(lastikEtiket)) {
+    sorunMetni = `${sorunMetni} · ${lastikEtiket}`;
+  }
+  if (yakitEtiket && !sorunMetni.includes(yakitEtiket)) {
+    sorunMetni = `${sorunMetni} · ${yakitEtiket}`;
+  }
+  if (kilitEtiket && !sorunMetni.includes(kilitEtiket)) {
+    sorunMetni = `${sorunMetni} · ${kilitEtiket}`;
+  }
 
   if (tip === "diger" && !sorunDetay?.trim() && !sorun?.trim()) {
     return NextResponse.json(
@@ -69,7 +156,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (sorunFotografGerekliMi(tip) && !fotograf?.trim()) {
+  if (sorunFotografGerekliMi(tip) && fotografListesi.length === 0) {
     return NextResponse.json(
       { error: "Arıza fotoğrafı gerekli." },
       { status: 400 }
@@ -129,18 +216,26 @@ export async function POST(request: NextRequest) {
 
   const talepId = randomUUID();
   const fotografUrls: string[] = [];
-  if (fotograf?.trim()) {
-    const url = await talepFotografYukle(talepId, fotograf.trim());
+  for (const foto of fotografListesi) {
+    const url = await talepFotografYukle(talepId, foto);
     if (url) fotografUrls.push(url);
-    else if (sorunFotografGerekliMi(tip)) {
-      return NextResponse.json(
-        { error: "Fotoğraf yüklenemedi. Lütfen tekrar deneyin." },
-        { status: 400 }
-      );
-    }
+  }
+  if (
+    sorunFotografGerekliMi(tip) &&
+    fotografListesi.length > 0 &&
+    fotografUrls.length === 0
+  ) {
+    return NextResponse.json(
+      { error: "Fotoğraf yüklenemedi. Lütfen tekrar deneyin." },
+      { status: 400 }
+    );
   }
 
-  const modelMetni = aracModeli?.trim();
+  const modelMetni = typeof aracModeli === "string" ? aracModeli.trim() : "";
+  const aracTipi =
+    typeof aracTipiRaw === "string" ? aracTipiRaw.trim() : "";
+  const aracDurumu =
+    typeof aracDurumuRaw === "string" ? aracDurumuRaw.trim() : "";
   const sorunTam =
     modelMetni && sorunAracModeliAlaniGoster(tip)
       ? `${sorunMetni} · Araç: ${modelMetni}`
@@ -177,7 +272,12 @@ export async function POST(request: NextRequest) {
     sorun: sorunTam,
     sorunTipi: tip,
     sorunDetay: sorunDetay?.trim(),
-    aracModeli: modelMetni,
+    aracModeli: modelMetni || undefined,
+    ...(aracTipiGecerliMi(aracTipi) ? { aracTipi } : {}),
+    ...(aracDurumuGecerliMi(aracDurumu) ? { aracDurumu } : {}),
+    ...(lastikDurumuGecerliMi(lastikDurumu) ? { lastikDurumu } : {}),
+    ...(yakitTipiGecerliMi(yakitTipi) ? { yakitTipi } : {}),
+    ...(kilitDurumuGecerliMi(kilitDurumu) ? { kilitDurumu } : {}),
     fotografUrls: fotografUrls.length ? fotografUrls : undefined,
     durum: "ihalede",
     olusturulma: olusturulma.toISOString(),

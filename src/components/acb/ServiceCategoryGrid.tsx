@@ -62,9 +62,9 @@ export function ServiceCategoryGrid({
               aria-selected={secili}
               aria-label={tip.label}
               onClick={() => onSelect(tip.id)}
-              className={`flex min-h-[5.5rem] flex-col items-center justify-center gap-2 rounded-[var(--acb-radius-lg)] border px-2 py-3.5 text-center touch-manipulation transition-[border-color,background-color,transform] duration-[var(--acb-transition)] active:scale-[0.98] ${
+              className={`flex min-h-[5.5rem] flex-col items-center justify-center gap-2 rounded-[var(--acb-radius-lg)] border px-2 py-3.5 text-center touch-manipulation transition-[border-color,background-color,transform,box-shadow] duration-[var(--acb-transition)] ease-out active:scale-[0.97] ${
                 secili
-                  ? "border-[var(--acb-green)] bg-[var(--acb-soft)]"
+                  ? "border-[var(--acb-green)] bg-[var(--acb-soft)] shadow-[var(--acb-shadow)]"
                   : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_40%,white)]"
               }`}
             >

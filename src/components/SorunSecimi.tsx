@@ -63,15 +63,15 @@ export function SorunSecimi({
                   data-sorun-id={tip.id}
                   onClick={() => onTipSec(tip.id)}
                   aria-pressed={secili}
-                  className={`flex min-h-[5.25rem] flex-col items-center justify-center gap-2 rounded-[var(--acb-radius-lg)] border px-2 py-3.5 text-center touch-manipulation transition scroll-mt-24 active:scale-[0.98] ${
+                  className={`flex min-h-[5.75rem] flex-col items-center justify-center gap-2 rounded-[var(--acb-radius-lg)] border px-2 py-3.5 text-center touch-manipulation transition-[border-color,background-color,transform] duration-[var(--acb-transition)] ease-out scroll-mt-24 active:scale-[0.97] ${
                     secili
-                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)]"
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] shadow-[var(--acb-shadow)]"
                       : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_40%,white)]"
                   }`}
                 >
                   <SorunIkon id={tip.id} className="size-7" active={secili} />
                   <span
-                    className={`text-[13px] font-semibold leading-tight ${
+                    className={`px-0.5 text-[12px] font-semibold leading-snug ${
                       secili ? "text-[var(--acb-dark)]" : "text-slate-800"
                     }`}
                   >
@@ -87,25 +87,33 @@ export function SorunSecimi({
 
     return (
       <div className={kompaktKart ? "space-y-2.5" : "space-y-4"}>
-        <div className={`grid grid-cols-1 ${gap}`}>
-          {SORUN_TIPLERI.map((tip) => {
+        {/* Unified panel + hairlines — not a stack of cards */}
+        <div
+          className="overflow-hidden rounded-[var(--acb-radius-lg)] border border-[var(--acb-border)] bg-white shadow-[var(--acb-shadow)]"
+          role="listbox"
+          aria-label="Sorun tipi"
+        >
+          {SORUN_TIPLERI.map((tip, i) => {
             const secili = seciliTip === tip.id;
             return (
               <button
                 key={tip.id}
                 type="button"
+                role="option"
                 data-sorun-id={tip.id}
                 onClick={() => onTipSec(tip.id)}
-                aria-pressed={secili}
-                className={`w-full text-left rounded-[var(--acb-radius)] border ${kartPy} transition touch-manipulation flex items-center gap-3 scroll-mt-24 ${
+                aria-selected={secili}
+                className={`w-full text-left ${kartPy} transition-[background-color,transform] duration-[var(--acb-transition)] ease-out touch-manipulation flex items-center gap-3 scroll-mt-24 active:scale-[0.995] ${
+                  i > 0 ? "border-t border-[var(--acb-border)]" : ""
+                } ${
                   secili
-                    ? "border-[var(--acb-green)] bg-[var(--acb-soft)]"
-                    : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_40%,white)]"
+                    ? "bg-[var(--acb-soft)]"
+                    : "bg-white active:bg-[color-mix(in_srgb,var(--acb-soft)_55%,white)]"
                 }`}
               >
                 <SorunIkon id={tip.id} className="size-5 shrink-0" active={secili} />
                 <span
-                  className={`font-medium text-sm flex-1 min-w-0 ${
+                  className={`font-medium text-sm flex-1 min-w-0 tracking-[-0.01em] ${
                     secili ? "text-[var(--acb-dark)]" : "text-slate-800"
                   }`}
                 >

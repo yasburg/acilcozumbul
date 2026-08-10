@@ -1,7 +1,7 @@
 export interface SorunTipi {
   id: string;
   label: string;
-  /** Lucide icon key — render via `SorunIkon` / `SORUN_ICON_MAP` */
+  /** Legacy icon key — render via `SorunIkon` / `SORUN_ICON_MAP` (Hugeicons) */
   icon: string;
   /** Kısa etiket (grid / progressive flow) */
   shortLabel?: string;
@@ -23,14 +23,14 @@ export const TUM_SORUN_TIP_IDLERI = [
 export type SorunTipiId = (typeof TUM_SORUN_TIP_IDLERI)[number];
 
 export const SORUN_TIPLERI: SorunTipi[] = [
-  { id: "cekici", label: "Çekici / kurtarma lazım", icon: "towing", shortLabel: "Çekici" },
-  { id: "ariza", label: "Araç arızası / çalışmıyor", icon: "towing", shortLabel: "Arıza" },
-  { id: "lastik", label: "Lastik patladı", icon: "tire", shortLabel: "Lastik" },
-  { id: "aku", label: "Akü bitti", icon: "battery", shortLabel: "Akü" },
-  { id: "yakit", label: "Yakıt bitti", icon: "fuel", shortLabel: "Yakıt" },
-  { id: "kaza", label: "Kaza / çarpışma", icon: "towing", shortLabel: "Kaza" },
-  { id: "kilit", label: "Araç kilitlendi / Anahtar çalışmıyor", icon: "locksmith", shortLabel: "Anahtar" },
-  { id: "arac-tasima", label: "Araç taşıma", icon: "transport", shortLabel: "Araç Taşıma" },
+  { id: "cekici", label: "Çekici / kurtarma lazım", icon: "towing", shortLabel: "Çekici lazım" },
+  { id: "ariza", label: "Araç arızası / çalışmıyor", icon: "towing", shortLabel: "Araç arızası" },
+  { id: "lastik", label: "Lastik söndü/patladı", icon: "tire", shortLabel: "Lastik söndü/patladı" },
+  { id: "aku", label: "Akü bitti", icon: "battery", shortLabel: "Akü bitti" },
+  { id: "yakit", label: "Yakıt/şarj bitti", icon: "fuel", shortLabel: "Yakıt/şarj bitti" },
+  { id: "kaza", label: "Kaza / çarpışma", icon: "towing", shortLabel: "Kaza / çarpışma" },
+  { id: "kilit", label: "Araç kilitlendi / Anahtar çalışmıyor", icon: "locksmith", shortLabel: "Anahtar / kilit" },
+  { id: "arac-tasima", label: "Araç nakliye", icon: "transport", shortLabel: "Araç nakliye" },
   { id: "diger", label: "Diğer", icon: "search", shortLabel: "Diğer" },
 ];
 
@@ -207,6 +207,30 @@ export function sorunAracModeliAlaniGoster(sorunTipi?: string): boolean {
   return SORUN_ARAC_MODELI_TIPLERI.includes(id);
 }
 
+export function sorunLastikDurumuAlaniGoster(sorunTipi?: string): boolean {
+  return talepSorunTipi({ sorunTipi: sorunTipi }) === "lastik";
+}
+
+export function sorunLastikDurumuGerekliMi(sorunTipi?: string): boolean {
+  return sorunLastikDurumuAlaniGoster(sorunTipi);
+}
+
+export function sorunYakitTipiAlaniGoster(sorunTipi?: string): boolean {
+  return talepSorunTipi({ sorunTipi: sorunTipi }) === "yakit";
+}
+
+export function sorunYakitTipiGerekliMi(sorunTipi?: string): boolean {
+  return sorunYakitTipiAlaniGoster(sorunTipi);
+}
+
+export function sorunKilitDurumuAlaniGoster(sorunTipi?: string): boolean {
+  return talepSorunTipi({ sorunTipi: sorunTipi }) === "kilit";
+}
+
+export function sorunKilitDurumuGerekliMi(sorunTipi?: string): boolean {
+  return sorunKilitDurumuAlaniGoster(sorunTipi);
+}
+
 export function sorunMetniOlustur(sorunTipi: string, sorunDetay?: string): string {
   const tip = sorunTipiBul(sorunTipi);
   const baslik = tip?.label ?? sorunTipi;
@@ -217,4 +241,32 @@ export function sorunMetniOlustur(sorunTipi: string, sorunDetay?: string): strin
     return `${baslik}: ${sorunDetay.trim()}`;
   }
   return baslik;
+}
+
+/** Teklif notu alanı — sorun tipine özel örnek placeholder */
+export function sorunTeklifNotuPlaceholder(sorunTipi?: string): string {
+  const id = sorunTipi?.trim()
+    ? talepSorunTipi({ sorunTipi })
+    : "diger";
+  switch (id) {
+    case "cekici":
+      return "Örn:\nAraç yürümüyor, çekici lazım.\nVeya otoyolda kaldım, sağ şeritteyim.";
+    case "ariza":
+      return "Örn:\nMotor çalışmıyor / stop etti.\nVeya motordan duman çıkıyor.";
+    case "lastik":
+      return "Örn:\nÖn sağ lastik patladı, stepne yok.\nVeya jant hasarlı, lastik değişimi lazım.";
+    case "aku":
+      return "Örn:\nAraç hiç çalışmıyor, akü bitmiş olabilir.\nVeya farlar açık kaldı, kontak vermiyor.";
+    case "yakit":
+      return "Örn:\nYolda kaldım, en yakın istasyona destek lazım.\nVeya araç tamamen stop etti.";
+    case "kaza":
+      return "Örn:\nKaza yaptım, araç yürümüyor.\nVeya çarpışma sonrası lastik/şasi hasarı var.";
+    case "kilit":
+      return "Örn:\nAraç marka/modeli ve plaka.\nVeya yedek anahtar var mı yazın.";
+    case "arac-tasima":
+      return "Örn:\nAracı şehir içinde nakliye etmek istiyorum.\nVeya satılık araç, adresler arası nakil.";
+    case "diger":
+    default:
+      return "Örn:\nSorununuzu kısaca yazın.\nVeya konum / durum hakkında ek bilgi ekleyin.";
+  }
 }

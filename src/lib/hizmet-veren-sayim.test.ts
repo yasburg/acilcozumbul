@@ -54,7 +54,7 @@ describe("hizmetVerenSayimHesapla", () => {
       "Şu an kayıtlı anahtarcı yok"
     );
     expect(hizmetVerenKisaMetin("arac-tasima", 2, 5)).toBe(
-      "2 çevrimiçi araç taşıma · 5 kayıtlı"
+      "2 çevrimiçi araç nakliye · 5 kayıtlı"
     );
   });
 

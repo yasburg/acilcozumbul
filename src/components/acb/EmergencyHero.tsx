@@ -1,84 +1,84 @@
 "use client";
 
-import Link from "next/link";
-import { ChevronUp } from "lucide-react";
-import { Btn, Spinner } from "@/components/ui";
-import { ACB_CTA } from "@/lib/design-tokens";
+import { ChevronDown } from "lucide-react";
 import { ACB_ICON_STROKE } from "@/lib/acb-icons";
 
 /**
  * Emergency entry — one job: ask for help.
- * Brand mark is handled by OpeningLogo (morphs into the top nav).
+ * Brand mark + YARDIM AL are handled by OpeningLogo (morph into the top nav).
+ * `ctaDocked` fades trust lines once the CTA has moved into the header.
  */
 export function EmergencyHero({
-  onYardimAl,
-  yukleniyor = false,
-  disabled = false,
+  ctaDocked = false,
 }: {
-  onYardimAl: () => void;
-  yukleniyor?: boolean;
-  disabled?: boolean;
+  /** True when YARDIM AL has moved into the sticky header */
+  ctaDocked?: boolean;
 }) {
   return (
-    <section className="relative flex min-h-[calc(100dvh-1rem)] flex-col animate-fade-in">
-      {/* Room for the floating hero logo */}
-      <div className="h-[min(42vw,11.5rem)] shrink-0 sm:h-48" aria-hidden />
+    <section className="relative flex h-[100dvh] max-h-[100dvh] flex-col animate-fade-in">
+      {/* Band reserved for floating hero logo (synced with --acb-hero-logo-band) */}
+      <div
+        id="acb-hero-logo-band"
+        className="shrink-0"
+        style={{ height: "var(--acb-hero-logo-band)" }}
+        aria-hidden
+      />
 
-      <div className="flex flex-1 flex-col justify-center space-y-6 pb-4">
-        <div className="space-y-3 text-center">
-          <h1 className="text-[2.35rem] font-bold leading-[1.05] tracking-tight text-[var(--acb-dark)] sm:text-5xl">
-            Yolda mı kaldın?
-          </h1>
-          <p className="mx-auto max-w-[18rem] text-lg font-medium leading-snug text-[var(--acb-muted)] sm:text-xl sm:max-w-sm">
-            En yakın yardımı bulalım.
-          </p>
-        </div>
-
-        <div className="space-y-3 pt-2">
-          <Btn
-            type="button"
-            variant="primary"
-            onClick={onYardimAl}
-            disabled={disabled || yukleniyor}
-            className="!min-h-[3.5rem] !text-base !font-bold !tracking-wide shadow-[var(--acb-shadow-cta)]"
-          >
-            {yukleniyor ? (
-              <span className="inline-flex items-center justify-center gap-2">
-                <Spinner className="size-4 border-white/40 border-t-white" />
-                Hazırlanıyor…
-              </span>
-            ) : (
-              ACB_CTA.acilYardim
-            )}
-          </Btn>
-          <div className="flex justify-center">
-            <Link
-              href="/cekici-fiyat-hesaplama"
-              className="inline-flex min-h-[var(--acb-touch)] items-center px-3 text-sm font-medium text-[var(--acb-muted)] underline-offset-4 hover:underline touch-manipulation"
+      <div className="flex min-h-0 flex-1 flex-col">
+        {/* Logo altı: başlık → CTA yuvası → trust satırları */}
+        <div className="shrink-0 pt-1">
+          <div className="text-center">
+            <h1
+              id="acb-hero-baslik"
+              className="acb-display text-[2.15rem] font-bold text-[var(--acb-dark)] sm:text-[2.85rem]"
             >
-              {ACB_CTA.fiyatHesapla}
-            </Link>
+              Yolda mı kaldın?
+            </h1>
+          </div>
+
+          <div className="mt-3 flex flex-col items-stretch">
+            <p className="mx-auto max-w-[17.5rem] text-center text-[1.0625rem] font-medium leading-snug tracking-[0.01em] text-[var(--acb-muted)] sm:max-w-sm sm:text-xl">
+              En yakın yardımı bulalım.
+            </p>
+
+            {/* Layout + dock ölçümü — gerçek buton OpeningLogo’da morph eder */}
+            <div
+              id="acb-hero-yardim-cta"
+              className="my-7 min-h-[3.6rem] w-full"
+              aria-hidden
+            />
+
+            <p
+              className={`acb-hero-trust space-y-1 text-center text-[0.9375rem] font-medium leading-snug tracking-[0.01em] transition-opacity duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)] sm:text-base ${
+                ctaDocked ? "opacity-0" : "opacity-100"
+              }`}
+              aria-hidden={ctaDocked}
+            >
+              <span className="acb-hero-trust-line block">Kayıt yok</span>
+              <span className="acb-hero-trust-line block">
+                2 dakikada 5+ teklif al
+              </span>
+              <span className="acb-hero-trust-line block">En uygunu seç.</span>
+            </p>
           </div>
         </div>
-      </div>
 
-      <div className="mt-auto flex flex-col items-center gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <a
-          href="#nasil-calisir"
-          className="acb-scroll-hint group flex flex-col items-center gap-1 py-2 text-slate-400 touch-manipulation hover:text-slate-500"
-        >
-          <ChevronUp
-            className="size-5"
-            strokeWidth={ACB_ICON_STROKE}
-            aria-hidden
-          />
-          <span className="text-[11px] font-medium tracking-wide">
-            Acil Çözüm Bul Hakkında
-          </span>
-        </a>
-        <p className="text-center text-xs leading-relaxed text-[var(--acb-muted)]">
-          Kayıt yok · Ücretsiz talep · Teklifi sen seç
-        </p>
+        {/* «En uygunu seç» ile ekran altı arasının ortası */}
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          <a
+            href="#nasil-calisir"
+            className="acb-scroll-hint group flex flex-col items-center gap-1 py-2 text-[var(--acb-muted)] touch-manipulation active:opacity-70"
+          >
+            <ChevronDown
+              className="size-5"
+              strokeWidth={ACB_ICON_STROKE}
+              aria-hidden
+            />
+            <span className="text-[11px] font-medium tracking-[0.04em]">
+              Acil Çözüm Bul Hakkında
+            </span>
+          </a>
+        </div>
       </div>
     </section>
   );

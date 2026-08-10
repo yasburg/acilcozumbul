@@ -129,7 +129,7 @@ export function MobileShell({
       <header
         id="app-shell-header"
         className={[
-          "sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-md shadow-sm",
+          "acb-chrome-bar sticky top-0 z-30",
           headerCompact ? "px-3 py-1.5" : "px-3 py-2",
         ].join(" ")}
       >
@@ -225,9 +225,9 @@ export function MobileShell({
       )}
       <main
         className={[
-          "flex-1 w-full max-w-lg mx-auto px-4",
+          "flex-1 w-full",
           lockViewport
-            ? "flex min-h-0 flex-col overflow-hidden pt-2 pb-[max(0.75rem,var(--acil-sticky-cta-h,5.5rem))]"
+            ? "min-h-0 overflow-x-hidden overflow-y-auto overscroll-y-contain pt-2 pb-[max(1rem,var(--acil-sticky-cta-h,5.5rem))] [-webkit-overflow-scrolling:touch]"
             : [
                 hideHeader ? "pt-2" : "",
                 headerCompact ? "py-3" : hideHeader ? "pb-5" : "py-5",
@@ -237,7 +237,8 @@ export function MobileShell({
                 .join(" "),
         ].join(" ")}
       >
-        {children}
+        {/* Content column stays max-w-lg; scroll surface is full-width so edges scroll too */}
+        <div className="mx-auto w-full max-w-lg px-4">{children}</div>
       </main>
       {footer ? (
         <div className={footerClassName}>{footer}</div>

@@ -72,7 +72,7 @@ const HIZMET_KARTLARI: {
 
 const COKLU_HIZMETLER: { id: string; label: string }[] = [
   { id: "cekici", label: "Araç çekme" },
-  { id: "arac-tasima", label: "Araç taşıma" },
+  { id: "arac-tasima", label: "Araç nakliye" },
   { id: "lastik", label: "Lastik yardımı" },
   { id: "aku", label: "Akü takviyesi" },
   { id: "yakit", label: "Yakıt desteği" },

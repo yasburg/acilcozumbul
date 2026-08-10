@@ -26,20 +26,36 @@ import { ilceListesi } from "@/lib/il-ilce";
 import { illerSecimSirasi, sehirdeYazi } from "@/lib/turkiye-il-nufus";
 import {
   hizmetQuerydenSorunTipi,
+  sorunAracModeliAlaniGoster,
   sorunAracModeliGerekliMi,
-  sorunCagriButonEtiketi,
+  sorunFotografAlaniGoster,
   sorunFotografGerekliMi,
   sorunHedefKonumGerekliMi,
+  sorunLastikDurumuAlaniGoster,
+  sorunLastikDurumuGerekliMi,
   sorunMetniOlustur,
+  sorunTeklifNotuPlaceholder,
   sorunTipiBul,
-  HEDEF_BILINMIYOR_EK_SURE_DK,
+  sorunYakitTipiAlaniGoster,
+  sorunYakitTipiGerekliMi,
+  sorunKilitDurumuAlaniGoster,
+  sorunKilitDurumuGerekliMi,
+  UCRETSIZ_TEKLIF_CTA,
 } from "@/lib/sorun-tipleri";
-import { ARAC_TIPLERI, aracModeliMetniOlustur } from "@/lib/arac-tipi";
+import { telefonDogrulamaHatasi } from "@/lib/telefon";
+import { ARAC_TIPLERI, aracDurumuMetniOlustur } from "@/lib/arac-tipi";
+import { ARAC_DURUMLARI, aracDurumuEtiket } from "@/lib/arac-durumu";
+import {
+  LASTIK_DURUMLARI,
+  LASTIK_DURUMU_BILGI,
+  lastikDurumuEtiket,
+} from "@/lib/lastik-durumu";
+import { YAKIT_TIPLERI, yakitTipiEtiket } from "@/lib/yakit-tipi";
+import { KILIT_DURUMLARI, kilitDurumuEtiket } from "@/lib/kilit-durumu";
 import { AracTipiIkon } from "@/components/AracTipiIkon";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
-import { ChromeAcSecenegi } from "@/components/ChromeAcSecenegi";
-import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
+import { MusteriFormIletisimOtp } from "@/components/musteri/MusteriFormIletisimOtp";
 import {
   geocodeAdres,
   cihazPlatformu,
@@ -99,6 +115,7 @@ import {
 import type { IhaleSureTipi } from "@/lib/ihale";
 import { ihaleBitisHesapla } from "@/lib/ihale";
 import { IhaleSureSecimi } from "@/components/musteri/IhaleSureSecimi";
+import { cerezleriSifirla } from "@/lib/cerez-onay";
 
 const HedefOneriHarita = dynamic(
   () =>
@@ -129,41 +146,65 @@ const ArizaFotografAlani = dynamic(
   }
 );
 
+const HizmetVerenSayimAlani = dynamic(
+  () =>
+    import("@/components/HizmetVerenSayimAlani").then((m) => ({
+      default: m.HizmetVerenSayimAlani,
+    })),
+  { ssr: false }
+);
+
 type Step =
   | "giris"
   | "konum"
   | "sorun"
   | "fotograf"
+  | "lastik_durumu"
+  | "yakit_tipi"
+  | "kilit_durumu"
   | "arac_tipi"
   | "arac_modeli"
-  | "hareket"
+  | "arac_durumu"
   | "ek_detay"
   | "ihale"
-  | "hedef";
+  | "hedef"
+  | "telefon";
+
+/** Seçim sonrası otomatik sonraki adıma geçiş gecikmesi */
+const ADIM_OTOMATIK_GECIS_MS = 500;
 
 /** Sabit kanonik sıra — aktifAdimlar() bundan filtreler, göreli sıra hep aynı */
 const TUM_ADIMLAR: Step[] = [
   "giris",
   "konum",
   "sorun",
+  "lastik_durumu",
+  "yakit_tipi",
+  "kilit_durumu",
   "fotograf",
   "arac_tipi",
   "arac_modeli",
-  "hareket",
+  "arac_durumu",
   "ek_detay",
   "ihale",
   "hedef",
+  "telefon",
 ];
 
 /**
- * Giriş → konum → sorun → araç → hareket → özet → [hedef]
- * Fotoğraf / araç tipi / ihale süresi progressive akışta sorulmaz.
+ * Giriş → konum → sorun → [lastik] → [yakıt] → [kilit] → [fotoğraf] →
+ * [araç tipi] → [araç durumu] → ek detay → ihale → [hedef] → telefon
+ * Marka/model (arac_modeli) adımı yok.
  */
 function aktifAdimlar(sorunTipi: string, hedefGerekli: boolean): Step[] {
-  void sorunTipi;
   return TUM_ADIMLAR.filter((adim) => {
-    if (adim === "ihale" || adim === "fotograf" || adim === "arac_tipi") {
-      return false;
+    if (adim === "arac_modeli") return false;
+    if (adim === "fotograf") return sorunFotografAlaniGoster(sorunTipi);
+    if (adim === "lastik_durumu") return sorunLastikDurumuAlaniGoster(sorunTipi);
+    if (adim === "yakit_tipi") return sorunYakitTipiAlaniGoster(sorunTipi);
+    if (adim === "kilit_durumu") return sorunKilitDurumuAlaniGoster(sorunTipi);
+    if (adim === "arac_tipi" || adim === "arac_durumu") {
+      return sorunAracModeliAlaniGoster(sorunTipi);
     }
     if (adim === "hedef") return hedefGerekli;
     return true;
@@ -177,10 +218,13 @@ function progressAdimlari(sorunTipi: string, hedefGerekli: boolean): Step[] {
 
 /** Eski tek «detay» adımının bölündüğü alt adımlar */
 const DETAY_ALT_ADIMLARI: Step[] = [
+  "lastik_durumu",
+  "yakit_tipi",
+  "kilit_durumu",
   "fotograf",
   "arac_tipi",
   "arac_modeli",
-  "hareket",
+  "arac_durumu",
   "ek_detay",
   "ihale",
 ];
@@ -190,12 +234,16 @@ const ADIM_OLAYLARI: Partial<Record<Step, string>> = {
   sorun: "form_adim_sorun",
   konum: "form_adim_konum",
   fotograf: "form_adim_fotograf",
+  lastik_durumu: "form_adim_lastik_durumu",
+  yakit_tipi: "form_adim_yakit_tipi",
+  kilit_durumu: "form_adim_kilit_durumu",
   arac_tipi: "form_adim_arac_tipi",
   arac_modeli: "form_adim_arac_modeli",
-  hareket: "form_adim_hareket",
+  arac_durumu: "form_adim_arac_durumu",
   ek_detay: "form_adim_ek_detay",
   ihale: "form_adim_ihale",
   hedef: "form_adim_hedef",
+  telefon: "form_adim_bilgi",
 };
 
 type MusteriAnaSayfaProps = {
@@ -216,17 +264,23 @@ function sorunProps(sorunTipi: string): Record<string, unknown> {
   return sorunTipi ? { sorun_tipi: sorunTipi } : {};
 }
 
-/** Konum adımı — kalıcı CTA (GPS alınana kadar) */
+/** Sticky alt nav — Geri solunda, beyaz zemin */
+const GERI_BTN_SINIF = "flex-1";
+
 function AcilYardimStickyCta({
   onClick,
+  onGeri,
   disabled,
   yukleniyor,
-  label = ACB_CTA.konumKullan,
+  label = ACB_CTA.konumOtomatikAl,
+  devamGlow = false,
 }: {
   onClick: () => void;
+  onGeri: () => void;
   disabled?: boolean;
   yukleniyor?: boolean;
   label?: string;
+  devamGlow?: boolean;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -256,13 +310,28 @@ function AcilYardimStickyCta({
       ref={rootRef}
       className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--acb-border)] bg-white/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]"
     >
-      <div className="mx-auto max-w-lg">
+      <div className="mx-auto flex max-w-lg gap-3">
+        <Btn
+          type="button"
+          variant="geri"
+          className={GERI_BTN_SINIF}
+          onClick={onGeri}
+        >
+          Geri
+        </Btn>
         <Btn
           type="button"
           variant="primary"
           onClick={onClick}
           disabled={disabled}
-          className="!font-bold !tracking-wide"
+          className={[
+            "flex-[2] !font-bold !tracking-wide",
+            devamGlow && !disabled
+              ? "ring-2 ring-[color-mix(in_srgb,var(--acb-green)_45%,transparent)] shadow-[var(--acb-shadow-cta)] animate-devam-glow"
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
         >
           {yukleniyor ? (
             <span className="inline-flex items-center justify-center gap-2">
@@ -278,6 +347,10 @@ function AcilYardimStickyCta({
     document.body
   );
 }
+
+/** Şehir / ilçe seçiminde dikkat çekmek için */
+const KONUM_SELECT_GLOW =
+  "border-[var(--acb-green)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_50%,transparent)] shadow-[0_0_14px_3px_rgba(8,155,45,0.45)]";
 
 /** Konum sonrası tüm adımlarda ortak sticky alt nav (Geri + Devam) */
 function AdimAltNav({
@@ -325,8 +398,8 @@ function AdimAltNav({
       <div className="mx-auto flex max-w-lg gap-3">
         <Btn
           type="button"
-          variant="secondary"
-          className="!w-auto flex-1"
+          variant="geri"
+          className={GERI_BTN_SINIF}
           onClick={onGeri}
         >
           Geri
@@ -335,9 +408,7 @@ function AdimAltNav({
           type="button"
           className={[
             "flex-[2]",
-            devamGlow && !devamDisabled
-              ? "ring-2 ring-[color-mix(in_srgb,var(--acb-green)_45%,transparent)] shadow-[var(--acb-shadow-cta)]"
-              : "",
+            devamGlow && !devamDisabled ? "animate-devam-glow" : "",
           ]
             .filter(Boolean)
             .join(" ")}
@@ -352,13 +423,9 @@ function AdimAltNav({
   );
 }
 
-/** Hedef sayfası — sticky alt panel: uyarı + yasal onay + Geri/CTA */
+/** Hedef sayfası — sticky alt panel: Geri / Devam */
 function HedefAltNav({
   hedefSeciliMi,
-  yasalOnayRef,
-  yasalOnay,
-  onYasalOnayChange,
-  yasalOnayHata,
   onGeri,
   onDevam,
   devamDisabled = false,
@@ -366,10 +433,6 @@ function HedefAltNav({
   devamIcerik,
 }: {
   hedefSeciliMi: boolean;
-  yasalOnayRef: React.RefObject<HTMLDivElement | null>;
-  yasalOnay: boolean;
-  onYasalOnayChange: (checked: boolean) => void;
-  yasalOnayHata: string;
   onGeri: () => void;
   onDevam: () => void;
   devamDisabled?: boolean;
@@ -395,7 +458,7 @@ function HedefAltNav({
       ro.disconnect();
       stickyCtaOffsetTemizle();
     };
-  }, [mounted, hedefSeciliMi, yasalOnayHata]);
+  }, [mounted, hedefSeciliMi]);
 
   if (!mounted) return null;
 
@@ -404,53 +467,28 @@ function HedefAltNav({
       ref={rootRef}
       className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]"
     >
-      <div className="mx-auto max-w-lg space-y-2">
-        {!hedefSeciliMi && (
-          <p
-            className="text-sm font-semibold text-red-600 text-center"
-            role="alert"
-          >
-            Bir opsiyonu seçiniz
-          </p>
-        )}
-        <div ref={yasalOnayRef} className="scroll-mt-28 space-y-1.5">
-          <YasalOnayKutusu
-            checked={yasalOnay}
-            onChange={onYasalOnayChange}
-            invalid={!!yasalOnayHata}
-            kucukMetin
-          />
-          {yasalOnayHata && (
-            <p className="text-xs text-red-600" role="alert">
-              {yasalOnayHata}
-            </p>
-          )}
-        </div>
-        <div className="flex gap-3">
-          <Btn
-            type="button"
-            variant="secondary"
-            className="!w-auto flex-1"
-            onClick={onGeri}
-          >
-            Geri
-          </Btn>
-          <Btn
-            type="button"
-            className={[
-              "flex-[2]",
-              devamGlow && !devamDisabled
-                ? "ring-2 ring-amber-300/90 shadow-[0_0_16px_4px_rgba(245,158,11,0.55)] animate-devam-glow"
-                : "",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-            onClick={onDevam}
-            disabled={devamDisabled}
-          >
-            {devamIcerik}
-          </Btn>
-        </div>
+      <div className="mx-auto flex max-w-lg gap-3">
+        <Btn
+          type="button"
+          variant="geri"
+          className={GERI_BTN_SINIF}
+          onClick={onGeri}
+        >
+          Geri
+        </Btn>
+        <Btn
+          type="button"
+          className={[
+            "flex-[2]",
+            devamGlow && !devamDisabled ? "animate-devam-glow" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          onClick={onDevam}
+          disabled={devamDisabled}
+        >
+          {devamIcerik}
+        </Btn>
       </div>
     </div>,
     document.body
@@ -511,9 +549,12 @@ function MusteriAnaSayfaIcerik({
   const searchParams = useSearchParams();
   const router = useRouter();
   const [step, setStep] = useState<Step>("giris");
+  /** Entry page: YARDIM AL docks into header top-left on scroll */
+  const [girisHeaderDocked, setGirisHeaderDocked] = useState(false);
+  /** Dev-only: show address reset control on localhost */
+  const [localDev, setLocalDev] = useState(false);
   const [aracMarka, setAracMarka] = useState("");
   const [aracModelOnly, setAracModelOnly] = useState("");
-  const [aracHareket, setAracHareket] = useState<"evet" | "hayir" | "">("");
   const [konumSheetAcik, setKonumSheetAcik] = useState(false);
   const [seciliSehir, setSeciliSehir] = useState(varsayilanSehir ?? "");
   const [seciliIlce, setSeciliIlce] = useState(varsayilanIlce ?? "");
@@ -528,9 +569,16 @@ function MusteriAnaSayfaIcerik({
   const [gpsYukleniyor, setGpsYukleniyor] = useState(false);
   const [adresGeocodeYukleniyor, setAdresGeocodeYukleniyor] = useState(false);
   const [konumIzniToast, setKonumIzniToast] = useState<string | null>(null);
-  const [konumToastTop, setKonumToastTop] = useState(56);
   const gpsIstekRef = useRef(0);
   const konumToastTimerRef = useRef<number | null>(null);
+  const ilceDevamTimerRef = useRef<number | null>(null);
+  const sorunDevamTimerRef = useRef<number | null>(null);
+  const aracTipiDevamTimerRef = useRef<number | null>(null);
+  const aracDurumuDevamTimerRef = useRef<number | null>(null);
+  const lastikDurumuDevamTimerRef = useRef<number | null>(null);
+  const yakitTipiDevamTimerRef = useRef<number | null>(null);
+  const kilitDurumuDevamTimerRef = useRef<number | null>(null);
+  const ihaleDevamTimerRef = useRef<number | null>(null);
   const [oneriYukleniyor, setOneriYukleniyor] = useState(false);
   const [oneriler, setOneriler] = useState<KonumOneri[]>([]);
   const [oneriKaynak, setOneriKaynak] = useState<HedefOneriKaynak | null>(
@@ -545,7 +593,6 @@ function MusteriAnaSayfaIcerik({
   const konumIsimRef = useRef<HTMLDivElement>(null);
   const aracModeliRef = useRef<HTMLDivElement>(null);
   const fotografRef = useRef<HTMLDivElement>(null);
-  const yasalOnayRef = useRef<HTMLDivElement>(null);
   const stepRef = useRef<Step>("sorun");
   const formLatRef = useRef(0);
   const gpsYukleniyorRef = useRef(false);
@@ -557,6 +604,10 @@ function MusteriAnaSayfaIcerik({
   const hedefOneriBaslatildi = useRef(false);
   const [adSoyadHatasi, setAdSoyadHatasi] = useState(false);
   const [aracModeliHatasi, setAracModeliHatasi] = useState(false);
+  const [aracDurumuHatasi, setAracDurumuHatasi] = useState(false);
+  const [lastikDurumuHatasi, setLastikDurumuHatasi] = useState(false);
+  const [yakitTipiHatasi, setYakitTipiHatasi] = useState(false);
+  const [kilitDurumuHatasi, setKilitDurumuHatasi] = useState(false);
   const [fotografHatasi, setFotografHatasi] = useState(false);
   const [sorunDetayHatasi, setSorunDetayHatasi] = useState(false);
   const [arizaAdresDuzenle, setArizaAdresDuzenle] = useState(false);
@@ -580,9 +631,13 @@ function MusteriAnaSayfaIcerik({
     sorunDetay: "",
     aracTipi: "",
     aracModeli: "",
+    aracDurumu: "",
+    lastikDurumu: "",
+    yakitTipi: "",
+    kilitDurumu: "",
   });
-  const [fotografOnizleme, setFotografOnizleme] = useState<string | null>(null);
-  const [fotografData, setFotografData] = useState<string | null>(null);
+  const [fotografOnizleme, setFotografOnizleme] = useState<string[]>([]);
+  const [fotografData, setFotografData] = useState<string[]>([]);
   const [ihaleSureTipi, setIhaleSureTipi] = useState<IhaleSureTipi>("acil");
   const [ihaleOzelBitis, setIhaleOzelBitis] = useState("");
   const [ihaleSureHatasi, setIhaleSureHatasi] = useState(false);
@@ -599,12 +654,11 @@ function MusteriAnaSayfaIcerik({
     step: "giris" as Step,
     form,
     yasalOnay: false,
-    fotografOnizleme: null as string | null,
-    fotografData: null as string | null,
+    fotografOnizleme: [] as string[],
+    fotografData: [] as string[],
     hedefBilinmiyor: false,
     ihaleSureTipi: "acil" as IhaleSureTipi,
     ihaleOzelBitis: "",
-    aracHareket: "" as "evet" | "hayir" | "",
     aracMarka: "",
   });
 
@@ -619,7 +673,7 @@ function MusteriAnaSayfaIcerik({
       );
       const istenenAdim: Step =
         t.step === "bilgi"
-          ? "hedef"
+          ? "telefon"
           : t.step === "detay"
             ? (gecerliAdimlar.find((a) => DETAY_ALT_ADIMLARI.includes(a)) ??
               "ek_detay")
@@ -646,9 +700,6 @@ function MusteriAnaSayfaIcerik({
       }
       if (t.ihaleSureTipi) setIhaleSureTipi(t.ihaleSureTipi);
       if (t.ihaleOzelBitis) setIhaleOzelBitis(t.ihaleOzelBitis);
-      if (t.aracHareket === "evet" || t.aracHareket === "hayir") {
-        setAracHareket(t.aracHareket);
-      }
       if (t.aracMarka) {
         setAracMarka(t.aracMarka);
         const full = t.form.aracModeli.trim();
@@ -779,6 +830,21 @@ function MusteriAnaSayfaIcerik({
       if (konumToastTimerRef.current != null) {
         window.clearTimeout(konumToastTimerRef.current);
       }
+      if (ilceDevamTimerRef.current != null) {
+        window.clearTimeout(ilceDevamTimerRef.current);
+      }
+      if (sorunDevamTimerRef.current != null) {
+        window.clearTimeout(sorunDevamTimerRef.current);
+      }
+      if (aracTipiDevamTimerRef.current != null) {
+        window.clearTimeout(aracTipiDevamTimerRef.current);
+      }
+      if (aracDurumuDevamTimerRef.current != null) {
+        window.clearTimeout(aracDurumuDevamTimerRef.current);
+      }
+      if (ihaleDevamTimerRef.current != null) {
+        window.clearTimeout(ihaleDevamTimerRef.current);
+      }
     };
   }, []);
 
@@ -794,7 +860,6 @@ function MusteriAnaSayfaIcerik({
     hedefBilinmiyor,
     ihaleSureTipi,
     ihaleOzelBitis,
-    aracHareket,
     aracMarka,
   };
 
@@ -811,7 +876,6 @@ function MusteriAnaSayfaIcerik({
       hedefBilinmiyor,
       ihaleSureTipi,
       ihaleOzelBitis: ihaleOzelBitis || undefined,
-      aracHareket,
       aracMarka,
     };
     if (musteriFormTaslakBosMu(taslak)) {
@@ -829,7 +893,6 @@ function MusteriAnaSayfaIcerik({
     hedefBilinmiyor,
     ihaleSureTipi,
     ihaleOzelBitis,
-    aracHareket,
     aracMarka,
   ]);
 
@@ -847,7 +910,6 @@ function MusteriAnaSayfaIcerik({
         hedefBilinmiyor: a.hedefBilinmiyor,
         ihaleSureTipi: a.ihaleSureTipi,
         ihaleOzelBitis: a.ihaleOzelBitis || undefined,
-        aracHareket: a.aracHareket,
         aracMarka: a.aracMarka,
       };
       if (musteriFormTaslakBosMu(taslak)) musteriFormTaslakSil();
@@ -867,11 +929,43 @@ function MusteriAnaSayfaIcerik({
   useEffect(() => {
     if (step !== "fotograf") setFotografHatasi(false);
     if (step !== "arac_modeli") setAracModeliHatasi(false);
+    if (step !== "arac_durumu") setAracDurumuHatasi(false);
+    if (step !== "lastik_durumu") setLastikDurumuHatasi(false);
+    if (step !== "yakit_tipi") setYakitTipiHatasi(false);
+    if (step !== "kilit_durumu") setKilitDurumuHatasi(false);
     if (step !== "ek_detay") setSorunDetayHatasi(false);
     if (step !== "ihale") setIhaleSureHatasi(false);
     if (step !== "konum") {
       setAdSoyadHatasi(false);
       setArizaAdresDuzenle(false);
+    }
+    if (step !== "sorun" && sorunDevamTimerRef.current != null) {
+      window.clearTimeout(sorunDevamTimerRef.current);
+      sorunDevamTimerRef.current = null;
+    }
+    if (step !== "arac_tipi" && aracTipiDevamTimerRef.current != null) {
+      window.clearTimeout(aracTipiDevamTimerRef.current);
+      aracTipiDevamTimerRef.current = null;
+    }
+    if (step !== "arac_durumu" && aracDurumuDevamTimerRef.current != null) {
+      window.clearTimeout(aracDurumuDevamTimerRef.current);
+      aracDurumuDevamTimerRef.current = null;
+    }
+    if (step !== "lastik_durumu" && lastikDurumuDevamTimerRef.current != null) {
+      window.clearTimeout(lastikDurumuDevamTimerRef.current);
+      lastikDurumuDevamTimerRef.current = null;
+    }
+    if (step !== "yakit_tipi" && yakitTipiDevamTimerRef.current != null) {
+      window.clearTimeout(yakitTipiDevamTimerRef.current);
+      yakitTipiDevamTimerRef.current = null;
+    }
+    if (step !== "kilit_durumu" && kilitDurumuDevamTimerRef.current != null) {
+      window.clearTimeout(kilitDurumuDevamTimerRef.current);
+      kilitDurumuDevamTimerRef.current = null;
+    }
+    if (step !== "ihale" && ihaleDevamTimerRef.current != null) {
+      window.clearTimeout(ihaleDevamTimerRef.current);
+      ihaleDevamTimerRef.current = null;
     }
     setBilgiAlanMesajlari({ yasalOnay: "", telefon: "" });
   }, [step]);
@@ -882,6 +976,7 @@ function MusteriAnaSayfaIcerik({
     setGpsGuvenli(guvenli);
     if (!guvenli) {
       setKonumIzni("unknown");
+      setKonumSheetAcik(true);
       return;
     }
     konumIzniOku().then((izin) => {
@@ -928,7 +1023,7 @@ function MusteriAnaSayfaIcerik({
   /** `fotograf` adımında Devam — foto isteğe bağlı (bugün hiçbir tip zorunlu değil) */
   function fotografAdimiDevam(): boolean {
     const fotografEksik =
-      sorunFotografGerekliMi(form.sorunTipi) && !fotografData;
+      sorunFotografGerekliMi(form.sorunTipi) && fotografData.length === 0;
     setFotografHatasi(fotografEksik);
     if (fotografEksik) {
       setError(
@@ -947,6 +1042,58 @@ function MusteriAnaSayfaIcerik({
     setAracModeliHatasi(aracEksik);
     if (aracEksik) {
       setError("Araç modelini girin (ör. Audi A3 sedan).");
+      return false;
+    }
+    setError("");
+    return true;
+  }
+
+  /** `arac_durumu` adımında Devam — durum seçimi (main ile aynı) */
+  function aracDurumuAdimiDevam(): boolean {
+    const eksik =
+      sorunAracModeliAlaniGoster(form.sorunTipi) && !form.aracDurumu.trim();
+    setAracDurumuHatasi(eksik);
+    if (eksik) {
+      setError("Araç durumunu seçin.");
+      return false;
+    }
+    setError("");
+    return true;
+  }
+
+  /** `lastik_durumu` adımında Devam — zorunlu */
+  function lastikDurumuAdimiDevam(): boolean {
+    const eksik =
+      sorunLastikDurumuGerekliMi(form.sorunTipi) && !form.lastikDurumu.trim();
+    setLastikDurumuHatasi(eksik);
+    if (eksik) {
+      setError("Lastik durumunu seçin.");
+      return false;
+    }
+    setError("");
+    return true;
+  }
+
+  /** `yakit_tipi` adımında Devam — zorunlu */
+  function yakitTipiAdimiDevam(): boolean {
+    const eksik =
+      sorunYakitTipiGerekliMi(form.sorunTipi) && !form.yakitTipi.trim();
+    setYakitTipiHatasi(eksik);
+    if (eksik) {
+      setError("Yakıt tipini seçin.");
+      return false;
+    }
+    setError("");
+    return true;
+  }
+
+  /** `kilit_durumu` adımında Devam — zorunlu */
+  function kilitDurumuAdimiDevam(): boolean {
+    const eksik =
+      sorunKilitDurumuGerekliMi(form.sorunTipi) && !form.kilitDurumu.trim();
+    setKilitDurumuHatasi(eksik);
+    if (eksik) {
+      setError("Kilit durumunu seçin.");
       return false;
     }
     setError("");
@@ -986,6 +1133,18 @@ function MusteriAnaSayfaIcerik({
     }
     if (field === "aracModeli") {
       setAracModeliHatasi(false);
+    }
+    if (field === "aracDurumu") {
+      setAracDurumuHatasi(false);
+    }
+    if (field === "lastikDurumu") {
+      setLastikDurumuHatasi(false);
+    }
+    if (field === "yakitTipi") {
+      setYakitTipiHatasi(false);
+    }
+    if (field === "kilitDurumu") {
+      setKilitDurumuHatasi(false);
     }
     if (field === "sorunDetay") {
       setSorunDetayHatasi(false);
@@ -1028,7 +1187,7 @@ function MusteriAnaSayfaIcerik({
       }
     }
 
-    /* Konum adımından çıkarken URL’yi şehir/ilçe ile senkronize et */
+    /* Konum adımından çıkarken URL’yi senkronize et — remount yok (push akışı sıfırlar) */
     if (step === "konum" && hedef !== "konum" && seciliSehir) {
       const yol = musteriKonumYolu(seciliSehir, seciliIlce || null);
       musteriFormTaslakKaydet({
@@ -1044,10 +1203,10 @@ function MusteriAnaSayfaIcerik({
       });
       if (
         typeof window !== "undefined" &&
+        yol &&
         window.location.pathname !== yol
       ) {
-        router.push(yol);
-        return;
+        window.history.replaceState(window.history.state, "", yol);
       }
     }
 
@@ -1055,16 +1214,9 @@ function MusteriAnaSayfaIcerik({
     setError("");
     window.requestAnimationFrame(() => {
       window.scrollTo({ top: 0, behavior: "auto" });
+      const main = document.querySelector("main");
+      if (main instanceof HTMLElement) main.scrollTop = 0;
     });
-  }
-
-  function yasalOnayaKaydir() {
-    window.setTimeout(() => {
-      yasalOnayRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }, 50);
   }
 
   async function konumKaydet(
@@ -1104,10 +1256,6 @@ function MusteriAnaSayfaIcerik({
   }
 
   function konumIzniToastGoster(mesaj: string) {
-    const header = document.getElementById("app-shell-header");
-    if (header) {
-      setKonumToastTop(Math.round(header.getBoundingClientRect().bottom) + 6);
-    }
     setKonumIzniToast(mesaj);
     if (konumToastTimerRef.current != null) {
       window.clearTimeout(konumToastTimerRef.current);
@@ -1192,14 +1340,16 @@ function MusteriAnaSayfaIcerik({
           ihaleSureTipi,
           ihaleOzelBitis: ihaleOzelBitis || undefined,
         });
+        /* Skip konum confirmation — go straight to sorun (no remount via router) */
+        setError("");
+        setStep("sorun");
         const yol = musteriKonumYolu(il, ilce);
         if (
           typeof window !== "undefined" &&
+          yol &&
           window.location.pathname !== yol
         ) {
-          router.replace(yol);
-        } else {
-          setStep("sorun");
+          window.history.replaceState(window.history.state, "", yol);
         }
       }
       setKonumIzni("granted");
@@ -1207,6 +1357,7 @@ function MusteriAnaSayfaIcerik({
     } catch (e) {
       if (gpsIstekRef.current !== istekId) return;
       setKonumBasarisiz(true);
+      setKonumSheetAcik(true);
       const code =
         e && typeof e === "object" && "code" in e
           ? (e as GeolocationPositionError).code
@@ -1226,6 +1377,67 @@ function MusteriAnaSayfaIcerik({
         setKonumIzniBekleniyor(false);
       }
     }
+  }
+
+  /** Şehir + ilçe ile manuel konum kaydı → sorun adımı */
+  async function konumManuelDevam(
+    sehir = seciliSehir,
+    ilce = seciliIlce
+  ): Promise<boolean> {
+    setError("");
+    if (gpsYukleniyor) gpsIptal();
+
+    if (arizaKonumGpsAlindi && form.adres) {
+      const ok = await adresKoordinatDoldur(false);
+      if (ok) {
+        adimGit("sorun");
+        return true;
+      }
+      return false;
+    }
+
+    if (sehir && ilce) {
+      const adresMetni =
+        form.adres.trim() || `${ilce}, ${sehir}, Türkiye`;
+      if (!form.lat || !form.lng) {
+        setAdresGeocodeYukleniyor(true);
+        try {
+          const g = await geocodeAdres(`${ilce}, ${sehir}, Türkiye`);
+          if (g) {
+            await konumKaydet(g.lat, g.lng, g.adres, false, "manuel");
+          } else {
+            setForm((f) => ({
+              ...f,
+              adres: adresMetni,
+              konumKaynak: "manuel",
+            }));
+          }
+        } finally {
+          setAdresGeocodeYukleniyor(false);
+        }
+      } else {
+        setForm((f) => ({
+          ...f,
+          adres: form.adres.trim() || adresMetni,
+          konumKaynak: "manuel",
+        }));
+      }
+      setArizaAdresDuzenle(false);
+      adimGit("sorun");
+      return true;
+    }
+
+    if (form.adres.trim().length >= 6) {
+      const ok = await adresKoordinatDoldur(false);
+      if (ok) {
+        adimGit("sorun");
+        return true;
+      }
+    }
+
+    setKonumSheetAcik(true);
+    setError("Otomatik konum alın veya şehir ve ilçe seçin.");
+    return false;
   }
 
   async function yaklasikKonumAl(hedef = false) {
@@ -1567,10 +1779,10 @@ function MusteriAnaSayfaIcerik({
   async function hedefIleriGit() {
     if (gpsYukleniyor) gpsIptal();
     if (hedefBilinmiyor) {
-      void cekiciBul();
+      adimGit("telefon");
       return;
     }
-    if (await adresKoordinatDoldur(true)) void cekiciBul();
+    if (await adresKoordinatDoldur(true)) adimGit("telefon");
   }
 
   const hedefSeciliMi = hedefOpsiyon != null;
@@ -1585,7 +1797,7 @@ function MusteriAnaSayfaIcerik({
     loading || adresGeocodeYukleniyor || !hedefGonderilebilir;
 
   const hedefGlowSinif =
-    "border-amber-400 bg-white text-slate-900 ring-2 ring-amber-300/80 shadow-[0_0_14px_3px_rgba(245,158,11,0.55)] animate-pulse";
+    "border-amber-400 bg-white text-slate-900 ring-2 ring-amber-300/80 shadow-[0_0_14px_3px_rgba(8,155,45,0.45)] animate-pulse";
   const hedefNormalSinif = "border-slate-200 bg-white text-slate-900";
 
   function hedefOneriSeciliMi(o: KonumOneri): boolean {
@@ -1689,13 +1901,25 @@ function MusteriAnaSayfaIcerik({
       const ok = await adresKoordinatDoldur(false);
       if (!ok) return;
     }
+    const telHata = telefonDogrulamaHatasi(form.telefon);
+    if (telHata) {
+      setError(telHata);
+      setBilgiAlanMesajlari((m) => ({ ...m, telefon: telHata }));
+      setStep("telefon");
+      return;
+    }
+    if (!form.ad.trim()) {
+      setError("İsminizi girin.");
+      setStep("telefon");
+      return;
+    }
     if (!yasalOnay) {
       setError("Talep göndermek için yasal metinleri onaylayın.");
       setBilgiAlanMesajlari((m) => ({
         ...m,
         yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
       }));
-      yasalOnayaKaydir();
+      setStep("telefon");
       return;
     }
     if (!form.adres) {
@@ -1713,12 +1937,22 @@ function MusteriAnaSayfaIcerik({
       setStep("ek_detay");
       return;
     }
-    if (sorunAracModeliGerekliMi(form.sorunTipi) && !form.aracModeli.trim()) {
-      setError("Araç modelini girin (ör. Audi A3 sedan).");
-      setStep("arac_modeli");
+    if (sorunLastikDurumuGerekliMi(form.sorunTipi) && !form.lastikDurumu.trim()) {
+      setError("Lastik durumunu seçin.");
+      setStep("lastik_durumu");
       return;
     }
-    if (sorunFotografGerekliMi(form.sorunTipi) && !fotografData) {
+    if (sorunYakitTipiGerekliMi(form.sorunTipi) && !form.yakitTipi.trim()) {
+      setError("Yakıt tipini seçin.");
+      setStep("yakit_tipi");
+      return;
+    }
+    if (sorunKilitDurumuGerekliMi(form.sorunTipi) && !form.kilitDurumu.trim()) {
+      setError("Kilit durumunu seçin.");
+      setStep("kilit_durumu");
+      return;
+    }
+    if (sorunFotografGerekliMi(form.sorunTipi) && fotografData.length === 0) {
       setError("Arıza fotoğrafı gerekli.");
       setStep("fotograf");
       return;
@@ -1747,20 +1981,15 @@ function MusteriAnaSayfaIcerik({
     setLoading(true);
     const hedefGerekli =
       sorunHedefKonumGerekliMi(form.sorunTipi) && !hedefBilinmiyor;
-    const hareketNotu =
-      aracHareket === "evet"
-        ? "Araç hareket ediyor"
-        : aracHareket === "hayir"
-          ? "Araç hareket etmiyor"
-          : "";
-    const sorunDetayGonder = [form.sorunDetay.trim(), hareketNotu]
-      .filter(Boolean)
-      .join(" · ");
+    const sorunDetayGonder = form.sorunDetay.trim();
     try {
       const res = await fetch("/api/talep", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ad: form.ad.trim(),
+          soyad: form.soyad.trim() || "-",
+          telefon: form.telefon.trim(),
           konum: {
             lat: form.lat,
             lng: form.lng,
@@ -1779,9 +2008,26 @@ function MusteriAnaSayfaIcerik({
             : {}),
           sorunTipi: form.sorunTipi,
           sorunDetay: sorunDetayGonder,
-          aracModeli: aracModeliMetniOlustur(form.aracTipi, form.aracModeli),
-          fotograf: fotografData || undefined,
-          sorun: sorunMetniOlustur(form.sorunTipi, sorunDetayGonder),
+          lastikDurumu: form.lastikDurumu.trim() || undefined,
+          yakitTipi: form.yakitTipi.trim() || undefined,
+          kilitDurumu: form.kilitDurumu.trim() || undefined,
+          aracTipi: form.aracTipi.trim() || undefined,
+          aracDurumu: form.aracDurumu.trim() || undefined,
+          aracModeli: aracDurumuMetniOlustur(
+            form.aracTipi,
+            aracDurumuEtiket(form.aracDurumu) ?? form.aracModeli
+          ),
+          fotograflar: fotografData.length ? fotografData : undefined,
+          sorun: (() => {
+            let metin = sorunMetniOlustur(form.sorunTipi, sorunDetayGonder);
+            const lastik = lastikDurumuEtiket(form.lastikDurumu);
+            if (lastik) metin = `${metin} · ${lastik}`;
+            const yakit = yakitTipiEtiket(form.yakitTipi);
+            if (yakit) metin = `${metin} · ${yakit}`;
+            const kilit = kilitDurumuEtiket(form.kilitDurumu);
+            if (kilit) metin = `${metin} · ${kilit}`;
+            return metin;
+          })(),
           ihaleSureTipi,
           ...(ihaleSureTipi === "ozel" && ihaleOzelBitis
             ? { ihaleOzelBitis }
@@ -1918,16 +2164,67 @@ function MusteriAnaSayfaIcerik({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca hedef adımına girildiğinde
   }, [step, cozumOneriAktif]);
 
+  /** Konum alındıysa onay ekranını atla → sorun (02) */
+  useEffect(() => {
+    if (step !== "konum") return;
+    if (!arizaKonumGpsAlindi || !form.adres.trim()) return;
+    if (arizaAdresDuzenle || gpsYukleniyor) return;
+    const { il, ilce } = parseIlIlce(form.adres);
+    const sehir = seciliSehir || il;
+    const ilceAd = seciliIlce || ilce;
+    if (sehir && !seciliSehir) setSeciliSehir(sehir);
+    if (ilceAd && !seciliIlce) setSeciliIlce(ilceAd);
+    musteriFormTaslakKaydet({
+      v: 1,
+      step: "sorun",
+      form,
+      yasalOnay,
+      fotografOnizleme,
+      fotografData,
+      hedefBilinmiyor,
+      ihaleSureTipi,
+      ihaleOzelBitis: ihaleOzelBitis || undefined,
+    });
+    setError("");
+    setStep("sorun");
+    const yol = musteriKonumYolu(sehir || null, ilceAd || null);
+    if (
+      typeof window !== "undefined" &&
+      yol &&
+      window.location.pathname !== yol
+    ) {
+      window.history.replaceState(window.history.state, "", yol);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when GPS location is ready on konum
+  }, [
+    step,
+    arizaKonumGpsAlindi,
+    form.adres,
+    arizaAdresDuzenle,
+    gpsYukleniyor,
+  ]);
+
   const progressSteps = progressAdimlari(form.sorunTipi, hedefKonumGerekli);
   const progressCurrent =
     Math.max(1, progressSteps.indexOf(step as (typeof progressSteps)[number]) + 1);
 
-  const adimUstBilgi = (_compact: boolean) =>
+  const adimUstBilgi =
     step === "giris" ? null : (
-      <FlowProgress
-        current={progressCurrent}
-        total={progressSteps.length}
-      />
+      <div className="mx-auto w-full max-w-[14rem] space-y-1">
+        <HizmetVerenSayimAlani
+          sorunTipi={form.sorunTipi || null}
+          sehirAd={seciliSehir || null}
+          compact
+        />
+        <FlowProgress
+          current={progressCurrent}
+          total={progressSteps.length}
+          onStepClick={(i) => {
+            const hedef = progressSteps[i];
+            if (hedef) adimGit(hedef);
+          }}
+        />
+      </div>
     );
 
   const seoIcerik = seoIcerikProp ?? anaSayfaSeoIcerik();
@@ -1947,40 +2244,61 @@ function MusteriAnaSayfaIcerik({
     (seoLinkSehir === ISTANBUL_IL ? ISTANBUL_ANA_HERO : seoIcerik.h1);
 
   const girisEkrani = step === "giris";
-  /** YARDIM AL sonrası: footer yok, 100vh, sayfa scroll yok (teklif sayfasına kadar) */
+  /** YARDIM AL sonrası: sticky alt nav + scrollable main (içerik sığmazsa kaydır) */
   const akisKilitli = !girisEkrani;
 
   useEffect(() => {
     if (!akisKilitli) return;
-    const html = document.documentElement;
-    const body = document.body;
-    const prevHtml = html.style.overflow;
-    const prevBody = body.style.overflow;
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
     window.scrollTo(0, 0);
-    return () => {
-      html.style.overflow = prevHtml;
-      body.style.overflow = prevBody;
-    };
-  }, [akisKilitli]);
-
-  useEffect(() => {
-    if (!akisKilitli) return;
-    window.scrollTo(0, 0);
+    const main = document.querySelector("main");
+    if (main instanceof HTMLElement) main.scrollTop = 0;
   }, [step, akisKilitli]);
 
-  const navGeri = girisEkrani ? null : (
-    <button
-      type="button"
-      onClick={oncekiAdimaDon}
-      className="inline-flex min-h-[var(--acb-touch)] items-center px-1 text-sm font-semibold text-[var(--acb-muted)] touch-manipulation"
-    >
-      Geri
-    </button>
-  );
+  function yardimAlBaslat() {
+    setError("");
+    setKonumSheetAcik(true);
+    window.scrollTo(0, 0);
+    posthogOlayYakala("yardim_al_tiklandi", {});
+    musteriFunnelOlayBirKez(funnelId, "form_adim_giris", {
+      props: {},
+    });
+    /* Konum zaten varsa onay ekranını atla → sorun */
+    if (arizaKonumGpsAlindi && form.adres.trim()) {
+      adimGit("sorun");
+      return;
+    }
+    adimGit("konum");
+    if (gpsGuvenli) {
+      void konumAl(false);
+    }
+  }
 
-  const navTrailing = girisEkrani ? null : adimUstBilgi(true);
+  function adresSifirla() {
+    gpsIptal();
+    setGpsYukleniyor(false);
+    setArizaAdresDuzenle(true);
+    setForm((f) => ({
+      ...f,
+      lat: 0,
+      lng: 0,
+      adres: "",
+      konumKaynak: undefined,
+    }));
+    setSeciliSehir(varsayilanSehir ?? "");
+    setSeciliIlce(varsayilanIlce ?? "");
+    setError("");
+    setBilgiMesaj("");
+    setKonumBasarisiz(false);
+    musteriFormTaslakSil();
+    setStep("giris");
+    setKonumSheetAcik(false);
+    window.scrollTo(0, 0);
+  }
+
+  useEffect(() => {
+    const h = window.location.hostname;
+    setLocalDev(h === "localhost" || h === "127.0.0.1");
+  }, []);
 
   return (
     <MobileShell
@@ -1989,56 +2307,85 @@ function MusteriAnaSayfaIcerik({
       lockViewport={akisKilitli}
       footer={girisEkrani ? <YasalSiteFooter /> : undefined}
     >
+      {localDev ? (
+        <div
+          className="fixed left-2 z-[70] flex flex-col gap-1"
+          style={{
+            top:
+              girisEkrani && !girisHeaderDocked
+                ? "max(0.35rem, env(safe-area-inset-top))"
+                : "calc(4.65rem + env(safe-area-inset-top))",
+          }}
+        >
+          <button
+            type="button"
+            onClick={adresSifirla}
+            className="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-rose-700 shadow-sm touch-manipulation active:scale-[0.97]"
+            title="Localhost: kayıtlı adresi temizle"
+          >
+            Adres sıfırla
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              cerezleriSifirla();
+              window.location.reload();
+            }}
+            className="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-rose-700 shadow-sm touch-manipulation active:scale-[0.97]"
+            title="Localhost: çerezleri ve onay tercihini temizle"
+          >
+            Çerezleri sıfırla
+          </button>
+        </div>
+      ) : null}
       <OpeningLogo
         forceDocked={!girisEkrani}
         scrollDock={girisEkrani}
+        onDockedChange={setGirisHeaderDocked}
+        onYardimAl={girisEkrani ? yardimAlBaslat : undefined}
         onClick={() => {
           setStep("giris");
           setKonumSheetAcik(false);
           setError("");
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
-        leading={navGeri}
-        trailing={navTrailing}
+        center={adimUstBilgi}
       />
-      {step === "konum" && !arizaKonumGpsAlindi && gpsGuvenli ? (
+      {step === "konum" && !arizaKonumGpsAlindi ? (
         <AcilYardimStickyCta
+          onGeri={oncekiAdimaDon}
+          label={
+            konumBasarisiz || (seciliSehir && seciliIlce) || !gpsGuvenli
+              ? "Devam et"
+              : ACB_CTA.konumOtomatikAl
+          }
           onClick={() => {
             setError("");
+            const manuelHazir = !!(seciliSehir && seciliIlce);
+            if (
+              manuelHazir ||
+              konumBasarisiz ||
+              !gpsGuvenli
+            ) {
+              if (!manuelHazir) {
+                setKonumSheetAcik(true);
+                setError("Şehir ve ilçe seçin.");
+                return;
+              }
+              void konumManuelDevam();
+              return;
+            }
             void konumAl(false);
           }}
-          disabled={gpsYukleniyor}
+          disabled={gpsYukleniyor || adresGeocodeYukleniyor}
           yukleniyor={gpsYukleniyor}
         />
       ) : null}
-      {konumIzniToast && (
-        <div
-          role="status"
-          className="fixed inset-x-0 z-20 flex justify-center px-3 pointer-events-none"
-          style={{ top: konumToastTop }}
-        >
-          <div className="pointer-events-auto w-full max-w-lg rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-snug text-amber-950 shadow-md">
-            {konumIzniToast}
-          </div>
-        </div>
-      )}
-
       {step === "giris" && (
         <>
-          <EmergencyHero
-            onYardimAl={() => {
-              setError("");
-              setKonumSheetAcik(true);
-              window.scrollTo(0, 0);
-              adimGit("konum");
-              posthogOlayYakala("yardim_al_tiklandi", {});
-              musteriFunnelOlayBirKez(funnelId, "form_adim_giris", {
-                props: {},
-              });
-            }}
-          />
+          <EmergencyHero ctaDocked={girisHeaderDocked} />
           <div className="mt-10 space-y-8 border-t border-[var(--acb-border)] pt-8">
-            <div id="nasil-calisir">
+            <div id="nasil-calisir" className="scroll-mt-[calc(4.75rem+env(safe-area-inset-top))]">
               <AnaSayfaOzellikSeridi />
             </div>
             <AnaSayfaFiyatHesaplamaTeaser />
@@ -2057,7 +2404,11 @@ function MusteriAnaSayfaIcerik({
         </>
       )}
 
-      {error && step !== "giris" && (
+      {error &&
+        step !== "giris" &&
+        step !== "sorun" &&
+        step !== "konum" &&
+        step !== "telefon" && (
         <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
@@ -2071,7 +2422,7 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {step === "sorun" && (
-        <div className="space-y-5 flex-1 min-h-0 overflow-hidden animate-fade-in">
+        <div className="space-y-5 animate-fade-in">
           <div className="space-y-2">
             <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
               Nasıl yardımcı olalım?
@@ -2095,7 +2446,20 @@ function MusteriAnaSayfaIcerik({
             detay={form.sorunDetay}
             izgara
             onTipSec={(id) => {
+              if (sorunDevamTimerRef.current != null) {
+                window.clearTimeout(sorunDevamTimerRef.current);
+                sorunDevamTimerRef.current = null;
+              }
               update("sorunTipi", id);
+              if (id !== "lastik") {
+                update("lastikDurumu", "");
+              }
+              if (id !== "yakit") {
+                update("yakitTipi", "");
+              }
+              if (id !== "kilit") {
+                update("kilitDurumu", "");
+              }
               posthogOlayYakala("sorun_secildi", { sorun_tipi: id });
               musteriFunnelOlayBirKez(funnelId, "service_selected", {
                 props: { sorun_tipi: id },
@@ -2110,9 +2474,20 @@ function MusteriAnaSayfaIcerik({
                 content_id: id,
                 content_name: label,
               });
-              const sonraki = sonrakiAdim("sorun");
+              setError("");
+              /* update async — sonraki adımı yeni tip ile hesapla */
+              const sirasi = aktifAdimlar(
+                id,
+                sorunHedefKonumGerekliMi(id)
+              );
+              const idx = sirasi.indexOf("sorun");
+              const sonraki =
+                idx >= 0 && idx < sirasi.length - 1 ? sirasi[idx + 1]! : null;
               if (sonraki) {
-                window.setTimeout(() => adimGit(sonraki), 180);
+                sorunDevamTimerRef.current = window.setTimeout(() => {
+                  sorunDevamTimerRef.current = null;
+                  adimGit(sonraki);
+                }, ADIM_OTOMATIK_GECIS_MS);
               }
             }}
             onDetayChange={(v) => update("sorunDetay", v)}
@@ -2124,6 +2499,10 @@ function MusteriAnaSayfaIcerik({
             devamGlow={!!form.sorunTipi}
             onGeri={oncekiAdimaDon}
             onDevam={() => {
+              if (sorunDevamTimerRef.current != null) {
+                window.clearTimeout(sorunDevamTimerRef.current);
+                sorunDevamTimerRef.current = null;
+              }
               if (!form.sorunTipi) {
                 setError("Lütfen bir hizmet seçin.");
                 return;
@@ -2136,33 +2515,297 @@ function MusteriAnaSayfaIcerik({
         </div>
       )}
 
+      {step === "kilit_durumu" && (
+        <div className="space-y-5 animate-fade-in">
+          <div className="space-y-2">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+              Kilit durumu
+            </h2>
+            <p className="text-sm text-[var(--acb-muted)]">
+              Durumu seçin — zorunlu.
+            </p>
+          </div>
+          <div
+            className="grid grid-cols-1 gap-2"
+            role="listbox"
+            aria-label="Kilit durumu"
+          >
+            {KILIT_DURUMLARI.map((d) => {
+              const secili = form.kilitDurumu === d.id;
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  role="option"
+                  aria-selected={secili}
+                  onClick={() => {
+                    if (kilitDurumuDevamTimerRef.current != null) {
+                      window.clearTimeout(kilitDurumuDevamTimerRef.current);
+                      kilitDurumuDevamTimerRef.current = null;
+                    }
+                    setKilitDurumuHatasi(false);
+                    setError("");
+                    if (secili) {
+                      update("kilitDurumu", "");
+                      return;
+                    }
+                    update("kilitDurumu", d.id);
+                    kilitDurumuDevamTimerRef.current = window.setTimeout(() => {
+                      kilitDurumuDevamTimerRef.current = null;
+                      const sonraki = sonrakiAdim("kilit_durumu");
+                      if (sonraki) adimGit(sonraki);
+                    }, ADIM_OTOMATIK_GECIS_MS);
+                  }}
+                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4 py-3.5 flex items-center gap-2 transition touch-manipulation active:scale-[0.99] ${
+                    secili
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
+                      : kilitDurumuHatasi
+                        ? "border-red-400 bg-white"
+                        : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
+                  }`}
+                >
+                  <span className="font-semibold text-sm flex-1 min-w-0 text-[var(--acb-dark)]">
+                    {d.etiket}
+                  </span>
+                  {secili ? (
+                    <span className="shrink-0 text-[var(--acb-green)] text-base">
+                      ✓
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+          {kilitDurumuHatasi && (
+            <p className="text-sm text-red-600" role="alert">
+              Kilit durumunu seçin.
+            </p>
+          )}
+          <AdimAltNav
+            devamMetin="Devam et"
+            devamGlow={!!form.kilitDurumu}
+            onGeri={oncekiAdimaDon}
+            onDevam={() => {
+              if (kilitDurumuDevamTimerRef.current != null) {
+                window.clearTimeout(kilitDurumuDevamTimerRef.current);
+                kilitDurumuDevamTimerRef.current = null;
+              }
+              if (!kilitDurumuAdimiDevam()) return;
+              const sonraki = sonrakiAdim("kilit_durumu");
+              if (sonraki) adimGit(sonraki);
+            }}
+          />
+        </div>
+      )}
+
+      {step === "yakit_tipi" && (
+        <div className="space-y-5 animate-fade-in">
+          <div className="space-y-2">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+              Yakıt tipi
+            </h2>
+            <p className="text-sm text-[var(--acb-muted)]">
+              Aracınızın yakıt / şarj tipini seçin — zorunlu.
+            </p>
+          </div>
+          <div
+            className="grid grid-cols-1 gap-2"
+            role="listbox"
+            aria-label="Yakıt tipi"
+          >
+            {YAKIT_TIPLERI.map((d) => {
+              const secili = form.yakitTipi === d.id;
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  role="option"
+                  aria-selected={secili}
+                  onClick={() => {
+                    if (yakitTipiDevamTimerRef.current != null) {
+                      window.clearTimeout(yakitTipiDevamTimerRef.current);
+                      yakitTipiDevamTimerRef.current = null;
+                    }
+                    setYakitTipiHatasi(false);
+                    setError("");
+                    if (secili) {
+                      update("yakitTipi", "");
+                      return;
+                    }
+                    update("yakitTipi", d.id);
+                    yakitTipiDevamTimerRef.current = window.setTimeout(() => {
+                      yakitTipiDevamTimerRef.current = null;
+                      const sonraki = sonrakiAdim("yakit_tipi");
+                      if (sonraki) adimGit(sonraki);
+                    }, ADIM_OTOMATIK_GECIS_MS);
+                  }}
+                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4 py-3.5 flex items-center gap-2 transition touch-manipulation active:scale-[0.99] ${
+                    secili
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
+                      : yakitTipiHatasi
+                        ? "border-red-400 bg-white"
+                        : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
+                  }`}
+                >
+                  <span className="font-semibold text-sm flex-1 min-w-0 text-[var(--acb-dark)]">
+                    {d.etiket}
+                  </span>
+                  {secili ? (
+                    <span className="shrink-0 text-[var(--acb-green)] text-base">
+                      ✓
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+          {yakitTipiHatasi && (
+            <p className="text-sm text-red-600" role="alert">
+              Yakıt tipini seçin.
+            </p>
+          )}
+          <AdimAltNav
+            devamMetin="Devam et"
+            devamGlow={!!form.yakitTipi}
+            onGeri={oncekiAdimaDon}
+            onDevam={() => {
+              if (yakitTipiDevamTimerRef.current != null) {
+                window.clearTimeout(yakitTipiDevamTimerRef.current);
+                yakitTipiDevamTimerRef.current = null;
+              }
+              if (!yakitTipiAdimiDevam()) return;
+              const sonraki = sonrakiAdim("yakit_tipi");
+              if (sonraki) adimGit(sonraki);
+            }}
+          />
+        </div>
+      )}
+
+      {step === "lastik_durumu" && (
+        <div className="space-y-5 animate-fade-in">
+          <div className="space-y-2">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+              Lastik durumu
+            </h2>
+            <p className="text-sm text-[var(--acb-muted)]">
+              Lastiğin durumunu seçin — zorunlu.
+            </p>
+          </div>
+          <div
+            className="grid grid-cols-1 gap-2"
+            role="listbox"
+            aria-label="Lastik durumu"
+          >
+            {LASTIK_DURUMLARI.map((d) => {
+              const secili = form.lastikDurumu === d.id;
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  role="option"
+                  aria-selected={secili}
+                  onClick={() => {
+                    if (lastikDurumuDevamTimerRef.current != null) {
+                      window.clearTimeout(lastikDurumuDevamTimerRef.current);
+                      lastikDurumuDevamTimerRef.current = null;
+                    }
+                    setLastikDurumuHatasi(false);
+                    setError("");
+                    if (secili) {
+                      update("lastikDurumu", "");
+                      return;
+                    }
+                    update("lastikDurumu", d.id);
+                    lastikDurumuDevamTimerRef.current = window.setTimeout(() => {
+                      lastikDurumuDevamTimerRef.current = null;
+                      const sonraki = sonrakiAdim("lastik_durumu");
+                      if (sonraki) adimGit(sonraki);
+                    }, ADIM_OTOMATIK_GECIS_MS);
+                  }}
+                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4 py-3.5 flex items-center gap-2 transition touch-manipulation active:scale-[0.99] ${
+                    secili
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
+                      : lastikDurumuHatasi
+                        ? "border-red-400 bg-white"
+                        : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
+                  }`}
+                >
+                  <span
+                    className={`font-semibold text-sm flex-1 min-w-0 text-[var(--acb-dark)]`}
+                  >
+                    {d.etiket}
+                  </span>
+                  {secili ? (
+                    <span className="shrink-0 text-[var(--acb-green)] text-base">
+                      ✓
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+          <div
+            className="rounded-[var(--acb-radius-lg)] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 leading-relaxed"
+            role="note"
+          >
+            {LASTIK_DURUMU_BILGI}
+          </div>
+          {lastikDurumuHatasi && (
+            <p className="text-sm text-red-600" role="alert">
+              Lastik durumunu seçin.
+            </p>
+          )}
+          <AdimAltNav
+            devamMetin="Devam et"
+            devamGlow={!!form.lastikDurumu}
+            onGeri={oncekiAdimaDon}
+            onDevam={() => {
+              if (lastikDurumuDevamTimerRef.current != null) {
+                window.clearTimeout(lastikDurumuDevamTimerRef.current);
+                lastikDurumuDevamTimerRef.current = null;
+              }
+              if (!lastikDurumuAdimiDevam()) return;
+              const sonraki = sonrakiAdim("lastik_durumu");
+              if (sonraki) adimGit(sonraki);
+            }}
+          />
+        </div>
+      )}
+
       {step === "fotograf" && (
-        <div className="space-y-4 flex-1 min-h-0 overflow-hidden animate-fade-in">
-          <h2 className="text-xl font-bold">Arıza Fotoğrafı</h2>
+        <div className="space-y-4 animate-fade-in">
+          <h2 className="text-xl font-bold">
+            Araç ve Arıza Fotoğrafı (isteğe bağlı)
+          </h2>
           <p className="text-slate-500 text-sm">
-            Bir fotoğraf ekleyin — çekici doğru teklif verebilsin (isteğe
-            bağlı).
+            Araç ve arıza fotoğrafı yükleyiniz — çekici doğru teklif
+            verebilsin.
           </p>
-          <div ref={fotografRef} className="scroll-mt-44">
+          <div ref={fotografRef} className="scroll-mt-44 space-y-3">
             <ArizaFotografAlani
-              onizleme={fotografOnizleme}
+              fotograflar={fotografData.length ? fotografData : fotografOnizleme}
               invalid={fotografHatasi}
-              zorunlu={sorunFotografGerekliMi(form.sorunTipi)}
-              onDegisti={(dataUrl) => {
-                setFotografOnizleme(dataUrl);
-                setFotografData(dataUrl);
-                if (dataUrl) setFotografHatasi(false);
+              onDegisti={(urls) => {
+                setFotografOnizleme(urls);
+                setFotografData(urls);
+                if (urls.length) setFotografHatasi(false);
               }}
             />
             {fotografHatasi && (
               <p className="text-sm text-red-600 mt-1" role="alert">
-                Arıza fotoğrafı zorunludur — çekici doğru teklif verebilsin.
+                Araç ve arıza fotoğrafı zorunludur — çekici doğru teklif
+                verebilsin.
+              </p>
+            )}
+            {!fotografHatasi && (
+              <p className="text-sm text-slate-500 text-center leading-snug">
+                Fotoğrafsız devam edebilirsiniz.
               </p>
             )}
           </div>
           <AdimAltNav
             devamMetin={
-              fotografData || fotografOnizleme
+              fotografData.length || fotografOnizleme.length
                 ? "Devam et"
                 : "Fotoğrafsız devam et"
             }
@@ -2177,13 +2820,15 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {step === "arac_tipi" && (
-        <div className="space-y-4 flex-1 min-h-0 overflow-hidden animate-fade-in">
-          <h2 className="text-xl font-bold">Araç Tipi</h2>
-          <p className="text-slate-500 text-sm">
-            Aracınızın tipini seçin (isteğe bağlı).
-          </p>
+        <div className="flex min-h-[calc(100dvh-12.5rem)] flex-col gap-3 animate-fade-in">
+          <div className="shrink-0 space-y-1">
+            <h2 className="text-xl font-bold">Araç Tipi</h2>
+            <p className="text-slate-500 text-sm">
+              Aracınızın tipini seçin (isteğe bağlı).
+            </p>
+          </div>
           <div
-            className="grid grid-cols-1 gap-1.5"
+            className="grid flex-1 auto-rows-fr grid-cols-3 content-stretch gap-2 [@media(min-height:740px)]:grid-cols-2 [@media(min-height:740px)]:gap-2.5"
             role="listbox"
             aria-label="Araç tipi"
           >
@@ -2195,40 +2840,55 @@ function MusteriAnaSayfaIcerik({
                   type="button"
                   role="option"
                   aria-selected={secili}
-                  onClick={() => update("aracTipi", secili ? "" : t.id)}
-                  className={`w-full text-left rounded-xl border px-3.5 py-2.5 flex items-center gap-2.5 transition touch-manipulation ${
+                  onClick={() => {
+                    if (aracTipiDevamTimerRef.current != null) {
+                      window.clearTimeout(aracTipiDevamTimerRef.current);
+                      aracTipiDevamTimerRef.current = null;
+                    }
+                    if (secili) {
+                      update("aracTipi", "");
+                      return;
+                    }
+                    update("aracTipi", t.id);
+                    aracTipiDevamTimerRef.current = window.setTimeout(() => {
+                      aracTipiDevamTimerRef.current = null;
+                      const sonraki = sonrakiAdim("arac_tipi");
+                      if (sonraki) adimGit(sonraki);
+                    }, ADIM_OTOMATIK_GECIS_MS);
+                  }}
+                  className={`flex h-full min-h-[6.25rem] w-full flex-col items-center justify-center gap-2 rounded-xl border px-2 py-3 text-center transition touch-manipulation [@media(min-height:740px)]:min-h-[7.25rem] ${
                     secili
-                      ? "border-amber-500 bg-amber-50 ring-2 ring-amber-500/25"
-                      : "border-slate-200 bg-white hover:border-amber-300"
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
+                      : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
                   }`}
                 >
                   <span
-                    className={`inline-flex size-8 shrink-0 items-center justify-center ${
-                      secili ? "text-amber-700" : "text-slate-500"
+                    className={`inline-flex size-14 items-center justify-center [@media(min-height:740px)]:size-[4.25rem] ${
+                      secili
+                        ? "text-[var(--acb-green)]"
+                        : "text-[var(--acb-muted)]"
                     }`}
                   >
-                    <AracTipiIkon tip={t.id} className="size-8" />
+                    <AracTipiIkon
+                      tip={t.id}
+                      className="size-14 [@media(min-height:740px)]:size-[4.25rem]"
+                    />
                   </span>
-                  <span
-                    className={`font-medium text-sm flex-1 min-w-0 ${
-                      secili ? "text-amber-900" : "text-slate-800"
-                    }`}
-                  >
+                  <span className="px-0.5 text-xs font-medium leading-tight text-[var(--acb-dark)] [@media(min-height:740px)]:text-[13px]">
                     {t.etiket}
                   </span>
-                  {secili ? (
-                    <span className="shrink-0 text-amber-600 text-base">
-                      ✓
-                    </span>
-                  ) : null}
                 </button>
               );
             })}
           </div>
           <AdimAltNav
-            devamMetin="Modeli gir"
+            devamMetin="Devam et"
             onGeri={oncekiAdimaDon}
             onDevam={() => {
+              if (aracTipiDevamTimerRef.current != null) {
+                window.clearTimeout(aracTipiDevamTimerRef.current);
+                aracTipiDevamTimerRef.current = null;
+              }
               const sonraki = sonrakiAdim("arac_tipi");
               if (sonraki) adimGit(sonraki);
             }}
@@ -2237,7 +2897,7 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {step === "arac_modeli" && (
-        <div className="space-y-5 flex-1 min-h-0 overflow-hidden animate-fade-in">
+        <div className="space-y-5 animate-fade-in">
           <div className="space-y-2">
             <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
               Aracın hangisi?
@@ -2293,58 +2953,83 @@ function MusteriAnaSayfaIcerik({
         </div>
       )}
 
-      {step === "hareket" && (
-        <div className="space-y-5 flex-1 min-h-0 overflow-hidden animate-fade-in">
-          <div className="space-y-2">
-            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
-              Aracın hareket ediyor mu?
-            </h2>
-            <p className="text-sm text-[var(--acb-muted)]">
-              Doğru ekip için bilmemiz yeterli.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-3">
-            {(
-              [
-                { id: "evet" as const, label: "Hareket ediyor" },
-                { id: "hayir" as const, label: "Hareket etmiyor" },
-              ] as const
-            ).map((opt) => {
-              const secili = aracHareket === opt.id;
+      {step === "arac_durumu" && (
+        <div className="space-y-4 animate-fade-in">
+          <h2 className="text-xl font-bold">Aracın Durumu</h2>
+          <p className="text-slate-500 text-sm">
+            Çekici doğru ekipmanla gelsin — aracın durumunu seçin.
+          </p>
+          <div
+            className="grid grid-cols-1 gap-1.5 scroll-mt-44"
+            role="listbox"
+            aria-label="Araç durumu"
+          >
+            {ARAC_DURUMLARI.map((d) => {
+              const secili = form.aracDurumu === d.id;
               return (
                 <button
-                  key={opt.id}
+                  key={d.id}
                   type="button"
+                  role="option"
+                  aria-selected={secili}
                   onClick={() => {
-                    setAracHareket(opt.id);
-                    window.setTimeout(() => {
-                      const sonraki = sonrakiAdim("hareket");
+                    if (aracDurumuDevamTimerRef.current != null) {
+                      window.clearTimeout(aracDurumuDevamTimerRef.current);
+                      aracDurumuDevamTimerRef.current = null;
+                    }
+                    setAracDurumuHatasi(false);
+                    setError("");
+                    if (secili) {
+                      update("aracDurumu", "");
+                      return;
+                    }
+                    update("aracDurumu", d.id);
+                    aracDurumuDevamTimerRef.current = window.setTimeout(() => {
+                      aracDurumuDevamTimerRef.current = null;
+                      const sonraki = sonrakiAdim("arac_durumu");
                       if (sonraki) adimGit(sonraki);
-                    }, 160);
+                    }, ADIM_OTOMATIK_GECIS_MS);
                   }}
-                  className={`min-h-[4.5rem] rounded-[var(--acb-radius-lg)] border px-5 py-4 text-left text-lg font-semibold touch-manipulation transition active:scale-[0.99] ${
+                  className={`w-full text-left rounded-xl border px-3.5 py-3 flex items-center gap-2 transition touch-manipulation ${
                     secili
-                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] text-[var(--acb-dark)]"
-                      : "border-[var(--acb-border)] bg-white text-[var(--acb-dark)] hover:border-[color-mix(in_srgb,var(--acb-green)_40%,white)]"
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
+                      : aracDurumuHatasi
+                        ? "border-red-400 bg-white"
+                        : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
                   }`}
                 >
-                  {opt.label}
+                  <span
+                    className={`font-medium text-sm flex-1 min-w-0 ${
+                      secili ? "text-[var(--acb-dark)]" : "text-[var(--acb-dark)]"
+                    }`}
+                  >
+                    {d.etiket}
+                  </span>
+                  {secili ? (
+                    <span className="shrink-0 text-[var(--acb-green)] text-base">
+                      ✓
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
           </div>
+          {aracDurumuHatasi && (
+            <p className="text-sm text-red-600" role="alert">
+              Araç durumunu seçin.
+            </p>
+          )}
           <AdimAltNav
-            devamMetin={aracHareket ? "Devam et" : "Önce seç"}
-            devamDisabled={!aracHareket}
-            devamGlow={!!aracHareket}
+            devamMetin="Devam et"
+            devamGlow={!!form.aracDurumu}
             onGeri={oncekiAdimaDon}
             onDevam={() => {
-              if (!aracHareket) {
-                setError("Lütfen bir seçenek işaretleyin.");
-                return;
+              if (aracDurumuDevamTimerRef.current != null) {
+                window.clearTimeout(aracDurumuDevamTimerRef.current);
+                aracDurumuDevamTimerRef.current = null;
               }
-              setError("");
-              const sonraki = sonrakiAdim("hareket");
+              if (!aracDurumuAdimiDevam()) return;
+              const sonraki = sonrakiAdim("arac_durumu");
               if (sonraki) adimGit(sonraki);
             }}
           />
@@ -2352,55 +3037,13 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {step === "ek_detay" && (
-        <div className="space-y-5 flex-1 min-h-0 overflow-hidden animate-fade-in">
+        <div className="space-y-5 animate-fade-in">
           <div className="space-y-2">
-            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
-              Her şey hazır.
-            </h2>
-            <p className="text-sm text-[var(--acb-muted)]">
-              {hedefKonumGerekli
-                ? "Özeti kontrol et — ardından çekilecek yeri seç."
-                : "Özeti kontrol et ve yardım bul."}
+            <h2 className="text-xl font-bold">Teklif Notu (isteğe bağlı)</h2>
+            <p className="text-sm text-slate-500">
+              Çekiciye iletilecek kısa not — doğru teklif için yardımcı olur.
             </p>
           </div>
-
-          <Card className="!border-[var(--acb-border)] !rounded-[var(--acb-radius-lg)] space-y-4 !p-5">
-            {form.adres ? (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--acb-muted)]">
-                  Konum
-                </p>
-                <p className="mt-1 text-base font-semibold text-[var(--acb-dark)] leading-snug">
-                  {form.adres}
-                </p>
-              </div>
-            ) : null}
-            {form.sorunTipi ? (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--acb-muted)]">
-                  Hizmet
-                </p>
-                <p className="mt-1 text-base font-semibold text-[var(--acb-dark)]">
-                  {sorunTipiBul(form.sorunTipi)?.shortLabel ??
-                    sorunTipiBul(form.sorunTipi)?.label ??
-                    form.sorunTipi}
-                </p>
-              </div>
-            ) : null}
-            {(form.aracModeli || aracMarka) && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--acb-muted)]">
-                  Araç
-                </p>
-                <p className="mt-1 text-base font-semibold text-[var(--acb-dark)]">
-                  {form.aracModeli || aracMarka}
-                  {aracHareket
-                    ? ` · ${aracHareket === "evet" ? "Hareket ediyor" : "Hareket etmiyor"}`
-                    : ""}
-                </p>
-              </div>
-            )}
-          </Card>
 
           {form.sorunTipi === "diger" ? (
             <label className="block space-y-1.5">
@@ -2415,12 +3058,12 @@ function MusteriAnaSayfaIcerik({
                   /* autoFocus ortayı kaydırır; üstte kalsın */
                   el.focus({ preventScroll: true });
                 }}
-                rows={3}
-                placeholder="Sorununuzu kısaca yazın…"
+                rows={4}
+                placeholder={sorunTeklifNotuPlaceholder(form.sorunTipi)}
                 value={form.sorunDetay}
                 onChange={(e) => update("sorunDetay", e.target.value)}
                 aria-invalid={sorunDetayHatasi || undefined}
-                className={`w-full rounded-xl bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 resize-none ${
+                className={`w-full rounded-xl bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 resize-none whitespace-pre-line ${
                   sorunDetayHatasi
                     ? "border-red-500 ring-red-500/30 focus:ring-red-500/40"
                     : "border-slate-200 focus:ring-amber-500/40 focus:border-amber-500"
@@ -2434,74 +3077,35 @@ function MusteriAnaSayfaIcerik({
             </label>
           ) : (
             <TextArea
-              label="Ek detay (isteğe bağlı)"
-              placeholder="Örn: Otoyol km 42, sağ şeritteyim"
+              placeholder={sorunTeklifNotuPlaceholder(form.sorunTipi)}
               value={form.sorunDetay}
               onChange={(e) => update("sorunDetay", e.target.value)}
-              rows={2}
+              rows={4}
+              className="whitespace-pre-line"
+              aria-label="Teklif notu"
             />
           )}
 
-          {!hedefKonumGerekli ? (
-            <div ref={yasalOnayRef} className="scroll-mt-28 space-y-2">
-              <YasalOnayKutusu
-                checked={yasalOnay}
-                onChange={(checked) => {
-                  setYasalOnay(checked);
-                  if (checked) {
-                    setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
-                  }
-                }}
-                invalid={!!bilgiAlanMesajlari.yasalOnay}
-              />
-              {bilgiAlanMesajlari.yasalOnay && (
-                <p className="text-sm text-red-600" role="alert">
-                  {bilgiAlanMesajlari.yasalOnay}
-                </p>
-              )}
-            </div>
-          ) : null}
+          {form.sorunTipi !== "diger" && (
+            <p className="text-sm text-slate-500 text-center leading-snug">
+              Burayı doldurmadan ilerleyebilirsiniz.
+            </p>
+          )}
 
           <AdimAltNav
-            devamMetin={
-              loading ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Spinner className="size-4 border-white/40 border-t-white" />
-                  Gönderiliyor…
-                </span>
-              ) : hedefKonumGerekli ? (
-                "Çekilecek yeri seç"
-              ) : (
-                ACB_CTA.yardimBul
-              )
-            }
-            devamDisabled={loading}
-            devamGlow={!hedefKonumGerekli && yasalOnay}
+            devamMetin="Devam et"
             onGeri={oncekiAdimaDon}
             onDevam={() => {
               if (!ekDetayAdimiDevam()) return;
               const sonraki = sonrakiAdim("ek_detay");
-              if (sonraki) {
-                adimGit(sonraki);
-                return;
-              }
-              if (!yasalOnay) {
-                setBilgiAlanMesajlari((m) => ({
-                  ...m,
-                  yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
-                }));
-                setError("Talep göndermek için yasal metinleri onaylayın.");
-                yasalOnayaKaydir();
-                return;
-              }
-              void cekiciBul();
+              if (sonraki) adimGit(sonraki);
             }}
           />
         </div>
       )}
 
       {step === "ihale" && (
-        <div className="space-y-4 flex-1 min-h-0 overflow-hidden animate-fade-in">
+        <div className="space-y-4 animate-fade-in">
           <h2 className="text-xl font-bold">İhale Süresi</h2>
           <p className="text-slate-500 text-sm">
             Teklif toplama süresini seçin — süre dolunca en uygun teklifi
@@ -2516,76 +3120,48 @@ function MusteriAnaSayfaIcerik({
               setIhaleSureTipi(tip);
               setIhaleOzelBitis(ozel);
               setIhaleSureHatasi(false);
+              if (ihaleDevamTimerRef.current != null) {
+                window.clearTimeout(ihaleDevamTimerRef.current);
+                ihaleDevamTimerRef.current = null;
+              }
+              // Özel tarih: kullanıcı bitiş seçene kadar otomatik devam yok
+              if (tip === "ozel") return;
+              ihaleDevamTimerRef.current = window.setTimeout(() => {
+                ihaleDevamTimerRef.current = null;
+                const sure = ihaleBitisHesapla(tip, { ozelBitis: ozel });
+                if (!sure.ok) {
+                  setIhaleSureHatasi(true);
+                  setError(sure.hata);
+                  return;
+                }
+                const sonraki = sonrakiAdim("ihale");
+                if (sonraki) adimGit(sonraki);
+              }, ADIM_OTOMATIK_GECIS_MS);
             }}
           />
 
-          {!hedefKonumGerekli && (
-            <div ref={yasalOnayRef} className="scroll-mt-28 space-y-2">
-              <YasalOnayKutusu
-                checked={yasalOnay}
-                onChange={(checked) => {
-                  setYasalOnay(checked);
-                  if (checked) {
-                    setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
-                  }
-                }}
-                invalid={!!bilgiAlanMesajlari.yasalOnay}
-              />
-              {bilgiAlanMesajlari.yasalOnay && (
-                <p className="text-sm text-red-600" role="alert">
-                  {bilgiAlanMesajlari.yasalOnay}
-                </p>
-              )}
-            </div>
-          )}
-
           <AdimAltNav
-            devamMetin={
-              loading ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Spinner className="size-4 border-white/40 border-t-white" />
-                  Gönderiliyor…
-                </span>
-              ) : sonrakiAdim("ihale") ? (
-                "Devam Et"
-              ) : (
-                sorunCagriButonEtiketi(form.sorunTipi)
-              )
-            }
+            devamMetin="Devam Et"
             devamDisabled={loading}
             onGeri={oncekiAdimaDon}
             onDevam={() => {
+              if (ihaleDevamTimerRef.current != null) {
+                window.clearTimeout(ihaleDevamTimerRef.current);
+                ihaleDevamTimerRef.current = null;
+              }
               if (!ihaleAdimiDevam()) return;
               const sonraki = sonrakiAdim("ihale");
-              if (sonraki) {
-                adimGit(sonraki);
-                return;
-              }
-              if (!yasalOnay) {
-                setBilgiAlanMesajlari((m) => ({
-                  ...m,
-                  yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
-                }));
-                setError("Talep göndermek için yasal metinleri onaylayın.");
-                yasalOnayaKaydir();
-                return;
-              }
-              void cekiciBul();
+              if (sonraki) adimGit(sonraki);
             }}
           />
         </div>
       )}
 
       {step === "konum" && (
-        <div className="flex flex-1 min-h-0 flex-col space-y-5 overflow-hidden animate-fade-in">
-          <div className="space-y-2">
-            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
-              Önce konumunu bulalım.
-            </h2>
-            <p className="text-sm text-[var(--acb-muted)]">
-              En hızlı yol: konumunu kullan.
-            </p>
-          </div>
+        <div className="space-y-5 animate-fade-in">
+          <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+            Önce konumunu bulalım.
+          </h2>
           {arizaKonumGpsAlindi && form.adres ? (
             <Card className="!bg-[var(--acb-soft)] !border-[color-mix(in_srgb,var(--acb-green)_35%,white)] !rounded-[var(--acb-radius-lg)]">
               <p className="mb-1 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--acb-green)]">
@@ -2630,67 +3206,40 @@ function MusteriAnaSayfaIcerik({
             </Card>
           ) : (
             <div className="space-y-3">
-              <div className="rounded-[var(--acb-radius-lg)] border border-[var(--acb-border)] bg-white px-4 py-5 space-y-4 shadow-[var(--acb-shadow)]">
-                {gpsGuvenli ? (
-                  <div className="space-y-2">
-                    <Btn
-                      type="button"
-                      variant="primary"
-                      onClick={() => {
-                        setError("");
-                        void konumAl(false);
-                      }}
-                      disabled={gpsYukleniyor}
-                      className="!min-h-[3.5rem] !text-base !font-bold"
-                    >
-                      {gpsYukleniyor
-                        ? konumIzniBekleniyor
-                          ? "Konum izni bekleniyor…"
-                          : "Konum alınıyor…"
-                        : ACB_CTA.konumKullan}
-                    </Btn>
-                    {konumBasarisiz ? <ChromeAcSecenegi /> : null}
-                  </div>
-                ) : (
-                  <GpsHttpsBanner compact />
-                )}
+              {!gpsGuvenli ? <GpsHttpsBanner compact /> : null}
 
-                <details
-                  className="group rounded-[var(--acb-radius)] border border-[var(--acb-border)] bg-[var(--acb-soft)]/40 open:bg-white"
-                  open={konumSheetAcik || undefined}
-                >
-                  <summary className="cursor-pointer list-none px-3.5 py-3 text-sm font-semibold text-[var(--acb-dark)] touch-manipulation [&::-webkit-details-marker]:hidden flex items-center justify-between gap-2 min-h-[var(--acb-touch)]">
-                    <span>{ACB_CTA.adresAra}</span>
-                    <span
-                      className="text-[var(--acb-muted)] transition group-open:rotate-180"
-                      aria-hidden
-                    >
-                      ▾
-                    </span>
-                  </summary>
-                  <div className="border-t border-[var(--acb-border)] px-3.5 pb-3.5 pt-3 space-y-2.5">
+              <div className="rounded-[var(--acb-radius-lg)] border border-[var(--acb-border)] bg-white px-3.5 py-3.5 space-y-2.5 shadow-[var(--acb-shadow)]">
+                  <p className="text-sm font-semibold text-[var(--acb-dark)]">
+                    {ACB_CTA.adresAra}
+                  </p>
                   <div className="grid grid-cols-2 gap-2.5 items-end">
                     <div className="min-w-0 space-y-1.5">
                       <span className="block text-sm font-semibold text-slate-800">
                         Şehriniz
                       </span>
                       <div className="relative">
+                        {!seciliSehir ? (
+                          <span
+                            className="pointer-events-none absolute -inset-1 rounded-xl bg-[var(--acb-green)]/30 blur-md animate-pulse"
+                            aria-hidden
+                          />
+                        ) : null}
                         <SelectField
                           aria-label="Şehir"
-                          className="!py-2.5 !px-3 !pr-9 relative text-[0.9375rem]"
+                          className={[
+                            "!py-2.5 !px-3 !pr-10 text-[0.9375rem]",
+                            !seciliSehir ? KONUM_SELECT_GLOW : "",
+                          ].join(" ")}
                           value={seciliSehir}
                           onChange={(e) => {
                             const il = e.target.value;
+                            if (ilceDevamTimerRef.current != null) {
+                              window.clearTimeout(ilceDevamTimerRef.current);
+                              ilceDevamTimerRef.current = null;
+                            }
                             setSeciliSehir(il);
                             setSeciliIlce("");
                             setError("");
-                            const yol = musteriKonumYolu(il || null, null);
-                            if (
-                              typeof window !== "undefined" &&
-                              window.location.pathname !== yol
-                            ) {
-                              router.push(yol);
-                            }
                           }}
                         >
                           <option value="">Şehir seçin</option>
@@ -2718,149 +3267,79 @@ function MusteriAnaSayfaIcerik({
                       >
                         İlçeniz
                       </span>
-                      <SelectField
-                        aria-label="İlçe"
-                        className="!py-2.5 !px-3 !pr-9 text-[0.9375rem]"
-                        value={seciliIlce}
-                        disabled={!seciliSehir}
-                        onChange={(e) => {
-                          const ilce = e.target.value;
-                          setSeciliIlce(ilce);
-                          setError("");
-                          const yol = musteriKonumYolu(
-                            seciliSehir || null,
-                            ilce || null
-                          );
-                          const hasGps = !!(form.lat && form.lng);
-                          if (ilce && hasGps) {
-                            setArizaAdresDuzenle(false);
-                            musteriFormTaslakKaydet({
-                              v: 1,
-                              step: "sorun",
-                              form,
-                              yasalOnay,
-                              fotografOnizleme,
-                              fotografData,
-                              hedefBilinmiyor,
-                              ihaleSureTipi,
-                              ihaleOzelBitis: ihaleOzelBitis || undefined,
-                            });
-                            if (
-                              typeof window !== "undefined" &&
-                              window.location.pathname !== yol
-                            ) {
-                              router.push(yol);
-                            } else {
-                              adimGit("sorun");
+                      <div className="relative">
+                        {seciliSehir && !seciliIlce ? (
+                          <span
+                            className="pointer-events-none absolute -inset-1 rounded-xl bg-[var(--acb-green)]/30 blur-md animate-pulse"
+                            aria-hidden
+                          />
+                        ) : null}
+                        <SelectField
+                          aria-label="İlçe"
+                          className={[
+                            "!py-2.5 !px-3 !pr-10 text-[0.9375rem]",
+                            seciliSehir && !seciliIlce ? KONUM_SELECT_GLOW : "",
+                          ].join(" ")}
+                          value={seciliIlce}
+                          disabled={!seciliSehir}
+                          onChange={(e) => {
+                            const ilce = e.target.value;
+                            if (ilceDevamTimerRef.current != null) {
+                              window.clearTimeout(ilceDevamTimerRef.current);
+                              ilceDevamTimerRef.current = null;
                             }
-                            return;
-                          }
-                          if (
-                            typeof window !== "undefined" &&
-                            window.location.pathname !== yol
-                          ) {
-                            router.push(yol);
-                          }
-                        }}
-                      >
-                        <option value="">
-                          {seciliSehir ? "İlçe seçin" : "Önce şehir"}
-                        </option>
-                        {seciliSehir
-                          ? ilceListesi(seciliSehir).map((ilce) => (
-                              <option key={ilce} value={ilce}>
-                                {ilce}
-                              </option>
-                            ))
-                          : null}
-                      </SelectField>
+                            setSeciliIlce(ilce);
+                            setError("");
+                            if (!ilce) return;
+                            const sehir = seciliSehir;
+                            ilceDevamTimerRef.current = window.setTimeout(() => {
+                              ilceDevamTimerRef.current = null;
+                              void konumManuelDevam(sehir, ilce);
+                            }, ADIM_OTOMATIK_GECIS_MS);
+                          }}
+                        >
+                          <option value="">
+                            {seciliSehir ? "İlçe seçin" : "Önce şehir"}
+                          </option>
+                          {seciliSehir
+                            ? ilceListesi(seciliSehir).map((ilce) => (
+                                <option key={ilce} value={ilce}>
+                                  {ilce}
+                                </option>
+                              ))
+                            : null}
+                        </SelectField>
+                      </div>
                     </div>
                   </div>
-                  <Btn
-                    className="!w-full"
-                    onClick={async () => {
-                      setError("");
-                      if (gpsYukleniyor) gpsIptal();
-
-                      if (arizaKonumGpsAlindi && form.adres) {
-                        const ok = await adresKoordinatDoldur(false);
-                        if (ok) adimGit("sorun");
-                        return;
-                      }
-
-                      if (seciliSehir && seciliIlce) {
-                        const adresMetni =
-                          form.adres.trim() ||
-                          `${seciliIlce}, ${seciliSehir}, Türkiye`;
-                        if (!form.lat || !form.lng) {
-                          setAdresGeocodeYukleniyor(true);
-                          try {
-                            const g = await geocodeAdres(
-                              `${seciliIlce}, ${seciliSehir}, Türkiye`
-                            );
-                            if (g) {
-                              await konumKaydet(
-                                g.lat,
-                                g.lng,
-                                g.adres,
-                                false,
-                                "manuel"
-                              );
-                            } else {
-                              setForm((f) => ({
-                                ...f,
-                                adres: adresMetni,
-                                konumKaynak: "manuel",
-                              }));
-                            }
-                          } finally {
-                            setAdresGeocodeYukleniyor(false);
-                          }
-                        } else {
-                          setForm((f) => ({
-                            ...f,
-                            adres: form.adres.trim() || adresMetni,
-                            konumKaynak: "manuel",
-                          }));
-                        }
-                        adimGit("sorun");
-                        return;
-                      }
-
-                      if (form.adres.trim().length >= 6) {
-                        const ok = await adresKoordinatDoldur(false);
-                        if (ok) {
-                          adimGit("sorun");
-                          return;
-                        }
-                      }
-
-                      setError(
-                        "Otomatik konum alın veya şehir ve ilçe seçin."
-                      );
-                    }}
-                    disabled={adresGeocodeYukleniyor || gpsYukleniyor}
-                  >
-                    {adresGeocodeYukleniyor ? (
-                      <span className="inline-flex items-center justify-center gap-2">
-                        <Spinner className="size-4 border-white/40 border-t-white" />
-                        …
-                      </span>
-                    ) : (
-                      "Devam et"
-                    )}
-                  </Btn>
-                  </div>
-                </details>
               </div>
+              {error || konumIzniToast ? (
+                <div
+                  role={error ? "alert" : "status"}
+                  className="w-full rounded-[var(--acb-radius-lg)] border border-red-200 bg-red-50 px-3.5 py-3 text-sm leading-snug text-red-700"
+                >
+                  {error || konumIzniToast}
+                </div>
+              ) : null}
             </div>
           )}
 
           {arizaKonumGpsAlindi && form.adres ? (
-            <div className="space-y-2">
-              <Btn
-                className="w-full !min-h-[3.5rem] !text-base !font-bold"
-                onClick={async () => {
+            <AdimAltNav
+              devamMetin={
+                adresGeocodeYukleniyor ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <Spinner className="size-4 border-white/40 border-t-white" />
+                    Adres işleniyor…
+                  </span>
+                ) : (
+                  "Devam et"
+                )
+              }
+              devamDisabled={adresGeocodeYukleniyor || gpsYukleniyor}
+              onGeri={oncekiAdimaDon}
+              onDevam={() => {
+                void (async () => {
                   setError("");
                   if (gpsYukleniyor) gpsIptal();
 
@@ -2918,19 +3397,9 @@ function MusteriAnaSayfaIcerik({
                   }
 
                   setError("Otomatik konum alın veya şehir ve ilçe seçin.");
-                }}
-                disabled={adresGeocodeYukleniyor || gpsYukleniyor}
-              >
-                {adresGeocodeYukleniyor ? (
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <Spinner className="size-4 border-white/40 border-t-white" />
-                    Adres işleniyor…
-                  </span>
-                ) : (
-                  "Devam et"
-                )}
-              </Btn>
-            </div>
+                })();
+              }}
+            />
           ) : null}
 
           {(gpsYukleniyor || adresGeocodeYukleniyor) && (
@@ -2963,7 +3432,7 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {step === "hedef" && (
-        <div className="flex-1 min-h-0 overflow-hidden space-y-4">
+        <div className="space-y-4 animate-fade-in">
           <h2 className="text-xl font-bold">Nereye Çekilecek?</h2>
           <p className="text-slate-500 text-sm">
             {sorunLabel
@@ -3025,8 +3494,7 @@ function MusteriAnaSayfaIcerik({
                 </button>
                 <div className="px-4 pb-3">
                   <p className="text-sm text-amber-900 leading-relaxed">
-                    Hedefi sonra seçebilirsiniz. Tahmini sürelere ortalama{" "}
-                    <strong>+{HEDEF_BILINMIYOR_EK_SURE_DK} dk</strong> eklenir.
+                    Hedefi sonra seçebilirsiniz.
                   </p>
                 </div>
               </div>
@@ -3338,47 +3806,54 @@ function MusteriAnaSayfaIcerik({
 
         </div>
       )}
-      {step === "hedef" && (
-        <HedefAltNav
-          hedefSeciliMi={hedefSeciliMi}
-          yasalOnayRef={yasalOnayRef}
+      {step === "telefon" && (
+        <MusteriFormIletisimOtp
+          funnelId={funnelId}
+          ad={form.ad}
+          telefon={form.telefon}
           yasalOnay={yasalOnay}
+          onAdChange={(v) => {
+            update("ad", v);
+            setBilgiAlanMesajlari((m) => ({ ...m, telefon: "" }));
+          }}
+          onTelefonChange={(v) => {
+            update("telefon", v);
+            setBilgiAlanMesajlari((m) => ({ ...m, telefon: "" }));
+            setError("");
+          }}
           onYasalOnayChange={(checked) => {
             setYasalOnay(checked);
             if (checked) {
               setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
             }
           }}
-          yasalOnayHata={bilgiAlanMesajlari.yasalOnay}
+          telefonHata={bilgiAlanMesajlari.telefon}
+          yasalHata={bilgiAlanMesajlari.yasalOnay}
+          sorunLabel={sorunLabel}
+          onGeri={oncekiAdimaDon}
+          submitting={loading}
+          submitEtiket={UCRETSIZ_TEKLIF_CTA}
+          onHazir={() => cekiciBul()}
+        />
+      )}
+
+      {step === "hedef" && (
+        <HedefAltNav
+          hedefSeciliMi={hedefSeciliMi}
           onGeri={oncekiAdimaDon}
           devamDisabled={hedefIleriEngelli}
-          devamGlow={hedefGonderilebilir}
           devamIcerik={
-            loading ? (
-              <span className="inline-flex items-center justify-center gap-2">
-                <Spinner className="size-4 border-white/40 border-t-white" />
-                Gönderiliyor…
-              </span>
-            ) : adresGeocodeYukleniyor ? (
+            adresGeocodeYukleniyor ? (
               <span className="inline-flex items-center justify-center gap-2">
                 <Spinner className="size-4 border-white/40 border-t-white" />
                 Adres işleniyor…
               </span>
             ) : (
-              "Ücretsiz teklif iste"
+              "Devam et"
             )
           }
           onDevam={() => {
             if (!hedefGonderilebilir) return;
-            if (!yasalOnay) {
-              setBilgiAlanMesajlari((m) => ({
-                ...m,
-                yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
-              }));
-              setError("Talep göndermek için yasal metinleri onaylayın.");
-              yasalOnayaKaydir();
-              return;
-            }
             void hedefIleriGit();
           }}
         />

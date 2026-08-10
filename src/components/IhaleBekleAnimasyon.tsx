@@ -20,20 +20,13 @@ interface IhaleBekleAnimasyonProps {
 }
 
 const ASAMA_METIN: Record<Asama, (n: number) => string> = {
-  tespit: () => "Menzildeki operatörler tespit ediliyor…",
-  bulundu: (n) =>
-    n > 0
-      ? `${n} operatör tespit edildi`
-      : "Yakındaki operatörler aranıyor…",
-  gonderiliyor: (n) =>
-    n > 0
-      ? `${n} operatöre SMS gönderiliyor…`
-      : "Operatörlere bildirim gönderiliyor…",
-  gonderildi: (n) =>
-    n > 0
-      ? `${n} operatöre SMS gönderildi`
-      : "Bildirimler iletildi",
-  bekleniyor: () => "Teklifler bekleniyor…",
+  tespit: () => "En yakın hizmet verenler tespit ediliyor…",
+  bulundu: () => "En yakın ve müsait hizmet verenler tespit edildi",
+  gonderiliyor: () => "Hizmet verenler aranıyor…",
+  gonderildi: () =>
+    "Hizmet verenler bilgilendirildi, birazdan teklifler ekranınıza gelecektir.",
+  bekleniyor: () =>
+    "Hizmet verenler bilgilendirildi, birazdan teklifler ekranınıza gelecektir.",
 };
 
 function AsamaIkon({ asama }: { asama: Asama }) {

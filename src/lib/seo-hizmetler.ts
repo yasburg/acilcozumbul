@@ -73,8 +73,8 @@ export const SEO_HIZMETLER: Record<SeoHizmetSlug, SeoHizmetTanim> = {
   },
   "arac-tasima": {
     slug: "arac-tasima",
-    etiket: "Araç taşıma",
-    etiketUzun: "Araç taşıma",
+    etiket: "Araç nakliye",
+    etiketUzun: "Araç nakliye",
     sorunTipi: "arac-tasima",
     formHizmetQuery: "arac-tasima",
   },

@@ -35,9 +35,7 @@ const geist = Geist({
   preload: true,
 });
 
-const brandIcon = isAcbBrand
-  ? ACB_BRAND.logoIcon
-  : "/acilcozumbul-logo-icon-192.png";
+const brandIcon = ACB_BRAND.logoIcon;
 const brandOg = isAcbBrand
   ? ACB_BRAND.logoSocial
   : "/acilcozumbul-logo-yazili.png";
@@ -92,8 +90,11 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: [{ url: brandIcon, type: "image/png", sizes: "192x192" }],
-    apple: brandIcon,
+    icon: [
+      { url: brandIcon, type: "image/png", sizes: "1276x1276" },
+      { url: "/acilcozumbul-logo-icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: [{ url: brandIcon, type: "image/png", sizes: "1276x1276" }],
     shortcut: brandIcon,
   },
   appleWebApp: {
@@ -112,7 +113,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   /* maximumScale/userScalable=false mobilde ~300ms dokunma gecikmesi + PSI INP cezası */
-  themeColor: isAcbBrand ? ACB_BRAND.themeColor : "#ffffff",
+  themeColor: ACB_BRAND.themeColor,
 };
 
 const googleConsentGerekli = Boolean(

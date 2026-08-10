@@ -6,7 +6,7 @@ const SVG_SRC = "/brand/acb/Single-Animation.svg";
 /** Fallback if Web Animations API unavailable (matches current SVG) */
 const ANIM_FALLBACK_MS = 1807;
 const HOLD_MS = 80;
-const EXIT_MS = 480;
+const EXIT_MS = 520;
 const SESSION_KEY = "acb_intro_splash_seen";
 
 /**

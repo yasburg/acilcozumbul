@@ -52,6 +52,7 @@ export function Btn({
   variant?:
     | "primary"
     | "secondary"
+    | "geri"
     | "success"
     | "outline"
     | "danger"
@@ -59,19 +60,21 @@ export function Btn({
     | "dark";
 }) {
   const base =
-    "w-full min-h-[var(--acb-cta,52px)] rounded-[var(--acb-radius,1rem)] py-4 px-6 font-semibold text-base transition-[background-color,box-shadow,transform,opacity] duration-[var(--acb-transition,160ms)] touch-manipulation cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
+    "w-full min-h-[var(--acb-cta,52px)] rounded-[var(--acb-radius,1rem)] py-4 px-6 font-semibold text-base transition-[background-color,box-shadow,transform,opacity] duration-[var(--acb-transition,100ms)] ease-out touch-manipulation cursor-pointer active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
   const variants = {
     primary:
       "bg-[var(--acb-primary,#089b2d)] text-[var(--acb-primary-fg,#fff)] shadow-[var(--acb-shadow-cta)] hover:bg-[var(--acb-primary-hover,#077f25)] focus-visible:ring-[var(--acb-primary,#089b2d)]",
     secondary:
       "bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200 focus-visible:ring-slate-400",
+    /** Sticky alt nav — white fill next to primary CTA */
+    geri: "bg-white text-[var(--acb-dark,#1b2d2a)] border border-[var(--acb-border,#e5e7eb)] shadow-none hover:bg-[var(--acb-soft,#eaf8ee)] focus-visible:ring-[var(--acb-border,#e5e7eb)]",
     success:
       "bg-[var(--acb-green,#089b2d)] text-white shadow-[var(--acb-shadow-cta)] hover:bg-[var(--acb-green-hover,#077f25)] focus-visible:ring-[var(--acb-green)]",
     outline:
       "bg-white border-2 border-[var(--acb-primary,#089b2d)] text-[var(--acb-dark,#1b2d2a)] focus-visible:ring-[var(--acb-primary)]",
     danger: "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 focus-visible:ring-red-400",
     emergency:
-      "bg-[var(--acb-emergency,#ff9b42)] text-white shadow-[var(--acb-shadow-emergency)] hover:bg-[var(--acb-emergency-hover,#e8872f)] focus-visible:ring-[var(--acb-emergency)]",
+      "bg-[var(--acb-emergency,#089b2d)] text-white shadow-[var(--acb-shadow-emergency)] hover:bg-[var(--acb-emergency-hover,#077f25)] focus-visible:ring-[var(--acb-emergency)]",
     dark: "bg-[var(--acb-dark,#1b2d2a)] text-white hover:opacity-95 focus-visible:ring-[var(--acb-dark)]",
   };
   return (
@@ -156,13 +159,13 @@ export function SelectField({
           aria-invalid={invalid || undefined}
           className={inputSinif(
             invalid,
-            `appearance-none pr-12 ${className}`
+            `appearance-none pr-11 ${className}`
           )}
           {...props}
         >
           {children}
         </select>
-        <span className="absolute right-4 top-1/2 -translate-y-1/2">
+        <span className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2 text-slate-500">
           <SelectOkIkonu />
         </span>
       </div>
@@ -213,14 +216,17 @@ export const SifreAlani = forwardRef<
 
 export function TextArea({
   label,
+  className = "",
   ...props
-}: TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: string }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+      {label ? (
+        <span className="text-sm font-medium text-slate-700">{label}</span>
+      ) : null}
       <textarea
         rows={4}
-        className="w-full rounded-xl bg-white border border-slate-200 px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none"
+        className={`w-full rounded-xl bg-white border border-slate-200 px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none ${className}`}
         {...props}
       />
     </label>

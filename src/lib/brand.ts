@@ -2,9 +2,13 @@
 export const isAcbBrand = process.env.NEXT_PUBLIC_APP_ENV === "staging";
 
 export const ACB_BRAND = {
-  logoYazili: "/brand/acb/ACB-Logo.png",
+  /** Beyaz zemin — header / MobileShell */
+  logoYazili: "/brand/acb/ACB-Logo-White-Background-Tescil.png",
+  logoYaziliBoyut: { width: 827, height: 827 } as const,
   logoIcon: "/brand/acb/ACB-Logo-App.png",
   logoSocial: "/brand/acb/ACB-Logo-Social-Media.png",
+  /** Square mark used in header morph + footer */
+  logoOpening: "/brand/acb/opening-logo.png",
   animationPingpong: "/brand/acb/ACB-Animation-pingpong.svg",
   themeColor: "#089B2D",
   backgroundColor: "#EAF0CE",

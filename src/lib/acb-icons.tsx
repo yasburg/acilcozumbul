@@ -1,33 +1,74 @@
 /**
- * ACB icon language — Lucide only.
+ * ACB icon language — Lucide for chrome UI, Hugeicons for service/problem marks.
  * Stroke-based, monochromatic; primary green for active states.
  */
 "use client";
 
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import {
+  AccidentIcon,
+  AutomotiveBattery01Icon,
+  Camera01Icon,
+  ContainerTruck01Icon,
+  FuelStationIcon,
+  Key01Icon,
+  Search01Icon,
+  TireIcon,
+  TowTruckIcon,
+  Wrench01Icon,
+} from "@hugeicons/core-free-icons";
 import {
   ArrowLeft,
   ArrowRight,
-  BatteryCharging,
   Car,
   CircleCheck,
-  CircleDot,
   Clock,
-  Fuel,
-  KeyRound,
   MapPin,
   Navigation,
   Phone,
   Search,
   ShieldCheck,
   Star,
-  Truck,
   Wrench,
   type LucideIcon,
   type LucideProps,
 } from "lucide-react";
+import type { CSSProperties } from "react";
 import type { SorunTipiId } from "@/lib/sorun-tipleri";
 
 export const ACB_ICON_STROKE = 1.75;
+
+type HugeIconProps = {
+  className?: string;
+  strokeWidth?: number;
+  size?: number;
+  style?: CSSProperties;
+  "aria-hidden"?: boolean | "true" | "false";
+};
+
+function makeHugeIcon(icon: IconSvgElement) {
+  function HugeAcbIcon({
+    className,
+    strokeWidth = ACB_ICON_STROKE,
+    size = 24,
+    style,
+    ...rest
+  }: HugeIconProps) {
+    return (
+      <HugeiconsIcon
+        icon={icon}
+        size={size}
+        color="currentColor"
+        strokeWidth={strokeWidth}
+        className={className}
+        style={style}
+        aria-hidden
+        {...rest}
+      />
+    );
+  }
+  return HugeAcbIcon;
+}
 
 export function AcbIcon({
   icon: Icon,
@@ -47,12 +88,13 @@ export function AcbIcon({
 
 /** Canonical icons used across the product */
 export const AcbIcons = {
-  towing: Truck,
-  battery: BatteryCharging,
-  tire: CircleDot,
-  locksmith: KeyRound,
-  fuel: Fuel,
-  transport: Truck,
+  towing: makeHugeIcon(TowTruckIcon),
+  battery: makeHugeIcon(AutomotiveBattery01Icon),
+  tire: makeHugeIcon(TireIcon),
+  locksmith: makeHugeIcon(Key01Icon),
+  fuel: makeHugeIcon(FuelStationIcon),
+  transport: makeHugeIcon(ContainerTruck01Icon),
+  camera: makeHugeIcon(Camera01Icon),
   car: Car,
   wrench: Wrench,
   location: MapPin,
@@ -69,24 +111,24 @@ export const AcbIcons = {
 
 export type AcbIconKey = keyof typeof AcbIcons;
 
-/** Problem / service → Lucide icon */
-export const SORUN_ICON_MAP: Record<SorunTipiId, LucideIcon> = {
-  cekici: Truck,
-  ariza: Wrench,
-  lastik: CircleDot,
-  aku: BatteryCharging,
-  yakit: Fuel,
-  kaza: Car,
-  kilit: KeyRound,
-  "arac-tasima": Truck,
-  diger: Search,
+/** Problem / service → Hugeicons */
+export const SORUN_ICON_MAP: Record<SorunTipiId, IconSvgElement> = {
+  cekici: TowTruckIcon,
+  ariza: Wrench01Icon,
+  lastik: TireIcon,
+  aku: AutomotiveBattery01Icon,
+  yakit: FuelStationIcon,
+  kaza: AccidentIcon,
+  kilit: Key01Icon,
+  "arac-tasima": ContainerTruck01Icon,
+  diger: Search01Icon,
 };
 
-export function sorunIkonu(id: string): LucideIcon {
+export function sorunIkonu(id: string): IconSvgElement {
   if (id in SORUN_ICON_MAP) {
     return SORUN_ICON_MAP[id as SorunTipiId];
   }
-  return Search;
+  return Search01Icon;
 }
 
 export function SorunIkon({
@@ -98,13 +140,15 @@ export function SorunIkon({
   className?: string;
   active?: boolean;
 }) {
-  const Icon = sorunIkonu(id);
   return (
-    <Icon
+    <HugeiconsIcon
+      icon={sorunIkonu(id)}
+      size={24}
+      color="currentColor"
+      strokeWidth={ACB_ICON_STROKE}
       className={`${className} ${
         active ? "text-[var(--acb-green)]" : "text-[var(--acb-dark)]"
       }`}
-      strokeWidth={ACB_ICON_STROKE}
       aria-hidden
     />
   );

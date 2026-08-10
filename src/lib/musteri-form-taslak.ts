@@ -24,6 +24,14 @@ export type MusteriFormAlanlari = {
   sorunDetay: string;
   aracTipi: string;
   aracModeli: string;
+  /** Araç durumu (çalışıyor / boşa alınabiliyor …) */
+  aracDurumu: string;
+  /** yama | degisim — yalnız lastik tipinde */
+  lastikDurumu: string;
+  /** benzin | dizel | lpg | elektrik — yalnız yakit tipinde */
+  yakitTipi: string;
+  /** iceride | kayip | kirik | kumanda | kontak | diger — yalnız kilit tipinde */
+  kilitDurumu: string;
 };
 
 /**
@@ -40,18 +48,24 @@ export type MusteriFormAdim =
   | "fotograf"
   | "arac_tipi"
   | "arac_modeli"
+  | "arac_durumu"
+  | "lastik_durumu"
+  | "yakit_tipi"
+  | "kilit_durumu"
   | "hareket"
   | "ek_detay"
   | "ihale"
-  | "hedef";
+  | "hedef"
+  | "telefon";
 
+/** Eski tek string veya yeni dizi — okurken diziye normalize edilir */
 export type MusteriFormTaslak = {
   v: 1;
   step: MusteriFormAdim;
   form: MusteriFormAlanlari;
   yasalOnay: boolean;
-  fotografOnizleme: string | null;
-  fotografData: string | null;
+  fotografOnizleme: string[];
+  fotografData: string[];
   /** Hedef adımında «bilmiyorum sonra seçeceğim» */
   hedefBilinmiyor?: boolean;
   ihaleSureTipi?: IhaleSureTipi;
@@ -60,6 +74,14 @@ export type MusteriFormTaslak = {
   aracHareket?: "evet" | "hayir" | "";
   aracMarka?: string;
 };
+
+function fotografListesiOku(v: unknown): string[] {
+  if (Array.isArray(v)) {
+    return v.filter((x): x is string => typeof x === "string" && x.length > 0);
+  }
+  if (typeof v === "string" && v.length > 0) return [v];
+  return [];
+}
 
 const ADIMLAR: ReadonlySet<string> = new Set([
   "giris",
@@ -70,13 +92,18 @@ const ADIMLAR: ReadonlySet<string> = new Set([
   "fotograf",
   "arac_tipi",
   "arac_modeli",
+  "arac_durumu",
+  "lastik_durumu",
+  "yakit_tipi",
+  "kilit_durumu",
   "hareket",
   "ek_detay",
   "ihale",
   "hedef",
+  "telefon",
 ]);
 
-/** /b dönüşüm akışı — konum/detay (+ alt adımları) → sorun; eski iletişim adımı → hedef */
+/** /b dönüşüm akışı — konum/detay (+ alt adımları) → sorun; iletişim/telefon → hedef */
 export function musteriFormAdimDonusumNormalize(
   step: string
 ): "sorun" | "hedef" {
@@ -86,12 +113,17 @@ export function musteriFormAdimDonusumNormalize(
     step === "fotograf" ||
     step === "arac_tipi" ||
     step === "arac_modeli" ||
+    step === "arac_durumu" ||
+    step === "lastik_durumu" ||
+    step === "yakit_tipi" ||
+    step === "kilit_durumu" ||
+    step === "hareket" ||
     step === "ek_detay" ||
     step === "ihale"
   ) {
     return "sorun";
   }
-  if (step === "bilgi") return "hedef";
+  if (step === "bilgi" || step === "telefon") return "hedef";
   if (step === "hedef" || step === "sorun") return step;
   return "sorun";
 }
@@ -136,6 +168,10 @@ function formDogrula(raw: unknown): MusteriFormAlanlari | null {
     sorunDetay: metin(f.sorunDetay),
     aracTipi: metin(f.aracTipi),
     aracModeli: metin(f.aracModeli),
+    aracDurumu: metin(f.aracDurumu),
+    lastikDurumu: metin(f.lastikDurumu),
+    yakitTipi: metin(f.yakitTipi),
+    kilitDurumu: metin(f.kilitDurumu),
   };
 }
 
@@ -152,14 +188,15 @@ export function musteriFormTaslakOku(): MusteriFormTaslak | null {
     if (typeof p.step !== "string" || !ADIMLAR.has(p.step)) return null;
     const form = formDogrula(p.form);
     if (!form) return null;
+    const step =
+      p.step === "hareket" ? ("arac_durumu" as MusteriFormAdim) : (p.step as MusteriFormAdim);
     return {
       v: 1,
-      step: p.step as MusteriFormAdim,
+      step,
       form,
       yasalOnay: p.yasalOnay === true,
-      fotografOnizleme:
-        typeof p.fotografOnizleme === "string" ? p.fotografOnizleme : null,
-      fotografData: typeof p.fotografData === "string" ? p.fotografData : null,
+      fotografOnizleme: fotografListesiOku(p.fotografOnizleme),
+      fotografData: fotografListesiOku(p.fotografData),
       hedefBilinmiyor: p.hedefBilinmiyor === true,
       ihaleSureTipi: ihaleSureTipiNormalize(p.ihaleSureTipi),
       ihaleOzelBitis:
@@ -192,8 +229,8 @@ function yaz(payload: MusteriFormTaslak): boolean {
 export function musteriFormTaslakKaydet(taslak: MusteriFormTaslak): void {
   const tam: MusteriFormTaslak = { ...taslak, v: 1 };
   if (yaz(tam)) return;
-  if (tam.fotografData || tam.fotografOnizleme) {
-    yaz({ ...tam, fotografData: null, fotografOnizleme: null });
+  if (tam.fotografData.length || tam.fotografOnizleme.length) {
+    yaz({ ...tam, fotografData: [], fotografOnizleme: [] });
   }
 }
 
@@ -220,10 +257,14 @@ export function musteriFormTaslakBosMu(t: MusteriFormTaslak): boolean {
     !f.sorunTipi &&
     !f.sorunDetay &&
     !f.aracModeli &&
+    !f.aracDurumu &&
+    !f.lastikDurumu &&
+    !f.yakitTipi &&
+    !f.kilitDurumu &&
     !f.lat &&
     !f.lng &&
     !t.hedefBilinmiyor &&
-    !t.fotografData &&
-    !t.fotografOnizleme
+    t.fotografData.length === 0 &&
+    t.fotografOnizleme.length === 0
   );
 }

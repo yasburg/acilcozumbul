@@ -21,8 +21,9 @@ import {
 } from "@/lib/sorun-tipleri";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import { ChromeAcSecenegi } from "@/components/ChromeAcSecenegi";
-import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
+import { MusteriFormIletisimOtp } from "@/components/musteri/MusteriFormIletisimOtp";
+import { telefonDogrulamaHatasi } from "@/lib/telefon";
 import {
   geocodeAdres,
   cihazPlatformu,
@@ -148,12 +149,13 @@ const KonumIzniYardim = dynamic(
   }
 );
 
-type Step = "sorun" | "hedef";
+type Step = "sorun" | "hedef" | "bilgi";
 
-/** Sorun → hedef · iletişim + OTP teklif seçiminde */
-const STEP_SIRA: Step[] = ["sorun", "hedef"];
+/** Sorun → [hedef] → bilgi (OTP) → talep */
+const STEP_SIRA: Step[] = ["sorun", "hedef", "bilgi"];
 const ADIM_OLAYLARI: Partial<Record<Step, string>> = {
   hedef: "form_adim_hedef",
+  bilgi: "form_adim_bilgi",
 };
 
 type MusteriDonusumSayfaProps = {
@@ -206,7 +208,6 @@ function MusteriDonusumSayfaIcerik({
   const [gpsGuvenli, setGpsGuvenli] = useState(false);
   const [konumIzni, setKonumIzni] = useState<KonumIzniDurumu>("unknown");
   const [konumIzniBekleniyor, setKonumIzniBekleniyor] = useState(false);
-  const yasalOnayRef = useRef<HTMLDivElement>(null);
   const aracModeliRef = useRef<HTMLDivElement>(null);
   const fotografRef = useRef<HTMLDivElement>(null);
   const arizaAdresRef = useRef<HTMLInputElement>(null);
@@ -244,9 +245,13 @@ function MusteriDonusumSayfaIcerik({
     sorunDetay: "",
     aracTipi: "",
     aracModeli: "",
+    aracDurumu: "",
+    lastikDurumu: "",
+    yakitTipi: "",
+    kilitDurumu: "",
   });
-  const [fotografOnizleme, setFotografOnizleme] = useState<string | null>(null);
-  const [fotografData, setFotografData] = useState<string | null>(null);
+  const [fotografOnizleme, setFotografOnizleme] = useState<string[]>([]);
+  const [fotografData, setFotografData] = useState<string[]>([]);
   const [ihaleSureTipi, setIhaleSureTipi] = useState<IhaleSureTipi>("acil");
   const [ihaleOzelBitis, setIhaleOzelBitis] = useState("");
   const [ihaleSureHatasi, setIhaleSureHatasi] = useState(false);
@@ -265,8 +270,8 @@ function MusteriDonusumSayfaIcerik({
     step: "sorun" as Step,
     form,
     yasalOnay: false,
-    fotografOnizleme: null as string | null,
-    fotografData: null as string | null,
+    fotografOnizleme: [] as string[],
+    fotografData: [] as string[],
     hedefBilinmiyor: false,
     ihaleSureTipi: "acil" as IhaleSureTipi,
     ihaleOzelBitis: "",
@@ -526,7 +531,7 @@ function MusteriDonusumSayfaIcerik({
     const aracEksik =
       sorunAracModeliGerekliMi(form.sorunTipi) && !form.aracModeli.trim();
     const fotografEksik =
-      sorunFotografGerekliMi(form.sorunTipi) && !fotografData;
+      sorunFotografGerekliMi(form.sorunTipi) && fotografData.length === 0;
 
     setSorunDetayHatasi(detayEksik);
     if (detayEksik) {
@@ -610,15 +615,6 @@ function MusteriDonusumSayfaIcerik({
 
     setStep(hedef);
     setError("");
-  }
-
-  function yasalOnayaKaydir() {
-    window.setTimeout(() => {
-      yasalOnayRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    }, 50);
   }
 
   async function konumKaydet(
@@ -1144,7 +1140,7 @@ function MusteriDonusumSayfaIcerik({
         ...sorunProps(form.sorunTipi),
         mod: "bilmiyorum",
       });
-      void cekiciBul();
+      adimGit("bilgi");
       return;
     }
     if (hedefHaritaAra && form.hedefLat && form.hedefLng && form.hedefAdres.trim()) {
@@ -1152,7 +1148,7 @@ function MusteriDonusumSayfaIcerik({
         ...sorunProps(form.sorunTipi),
         mod: "harita",
       });
-      void cekiciBul();
+      adimGit("bilgi");
       return;
     }
     if (await adresKoordinatDoldur(true)) {
@@ -1160,7 +1156,7 @@ function MusteriDonusumSayfaIcerik({
         ...sorunProps(form.sorunTipi),
         mod: "adres",
       });
-      void cekiciBul();
+      adimGit("bilgi");
     } else {
       musteriFunnelOlay("address_not_found", sorunProps(form.sorunTipi));
     }
@@ -1174,35 +1170,9 @@ function MusteriDonusumSayfaIcerik({
   function hedefNavButonlari(className = "mt-3") {
     return (
       <div className={className}>
-        <div ref={yasalOnayRef} className="scroll-mt-28 space-y-2 mb-3">
-          <YasalOnayKutusu
-            checked={yasalOnay}
-            onChange={(checked) => {
-              setYasalOnay(checked);
-              if (checked) {
-                setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
-              }
-            }}
-            invalid={!!bilgiAlanMesajlari.yasalOnay}
-          />
-          {bilgiAlanMesajlari.yasalOnay && (
-            <p className="text-sm text-red-600" role="alert">
-              {bilgiAlanMesajlari.yasalOnay}
-            </p>
-          )}
-        </div>
         <Btn
           className="w-full"
           onClick={() => {
-            if (!yasalOnay) {
-              setBilgiAlanMesajlari((m) => ({
-                ...m,
-                yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
-              }));
-              setError("Talep göndermek için yasal metinleri onaylayın.");
-              yasalOnayaKaydir();
-              return;
-            }
             void hedefIleriGit();
           }}
           disabled={hedefIleriEngelli}
@@ -1218,7 +1188,7 @@ function MusteriDonusumSayfaIcerik({
               Adres işleniyor…
             </span>
           ) : (
-            sorunCagriButonEtiketi(form.sorunTipi)
+            "Devam Et"
           )}
         </Btn>
       </div>
@@ -1327,13 +1297,25 @@ function MusteriDonusumSayfaIcerik({
       const ok = await adresKoordinatDoldur(false);
       if (!ok) return;
     }
+    const telHata = telefonDogrulamaHatasi(form.telefon);
+    if (telHata) {
+      setError(telHata);
+      setBilgiAlanMesajlari((m) => ({ ...m, telefon: telHata }));
+      setStep("bilgi");
+      return;
+    }
+    if (!form.ad.trim()) {
+      setError("İsminizi girin.");
+      setStep("bilgi");
+      return;
+    }
     if (!yasalOnay) {
       setError("Talep göndermek için yasal metinleri onaylayın.");
       setBilgiAlanMesajlari((m) => ({
         ...m,
         yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
       }));
-      yasalOnayaKaydir();
+      setStep("bilgi");
       return;
     }
     if (!form.adres) {
@@ -1356,7 +1338,7 @@ function MusteriDonusumSayfaIcerik({
       setStep(sorunHedefKonumGerekliMi(form.sorunTipi) ? "hedef" : "sorun");
       return;
     }
-    if (sorunFotografGerekliMi(form.sorunTipi) && !fotografData) {
+    if (sorunFotografGerekliMi(form.sorunTipi) && fotografData.length === 0) {
       setError("Arıza fotoğrafı gerekli.");
       setStep(sorunHedefKonumGerekliMi(form.sorunTipi) ? "hedef" : "sorun");
       return;
@@ -1398,7 +1380,7 @@ function MusteriDonusumSayfaIcerik({
           sorunTipi: form.sorunTipi,
           sorunDetay: form.sorunDetay,
           aracModeli: form.aracModeli.trim() || undefined,
-          fotograf: fotografData || undefined,
+          fotograflar: fotografData.length ? fotografData : undefined,
           sorun: sorunMetniOlustur(form.sorunTipi, form.sorunDetay),
           ihaleSureTipi,
           ...(ihaleSureTipi === "ozel" && ihaleOzelBitis
@@ -1540,7 +1522,9 @@ function MusteriDonusumSayfaIcerik({
           const etiket =
             step === "sorun"
               ? "Sorun ve konum"
-              : "Hedef";
+              : step === "hedef"
+                ? "Hedef"
+                : "İletişim";
           return `${idx + 1} / ${steps.length} — ${etiket}`;
         })()}
       </p>
@@ -1557,7 +1541,7 @@ function MusteriDonusumSayfaIcerik({
               className={[
                 "flex-1 h-1.5 rounded-full transition",
                 buradayiz
-                  ? "bg-amber-500 shadow-[0_0_8px_1px_rgba(245,158,11,0.5)]"
+                  ? "bg-amber-500 shadow-[0_0_8px_1px_rgba(8,155,45,0.45)]"
                   : gecildi
                     ? "bg-amber-500"
                     : "bg-slate-200",
@@ -1618,7 +1602,8 @@ function MusteriDonusumSayfaIcerik({
         </div>
       )}
 
-      {bilgiMesaj && (step === "sorun" || step === "hedef") && (
+      {bilgiMesaj &&
+        (step === "sorun" || step === "hedef" || step === "bilgi") && (
         <div className="mb-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
           {bilgiMesaj}
         </div>
@@ -1787,28 +1772,6 @@ function MusteriDonusumSayfaIcerik({
                     </div>
                   )}
 
-                  {!hedefKonumGerekli && (
-                    <div ref={yasalOnayRef} className="scroll-mt-28 space-y-2">
-                      <YasalOnayKutusu
-                        checked={yasalOnay}
-                        onChange={(checked) => {
-                          setYasalOnay(checked);
-                          if (checked) {
-                            setBilgiAlanMesajlari((m) => ({
-                              ...m,
-                              yasalOnay: "",
-                            }));
-                          }
-                        }}
-                        invalid={!!bilgiAlanMesajlari.yasalOnay}
-                      />
-                      {bilgiAlanMesajlari.yasalOnay && (
-                        <p className="text-sm text-red-600" role="alert">
-                          {bilgiAlanMesajlari.yasalOnay}
-                        </p>
-                      )}
-                    </div>
-                  )}
                 </div>
               ) : null
             }
@@ -1824,10 +1787,8 @@ function MusteriDonusumSayfaIcerik({
                   <Spinner className="size-4 border-white/40 border-t-white" />
                   Adres işleniyor…
                 </span>
-              ) : hedefKonumGerekli ? (
-                "Devam Et"
               ) : (
-                sorunCagriButonEtiketi(form.sorunTipi)
+                "Devam Et"
               )
             }
             onDevam={async () => {
@@ -1861,16 +1822,7 @@ function MusteriDonusumSayfaIcerik({
               if (hedefKonumGerekli) {
                 adimGit("hedef");
               } else {
-                if (!yasalOnay) {
-                  setBilgiAlanMesajlari((m) => ({
-                    ...m,
-                    yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
-                  }));
-                  setError("Talep göndermek için yasal metinleri onaylayın.");
-                  yasalOnayaKaydir();
-                  return;
-                }
-                void cekiciBul();
+                adimGit("bilgi");
               }
             }}
           />
@@ -1884,13 +1836,14 @@ function MusteriDonusumSayfaIcerik({
                 {sorunFotografAlaniGoster(form.sorunTipi) && (
                   <div ref={fotografRef}>
                     <ArizaFotografAlani
-                      onizleme={fotografOnizleme}
+                      fotograflar={
+                        fotografData.length ? fotografData : fotografOnizleme
+                      }
                       invalid={fotografHatasi}
-                      zorunlu={sorunFotografGerekliMi(form.sorunTipi)}
-                      onDegisti={(dataUrl) => {
-                        setFotografOnizleme(dataUrl);
-                        setFotografData(dataUrl);
-                        if (dataUrl) setFotografHatasi(false);
+                      onDegisti={(urls) => {
+                        setFotografOnizleme(urls);
+                        setFotografData(urls);
+                        if (urls.length) setFotografHatasi(false);
                       }}
                     />
                     {sorunFotografGerekliMi(form.sorunTipi) ? (
@@ -2269,25 +2222,14 @@ function MusteriDonusumSayfaIcerik({
               <span className="text-slate-500 font-medium">(isteğe bağlı)</span>
             </p>
             <ArizaFotografAlani
-              onizleme={fotografOnizleme}
+              fotograflar={
+                fotografData.length ? fotografData : fotografOnizleme
+              }
               invalid={fotografHatasi}
-              zorunlu={false}
-              onDegisti={(dataUrl) => {
-                setFotografOnizleme(dataUrl);
-                setFotografData(dataUrl);
-                if (dataUrl) setFotografHatasi(false);
-              }}
-              onDevam={() => {
-                if (!yasalOnay) {
-                  setBilgiAlanMesajlari((m) => ({
-                    ...m,
-                    yasalOnay: "Yasal metinleri onaylamanız zorunludur.",
-                  }));
-                  setError("Talep göndermek için yasal metinleri onaylayın.");
-                  yasalOnayaKaydir();
-                  return;
-                }
-                void hedefIleriGit();
+              onDegisti={(urls) => {
+                setFotografOnizleme(urls);
+                setFotografData(urls);
+                if (urls.length) setFotografHatasi(false);
               }}
             />
             {sorunAracModeliAlaniGoster(form.sorunTipi) && (
@@ -2318,6 +2260,33 @@ function MusteriDonusumSayfaIcerik({
             />
           </div>
         </div>
+      )}
+
+      {step === "bilgi" && (
+        <MusteriFormIletisimOtp
+          funnelId={funnelId}
+          ad={form.ad}
+          telefon={form.telefon}
+          yasalOnay={yasalOnay}
+          onAdChange={(v) => update("ad", v)}
+          onTelefonChange={(v) => {
+            update("telefon", v);
+            setBilgiAlanMesajlari((m) => ({ ...m, telefon: "" }));
+            setError("");
+          }}
+          onYasalOnayChange={(checked) => {
+            setYasalOnay(checked);
+            if (checked) {
+              setBilgiAlanMesajlari((m) => ({ ...m, yasalOnay: "" }));
+            }
+          }}
+          telefonHata={bilgiAlanMesajlari.telefon}
+          yasalHata={bilgiAlanMesajlari.yasalOnay}
+          onGeri={oncekiAdimaDon}
+          submitting={loading}
+          submitEtiket={sorunCagriButonEtiketi(form.sorunTipi)}
+          onHazir={() => cekiciBul()}
+        />
       )}
 
       {step === "sorun" && <SssBolumu />}

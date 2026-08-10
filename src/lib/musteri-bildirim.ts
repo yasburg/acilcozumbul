@@ -19,7 +19,7 @@ export function musteriYeniTeklifBildir(fiyat: number, cekiciAd: string): void {
   try {
     new Notification("Gelen teklifler", {
       body: `${cekiciAd}: ${fiyat} TL — acilcozumbul.com`,
-      icon: "/favicon.ico",
+      icon: "/brand/acb/ACB-Logo-App.png",
       tag: "yeni-teklif",
     });
   } catch {

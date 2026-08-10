@@ -55,7 +55,7 @@ export function ProviderOfferCard({
 
   return (
     <Card
-      className={`!p-0 overflow-hidden border-[var(--acb-border)] shadow-[var(--acb-shadow)] ${
+      className={`!p-0 overflow-hidden border-[var(--acb-border)] bg-white/95 shadow-[var(--acb-shadow)] transition-transform duration-[var(--acb-transition)] ease-out active:scale-[0.995] ${
         fiyatDegisti ? "border-red-200 bg-red-50/30" : ""
       }`}
     >

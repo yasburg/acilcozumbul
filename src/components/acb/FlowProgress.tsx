@@ -1,38 +1,49 @@
-/** Subtle step indicator — never competes with the question. */
+/** Centered step segments — one bar per step (main-style). */
 export function FlowProgress({
   current,
   total,
+  onStepClick,
   className = "",
 }: {
   current: number;
   total: number;
+  /** 0-based step index */
+  onStepClick?: (index: number) => void;
   className?: string;
 }) {
   if (total <= 0) return null;
   const cur = Math.min(Math.max(current, 1), total);
-  const pad = (n: number) => String(n).padStart(2, "0");
 
   return (
     <div
-      className={`inline-flex items-center gap-2 text-[11px] font-semibold tracking-wide text-[var(--acb-muted)] ${className}`}
+      className={`mx-auto flex w-full max-w-[11.5rem] gap-1 sm:max-w-[12.5rem] ${className}`}
+      role="list"
       aria-label={`Adım ${cur} / ${total}`}
     >
-      <span className="tabular-nums text-[var(--acb-dark)]">
-        {pad(cur)}
-      </span>
-      <span className="text-[var(--acb-border)]" aria-hidden>
-        /
-      </span>
-      <span className="tabular-nums">{pad(total)}</span>
-      <span
-        className="ml-1 h-1 w-16 overflow-hidden rounded-full bg-[var(--acb-border)]"
-        aria-hidden
-      >
-        <span
-          className="block h-full rounded-full bg-[var(--acb-green)] transition-[width] duration-300 ease-out"
-          style={{ width: `${(cur / total) * 100}%` }}
-        />
-      </span>
+      {Array.from({ length: total }, (_, i) => {
+        const buradayiz = i === cur - 1;
+        const gecildi = i < cur - 1;
+        return (
+          <button
+            key={i}
+            type="button"
+            role="listitem"
+            onClick={() => onStepClick?.(i)}
+            disabled={!onStepClick}
+            className={[
+              "h-1.5 flex-1 rounded-full transition-[background-color,box-shadow] duration-[var(--acb-transition)] ease-out",
+              onStepClick ? "touch-manipulation" : "pointer-events-none",
+              buradayiz
+                ? "bg-[var(--acb-green)] shadow-[0_0_10px_2px_rgba(8,155,45,0.45)] animate-pulse"
+                : gecildi
+                  ? "bg-[var(--acb-green)]"
+                  : "bg-[var(--acb-border)]",
+            ].join(" ")}
+            aria-label={`Adım ${i + 1}`}
+            aria-current={buradayiz ? "step" : undefined}
+          />
+        );
+      })}
     </div>
   );
 }
