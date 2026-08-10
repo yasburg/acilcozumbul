@@ -33,6 +33,7 @@ import { tiktokPixelContact, tiktokPixelLead } from "@/lib/tiktok-pixel";
 import { whatsappKonumMesaji } from "@/lib/harita-yonlendirme";
 import { whatsappUrl } from "@/lib/telefon";
 import { MusteriTeklifSecOtp } from "@/components/musteri/MusteriTeklifSecOtp";
+import { musteriAktifTalepTemizleEger } from "@/lib/musteri-aktif-talep";
 
 type Durum =
   | "ihale_bekliyor"
@@ -363,6 +364,7 @@ function BekleIcerik() {
 
         if (data.iptal || data.durum === "iptal") {
           setDurum("iptal");
+          musteriAktifTalepTemizleEger(id);
           return;
         }
 
@@ -655,6 +657,31 @@ function BekleIcerik() {
     }
   }
 
+  async function iptalVeYeniTalep() {
+    if (islem) return;
+    setIslem(true);
+    setMesaj("");
+    try {
+      const res = await fetch(`/api/talep/${id}/iptal`, { method: "POST" });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(data.error || "İptal edilemedi.");
+      }
+      musteriAktifTalepTemizleEger(id);
+      window.location.href = "/?yeni=1";
+    } catch (e) {
+      setMesaj(e instanceof Error ? e.message : "İptal edilemedi.");
+      setIslem(false);
+    }
+  }
+
+  function yeniTalepOlustur() {
+    musteriAktifTalepTemizleEger(id);
+    window.location.href = "/?yeni=1";
+  }
+
   function otpModal() {
     if (!otpTeklifId) return null;
     return (
@@ -691,15 +718,16 @@ function BekleIcerik() {
           <h2 className="text-xl font-bold text-slate-900">Talebiniz iptal edildi</h2>
           <p className="text-sm text-slate-500 max-w-xs">
             Yakındaki operatörlere bildirim gönderilmeyecek. Yeni bir talep için
-            ana sayfaya dönebilirsiniz.
+            devam edebilirsiniz.
           </p>
           <Btn
             className="max-w-xs"
             onClick={() => {
-              window.location.href = "/";
+              musteriAktifTalepTemizleEger(id);
+              window.location.href = "/?yeni=1";
             }}
           >
-            Ana sayfaya dön
+            İptal et ve yeni talep oluştur
           </Btn>
         </div>
       </MobileShell>
@@ -871,6 +899,16 @@ function BekleIcerik() {
               )}
             </>
           )}
+
+          {anlasildi ? (
+            <button
+              type="button"
+              onClick={yeniTalepOlustur}
+              className="w-full py-3 text-sm font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline touch-manipulation"
+            >
+              Yeni talep oluştur
+            </button>
+          ) : null}
         </div>
       </MobileShell>
     );
@@ -980,6 +1018,15 @@ function BekleIcerik() {
               veya mevcut tekliflerden birini seçebilirsiniz.
             </p>
           </Card>
+
+          <button
+            type="button"
+            disabled={islem}
+            onClick={() => void iptalVeYeniTalep()}
+            className="w-full py-3 text-sm font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline disabled:opacity-50 touch-manipulation"
+          >
+            İptal et ve yeni talep oluştur
+          </button>
         </div>
       </MobileShell>
       {otpModal()}
@@ -1078,6 +1125,15 @@ function BekleIcerik() {
               )}
           </div>
         )}
+
+        <button
+          type="button"
+          disabled={islem}
+          onClick={() => void iptalVeYeniTalep()}
+          className="mt-6 w-full max-w-lg py-3 text-sm font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline disabled:opacity-50 touch-manipulation"
+        >
+          İptal et ve yeni talep oluştur
+        </button>
       </div>
     </MobileShell>
     {otpModal()}

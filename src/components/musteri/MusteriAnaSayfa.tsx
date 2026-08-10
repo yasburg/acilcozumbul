@@ -56,6 +56,8 @@ import { AracTipiIkon } from "@/components/AracTipiIkon";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import { MusteriFormIletisimOtp } from "@/components/musteri/MusteriFormIletisimOtp";
+import { useMusteriAktifTalepYonlendir } from "@/components/musteri/useMusteriAktifTalepYonlendir";
+import { musteriAktifTalepKaydet } from "@/lib/musteri-aktif-talep";
 import {
   geocodeAdres,
   cihazPlatformu,
@@ -550,6 +552,7 @@ function MusteriAnaSayfaIcerik({
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  useMusteriAktifTalepYonlendir();
   const [step, setStep] = useState<Step>("giris");
   /** Entry page: YARDIM AL docks into header top-left on scroll */
   const [girisHeaderDocked, setGirisHeaderDocked] = useState(false);
@@ -2062,6 +2065,7 @@ function MusteriAnaSayfaIcerik({
       });
       if (typeof data.id === "string" || data.id != null) {
         musteriFunnelIdTalepKaydet(String(data.id), funnelId);
+        musteriAktifTalepKaydet(String(data.id));
       }
       /* Meta + TikTok Lead: bekle sayfasına gitmeden önce + bir kez (bekle yedek) */
       try {

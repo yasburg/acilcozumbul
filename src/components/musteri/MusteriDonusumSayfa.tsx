@@ -23,6 +23,8 @@ import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import { ChromeAcSecenegi } from "@/components/ChromeAcSecenegi";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import { MusteriFormIletisimOtp } from "@/components/musteri/MusteriFormIletisimOtp";
+import { useMusteriAktifTalepYonlendir } from "@/components/musteri/useMusteriAktifTalepYonlendir";
+import { musteriAktifTalepKaydet } from "@/lib/musteri-aktif-talep";
 import { telefonDogrulamaHatasi } from "@/lib/telefon";
 import {
   geocodeAdres,
@@ -189,6 +191,7 @@ function MusteriDonusumSayfaIcerik({
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  useMusteriAktifTalepYonlendir();
   const [step, setStep] = useState<Step>("sorun");
   const hizmetUygulandi = useRef(false);
   const hizmetKaydirTip = useRef<string | null>(null);
@@ -1409,6 +1412,7 @@ function MusteriDonusumSayfaIcerik({
       });
       if (typeof data.id === "string" || data.id != null) {
         musteriFunnelIdTalepKaydet(String(data.id), funnelId);
+        musteriAktifTalepKaydet(String(data.id));
       }
       /* Meta + TikTok Lead: bekle sayfasına gitmeden önce + bir kez (bekle yedek) */
       try {

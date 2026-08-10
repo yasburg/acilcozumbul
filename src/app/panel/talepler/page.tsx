@@ -12,13 +12,26 @@ import {
   type PanelTalepOzet,
   type PanelTalepHaritaNokta,
 } from "@/lib/panel-talep";
-import type { Talep } from "@/lib/types";
+import type { Talep, TeklifDurumu } from "@/lib/types";
 
 const PAGE_SIZE = 50;
 
 type Gorunum = "liste" | "ozet" | "harita" | "sehir-harita";
 type Siralama = "adet" | "alfa";
 type PanelTalepSatir = Talep & { simulasyon?: boolean };
+
+function panelTeklifDurumEtiketi(durum: TeklifDurumu | string): string {
+  switch (durum) {
+    case "aktif":
+      return "Aktif";
+    case "kazandi":
+      return "Kazandı";
+    case "kaybetti":
+      return "Kaybetti";
+    default:
+      return durum;
+  }
+}
 
 export default function PanelTaleplerPage() {
   const [liste, setListe] = useState<PanelTalepSatir[]>([]);
@@ -35,6 +48,9 @@ export default function PanelTaleplerPage() {
   >("");
   const [siralama, setSiralama] = useState<Siralama>("adet");
   const [sayiGizli, setSayiGizli] = useState(false);
+  const [acikTeklifler, setAcikTeklifler] = useState<Record<string, boolean>>(
+    {}
+  );
 
   const yukleListe = useCallback(async (nextOffset: number, append: boolean) => {
     if (append) setLoadingMore(true);
@@ -358,6 +374,13 @@ export default function PanelTaleplerPage() {
                 t.olusturulma,
                 t.iptalAt
               );
+              const teklifListe = [...(t.teklifler ?? [])].sort(
+                (a, b) =>
+                  new Date(a.tarih).getTime() - new Date(b.tarih).getTime()
+              );
+              const teklifSayisi = teklifListe.length;
+              const tekliflerAcik =
+                acikTeklifler[t.id] ?? t.durum === "iptal";
               return (
               <Card key={t.id}>
                 <div className="flex flex-wrap justify-between gap-2">
@@ -392,7 +415,7 @@ export default function PanelTaleplerPage() {
                 </p>
                 <p className="text-xs text-slate-400 mt-2">
                   {new Date(t.olusturulma).toLocaleString("tr-TR")} ·{" "}
-                  {t.teklifler?.length ?? 0} teklif
+                  {teklifSayisi} teklif
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2 text-xs">
                   {teklifSecildi ? (
@@ -422,6 +445,77 @@ export default function PanelTaleplerPage() {
                     )
                   ) : null}
                 </div>
+                {teklifSayisi > 0 ? (
+                  <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50/80">
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-100/80"
+                      aria-expanded={tekliflerAcik}
+                      onClick={() =>
+                        setAcikTeklifler((prev) => ({
+                          ...prev,
+                          [t.id]: !(prev[t.id] ?? t.durum === "iptal"),
+                        }))
+                      }
+                    >
+                      <span>
+                        {tekliflerAcik
+                          ? "Teklifleri gizle"
+                          : `${teklifSayisi} teklifi göster`}
+                      </span>
+                      <span className="text-slate-400" aria-hidden>
+                        {tekliflerAcik ? "▴" : "▾"}
+                      </span>
+                    </button>
+                    {tekliflerAcik ? (
+                      <ul className="space-y-2 border-t border-slate-100 px-3 py-2">
+                        {teklifListe.map((tk) => {
+                          const kazanan =
+                            tk.id === t.kazananTeklifId ||
+                            tk.cekiciId === t.kazananCekiciId ||
+                            tk.durum === "kazandi";
+                          return (
+                            <li
+                              key={tk.id}
+                              className={`rounded-lg bg-white px-3 py-2 text-sm shadow-sm ring-1 ${
+                                kazanan
+                                  ? "ring-emerald-200"
+                                  : "ring-slate-100"
+                              }`}
+                            >
+                              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                                <p className="font-medium text-slate-900">
+                                  {tk.cekiciAd}
+                                  {kazanan ? (
+                                    <span className="ml-2 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                                      Kazanan
+                                    </span>
+                                  ) : null}
+                                </p>
+                                <p className="tabular-nums font-semibold text-slate-900">
+                                  {tk.fiyat} TL
+                                </p>
+                              </div>
+                              <p className="mt-0.5 text-xs text-slate-500">
+                                {panelTeklifDurumEtiketi(tk.durum)}
+                                {" · "}
+                                {new Date(tk.tarih).toLocaleString("tr-TR")}
+                                {tk.tahminiSureDk
+                                  ? ` · ~${tk.tahminiSureDk} dk`
+                                  : ""}
+                              </p>
+                              {tk.mesaj ? (
+                                <p className="mt-1 text-xs text-slate-600 line-clamp-2">
+                                  {tk.mesaj}
+                                </p>
+                              ) : null}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : null}
+                  </div>
+                ) : null}
                 <div className="flex flex-wrap gap-3 mt-3 text-sm">
                   <Link
                     href={`/bekle/${t.id}`}
