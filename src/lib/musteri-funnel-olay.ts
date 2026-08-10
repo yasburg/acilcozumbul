@@ -3,6 +3,17 @@ import {
   musteriFunnelMi,
   type MusteriFunnelId,
 } from "./musteri-funnel";
+import {
+  gecerliSorunTipi,
+  sorunAracModeliAlaniGoster,
+  sorunFotografAlaniGoster,
+  sorunHedefKonumGerekliMi,
+  sorunKilitDurumuAlaniGoster,
+  sorunLastikDurumuAlaniGoster,
+  sorunTipiBul,
+  sorunYakitTipiAlaniGoster,
+  type SorunTipiId,
+} from "./sorun-tipleri";
 
 export const MUSTERI_FUNNEL_OLAY_SABIT = [
   "goruldu",
@@ -17,10 +28,10 @@ export const MUSTERI_FUNNEL_OLAY_SABIT = [
   "form_adim_arac_tipi",
   "form_adim_arac_modeli",
   "form_adim_arac_durumu",
-  "form_adim_lastik_durumu",
   "form_adim_ek_detay",
   "form_adim_ihale",
   "form_adim_hedef",
+  "form_adim_giris",
   "service_selected",
   "talep_olustur",
   "otp_gonder",
@@ -124,7 +135,8 @@ export type MusteriFunnelHuniAdimTanim = {
 };
 
 /**
- * Funnel A: konum → hizmet → foto/araç/ek/ihale → hedef → iletişim → OTP → talep → teklif
+ * Funnel A kanonik sıra — form `aktifAdimlar` ile aynı.
+ * Koşullu adımlar sorun tipine göre filtrelenir (`musteriFunnelHuniASorunIcin`).
  */
 export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
   { id: "goruldu", label: "Görülme", olaylar: ["goruldu"] },
@@ -135,55 +147,45 @@ export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
     olaylar: ["form_adim_sorun", "service_selected"],
   },
   {
-    id: "form_adim_fotograf",
-    label: "Adım · Fotoğraf",
-    /* form_adim_detay: eski tek detay adımı (geriye uyum) */
-    olaylar: ["form_adim_fotograf", "form_adim_detay"],
-  },
-  {
     id: "form_adim_lastik_durumu",
     label: "Adım · Lastik durumu",
-    olaylar: ["form_adim_lastik_durumu", "form_adim_detay"],
+    olaylar: ["form_adim_lastik_durumu"],
   },
   {
     id: "form_adim_yakit_tipi",
     label: "Adım · Yakıt tipi",
-    olaylar: ["form_adim_yakit_tipi", "form_adim_detay"],
+    olaylar: ["form_adim_yakit_tipi"],
   },
   {
     id: "form_adim_kilit_durumu",
     label: "Adım · Kilit durumu",
-    olaylar: ["form_adim_kilit_durumu", "form_adim_detay"],
+    olaylar: ["form_adim_kilit_durumu"],
+  },
+  {
+    id: "form_adim_fotograf",
+    label: "Adım · Fotoğraf",
+    olaylar: ["form_adim_fotograf"],
   },
   {
     id: "form_adim_arac_tipi",
     label: "Adım · Araç tipi",
-    olaylar: ["form_adim_arac_tipi", "form_adim_detay"],
+    olaylar: ["form_adim_arac_tipi"],
   },
   {
     id: "form_adim_arac_durumu",
     label: "Adım · Araç durumu",
-    /* form_adim_arac_modeli: eski adım adı (geriye uyum) */
-    olaylar: [
-      "form_adim_arac_durumu",
-      "form_adim_arac_modeli",
-      "form_adim_detay",
-    ],
-  },
-  {
-    id: "form_adim_lastik_durumu",
-    label: "Adım · Lastik durumu",
-    olaylar: ["form_adim_lastik_durumu", "form_adim_detay"],
+    olaylar: ["form_adim_arac_durumu", "form_adim_arac_modeli"],
   },
   {
     id: "form_adim_ek_detay",
     label: "Adım · Ek detay",
+    /* form_adim_detay: eski tek detay adımı (geriye uyum) */
     olaylar: ["form_adim_ek_detay", "form_adim_detay"],
   },
   {
     id: "form_adim_ihale",
     label: "Adım · İhale süresi",
-    olaylar: ["form_adim_ihale", "form_adim_detay"],
+    olaylar: ["form_adim_ihale"],
   },
   { id: "form_adim_hedef", label: "Adım · Hedef", olaylar: ["form_adim_hedef"] },
   {
@@ -204,6 +206,54 @@ export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
     olaylar: ["teklif_secildi"],
   },
 ];
+
+/** Sorun tipine göre değişen A adımları — genel A/B hunisinde çıkarılır */
+const MUSTERI_FUNNEL_HUNI_A_KOSULLU = new Set([
+  "form_adim_lastik_durumu",
+  "form_adim_yakit_tipi",
+  "form_adim_kilit_durumu",
+  "form_adim_fotograf",
+  "form_adim_arac_tipi",
+  "form_adim_arac_durumu",
+  "form_adim_hedef",
+]);
+
+/** Tüm sorunlar için ortak A hunisi (koşullu adımlar yok) */
+export function musteriFunnelHuniAOrtak(): readonly MusteriFunnelHuniAdimTanim[] {
+  return MUSTERI_FUNNEL_HUNI_A.filter(
+    (a) => !MUSTERI_FUNNEL_HUNI_A_KOSULLU.has(a.id)
+  );
+}
+
+/** Belirli sorun tipi için A hunisi (form adım sırası) */
+export function musteriFunnelHuniASorunIcin(
+  sorunTipi: string
+): readonly MusteriFunnelHuniAdimTanim[] {
+  return MUSTERI_FUNNEL_HUNI_A.filter((a) => {
+    if (a.id === "form_adim_lastik_durumu") {
+      return sorunLastikDurumuAlaniGoster(sorunTipi);
+    }
+    if (a.id === "form_adim_yakit_tipi") {
+      return sorunYakitTipiAlaniGoster(sorunTipi);
+    }
+    if (a.id === "form_adim_kilit_durumu") {
+      return sorunKilitDurumuAlaniGoster(sorunTipi);
+    }
+    if (a.id === "form_adim_fotograf") {
+      return sorunFotografAlaniGoster(sorunTipi);
+    }
+    if (
+      a.id === "form_adim_arac_tipi" ||
+      a.id === "form_adim_arac_durumu"
+    ) {
+      return sorunAracModeliAlaniGoster(sorunTipi);
+    }
+    if (a.id === "form_adim_hedef") {
+      return sorunHedefKonumGerekliMi(sorunTipi);
+    }
+    return true;
+  });
+}
 
 /**
  * Funnel B: hizmet → hedef → iletişim → OTP → talep → teklif
@@ -303,7 +353,80 @@ export type MusteriFunnelOlaySatir = {
   olay: string;
   session_id?: string | null;
   olusturulma?: string;
+  meta?: MusteriFunnelOlayMeta | null;
 };
+
+/**
+ * Session’ın sorun tipi: meta.sorun_tipi veya koşullu adım olayından çıkarım.
+ */
+export function musteriFunnelSessionSorunTipi(
+  olaylar: Set<string>,
+  metaList: Array<MusteriFunnelOlayMeta | null | undefined>
+): SorunTipiId | null {
+  for (const m of metaList) {
+    const t = m?.sorun_tipi;
+    if (typeof t === "string" && gecerliSorunTipi(t)) return t;
+  }
+  if (olaylar.has("form_adim_lastik_durumu")) return "lastik";
+  if (olaylar.has("form_adim_yakit_tipi")) return "yakit";
+  if (olaylar.has("form_adim_kilit_durumu")) return "kilit";
+  return null;
+}
+
+export type MusteriFunnelSorunHuni = {
+  sorunTipi: string;
+  label: string;
+  session: number;
+  adimlar: MusteriFunnelHuniAdim[];
+};
+
+/** Funnel A session’larını sorun tipine göre ayırıp ayrı huniler üretir */
+export function musteriFunnelSorunHunileriHesapla(
+  rows: MusteriFunnelOlaySatir[]
+): MusteriFunnelSorunHuni[] {
+  const bySession = new Map<
+    string,
+    { olaylar: Set<string>; meta: MusteriFunnelOlayMeta[] }
+  >();
+  for (const r of rows) {
+    const sid = r.session_id?.trim();
+    if (!sid) continue;
+    if (!bySession.has(sid)) {
+      bySession.set(sid, { olaylar: new Set(), meta: [] });
+    }
+    const s = bySession.get(sid)!;
+    s.olaylar.add(String(r.olay));
+    if (r.meta && typeof r.meta === "object") s.meta.push(r.meta);
+  }
+
+  const bySorun = new Map<SorunTipiId, string[]>();
+  for (const [sid, s] of bySession) {
+    const tip = musteriFunnelSessionSorunTipi(s.olaylar, s.meta);
+    if (!tip) continue;
+    if (!bySorun.has(tip)) bySorun.set(tip, []);
+    bySorun.get(tip)!.push(sid);
+  }
+
+  const out: MusteriFunnelSorunHuni[] = [];
+  for (const [sorunTipi, sessionIds] of bySorun) {
+    const idSet = new Set(sessionIds);
+    const filtered = rows.filter(
+      (r) => r.session_id && idSet.has(r.session_id.trim())
+    );
+    const adimlar = musteriFunnelSessionHuniHesapla(
+      filtered,
+      musteriFunnelHuniASorunIcin(sorunTipi)
+    );
+    out.push({
+      sorunTipi,
+      label: sorunTipiBul(sorunTipi)?.shortLabel ?? sorunTipi,
+      session: sessionIds.length,
+      adimlar,
+    });
+  }
+
+  return out.sort((a, b) => b.session - a.session || a.label.localeCompare(b.label, "tr"));
+}
 
 function sessionOlayEslesir(
   olaylar: Set<string>,
@@ -338,7 +461,7 @@ export function musteriFunnelSessionMaxAdim(
 export function musteriFunnelHuniAdimlariSec(
   funnel?: string | null
 ): readonly MusteriFunnelHuniAdimTanim[] {
-  if (funnel === "a") return MUSTERI_FUNNEL_HUNI_A;
+  if (funnel === "a") return musteriFunnelHuniAOrtak();
   if (funnel === "b") return MUSTERI_FUNNEL_HUNI_B;
   return MUSTERI_FUNNEL_HUNI_ORTAK;
 }

@@ -24,6 +24,19 @@ type HuniAdim = {
   oncekiOran: number | null;
 };
 
+type SorunHuni = {
+  sorunTipi: string;
+  label: string;
+  session: number;
+  adimlar: HuniAdim[];
+};
+
+type KarsilastirmaSatir = {
+  funnel: string;
+  adimlar: HuniAdim[];
+  sorunHunileri?: SorunHuni[];
+};
+
 type PanelOzet = {
   session: number;
   goruldu: number;
@@ -47,7 +60,7 @@ const FUNNEL_CHIPLER = ["a", "b"] as const;
 
 function yuzde(oran: number | null): string {
   if (oran == null) return "—";
-  return `${(oran * 100).toFixed(1)}%`;
+  return `${(oran * 100).toFixed(2)}%`;
 }
 
 function bugun(): string {
@@ -159,7 +172,7 @@ function HuniSvgYatay({ adimlar }: { adimlar: HuniAdim[] }) {
                 fontSize={10}
                 fontWeight={700}
               >
-                {totalYuzde.toFixed(0)}%
+                {totalYuzde.toFixed(2)}%
               </text>
               <text
                 x={midX}
@@ -168,7 +181,7 @@ function HuniSvgYatay({ adimlar }: { adimlar: HuniAdim[] }) {
                 fill="#94a3b8"
                 fontSize={9}
               >
-                adım {adimYuzde.toFixed(0)}%
+                adım {adimYuzde.toFixed(2)}%
               </text>
             </g>
           );
@@ -184,9 +197,9 @@ function HuniSvgYatay({ adimlar }: { adimlar: HuniAdim[] }) {
 function HuniSvgDikey({ adimlar }: { adimlar: HuniAdim[] }) {
   const n = adimlar.length;
   const labelW = 110;
-  const pctSolW = 40;
+  const pctSolW = 52;
   const funnelW = 180;
-  const pctSagW = 48;
+  const pctSagW = 52;
   const svgW = labelW + pctSolW + funnelW + pctSagW;
   const segH = 54;
   const svgH = n * segH + 22;
@@ -267,10 +280,10 @@ function HuniSvgDikey({ adimlar }: { adimlar: HuniAdim[] }) {
                 y={midY + 4}
                 textAnchor="middle"
                 fill="#64748b"
-                fontSize={11}
+                fontSize={10}
                 fontWeight={700}
               >
-                {totalYuzde.toFixed(0)}%
+                {totalYuzde.toFixed(2)}%
               </text>
               <polygon
                 points={points}
@@ -291,10 +304,10 @@ function HuniSvgDikey({ adimlar }: { adimlar: HuniAdim[] }) {
                 y={midY + 4}
                 textAnchor="middle"
                 fill="#64748b"
-                fontSize={11}
+                fontSize={10}
                 fontWeight={700}
               >
-                {adimYuzde.toFixed(0)}%
+                {adimYuzde.toFixed(2)}%
               </text>
             </g>
           );
@@ -400,9 +413,7 @@ export default function PanelMusteriFunnelsPage() {
   const [liste, setListe] = useState<OzetSatir[]>([]);
   const [ozet, setOzet] = useState<PanelOzet | null>(null);
   const [huni, setHuni] = useState<HuniAdim[]>([]);
-  const [karsilastirma, setKarsilastirma] = useState<
-    { funnel: string; adimlar: HuniAdim[] }[]
-  >([]);
+  const [karsilastirma, setKarsilastirma] = useState<KarsilastirmaSatir[]>([]);
   const [olayHacmi, setOlayHacmi] = useState<OlayHacmi[]>([]);
   const [gunluk, setGunluk] = useState<Gunluk[]>([]);
   const [hata, setHata] = useState("");
@@ -633,16 +644,43 @@ export default function PanelMusteriFunnelsPage() {
           <h2 className="text-sm font-semibold text-slate-900">
             A/B karşılaştırması
           </h2>
+          <p className="text-xs text-slate-500">
+            Funnel A üstte ortak adımlar; altında sorun tipine göre ayrı
+            huniler (lastik / yakıt / kilit vb.).
+          </p>
           <div className="grid sm:grid-cols-2 gap-4">
             {karsilastirmaFunneller.map((k) => (
               <div key={k.funnel} className="space-y-1">
                 <p className="text-xs font-bold uppercase text-slate-600">
                   Funnel {k.funnel}
+                  {k.funnel === "a" ? " · ortak adımlar" : ""}
                 </p>
                 <HuniSvg adimlar={k.adimlar} />
               </div>
             ))}
           </div>
+          {karsilastirmaFunneller
+            .filter((k) => k.funnel === "a" && (k.sorunHunileri?.length ?? 0) > 0)
+            .map((k) => (
+              <div key={`${k.funnel}-sorun`} className="space-y-3 pt-2 border-t border-slate-100">
+                <h3 className="text-xs font-bold uppercase tracking-wide text-slate-600">
+                  Funnel A · sorun tipine göre
+                </h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {(k.sorunHunileri ?? []).map((sh) => (
+                    <div key={sh.sorunTipi} className="space-y-1">
+                      <p className="text-xs font-semibold text-slate-700">
+                        {sh.label}{" "}
+                        <span className="font-normal text-slate-400">
+                          · {sh.session} session
+                        </span>
+                      </p>
+                      <HuniSvg adimlar={sh.adimlar} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
         </Card>
       )}
 

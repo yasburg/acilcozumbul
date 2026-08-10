@@ -46,7 +46,7 @@ const FUNNEL_CHIPLER = ["a", "b", "c", "d", "e"] as const;
 
 function yuzde(oran: number | null): string {
   if (oran == null) return "—";
-  return `${(oran * 100).toFixed(1)}%`;
+  return `${(oran * 100).toFixed(2)}%`;
 }
 
 function bugun(): string {
@@ -150,7 +150,7 @@ function HuniSvgYatay({ adimlar }: { adimlar: HuniAdim[] }) {
                 fontSize={10}
                 fontWeight={700}
               >
-                {totalYuzde.toFixed(0)}%
+                {totalYuzde.toFixed(2)}%
               </text>
               <text
                 x={midX}
@@ -159,7 +159,7 @@ function HuniSvgYatay({ adimlar }: { adimlar: HuniAdim[] }) {
                 fill="#94a3b8"
                 fontSize={9}
               >
-                adım {adimYuzde.toFixed(0)}%
+                adım {adimYuzde.toFixed(2)}%
               </text>
             </g>
           );
@@ -175,9 +175,9 @@ function HuniSvgYatay({ adimlar }: { adimlar: HuniAdim[] }) {
 function HuniSvgDikey({ adimlar }: { adimlar: HuniAdim[] }) {
   const n = adimlar.length;
   const labelW = 100;
-  const pctSolW = 40;
+  const pctSolW = 52;
   const funnelW = 180;
-  const pctSagW = 48;
+  const pctSagW = 52;
   const svgW = labelW + pctSolW + funnelW + pctSagW;
   const segH = 54;
   const svgH = n * segH + 22;
@@ -255,10 +255,10 @@ function HuniSvgDikey({ adimlar }: { adimlar: HuniAdim[] }) {
                 y={midY + 4}
                 textAnchor="middle"
                 fill="#64748b"
-                fontSize={11}
+                fontSize={10}
                 fontWeight={700}
               >
-                {totalYuzde.toFixed(0)}%
+                {totalYuzde.toFixed(2)}%
               </text>
               <polygon
                 points={points}
@@ -279,10 +279,10 @@ function HuniSvgDikey({ adimlar }: { adimlar: HuniAdim[] }) {
                 y={midY + 4}
                 textAnchor="middle"
                 fill="#64748b"
-                fontSize={11}
+                fontSize={10}
                 fontWeight={700}
               >
-                {adimYuzde.toFixed(0)}%
+                {adimYuzde.toFixed(2)}%
               </text>
             </g>
           );

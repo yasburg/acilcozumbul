@@ -15,6 +15,7 @@ import {
   musteriFunnelOlayHacmiHesapla,
   musteriFunnelOzetHesapla,
   musteriFunnelSessionHuniHesapla,
+  musteriFunnelSorunHunileriHesapla,
   type MusteriFunnelOlaySatir,
 } from "@/lib/musteri-funnel-olay";
 
@@ -58,7 +59,7 @@ async function musteriFunnelOlaylariCek(opts: {
   for (;;) {
     const { data, error } = await getSupabaseAdmin()
       .from("musteri_funnel_olay")
-      .select("funnel, olay, session_id, olusturulma")
+      .select("funnel, olay, session_id, olusturulma, meta")
       .gte("olusturulma", gunBaslangicIso(opts.from))
       .lte("olusturulma", gunBitisIso(opts.to))
       .in("funnel", opts.funnels)
@@ -134,6 +135,12 @@ export async function GET(request: NextRequest) {
       rows.filter((r) => r.funnel === funnel),
       musteriFunnelHuniAdimlariSec(funnel)
     ),
+    sorunHunileri:
+      funnel === "a"
+        ? musteriFunnelSorunHunileriHesapla(
+            rows.filter((r) => r.funnel === "a")
+          )
+        : [],
   }));
 
   const session = musteriFunnelBenzersizSession(rows);
