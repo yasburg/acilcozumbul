@@ -192,6 +192,8 @@ export default function PanelTopluSmsPage() {
   const [oncekiKontrol, setOncekiKontrol] = useState(false);
   const [oncekiMod, setOncekiMod] = useState<OncekiMod>("atla");
   const [gecmisUyari, setGecmisUyari] = useState("");
+  /** Boş / 0 = tümü; >0 = (önceki filtresi sonrası) ilk N numara */
+  const [ilkAdetLimit, setIlkAdetLimit] = useState("");
 
   const [listeler, setListeler] = useState<ListeOzet[]>([]);
   const [genelTelefonlar, setGenelTelefonlar] = useState<GenelTelefon[]>([]);
@@ -246,10 +248,17 @@ export default function PanelTopluSmsPage() {
     [gecerliAlicilar, oncekiSet]
   );
   const yeniAdet = gecerliAlicilar.length - oncekiAdet;
-  const gonderilecekAdet =
+  const adayAdet =
     oncekiAdet > 0 && oncekiMod === "atla"
       ? yeniAdet
       : gecerliAlicilar.length;
+  const ilkAdetN = (() => {
+    const n = Number.parseInt(ilkAdetLimit.trim(), 10);
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  })();
+  const gonderilecekAdet =
+    ilkAdetN > 0 ? Math.min(adayAdet, ilkAdetN) : adayAdet;
+  const limitKalanAdet = Math.max(0, adayAdet - gonderilecekAdet);
 
   const tahminiSureSn = useMemo(
     () => topluSmsTahminiSureSn(gonderilecekAdet, etkiliTempo),
@@ -470,6 +479,7 @@ export default function PanelTopluSmsPage() {
     setExcelOzet(null);
     setExcelUyari("");
     setOncekiSet(new Set());
+    setIlkAdetLimit("");
   }
 
   function pollDurdur() {
@@ -608,6 +618,12 @@ export default function PanelTopluSmsPage() {
         : oncekiAdet > 0 && oncekiMod === "yine"
           ? ` · ${oncekiAdet} önceki numara dahil`
           : "";
+    const limitMetin =
+      ilkAdetN > 0 && limitKalanAdet > 0
+        ? ` · listedeki ilk ${gonderilecekAdet} (kalan ${limitKalanAdet} sonraki gönderime)`
+        : ilkAdetN > 0
+          ? ` · ilk ${gonderilecekAdet} limit`
+          : "";
 
     let baslangicAt: string | null = null;
     let zamanMetin = " · şimdi başla";
@@ -630,7 +646,7 @@ export default function PanelTopluSmsPage() {
     }
 
     const onay = window.confirm(
-      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${takipMetin}${atlaMetin}${zamanMetin}.\n\nİlk SMS her zaman admin test numarasına (${TOPLU_SMS_ADMIN_TEST_TELEFON}) gider.\n\nDiğer planlardan bağımsız çalışır; ekranı kapatabilirsiniz. Devam?`
+      `${gonderilecekAdet} numara · ~${partiTahmini} parti × ${tempoN.partiBoyutu} kişi · aralık ~${tempoN.beklemeSn} sn (tahmini ${topluSmsSureMetni(tahminiSureSn)})${takipMetin}${atlaMetin}${limitMetin}${zamanMetin}.\n\nİlk SMS her zaman admin test numarasına (${TOPLU_SMS_ADMIN_TEST_TELEFON}) gider.\n\nDiğer planlardan bağımsız çalışır; ekranı kapatabilirsiniz. Devam?`
     );
     if (!onay) return;
 
@@ -650,6 +666,9 @@ export default function PanelTopluSmsPage() {
       let kuyruk = gecerliAlicilar.map((a) => a.telefon);
       if (oncekiAdet > 0 && oncekiMod === "atla") {
         kuyruk = kuyruk.filter((t) => !oncekiSet.has(t));
+      }
+      if (ilkAdetN > 0) {
+        kuyruk = kuyruk.slice(0, ilkAdetN);
       }
 
       const adlar: Record<string, string> = {};
@@ -970,6 +989,66 @@ export default function PanelTopluSmsPage() {
                   </span>
                 </label>
               </div>
+            </Card>
+          )}
+
+          {gecerliAlicilar.length > 0 && (
+            <Card className="space-y-3">
+              <h3 className="font-semibold text-slate-800">
+                Bu gönderimde ilk N numara
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Büyük dosyayı bölmek için: liste sırasına göre yalnızca ilk N
+                kişiye planlanır. Liste silinmez; kalanlar sonraki gönderimde
+                (öncekiler atlanarak) devam eder. Boş bırakırsanız tüm adaylar
+                gider.
+              </p>
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="min-w-[8rem] max-w-[12rem]">
+                  <Field
+                    label="İlk kaç kişi?"
+                    type="number"
+                    min={1}
+                    inputMode="numeric"
+                    placeholder="Tümü"
+                    value={ilkAdetLimit}
+                    onChange={(e) => setIlkAdetLimit(e.target.value)}
+                    disabled={gonderiyor}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2 pb-1">
+                  {[100, 250, 500, 1000].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      disabled={gonderiyor || adayAdet < 1}
+                      onClick={() => setIlkAdetLimit(String(Math.min(n, adayAdet)))}
+                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      {n}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    disabled={gonderiyor}
+                    onClick={() => setIlkAdetLimit("")}
+                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Tümü
+                  </button>
+                </div>
+              </div>
+              <p className="text-sm text-slate-700">
+                Aday: <strong>{adayAdet}</strong>
+                {" · "}
+                Bu plan: <strong>{gonderilecekAdet}</strong>
+                {limitKalanAdet > 0 ? (
+                  <>
+                    {" · "}
+                    Sonraya kalan: <strong>{limitKalanAdet}</strong>
+                  </>
+                ) : null}
+              </p>
             </Card>
           )}
 
