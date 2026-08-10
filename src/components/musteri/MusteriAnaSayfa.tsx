@@ -357,6 +357,7 @@ function AdimAltNav({
   devamMetin,
   devamDisabled = false,
   devamGlow = false,
+  geriMetin = "Geri",
   onGeri,
   onDevam,
 }: {
@@ -364,6 +365,7 @@ function AdimAltNav({
   devamDisabled?: boolean;
   /** Seçim yapıldıktan sonra Devam butonunda amber glow */
   devamGlow?: boolean;
+  geriMetin?: string;
   onGeri: () => void;
   onDevam: () => void;
 }) {
@@ -402,7 +404,7 @@ function AdimAltNav({
           className={GERI_BTN_SINIF}
           onClick={onGeri}
         >
-          Geri
+          {geriMetin}
         </Btn>
         <Btn
           type="button"
@@ -1172,15 +1174,24 @@ function MusteriAnaSayfaIcerik({
     const hedefIdx = TUM_ADIMLAR.indexOf(hedef);
     const konumIdx = TUM_ADIMLAR.indexOf("konum");
     const sorunIdx = TUM_ADIMLAR.indexOf("sorun");
+    /* Timer’lardan çağrılınca stale form olmasın — anlık ref */
+    const anlik = taslakAnlikRef.current.form;
 
-    if (hedefIdx > konumIdx && !konumSecimiHazir()) {
+    if (
+      hedefIdx > konumIdx &&
+      !(
+        !!anlik.adres.trim() ||
+        (!!anlik.lat && !!anlik.lng) ||
+        (!!seciliSehir && !!seciliIlce)
+      )
+    ) {
       setError("Önce otomatik konum alın veya şehir ve ilçe seçin.");
       setStep("konum");
       return;
     }
 
     if (hedefIdx > sorunIdx) {
-      if (!form.sorunTipi) {
+      if (!anlik.sorunTipi) {
         setError("Lütfen sorununuzu seçin.");
         setStep("sorun");
         return;
@@ -1193,7 +1204,7 @@ function MusteriAnaSayfaIcerik({
       musteriFormTaslakKaydet({
         v: 1,
         step: hedef,
-        form,
+        form: anlik,
         yasalOnay,
         fotografOnizleme,
         fotografData,
@@ -2124,6 +2135,40 @@ function MusteriAnaSayfaIcerik({
     }
   }
 
+  /** Sorun adımından: konum atlama efektini kırıp konum seçimine dön */
+  function konumuDegistir() {
+    if (sorunDevamTimerRef.current != null) {
+      window.clearTimeout(sorunDevamTimerRef.current);
+      sorunDevamTimerRef.current = null;
+    }
+    gpsIptal();
+    setGpsYukleniyor(false);
+    setArizaAdresDuzenle(true);
+    const { il, ilce } = parseIlIlce(form.adres);
+    const sehirKorunan =
+      seciliSehir.trim() || il || varsayilanSehir || "";
+    const ilceKorunan =
+      seciliIlce.trim() || ilce || varsayilanIlce || "";
+    setForm((f) => ({
+      ...f,
+      lat: 0,
+      lng: 0,
+      adres: "",
+      konumKaynak: undefined,
+    }));
+    setSeciliSehir(sehirKorunan);
+    setSeciliIlce(ilceKorunan);
+    setError("");
+    setBilgiMesaj("");
+    setKonumBasarisiz(false);
+    setStep("konum");
+    /* Şehir+ilçe zaten doluysa sheet açmaya gerek yok */
+    setKonumSheetAcik(!(sehirKorunan && ilceKorunan));
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
+  }
+
   const sorunLabel = form.sorunTipi
     ? sorunTipiBul(form.sorunTipi)?.label
     : null;
@@ -2460,6 +2505,18 @@ function MusteriAnaSayfaIcerik({
               if (id !== "kilit") {
                 update("kilitDurumu", "");
               }
+              /* Timer adimGit stale form görmesin — ref’i hemen güncelle */
+              const formAnlik = {
+                ...taslakAnlikRef.current.form,
+                sorunTipi: id,
+                lastikDurumu: id === "lastik" ? taslakAnlikRef.current.form.lastikDurumu : "",
+                yakitTipi: id === "yakit" ? taslakAnlikRef.current.form.yakitTipi : "",
+                kilitDurumu: id === "kilit" ? taslakAnlikRef.current.form.kilitDurumu : "",
+              };
+              taslakAnlikRef.current = {
+                ...taslakAnlikRef.current,
+                form: formAnlik,
+              };
               posthogOlayYakala("sorun_secildi", { sorun_tipi: id });
               musteriFunnelOlayBirKez(funnelId, "service_selected", {
                 props: { sorun_tipi: id },
@@ -2497,7 +2554,8 @@ function MusteriAnaSayfaIcerik({
             devamMetin={form.sorunTipi ? "Devam et" : "Önce hizmet seç"}
             devamDisabled={!form.sorunTipi}
             devamGlow={!!form.sorunTipi}
-            onGeri={oncekiAdimaDon}
+            geriMetin="Konumu değiştir"
+            onGeri={konumuDegistir}
             onDevam={() => {
               if (sorunDevamTimerRef.current != null) {
                 window.clearTimeout(sorunDevamTimerRef.current);
@@ -3186,6 +3244,11 @@ function MusteriAnaSayfaIcerik({
                   gpsIptal();
                   setGpsYukleniyor(false);
                   setArizaAdresDuzenle(true);
+                  const { il, ilce } = parseIlIlce(form.adres);
+                  const sehirKorunan =
+                    seciliSehir.trim() || il || varsayilanSehir || "";
+                  const ilceKorunan =
+                    seciliIlce.trim() || ilce || varsayilanIlce || "";
                   setForm((f) => ({
                     ...f,
                     lat: 0,
@@ -3193,8 +3256,8 @@ function MusteriAnaSayfaIcerik({
                     adres: "",
                     konumKaynak: undefined,
                   }));
-                  setSeciliSehir(varsayilanSehir ?? "");
-                  setSeciliIlce(varsayilanIlce ?? "");
+                  setSeciliSehir(sehirKorunan);
+                  setSeciliIlce(ilceKorunan);
                   setError("");
                   setBilgiMesaj("");
                   setKonumBasarisiz(false);

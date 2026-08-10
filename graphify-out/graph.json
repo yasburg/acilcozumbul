@@ -2680,7 +2680,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_cekici_id_oturum_route",
-      "community": 20,
+      "community": 92,
       "norm_label": "route.ts"
     },
     {
@@ -2690,7 +2690,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_app_api_panel_cekici_id_oturum_route_post",
-      "community": 20,
+      "community": 92,
       "norm_label": "post()"
     },
     {
@@ -2700,7 +2700,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_cekiciler_id_belge_route",
-      "community": 20,
+      "community": 92,
       "norm_label": "route.ts"
     },
     {
@@ -2710,7 +2710,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_app_api_panel_cekiciler_id_belge_route_patch",
-      "community": 20,
+      "community": 92,
       "norm_label": "patch()"
     },
     {
@@ -2720,7 +2720,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_cekiciler_id_profil_foto_route",
-      "community": 20,
+      "community": 92,
       "norm_label": "route.ts"
     },
     {
@@ -2730,7 +2730,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_app_api_panel_cekiciler_id_profil_foto_route_patch",
-      "community": 20,
+      "community": 92,
       "norm_label": "patch()"
     },
     {
@@ -3660,7 +3660,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_rozetler_route",
-      "community": 89,
+      "community": 92,
       "norm_label": "route.ts"
     },
     {
@@ -3670,7 +3670,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_app_api_panel_rozetler_route_get",
-      "community": 89,
+      "community": 92,
       "norm_label": "get()"
     },
     {
@@ -3850,7 +3850,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_sablonlar_id_route",
-      "community": 142,
+      "community": 89,
       "norm_label": "route.ts"
     },
     {
@@ -3860,7 +3860,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_sablonlar_id_route_panelkullanici",
-      "community": 142,
+      "community": 89,
       "norm_label": "panelkullanici()"
     },
     {
@@ -3870,7 +3870,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_sablonlar_id_route_ctx",
-      "community": 142,
+      "community": 89,
       "norm_label": "ctx"
     },
     {
@@ -3880,7 +3880,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_sablonlar_id_route_patch",
-      "community": 142,
+      "community": 89,
       "norm_label": "patch()"
     },
     {
@@ -3890,7 +3890,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_sablonlar_id_route_delete",
-      "community": 142,
+      "community": 89,
       "norm_label": "delete()"
     },
     {
@@ -3900,7 +3900,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_sablonlar_route",
-      "community": 142,
+      "community": 89,
       "norm_label": "route.ts"
     },
     {
@@ -3910,7 +3910,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_sablonlar_route_panelkullanici",
-      "community": 142,
+      "community": 89,
       "norm_label": "panelkullanici()"
     },
     {
@@ -3920,7 +3920,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_sablonlar_route_get",
-      "community": 142,
+      "community": 89,
       "norm_label": "get()"
     },
     {
@@ -3930,7 +3930,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_app_api_panel_sms_sablonlar_route_post",
-      "community": 142,
+      "community": 89,
       "norm_label": "post()"
     },
     {
@@ -4250,7 +4250,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_talepler_route",
-      "community": 15,
+      "community": 100,
       "norm_label": "route.ts"
     },
     {
@@ -4260,7 +4260,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_app_api_panel_talepler_route_get",
-      "community": 15,
+      "community": 100,
       "norm_label": "get()"
     },
     {
@@ -11667,7 +11667,7 @@
       "label": "HedefAltNav()",
       "file_type": "code",
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L427",
+      "source_location": "L429",
       "_origin": "ast",
       "id": "src_components_musteri_musterianasayfa_hedefaltnav",
       "community": 70,
@@ -11677,7 +11677,7 @@
       "label": "MusteriAnaSayfa()",
       "file_type": "code",
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L498",
+      "source_location": "L500",
       "_origin": "ast",
       "id": "src_components_musteri_musterianasayfa_musterianasayfa",
       "community": 70,
@@ -11687,7 +11687,7 @@
       "label": "MusteriAnaSayfaIcerik()",
       "file_type": "code",
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L530",
+      "source_location": "L532",
       "_origin": "ast",
       "id": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "community": 21,
@@ -13750,7 +13750,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_belge",
-      "community": 124,
+      "community": 15,
       "norm_label": "cekici-belge.ts"
     },
     {
@@ -13760,7 +13760,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_cekici_belge_izinli_mime",
-      "community": 124,
+      "community": 15,
       "norm_label": "izinli_mime"
     },
     {
@@ -13770,7 +13770,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_cekici_belge_belgebase64ayikla",
-      "community": 124,
+      "community": 15,
       "norm_label": "belgebase64ayikla()"
     },
     {
@@ -13780,7 +13780,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_lib_cekici_belge_uzanti",
-      "community": 124,
+      "community": 15,
       "norm_label": "uzanti()"
     },
     {
@@ -13790,7 +13790,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_lib_cekici_belge_cekicibelgeyukle",
-      "community": 124,
+      "community": 15,
       "norm_label": "cekicibelgeyukle()"
     },
     {
@@ -16210,7 +16210,7 @@
       "source_location": "L176",
       "_origin": "ast",
       "id": "src_lib_db_getcekicibyid",
-      "community": 20,
+      "community": 92,
       "norm_label": "getcekicibyid()"
     },
     {
@@ -16300,7 +16300,7 @@
       "source_location": "L288",
       "_origin": "ast",
       "id": "src_lib_db_updatecekicibelgedurum",
-      "community": 20,
+      "community": 92,
       "norm_label": "updatecekicibelgedurum()"
     },
     {
@@ -16310,7 +16310,7 @@
       "source_location": "L308",
       "_origin": "ast",
       "id": "src_lib_db_updatecekiciprofilfotodurum",
-      "community": 20,
+      "community": 92,
       "norm_label": "updatecekiciprofilfotodurum()"
     },
     {
@@ -16400,7 +16400,7 @@
       "source_location": "L419",
       "_origin": "ast",
       "id": "src_lib_db_gettaleplersayfali",
-      "community": 15,
+      "community": 100,
       "norm_label": "gettaleplersayfali()"
     },
     {
@@ -16410,7 +16410,7 @@
       "source_location": "L441",
       "_origin": "ast",
       "id": "src_lib_db_getpaneltalepozet",
-      "community": 15,
+      "community": 100,
       "norm_label": "getpaneltalepozet()"
     },
     {
@@ -16420,7 +16420,7 @@
       "source_location": "L513",
       "_origin": "ast",
       "id": "src_lib_db_getpaneltalepharitanoktalari",
-      "community": 15,
+      "community": 100,
       "norm_label": "getpaneltalepharitanoktalari()"
     },
     {
@@ -25050,7 +25050,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "src_lib_panel_kredi_dagitim_ensurekreditanimsmssablon",
-      "community": 142,
+      "community": 89,
       "norm_label": "ensurekreditanimsmssablon()"
     },
     {
@@ -25710,7 +25710,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_test",
-      "community": 89,
+      "community": 92,
       "norm_label": "rozet-panel.test.ts"
     },
     {
@@ -25720,7 +25720,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_test_cekici",
-      "community": 89,
+      "community": 92,
       "norm_label": "cekici()"
     },
     {
@@ -25730,7 +25730,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_rozet_panel",
-      "community": 89,
+      "community": 92,
       "norm_label": "rozet-panel.ts"
     },
     {
@@ -25750,7 +25750,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_rozetpanelozet",
-      "community": 89,
+      "community": 92,
       "norm_label": "rozetpanelozet"
     },
     {
@@ -25760,7 +25760,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_rozetpanelverisi",
-      "community": 89,
+      "community": 92,
       "norm_label": "rozetpanelverisi"
     },
     {
@@ -25770,7 +25770,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_satirfromcekici",
-      "community": 89,
+      "community": 92,
       "norm_label": "satirfromcekici()"
     },
     {
@@ -25780,7 +25780,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_gonderimzamani",
-      "community": 89,
+      "community": 92,
       "norm_label": "gonderimzamani()"
     },
     {
@@ -25790,7 +25790,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_lib_rozet_panel_onaylanmissira",
-      "community": 89,
+      "community": 92,
       "norm_label": "onaylanmissira()"
     },
     {
@@ -26920,7 +26920,7 @@
       "source_location": "L248",
       "_origin": "ast",
       "id": "src_lib_simulasyon_ihale_db_simulasyontalepidset",
-      "community": 15,
+      "community": 100,
       "norm_label": "simulasyontalepidset()"
     },
     {
@@ -27690,7 +27690,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_sms_sablon_db",
-      "community": 142,
+      "community": 89,
       "norm_label": "sms-sablon-db.ts"
     },
     {
@@ -27700,7 +27700,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_lib_sms_sablon_db_panelsmssablon",
-      "community": 142,
+      "community": 89,
       "norm_label": "panelsmssablon"
     },
     {
@@ -27710,7 +27710,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_lib_sms_sablon_db_panelsmssablonozet",
-      "community": 142,
+      "community": 89,
       "norm_label": "panelsmssablonozet"
     },
     {
@@ -27720,7 +27720,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_sms_sablon_db_panelsmssablontablosuvar",
-      "community": 142,
+      "community": 89,
       "norm_label": "panelsmssablontablosuvar()"
     },
     {
@@ -27730,7 +27730,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_lib_sms_sablon_db_satirmap",
-      "community": 142,
+      "community": 89,
       "norm_label": "satirmap()"
     },
     {
@@ -27750,7 +27750,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_lib_sms_sablon_db_listetumsmssablonlari",
-      "community": 142,
+      "community": 89,
       "norm_label": "listetumsmssablonlari()"
     },
     {
@@ -27760,7 +27760,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "src_lib_sms_sablon_db_smssablonalandogrula",
-      "community": 142,
+      "community": 89,
       "norm_label": "smssablonalandogrula()"
     },
     {
@@ -27770,7 +27770,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "src_lib_sms_sablon_db_olustursmssablon",
-      "community": 142,
+      "community": 89,
       "norm_label": "olustursmssablon()"
     },
     {
@@ -27780,7 +27780,7 @@
       "source_location": "L134",
       "_origin": "ast",
       "id": "src_lib_sms_sablon_db_guncellesmssablon",
-      "community": 142,
+      "community": 89,
       "norm_label": "guncellesmssablon()"
     },
     {
@@ -27790,7 +27790,7 @@
       "source_location": "L159",
       "_origin": "ast",
       "id": "src_lib_sms_sablon_db_silsmssablon",
-      "community": 142,
+      "community": 89,
       "norm_label": "silsmssablon()"
     },
     {
@@ -31570,7 +31570,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_types",
-      "community": 30,
+      "community": 92,
       "norm_label": "types.ts"
     },
     {
@@ -31590,7 +31590,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_lib_types_anlasmadurumu",
-      "community": 30,
+      "community": 92,
       "norm_label": "anlasmadurumu"
     },
     {
@@ -31660,7 +31660,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "src_lib_types_belgedurum",
-      "community": 20,
+      "community": 92,
       "norm_label": "belgedurum"
     },
     {
@@ -31670,7 +31670,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_lib_types_profilfotodurum",
-      "community": 20,
+      "community": 92,
       "norm_label": "profilfotodurum"
     },
     {
@@ -31680,7 +31680,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "src_lib_types_odemetipi",
-      "community": 30,
+      "community": 92,
       "norm_label": "odemetipi"
     },
     {
@@ -31690,7 +31690,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "src_lib_types_abonelikstatus",
-      "community": 30,
+      "community": 92,
       "norm_label": "abonelikstatus"
     },
     {
@@ -31740,7 +31740,7 @@
       "source_location": "L174",
       "_origin": "ast",
       "id": "src_lib_types_odemefatura",
-      "community": 30,
+      "community": 92,
       "norm_label": "odemefatura"
     },
     {
@@ -31780,7 +31780,7 @@
       "source_location": "L256",
       "_origin": "ast",
       "id": "src_lib_types_bekleyenodeme",
-      "community": 30,
+      "community": 92,
       "norm_label": "bekleyenodeme"
     },
     {
@@ -31800,7 +31800,7 @@
       "source_location": "L297",
       "_origin": "ast",
       "id": "src_lib_types_talepozet",
-      "community": 30,
+      "community": 92,
       "norm_label": "talepozet"
     },
     {
@@ -90244,7 +90244,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L427",
+      "source_location": "L429",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa",
       "target": "src_components_musteri_musterianasayfa_hedefaltnav",
@@ -90274,7 +90274,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L498",
+      "source_location": "L500",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa",
       "target": "src_components_musteri_musterianasayfa_musterianasayfa",
@@ -90284,7 +90284,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L530",
+      "source_location": "L532",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa",
       "target": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
@@ -91643,7 +91643,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2099",
+      "source_location": "L2110",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_components_musteri_musterianasayfa_aktifadimlar",
@@ -91665,7 +91665,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2207",
+      "source_location": "L2252",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_components_musteri_musterianasayfa_progressadimlari",
@@ -91677,7 +91677,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2142",
+      "source_location": "L2187",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_google_maps_googlemapsyapilandirildi"
@@ -91688,7 +91688,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L3602",
+      "source_location": "L3665",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_hedef_oneri_data_ototamiraramasorgusu"
@@ -91699,7 +91699,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L3305",
+      "source_location": "L3368",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_il_ilce_ilcelistesi"
@@ -91710,7 +91710,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L3605",
+      "source_location": "L3668",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_konum_parse_parseililce"
@@ -91721,7 +91721,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2236",
+      "source_location": "L2281",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_seo_icerik_anasayfasehirbaglantilari"
@@ -91732,7 +91732,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2230",
+      "source_location": "L2275",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_seo_icerik_anasayfaseoicerik"
@@ -91743,7 +91743,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2235",
+      "source_location": "L2280",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_seo_icerik_seobolgebaglantilari"
@@ -91754,7 +91754,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2097",
+      "source_location": "L2108",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_sorunhedefkonumgereklimi"
@@ -91765,7 +91765,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L3062",
+      "source_location": "L3120",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_sorunteklifnotuplaceholder"
@@ -91776,7 +91776,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2128",
+      "source_location": "L2173",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_soruntipibul"
@@ -91787,7 +91787,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L3246",
+      "source_location": "L3309",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_turkiye_il_nufus_illersecimsirasi"
@@ -148986,5 +148986,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "c3c4de4e2fa5767185d5845593915346d942a258"
+  "built_at_commit": "39245bcd2e62bcd893134104e064f77c8681f9b6"
 }
