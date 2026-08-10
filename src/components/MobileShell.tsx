@@ -227,9 +227,13 @@ export function MobileShell({
         className={[
           "flex-1 w-full",
           lockViewport
-            ? "min-h-0 overflow-x-hidden overflow-y-auto overscroll-y-contain pt-2 pb-[max(1rem,var(--acil-sticky-cta-h,5.5rem))] [-webkit-overflow-scrolling:touch]"
+            ? `min-h-0 overflow-x-hidden overflow-y-auto overscroll-y-contain ${
+                hideHeader
+                  ? "pt-[calc(1.5rem+env(safe-area-inset-top))]"
+                  : "pt-4"
+              } pb-[max(1rem,var(--acil-sticky-cta-h,5.5rem))] [-webkit-overflow-scrolling:touch]`
             : [
-                hideHeader ? "pt-2" : "",
+                hideHeader ? "pt-0" : "",
                 headerCompact ? "py-3" : hideHeader ? "pb-5" : "py-5",
                 "pb-24",
               ]

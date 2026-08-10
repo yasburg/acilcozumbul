@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Inter } from "next/font/google";
 import { CerezOnayBanner } from "@/components/CerezOnayBanner";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import {
@@ -27,9 +27,9 @@ import {
 } from "@/lib/gtag";
 import "./globals.css";
 
-const geist = Geist({
-  subsets: ["latin"],
-  variable: "--font-geist",
+const inter = Inter({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-inter",
   display: "swap",
   adjustFontFallback: true,
   preload: true,
@@ -128,7 +128,7 @@ export default function RootLayout({
   return (
     <html
       lang="tr"
-      className={`${geist.variable} h-full${isAcbBrand ? " brand-acb" : ""}`}
+      className={`${inter.variable} h-full${isAcbBrand ? " brand-acb" : ""}`}
       suppressHydrationWarning
     >
       <head>

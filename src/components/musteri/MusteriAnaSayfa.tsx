@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, Suspense } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
@@ -115,7 +116,6 @@ import {
 import type { IhaleSureTipi } from "@/lib/ihale";
 import { ihaleBitisHesapla } from "@/lib/ihale";
 import { IhaleSureSecimi } from "@/components/musteri/IhaleSureSecimi";
-import { cerezleriSifirla } from "@/lib/cerez-onay";
 
 const HedefOneriHarita = dynamic(
   () =>
@@ -553,8 +553,6 @@ function MusteriAnaSayfaIcerik({
   const [step, setStep] = useState<Step>("giris");
   /** Entry page: YARDIM AL docks into header top-left on scroll */
   const [girisHeaderDocked, setGirisHeaderDocked] = useState(false);
-  /** Dev-only: show address reset control on localhost */
-  const [localDev, setLocalDev] = useState(false);
   const [aracMarka, setAracMarka] = useState("");
   const [aracModelOnly, setAracModelOnly] = useState("");
   const [konumSheetAcik, setKonumSheetAcik] = useState(false);
@@ -2318,32 +2316,33 @@ function MusteriAnaSayfaIcerik({
     }
   }
 
-  function adresSifirla() {
-    gpsIptal();
-    setGpsYukleniyor(false);
-    setArizaAdresDuzenle(true);
-    setForm((f) => ({
-      ...f,
-      lat: 0,
-      lng: 0,
-      adres: "",
-      konumKaynak: undefined,
-    }));
-    setSeciliSehir(varsayilanSehir ?? "");
-    setSeciliIlce(varsayilanIlce ?? "");
-    setError("");
-    setBilgiMesaj("");
-    setKonumBasarisiz(false);
-    musteriFormTaslakSil();
-    setStep("giris");
-    setKonumSheetAcik(false);
-    window.scrollTo(0, 0);
-  }
 
-  useEffect(() => {
-    const h = window.location.hostname;
-    setLocalDev(h === "localhost" || h === "127.0.0.1");
-  }, []);
+  const konumGosterimMetni =
+    seciliIlce
+      ? seciliIlce
+      : seciliSehir
+        ? seciliSehir
+        : form.adres.trim()
+          ? form.adres.split(",")[0]?.trim() || "Konum"
+          : "Konum";
+
+  const konumTamMetin =
+    seciliIlce && seciliSehir
+      ? `${seciliIlce}, ${seciliSehir}`
+      : seciliSehir || form.adres;
+
+  const konumHeaderTrailing =
+    step !== "giris" && step !== "konum" ? (
+      <button
+        type="button"
+        onClick={konumuDegistir}
+        title={`Konumu değiştir: ${konumTamMetin}`}
+        className="group inline-flex max-w-[5.5rem] xs:max-w-[7rem] sm:max-w-[8.5rem] items-center gap-1 rounded-full border border-[var(--acb-border)] bg-white px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold text-[var(--acb-dark)] shadow-2xs transition hover:border-[var(--acb-green)] hover:bg-[var(--acb-soft)] active:scale-95 touch-manipulation"
+      >
+        <MapPin className="size-3 shrink-0 text-[var(--acb-green)] transition-transform group-hover:scale-110" />
+        <span className="truncate">{konumGosterimMetni}</span>
+      </button>
+    ) : null;
 
   return (
     <MobileShell
@@ -2352,37 +2351,7 @@ function MusteriAnaSayfaIcerik({
       lockViewport={akisKilitli}
       footer={girisEkrani ? <YasalSiteFooter /> : undefined}
     >
-      {localDev ? (
-        <div
-          className="fixed left-2 z-[70] flex flex-col gap-1"
-          style={{
-            top:
-              girisEkrani && !girisHeaderDocked
-                ? "max(0.35rem, env(safe-area-inset-top))"
-                : "calc(4.65rem + env(safe-area-inset-top))",
-          }}
-        >
-          <button
-            type="button"
-            onClick={adresSifirla}
-            className="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-rose-700 shadow-sm touch-manipulation active:scale-[0.97]"
-            title="Localhost: kayıtlı adresi temizle"
-          >
-            Adres sıfırla
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              cerezleriSifirla();
-              window.location.reload();
-            }}
-            className="rounded-md border border-rose-300 bg-rose-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-rose-700 shadow-sm touch-manipulation active:scale-[0.97]"
-            title="Localhost: çerezleri ve onay tercihini temizle"
-          >
-            Çerezleri sıfırla
-          </button>
-        </div>
-      ) : null}
+
       <OpeningLogo
         forceDocked={!girisEkrani}
         scrollDock={girisEkrani}
@@ -2395,6 +2364,7 @@ function MusteriAnaSayfaIcerik({
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}
         center={adimUstBilgi}
+        trailing={konumHeaderTrailing}
       />
       {step === "konum" && !arizaKonumGpsAlindi ? (
         <AcilYardimStickyCta
@@ -2554,7 +2524,6 @@ function MusteriAnaSayfaIcerik({
             devamMetin={form.sorunTipi ? "Devam et" : "Önce hizmet seç"}
             devamDisabled={!form.sorunTipi}
             devamGlow={!!form.sorunTipi}
-            geriMetin="Konumu değiştir"
             onGeri={konumuDegistir}
             onDevam={() => {
               if (sorunDevamTimerRef.current != null) {
@@ -2750,7 +2719,7 @@ function MusteriAnaSayfaIcerik({
             </p>
           </div>
           <div
-            className="grid grid-cols-1 gap-2"
+            className="grid grid-cols-1 gap-3"
             role="listbox"
             aria-label="Lastik durumu"
           >
@@ -2780,7 +2749,7 @@ function MusteriAnaSayfaIcerik({
                       if (sonraki) adimGit(sonraki);
                     }, ADIM_OTOMATIK_GECIS_MS);
                   }}
-                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4 py-3.5 flex items-center gap-2 transition touch-manipulation active:scale-[0.99] ${
+                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4.5 py-4 flex items-center justify-between gap-3 transition touch-manipulation active:scale-[0.99] ${
                     secili
                       ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
                       : lastikDurumuHatasi
@@ -2789,12 +2758,12 @@ function MusteriAnaSayfaIcerik({
                   }`}
                 >
                   <span
-                    className={`font-semibold text-sm flex-1 min-w-0 text-[var(--acb-dark)]`}
+                    className="font-semibold text-base flex-1 min-w-0 text-[var(--acb-dark)]"
                   >
                     {d.etiket}
                   </span>
                   {secili ? (
-                    <span className="shrink-0 text-[var(--acb-green)] text-base">
+                    <span className="shrink-0 text-[var(--acb-green)] text-lg font-bold">
                       ✓
                     </span>
                   ) : null}
@@ -2832,8 +2801,8 @@ function MusteriAnaSayfaIcerik({
 
       {step === "fotograf" && (
         <div className="space-y-4 animate-fade-in">
-          <h2 className="text-xl font-bold">
-            Araç ve Arıza Fotoğrafı (isteğe bağlı)
+          <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+            Araç ve Arıza Fotoğrafı
           </h2>
           <p className="text-slate-500 text-sm">
             Araç ve arıza fotoğrafı yükleyiniz — çekici doğru teklif
@@ -2878,9 +2847,9 @@ function MusteriAnaSayfaIcerik({
       )}
 
       {step === "arac_tipi" && (
-        <div className="flex min-h-[calc(100dvh-12.5rem)] flex-col gap-3 animate-fade-in">
-          <div className="shrink-0 space-y-1">
-            <h2 className="text-xl font-bold">Araç Tipi</h2>
+        <div className="flex min-h-[calc(100dvh-10.5rem)] flex-col gap-1.5 animate-fade-in">
+          <div className="shrink-0 space-y-0.5">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">Araç Tipi</h2>
             <p className="text-slate-500 text-sm">
               Aracınızın tipini seçin (isteğe bağlı).
             </p>
@@ -3013,12 +2982,12 @@ function MusteriAnaSayfaIcerik({
 
       {step === "arac_durumu" && (
         <div className="space-y-4 animate-fade-in">
-          <h2 className="text-xl font-bold">Aracın Durumu</h2>
+          <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">Aracın Durumu</h2>
           <p className="text-slate-500 text-sm">
             Çekici doğru ekipmanla gelsin — aracın durumunu seçin.
           </p>
           <div
-            className="grid grid-cols-1 gap-1.5 scroll-mt-44"
+            className="grid grid-cols-1 gap-3 scroll-mt-44"
             role="listbox"
             aria-label="Araç durumu"
           >
@@ -3048,7 +3017,7 @@ function MusteriAnaSayfaIcerik({
                       if (sonraki) adimGit(sonraki);
                     }, ADIM_OTOMATIK_GECIS_MS);
                   }}
-                  className={`w-full text-left rounded-xl border px-3.5 py-3 flex items-center gap-2 transition touch-manipulation ${
+                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4.5 py-4 flex items-center justify-between gap-3 transition touch-manipulation active:scale-[0.99] ${
                     secili
                       ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
                       : aracDurumuHatasi
@@ -3057,14 +3026,12 @@ function MusteriAnaSayfaIcerik({
                   }`}
                 >
                   <span
-                    className={`font-medium text-sm flex-1 min-w-0 ${
-                      secili ? "text-[var(--acb-dark)]" : "text-[var(--acb-dark)]"
-                    }`}
+                    className="font-semibold text-base flex-1 min-w-0 text-[var(--acb-dark)]"
                   >
                     {d.etiket}
                   </span>
                   {secili ? (
-                    <span className="shrink-0 text-[var(--acb-green)] text-base">
+                    <span className="shrink-0 text-[var(--acb-green)] text-lg font-bold">
                       ✓
                     </span>
                   ) : null}
@@ -3097,7 +3064,9 @@ function MusteriAnaSayfaIcerik({
       {step === "ek_detay" && (
         <div className="space-y-5 animate-fade-in">
           <div className="space-y-2">
-            <h2 className="text-xl font-bold">Teklif Notu (isteğe bağlı)</h2>
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+              Teklif Notu
+            </h2>
             <p className="text-sm text-slate-500">
               Çekiciye iletilecek kısa not — doğru teklif için yardımcı olur.
             </p>
@@ -3164,7 +3133,7 @@ function MusteriAnaSayfaIcerik({
 
       {step === "ihale" && (
         <div className="space-y-4 animate-fade-in">
-          <h2 className="text-xl font-bold">İhale Süresi</h2>
+          <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">İhale Süresi</h2>
           <p className="text-slate-500 text-sm">
             Teklif toplama süresini seçin — süre dolunca en uygun teklifi
             seçersiniz.
@@ -3496,7 +3465,7 @@ function MusteriAnaSayfaIcerik({
 
       {step === "hedef" && (
         <div className="space-y-4 animate-fade-in">
-          <h2 className="text-xl font-bold">Nereye Çekilecek?</h2>
+          <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">Nereye Çekilecek?</h2>
           <p className="text-slate-500 text-sm">
             {sorunLabel
               ? googleOneriAktif

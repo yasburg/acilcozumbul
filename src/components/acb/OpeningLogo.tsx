@@ -298,7 +298,7 @@ export function OpeningLogo({
           <div className="flex min-w-0 flex-1 items-center justify-center">
             {chromeDocked ? center : null}
           </div>
-          <div className="flex size-11 shrink-0 items-center justify-end gap-1.5">
+          <div className="flex min-h-11 shrink-0 items-center justify-end gap-1.5">
             {trailing}
           </div>
         </div>

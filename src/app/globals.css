@@ -72,8 +72,8 @@
   --acb-material: rgb(255 255 255 / 0.72);
   --acb-material-blur: 20px;
   /* Hero mark — sized to viewport, sits in band above copy */
-  --acb-hero-logo: clamp(6.75rem, 30vw, 9.375rem);
-  --acb-hero-logo-band: clamp(8.5rem, 31vh, 11.5rem);
+  --acb-hero-logo: clamp(8.44rem, 37.5vw, 11.72rem);
+  --acb-hero-logo-band: clamp(10.63rem, 38.75vh, 14.38rem);
 }
 
 /* Display type — size-specific tracking (apple typography) */
@@ -175,7 +175,7 @@ html.brand-acb .animate-nasil-glow {
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
 }
 
 * {
@@ -390,11 +390,11 @@ html.acb-intro-pending body::before {
 }
 
 .acb-opening-logo--nav {
-  /* Same axis as hero (left) so undock interpolates — max-w-lg right edge */
+  /* Positioned on the FAR LEFT of the header bar */
   top: calc(env(safe-area-inset-top) + 0.85rem);
-  left: min(
-    calc(100% - 0.75rem - 2.75rem),
-    calc(50% + 16rem - 0.75rem - 2.75rem)
+  left: max(
+    0.75rem,
+    calc(50% - 16rem + 0.75rem)
   );
   width: 2.75rem;
   height: 2.75rem;
@@ -430,7 +430,7 @@ html.acb-intro-pending body::before {
     transform: translateY(0);
   }
   30% {
-    transform: translateY(3px);
+    transform: translateY(-3px);
   }
   42% {
     transform: translateY(0);

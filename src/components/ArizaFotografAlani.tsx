@@ -79,9 +79,7 @@ export function ArizaFotografAlani({
             Araç ve arıza fotoğrafı yükleyiniz
             {zorunlu ? (
               <span className="text-red-600 font-medium"> (zorunlu)</span>
-            ) : (
-              <span className="text-slate-500 font-normal"> (isteğe bağlı)</span>
-            )}
+            ) : null}
           </p>
           <p className="text-xs text-slate-500 leading-relaxed">
             En fazla {max} fotoğraf — çekici doğru teklif verebilsin.
@@ -158,11 +156,6 @@ export function ArizaFotografAlani({
         </p>
       )}
 
-      {!zorunlu && (
-        <p className="text-sm text-slate-500 text-center leading-snug">
-          Fotoğrafsız devam edebilirsiniz.
-        </p>
-      )}
 
       {hata && (
         <p className="text-sm text-red-600" role="alert">

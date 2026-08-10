@@ -222,7 +222,7 @@ export function MusteriFormIletisimOtp({
 
   return (
     <div className="space-y-4 animate-fade-in pb-40">
-      <h2 className="text-xl font-bold">İletişim bilgileriniz</h2>
+      <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">İletişim bilgileriniz</h2>
       {sorunLabel ? (
         <p className="text-sm text-slate-600">
           Seçilen sorun:{" "}

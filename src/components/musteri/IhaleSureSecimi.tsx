@@ -12,8 +12,18 @@ import {
 } from "@/lib/ihale";
 import { ACB_ICON_STROKE } from "@/lib/acb-icons";
 
-const SECENEKLER: { id: IhaleSureTipi; label: string; aciklama: string }[] = [
-  { id: "acil", label: "Acil", aciklama: "1 saat" },
+const SECENEKLER: {
+  id: IhaleSureTipi;
+  label: string;
+  aciklama: string;
+  badge?: string;
+}[] = [
+  {
+    id: "acil",
+    label: "Acil",
+    aciklama: "1 saat · Yakındaki çekicilere anında bildirim",
+    badge: "⚡ En Hızlı",
+  },
   { id: "1_gun", label: "1 Gün", aciklama: "24 saat" },
   { id: "1_hafta", label: "1 Hafta", aciklama: "7 gün" },
   { id: "ozel", label: "Özel", aciklama: "Tarih seç" },
@@ -369,22 +379,15 @@ export function IhaleSureSecimi({
   const gosterimDegeri = ozelBitis || minStr;
 
   return (
-    <div className="space-y-2">
-      <p
-        className={`text-sm font-semibold ${invalid ? "text-red-700" : "text-slate-800"}`}
-      >
-        İhale süresi
-      </p>
-      <p className="text-xs text-slate-500 leading-relaxed">
-        Tekliflerin ne kadar süre toplanacağını seçin. Varsayılan acil (1 saat).
-      </p>
+    <div className="space-y-3">
       <div
-        className="grid grid-cols-2 gap-2"
+        className="grid grid-cols-1 gap-3"
         role="radiogroup"
         aria-label="İhale süresi"
       >
         {SECENEKLER.map((s) => {
           const secili = value === s.id;
+          const isAcil = s.id === "acil";
           return (
             <button
               key={s.id}
@@ -399,20 +402,36 @@ export function IhaleSureSecimi({
                 }
                 onChange(s.id, ozelBitis);
               }}
-              className={`rounded-xl border px-3 py-2.5 text-left touch-manipulation transition ${
+              className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4.5 py-4 flex items-center justify-between gap-3 transition touch-manipulation active:scale-[0.99] ${
                 secili
-                  ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
-                  : invalid
-                    ? "border-red-300 bg-white"
-                    : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
+                  ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_35%,transparent)] shadow-sm"
+                  : isAcil
+                    ? "border-emerald-300 bg-emerald-50/40 hover:border-[var(--acb-green)]"
+                    : invalid
+                      ? "border-red-300 bg-white"
+                      : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
               }`}
             >
-              <span className="block text-sm font-semibold text-[var(--acb-dark)]">
-                {s.label}
-              </span>
-              <span className="mt-0.5 block text-xs text-[var(--acb-muted)]">
-                {s.aciklama}
-              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="block text-base font-bold text-[var(--acb-dark)]">
+                    {s.label}
+                  </span>
+                  {s.badge ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/90 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 border border-emerald-300/80 shadow-2xs">
+                      {s.badge}
+                    </span>
+                  ) : null}
+                </div>
+                <span className="mt-0.5 block text-xs text-[var(--acb-muted)]">
+                  {s.aciklama}
+                </span>
+              </div>
+              {secili ? (
+                <span className="shrink-0 text-[var(--acb-green)] text-lg font-bold">
+                  ✓
+                </span>
+              ) : null}
             </button>
           );
         })}
