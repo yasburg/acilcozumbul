@@ -6,7 +6,7 @@ function envInt(name: string, fallback: number): number {
   return Number.isFinite(v) && v > 0 ? v : fallback;
 }
 
-const TELEFON_LIMIT = () => envInt("TALEP_FRAUD_TELEFON_LIMIT", 3);
+const TELEFON_LIMIT = () => envInt("TALEP_FRAUD_TELEFON_LIMIT", 2);
 const TELEFON_SAAT = () => envInt("TALEP_FRAUD_TELEFON_PENCERE_SAAT", 24);
 const IP_LIMIT = () => envInt("TALEP_FRAUD_IP_LIMIT", 10);
 const IP_SAAT = () => envInt("TALEP_FRAUD_IP_PENCERE_SAAT", 1);
