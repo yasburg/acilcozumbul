@@ -389,7 +389,6 @@ export async function simulasyonPlanAc(
 
   const kapanis = rastgeleKapanisAt(simdi, ihaleBitis, rand);
 
-  /* SMS senkron beklenmez — onlarca çekicide panel/cron timeout oluyordu */
   talep.bildirilenCekiciIds = [];
   await addTalep(talep);
 

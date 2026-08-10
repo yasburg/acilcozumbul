@@ -16,6 +16,8 @@ export const MUSTERI_FUNNEL_OLAY_SABIT = [
   "form_adim_kilit_durumu",
   "form_adim_arac_tipi",
   "form_adim_arac_modeli",
+  "form_adim_arac_durumu",
+  "form_adim_lastik_durumu",
   "form_adim_ek_detay",
   "form_adim_ihale",
   "form_adim_hedef",
@@ -105,7 +107,7 @@ export function musteriFunnelOzetHesapla(
       otpGonder,
       talep,
       teklifSecildi,
-      /** OTP / talep — doğrulama teklif seçiminde */
+      /** OTP / talep — doğrulama form son adımında */
       otpOran: talep > 0 ? otpGonder / talep : null,
       talepOran: goruldu > 0 ? talep / goruldu : null,
       teklifOran: talep > 0 ? teklifSecildi / talep : null,
@@ -122,8 +124,7 @@ export type MusteriFunnelHuniAdimTanim = {
 };
 
 /**
- * Funnel A: konum → hizmet → foto/araç/ek/ihale → hedef → talep →
- * iletişim → OTP → teklif seçildi (MusteriAnaSayfa; iletişim teklif seçiminde)
+ * Funnel A: konum → hizmet → foto/araç/ek/ihale → hedef → iletişim → OTP → talep → teklif
  */
 export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
   { id: "goruldu", label: "Görülme", olaylar: ["goruldu"] },
@@ -160,9 +161,19 @@ export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
     olaylar: ["form_adim_arac_tipi", "form_adim_detay"],
   },
   {
-    id: "form_adim_arac_modeli",
-    label: "Adım · Araç modeli",
-    olaylar: ["form_adim_arac_modeli", "form_adim_detay"],
+    id: "form_adim_arac_durumu",
+    label: "Adım · Araç durumu",
+    /* form_adim_arac_modeli: eski adım adı (geriye uyum) */
+    olaylar: [
+      "form_adim_arac_durumu",
+      "form_adim_arac_modeli",
+      "form_adim_detay",
+    ],
+  },
+  {
+    id: "form_adim_lastik_durumu",
+    label: "Adım · Lastik durumu",
+    olaylar: ["form_adim_lastik_durumu", "form_adim_detay"],
   },
   {
     id: "form_adim_ek_detay",
@@ -175,18 +186,18 @@ export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
     olaylar: ["form_adim_ihale", "form_adim_detay"],
   },
   { id: "form_adim_hedef", label: "Adım · Hedef", olaylar: ["form_adim_hedef"] },
-  { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
   {
     id: "form_adim_bilgi",
-    label: "İletişim (teklif seç)",
+    label: "Adım · İletişim",
     olaylar: ["form_adim_bilgi"],
   },
   {
     id: "otp_gonder",
-    label: "OTP (teklif seç)",
+    label: "OTP gönder",
     olaylar: ["otp_gonder"],
   },
   { id: "otp_dogrulandi", label: "OTP doğrula", olaylar: ["otp_dogrulandi"] },
+  { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
   {
     id: "teklif_secildi",
     label: "Teklif seçildi",
@@ -195,8 +206,7 @@ export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
 ];
 
 /**
- * Funnel B: hizmet → hedef → talep → iletişim → OTP → teklif
- * (MusteriDonusumSayfa; iletişim teklif seçiminde)
+ * Funnel B: hizmet → hedef → iletişim → OTP → talep → teklif
  */
 export const MUSTERI_FUNNEL_HUNI_B: readonly MusteriFunnelHuniAdimTanim[] = [
   { id: "goruldu", label: "Görülme", olaylar: ["goruldu"] },
@@ -206,18 +216,18 @@ export const MUSTERI_FUNNEL_HUNI_B: readonly MusteriFunnelHuniAdimTanim[] = [
     olaylar: ["form_adim_sorun", "service_selected"],
   },
   { id: "form_adim_hedef", label: "Adım · Hedef", olaylar: ["form_adim_hedef"] },
-  { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
   {
     id: "form_adim_bilgi",
-    label: "İletişim (teklif seç)",
+    label: "Adım · İletişim",
     olaylar: ["form_adim_bilgi"],
   },
   {
     id: "otp_gonder",
-    label: "OTP (teklif seç)",
+    label: "OTP gönder",
     olaylar: ["otp_gonder"],
   },
   { id: "otp_dogrulandi", label: "OTP doğrula", olaylar: ["otp_dogrulandi"] },
+  { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
   {
     id: "teklif_secildi",
     label: "Teklif seçildi",
@@ -226,7 +236,7 @@ export const MUSTERI_FUNNEL_HUNI_B: readonly MusteriFunnelHuniAdimTanim[] = [
 ];
 
 /**
- * A+B ortak: hizmet → talep → iletişim → OTP → teklif.
+ * A+B ortak: hizmet → detay → iletişim → OTP → talep → teklif.
  * Detay alt adımları A’ya özel; ortak hunide tek «detay» kilometre taşı.
  */
 export const MUSTERI_FUNNEL_HUNI_ORTAK: readonly MusteriFunnelHuniAdimTanim[] = [
@@ -253,22 +263,24 @@ export const MUSTERI_FUNNEL_HUNI_ORTAK: readonly MusteriFunnelHuniAdimTanim[] = 
       "form_adim_kilit_durumu",
       "form_adim_arac_tipi",
       "form_adim_arac_modeli",
+      "form_adim_arac_durumu",
+      "form_adim_lastik_durumu",
       "form_adim_ek_detay",
       "form_adim_ihale",
     ],
   },
-  { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
   {
     id: "form_adim_bilgi",
-    label: "İletişim (teklif seç)",
+    label: "İletişim",
     olaylar: ["form_adim_bilgi"],
   },
   {
     id: "otp_gonder",
-    label: "OTP (teklif seç)",
+    label: "OTP gönder",
     olaylar: ["otp_gonder"],
   },
   { id: "otp_dogrulandi", label: "OTP doğrula", olaylar: ["otp_dogrulandi"] },
+  { id: "talep_olustur", label: "Talep", olaylar: ["talep_olustur"] },
   {
     id: "teklif_secildi",
     label: "Teklif seçildi",

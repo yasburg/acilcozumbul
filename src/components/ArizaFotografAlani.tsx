@@ -7,17 +7,31 @@ import { fotografSikistir } from "@/lib/fotograf-client";
 
 export const MAX_ARIZA_FOTOGRAF = 5;
 
+/** Sabit 2 slot — taslak okuma / liste dönüşümü için */
+export type ArizaFotografSlotlari = [string | null, string | null];
+
+export function arizaFotograflariListe(
+  slotlar: ArizaFotografSlotlari
+): string[] {
+  return slotlar.filter((x): x is string => Boolean(x));
+}
+
 interface ArizaFotografAlaniProps {
   fotograflar: string[];
   onDegisti: (dataUrls: string[]) => void;
+  zorunlu?: boolean;
   invalid?: boolean;
   max?: number;
+  /** Üst başlığı bileşen içinde gösterme */
+  baslikGizle?: boolean;
 }
 
 export function ArizaFotografAlani({
   fotograflar,
   onDegisti,
+  zorunlu = false,
   invalid = false,
+  baslikGizle = false,
   max = MAX_ARIZA_FOTOGRAF,
 }: ArizaFotografAlaniProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,6 +71,24 @@ export function ArizaFotografAlani({
 
   return (
     <div className="space-y-3">
+      {!baslikGizle && (
+        <>
+          <p
+            className={`text-sm font-medium ${invalid ? "text-red-700" : "text-slate-800"}`}
+          >
+            Araç ve arıza fotoğrafı yükleyiniz
+            {zorunlu ? (
+              <span className="text-red-600 font-medium"> (zorunlu)</span>
+            ) : (
+              <span className="text-slate-500 font-normal"> (isteğe bağlı)</span>
+            )}
+          </p>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            En fazla {max} fotoğraf — çekici doğru teklif verebilsin.
+          </p>
+        </>
+      )}
+
       {fotograflar.length > 0 && (
         <div className="grid grid-cols-2 gap-2">
           {fotograflar.map((src, i) => (
@@ -123,6 +155,12 @@ export function ArizaFotografAlani({
       ) : (
         <p className="text-xs text-slate-500 text-center">
           En fazla {max} fotoğraf eklenebilir.
+        </p>
+      )}
+
+      {!zorunlu && (
+        <p className="text-sm text-slate-500 text-center leading-snug">
+          Fotoğrafsız devam edebilirsiniz.
         </p>
       )}
 

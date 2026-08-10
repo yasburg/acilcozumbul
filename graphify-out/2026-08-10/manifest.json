@@ -200,7 +200,7 @@
     "semantic_hash": ""
   },
   "src/app/api/cekici/talep/[id]/route.ts": {
-    "mtime": 1786323366.0606713,
+    "mtime": 1786322936.2875512,
     "ast_hash": "308b9c5dfbb633930408741ec017bdda",
     "semantic_hash": ""
   },
@@ -415,7 +415,7 @@
     "semantic_hash": ""
   },
   "src/app/api/talep/route.ts": {
-    "mtime": 1786323366.0612168,
+    "mtime": 1786322925.054552,
     "ast_hash": "5c35b82ceb4dce3c7ba5f18b5661c2b3",
     "semantic_hash": ""
   },
@@ -475,7 +475,7 @@
     "semantic_hash": ""
   },
   "src/app/cekici/talep/[id]/CekiciTalepClient.tsx": {
-    "mtime": 1786323366.0619564,
+    "mtime": 1786322965.7748055,
     "ast_hash": "7e26b7f81bcbb9e864da609d54e894f3",
     "semantic_hash": ""
   },
@@ -610,8 +610,8 @@
     "semantic_hash": ""
   },
   "src/components/ArizaFotografAlani.tsx": {
-    "mtime": 1786323386.2486916,
-    "ast_hash": "52c8c95ff479da81e39e8ffbe25c5d32",
+    "mtime": 1786313973.8751352,
+    "ast_hash": "cd55eafa3f8d55488a212a5bed567d3b",
     "semantic_hash": ""
   },
   "src/components/BolgeAyarlari.tsx": {
@@ -700,7 +700,7 @@
     "semantic_hash": ""
   },
   "src/components/NasilCalisirSerit.tsx": {
-    "mtime": 1786323366.0625823,
+    "mtime": 1786310666.173344,
     "ast_hash": "2345f7a27571bba06405ba073e5489d6",
     "semantic_hash": ""
   },
@@ -780,7 +780,7 @@
     "semantic_hash": ""
   },
   "src/components/musteri/MusteriAnaSayfa.tsx": {
-    "mtime": 1786323366.0649662,
+    "mtime": 1786322926.1530442,
     "ast_hash": "4033f61aba4e04ad810392d5e5c6307f",
     "semantic_hash": ""
   },
@@ -805,7 +805,7 @@
     "semantic_hash": ""
   },
   "src/components/ui.tsx": {
-    "mtime": 1786323366.0672605,
+    "mtime": 1786315580.488857,
     "ast_hash": "cb876fb3d456093bbe82416a67ebe07c",
     "semantic_hash": ""
   },
@@ -995,7 +995,7 @@
     "semantic_hash": ""
   },
   "src/lib/demo-responses.ts": {
-    "mtime": 1786323366.0679898,
+    "mtime": 1786322946.3661556,
     "ast_hash": "7221fcc1e4926322eca54490c229ffe6",
     "semantic_hash": ""
   },
@@ -1285,7 +1285,7 @@
     "semantic_hash": ""
   },
   "src/lib/sorun-tipleri.ts": {
-    "mtime": 1786323366.069276,
+    "mtime": 1786322146.1114886,
     "ast_hash": "27033e319c62ece2aca544a94cba092b",
     "semantic_hash": ""
   },
@@ -1320,7 +1320,7 @@
     "semantic_hash": ""
   },
   "src/lib/supabase/mappers.ts": {
-    "mtime": 1786323366.0698133,
+    "mtime": 1786322913.7291553,
     "ast_hash": "758f055764c0182b0f6dc16a91fcdbf7",
     "semantic_hash": ""
   },
@@ -1350,7 +1350,7 @@
     "semantic_hash": ""
   },
   "src/lib/talep-utils.ts": {
-    "mtime": 1786323366.0703993,
+    "mtime": 1786322976.751827,
     "ast_hash": "d665e0f8a06228f410022af7b6203055",
     "semantic_hash": ""
   },
@@ -1365,7 +1365,7 @@
     "semantic_hash": ""
   },
   "src/lib/types.ts": {
-    "mtime": 1786323366.070963,
+    "mtime": 1786322892.0765893,
     "ast_hash": "2a371881d09f6072e26f41503f1b25b8",
     "semantic_hash": ""
   },
@@ -2375,12 +2375,12 @@
     "semantic_hash": ""
   },
   "src/lib/musteri-form-taslak.test.ts": {
-    "mtime": 1786323389.803707,
+    "mtime": 1786322079.0644658,
     "ast_hash": "d3317d280a1786d2042d5902e20b9945",
     "semantic_hash": ""
   },
   "src/lib/musteri-form-taslak.ts": {
-    "mtime": 1786323386.4457715,
+    "mtime": 1786322079.8054678,
     "ast_hash": "c6107327f3af4137ecbdcbe891cd0c74",
     "semantic_hash": ""
   },
@@ -2460,7 +2460,7 @@
     "semantic_hash": ""
   },
   "src/components/musteri/MusteriDonusumSayfa.tsx": {
-    "mtime": 1786323366.066578,
+    "mtime": 1786322818.3492334,
     "ast_hash": "b7ad23574a2b42ba7abc50a773c4c8cb",
     "semantic_hash": ""
   },
@@ -2740,13 +2740,13 @@
     "semantic_hash": ""
   },
   "src/lib/musteri-funnel-olay.test.ts": {
-    "mtime": 1786323322.430707,
-    "ast_hash": "efce24c286e91a082674aabc3f05c283",
+    "mtime": 1786310666.189923,
+    "ast_hash": "475e7c80633eff2efb3dfea2ac1aea36",
     "semantic_hash": ""
   },
   "src/lib/musteri-funnel-olay.ts": {
-    "mtime": 1786323322.431147,
-    "ast_hash": "9020738e88d2dc4ece3d77f48257d4dc",
+    "mtime": 1786322084.1109102,
+    "ast_hash": "ed647fc2b9142e7777382a4950e49039",
     "semantic_hash": ""
   },
   "supabase/migrations/049_musteri_funnel_olay.sql": {
@@ -3350,8 +3350,8 @@
     "semantic_hash": ""
   },
   "src/lib/simulasyon-ihale-db.ts": {
-    "mtime": 1786323322.4317787,
-    "ast_hash": "5d33703bc328a90931cd671688d34eca",
+    "mtime": 1786322680.175397,
+    "ast_hash": "eff5c19c00e4315fa65c77b90fa8cfe6",
     "semantic_hash": ""
   },
   "src/lib/simulasyon-ihale.test.ts": {
@@ -3629,6 +3629,11 @@
     "ast_hash": "2b37fcd27d4530a0b39802bfb4d37e17",
     "semantic_hash": ""
   },
+  "supabase/migrations/062_sesli_mesaj_log.sql": {
+    "mtime": 1786310666.1941688,
+    "ast_hash": "62025e4bb7909b4a308a5d6c9b41d94a",
+    "semantic_hash": ""
+  },
   "public/brand/acb/Single-Animation.svg": {
     "mtime": 1786310666.1522672,
     "ast_hash": "88ca1031e450f27894675329f825c779",
@@ -3655,13 +3660,18 @@
     "semantic_hash": ""
   },
   "src/lib/lastik-durumu-ihale.test.ts": {
-    "mtime": 1786323366.068635,
+    "mtime": 1786322954.767214,
     "ast_hash": "747d0fbbd19ef1e84bca48a921e0d0f3",
     "semantic_hash": ""
   },
   "src/lib/lastik-durumu.ts": {
     "mtime": 1786321409.7163594,
     "ast_hash": "408349e56d6019b90b9a4f4a2778ed38",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/063_talep_lastik_durumu.sql": {
+    "mtime": 1786321410.1840625,
+    "ast_hash": "09efd68993a998b588e5664c4c56d183",
     "semantic_hash": ""
   },
   "src/lib/yakit-tipi.ts": {
@@ -3682,16 +3692,6 @@
   "supabase/migrations/064_talep_ekstra_alanlar.sql": {
     "mtime": 1786322888.208501,
     "ast_hash": "7457d9fb212f27076245b3e814c8ba38",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/062_talep_lastik_durumu.sql": {
-    "mtime": 1786323322.4334366,
-    "ast_hash": "09efd68993a998b588e5664c4c56d183",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/063_sesli_mesaj_log.sql": {
-    "mtime": 1786323322.433676,
-    "ast_hash": "62025e4bb7909b4a308a5d6c9b41d94a",
     "semantic_hash": ""
   }
 }
