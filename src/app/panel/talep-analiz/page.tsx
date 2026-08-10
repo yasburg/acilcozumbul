@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui";
+import { Card, SelectField } from "@/components/ui";
 import {
   sureMsMetin,
   type TalepTeklifAnalizOzet,
@@ -10,8 +10,15 @@ import {
   type TalepTeklifSureSatir,
 } from "@/lib/talep-teklif-analiz";
 
+type SimulasyonFiltre = "" | "sadece" | "haric";
+
 type ApiCevap = {
-  filtre: { from: string; to: string; minOlusturulma: string };
+  filtre: {
+    from: string;
+    to: string;
+    simulasyon?: SimulasyonFiltre;
+    minOlusturulma: string;
+  };
   ozet: TalepTeklifAnalizOzet;
   kovalar: TalepTeklifSureKova[];
   teklifsiz: number;
@@ -77,12 +84,15 @@ export default function PanelTalepAnalizPage() {
   const [teklifsiz, setTeklifsiz] = useState(0);
   const [satirlar, setSatirlar] = useState<TalepTeklifSureSatir[]>([]);
   const [sadeceTeklifli, setSadeceTeklifli] = useState(false);
+  const [simulasyonFiltre, setSimulasyonFiltre] =
+    useState<SimulasyonFiltre>("");
 
   const yukle = useCallback(async () => {
     setYukleniyor(true);
     setHata(null);
     try {
       const qs = new URLSearchParams({ from, to });
+      if (simulasyonFiltre) qs.set("simulasyon", simulasyonFiltre);
       const res = await fetch(`/api/panel/talep-analiz?${qs}`);
       const data = (await res.json()) as ApiCevap;
       if (!res.ok) {
@@ -101,7 +111,7 @@ export default function PanelTalepAnalizPage() {
     } finally {
       setYukleniyor(false);
     }
-  }, [from, to]);
+  }, [from, to, simulasyonFiltre]);
 
   useEffect(() => {
     void yukle();
@@ -151,6 +161,19 @@ export default function PanelTalepAnalizPage() {
               className="mt-1 block rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
             />
           </label>
+          <div className="min-w-[10rem]">
+            <SelectField
+              label="Kaynak"
+              value={simulasyonFiltre}
+              onChange={(e) =>
+                setSimulasyonFiltre(e.target.value as SimulasyonFiltre)
+              }
+            >
+              <option value="">Tümü</option>
+              <option value="haric">Yalnızca gerçek</option>
+              <option value="sadece">Yalnızca simülasyon</option>
+            </SelectField>
+          </div>
           <button
             type="button"
             onClick={() => {
@@ -310,14 +333,21 @@ export default function PanelTalepAnalizPage() {
               {tabloSatirlar.map((s) => (
                 <tr key={s.talepId} className="hover:bg-slate-50/80">
                   <td className="px-4 py-2.5">
-                    <Link
-                      href={`/bekle/${s.talepId}`}
-                      className="font-mono text-xs text-amber-700 hover:underline"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {s.talepId.slice(0, 8)}…
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Link
+                        href={`/bekle/${s.talepId}`}
+                        className="font-mono text-xs text-amber-700 hover:underline"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {s.talepId.slice(0, 8)}…
+                      </Link>
+                      {s.simulasyon ? (
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-violet-700 bg-violet-50 px-1.5 py-0.5 rounded-md">
+                          Sim
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
                   <td className="px-4 py-2.5 tabular-nums text-slate-700">
                     {tarihKisa(s.olusturulma)}

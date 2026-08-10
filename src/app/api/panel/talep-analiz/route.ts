@@ -3,11 +3,19 @@ import { createClient } from "@/lib/supabase/server";
 import { panelEpostaIzinli } from "@/lib/supabase/env";
 import { getSupabaseAdmin, supabaseDbAktif } from "@/lib/supabase/admin";
 import { PANEL_TALEP_MIN_OLUSTURULMA } from "@/lib/panel-talep";
+import { simulasyonTalepIdSet } from "@/lib/simulasyon-ihale-db";
 import {
   talepTeklifAnalizOzetHesapla,
   talepTeklifSureKovalariHesapla,
   talepTeklifSureSatirlariHesapla,
 } from "@/lib/talep-teklif-analiz";
+
+type SimulasyonFiltre = "" | "sadece" | "haric";
+
+function parseSimulasyonFiltre(raw: string | null): SimulasyonFiltre {
+  if (raw === "sadece" || raw === "haric") return raw;
+  return "";
+}
 
 const SAYFA = 1000;
 const TEKLIF_CHUNK = 100;
@@ -98,6 +106,7 @@ export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
   const to = sp.get("to")?.trim() || bugunUtc();
   let from = sp.get("from")?.trim() || gunEksi(to, 6);
+  const simulasyon = parseSimulasyonFiltre(sp.get("simulasyon"));
 
   let fromIso = gunBaslangicIso(from);
   if (fromIso < PANEL_TALEP_MIN_OLUSTURULMA) {
@@ -107,7 +116,14 @@ export async function GET(request: NextRequest) {
   const toIso = gunBitisIso(to);
 
   try {
-    const talepler = await talepleriCek(fromIso, toIso);
+    const tumTalepler = await talepleriCek(fromIso, toIso);
+    const simIds = await simulasyonTalepIdSet(tumTalepler.map((t) => t.id));
+    const talepler = tumTalepler.filter((t) => {
+      const sim = simIds.has(t.id);
+      if (simulasyon === "sadece") return sim;
+      if (simulasyon === "haric") return !sim;
+      return true;
+    });
     const teklifMap = await teklifTarihleriCek(talepler.map((t) => t.id));
     const satirlar = talepTeklifSureSatirlariHesapla(
       talepler.map((t) => ({
@@ -115,6 +131,7 @@ export async function GET(request: NextRequest) {
         olusturulma: t.olusturulma,
         durum: t.durum,
         sehir: t.konum_il,
+        simulasyon: simIds.has(t.id),
       })),
       teklifMap
     );
@@ -125,6 +142,7 @@ export async function GET(request: NextRequest) {
       filtre: {
         from,
         to,
+        simulasyon,
         minOlusturulma: PANEL_TALEP_MIN_OLUSTURULMA,
       },
       ozet,
