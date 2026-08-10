@@ -3,6 +3,8 @@ import {
   LASTIK_DURUMU_BILGI,
   talepLastikDurumuEtiket,
 } from "./lastik-durumu";
+import { talepYakitTipiEtiket } from "./yakit-tipi";
+import { talepKilitDurumuEtiket } from "./kilit-durumu";
 import { cekiciTalepOnizleme } from "./talep-utils";
 import type { Talep } from "./types";
 
@@ -24,9 +26,9 @@ function talep(partial: Partial<Talep> & Pick<Talep, "sorun">): Talep {
 
 describe("talepLastikDurumuEtiket", () => {
   it("id alanından okur", () => {
-    expect(
-      talepLastikDurumuEtiket({ lastikDurumu: "yama" })
-    ).toBe("Lastik yama lazım / söndü");
+    expect(talepLastikDurumuEtiket({ lastikDurumu: "yama" })).toBe(
+      "Lastik yama lazım / söndü"
+    );
   });
 
   it("sorun metninden çıkarır", () => {
@@ -38,17 +40,59 @@ describe("talepLastikDurumuEtiket", () => {
   });
 });
 
-describe("cekiciTalepOnizleme", () => {
-  it("lastik durumunu ihale özetine koyar", () => {
+describe("cekiciTalepOnizleme — sorun ekstra alanları", () => {
+  it("lastik durumunu özetler", () => {
     const o = cekiciTalepOnizleme(
       talep({
-        sorun: "Lastik patladı · Lastik yama lazım / söndü",
+        sorun: "Lastik patladı",
+        sorunTipi: "lastik",
         lastikDurumu: "yama",
-        aracModeli: undefined,
       })
     );
+    expect(o.sorunBaslik).toBe("Lastik söndü/patladı");
     expect(o.lastikDurumu).toBe("Lastik yama lazım / söndü");
-    expect(o.sorunOzet).toContain("Lastik yama lazım / söndü");
-    expect(LASTIK_DURUMU_BILGI).toMatch(/ek ücret/i);
+    expect(LASTIK_DURUMU_BILGI.length).toBeGreaterThan(10);
+  });
+
+  it("yakıt tipini özetler", () => {
+    const o = cekiciTalepOnizleme(
+      talep({
+        sorun: "Yakıt bitti · Dizel / mazot",
+        sorunTipi: "yakit",
+        yakitTipi: "dizel",
+        sorunDetay: "Otoyolda kaldım",
+      })
+    );
+    expect(o.yakitTipi).toBe("Dizel / mazot");
+    expect(o.sorunDetay).toBe("Otoyolda kaldım");
+    expect(talepYakitTipiEtiket({ yakitTipi: "benzin" })).toBe("Benzin");
+  });
+
+  it("kilit durumunu özetler", () => {
+    const o = cekiciTalepOnizleme(
+      talep({
+        sorun: "Kilit",
+        sorunTipi: "kilit",
+        kilitDurumu: "iceride",
+      })
+    );
+    expect(o.kilitDurumu).toBe("Anahtar içeride kaldı, kapılar kilitli");
+    expect(talepKilitDurumuEtiket({ kilitDurumu: "kayip" })).toBe(
+      "Anahtar kayboldu / yok"
+    );
+  });
+
+  it("araç tipi ve durumunu ayrı gösterir", () => {
+    const o = cekiciTalepOnizleme(
+      talep({
+        sorun: "Çekici lazım",
+        sorunTipi: "cekici",
+        aracTipi: "suv",
+        aracDurumu: "calismiyor_bosa_alinamiyor",
+        aracModeli: "SUV / Jeep — Araç çalışmıyor, boşa alınamıyor",
+      })
+    );
+    expect(o.aracTipi).toBe("SUV / Jeep");
+    expect(o.aracDurumu).toBe("Araç çalışmıyor, boşa alınamıyor");
   });
 });

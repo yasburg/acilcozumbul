@@ -103,6 +103,7 @@ export async function GET(
           lastikDurumu: talep.lastikDurumu,
           sorun: talep.sorun,
         }) ?? undefined,
+      onizleme: cekiciTalepOnizleme(talep),
       fotografUrls: talep.fotografUrls,
       olusturulma: talep.olusturulma,
       benimTeklif: benimTeklifim,

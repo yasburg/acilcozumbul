@@ -8,7 +8,11 @@ import {
   ihaleAcikMi,
   aktifTeklifler,
 } from "./ihale";
-import { cekiciTalepOnizleme } from "./talep-utils";
+import {
+  cekiciTalepOnizleme,
+  talepBolge,
+  talepSorunOzet,
+} from "./talep-utils";
 import { teklifleriSirala } from "./teklif-siralama";
 import { demoRakipCekiciId } from "./demo-fixtures";
 import { musteriTeklifSureKirilim, sorunHedefKonumGerekliMi } from "./sorun-tipleri";
@@ -52,6 +56,7 @@ export function demoCekiciTalepGetJson(talep: Talep, cekici: Cekici) {
           lastikDurumu: talep.lastikDurumu,
           sorun: talep.sorun,
         }) ?? undefined,
+      onizleme: cekiciTalepOnizleme(talep),
       fotografUrls: talep.fotografUrls,
       olusturulma: talep.olusturulma,
       benimTeklif: benimTeklifim,
@@ -273,6 +278,9 @@ export function demoTeklifMesaji(
     kredi: cekiciToplamKredi(cekici),
     demoModu: true,
     mesaj: "Demo: Teklifiniz kaydedildi (gerçek veri değişmedi).",
-    onizleme: cekiciTalepOnizleme(talep),
+    onizleme: {
+      bolge: talepBolge(talep),
+      sorunOzet: talepSorunOzet(talep.sorun),
+    },
   };
 }

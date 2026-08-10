@@ -18,6 +18,10 @@ export function aracTipiEtiket(id: string): string | null {
   return ARAC_TIPLERI.find((t) => t.id === id)?.etiket ?? null;
 }
 
+export function aracTipiGecerliMi(id: string): boolean {
+  return ARAC_TIPLERI.some((t) => t.id === id);
+}
+
 /** API `aracModeli` alanı için tip + model birleşimi */
 export function aracModeliMetniOlustur(
   aracTipi: string,

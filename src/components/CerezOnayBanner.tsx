@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useId,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   cerezBannerGosterilmeli,
@@ -67,22 +74,15 @@ function Toggle({
   disabled,
   onChange,
   label,
-  aciklama,
 }: {
   checked: boolean;
   disabled?: boolean;
   onChange?: (v: boolean) => void;
   label: string;
-  aciklama: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 py-1">
-      <div className="min-w-0">
-        <p className="text-xs font-medium text-slate-900">{label}</p>
-        <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
-          {aciklama}
-        </p>
-      </div>
+    <div className="flex items-center justify-between gap-3 py-2.5">
+      <p className="text-sm font-medium text-[var(--acb-dark)]">{label}</p>
       <button
         type="button"
         role="switch"
@@ -91,15 +91,15 @@ function Toggle({
         disabled={disabled}
         onClick={() => onChange?.(!checked)}
         className={[
-          "relative shrink-0 h-5 w-9 rounded-full transition-colors touch-manipulation",
-          checked ? "bg-amber-500" : "bg-slate-300",
+          "relative h-6 w-11 shrink-0 rounded-full transition-colors touch-manipulation",
+          checked ? "bg-[var(--acb-green,#089b2d)]" : "bg-slate-300",
           disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
         ].join(" ")}
       >
         <span
           className={[
-            "absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
-            checked ? "translate-x-4" : "translate-x-0",
+            "absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform",
+            checked ? "translate-x-5" : "translate-x-0",
           ].join(" ")}
         />
       </button>
@@ -107,11 +107,89 @@ function Toggle({
   );
 }
 
-const dugmeSinif =
-  "min-h-[32px] rounded-md border border-slate-300 bg-white text-slate-800 text-xs font-semibold px-2 py-1.5 hover:bg-slate-50 touch-manipulation";
-
 const yalnizcaGerekliSinif =
-  "min-h-[32px] shrink-0 rounded-md border border-slate-200 bg-white text-slate-500 text-xs font-medium px-2 py-1.5 hover:bg-slate-50 hover:text-slate-600 touch-manipulation whitespace-nowrap";
+  "min-h-9 shrink-0 rounded-xl border border-[var(--acb-border,#e5e7eb)] bg-white text-[var(--acb-muted,#64748b)] text-xs font-medium px-3 py-2 hover:bg-slate-50 hover:text-[var(--acb-dark)] touch-manipulation whitespace-nowrap";
+
+const ikonDugmeSinif =
+  "inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-[var(--acb-muted)] transition hover:bg-[var(--acb-soft,#eaf8ee)] hover:text-[var(--acb-dark)] touch-manipulation";
+
+function CerezPopup({
+  title,
+  onClose,
+  children,
+  footer,
+}: {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+  footer: ReactNode;
+}) {
+  const titleId = useId();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center p-4"
+      role="presentation"
+    >
+      <button
+        type="button"
+        aria-label="Kapat"
+        className="absolute inset-0 bg-[rgb(27_45_42/0.45)] backdrop-blur-[2px]"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative z-10 w-full max-w-[20rem] overflow-hidden rounded-[var(--acb-radius-lg,1.25rem)] border border-[var(--acb-border,#e5e7eb)] bg-white shadow-[0_20px_48px_rgb(27_45_42/0.22)]"
+      >
+        <div className="flex items-center justify-between gap-2 border-b border-[var(--acb-border,#e5e7eb)] px-4 py-3">
+          <p
+            id={titleId}
+            className="text-base font-bold text-[var(--acb-dark)]"
+          >
+            {title}
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className={ikonDugmeSinif}
+            aria-label="Kapat"
+          >
+            <span className="text-lg leading-none" aria-hidden>
+              ×
+            </span>
+          </button>
+        </div>
+        <div className="px-4 py-3">{children}</div>
+        <div className="flex gap-2 border-t border-[var(--acb-border,#e5e7eb)] px-4 py-3">
+          {footer}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 export function CerezOnayBanner() {
   const gosterilmeli = useSyncExternalStore(
@@ -149,136 +227,46 @@ export function CerezOnayBanner() {
   const kapat = () => {
     setGoster(false);
     setZorlaAcik(false);
+    setGorunum("ozet");
     bannerDegisti();
   };
 
+  const popupKapat = () => {
+    if (zorlaAcik && !gosterilmeli) {
+      kapat();
+      return;
+    }
+    setGorunum("ozet");
+  };
+
   return (
-    <div
-      className="fixed inset-x-0 z-[100] pointer-events-none bottom-[var(--acil-sticky-cta-h,env(safe-area-inset-bottom,0px))]"
-      role="dialog"
-      aria-labelledby="cerez-banner-baslik"
-      aria-describedby="cerez-banner-aciklama"
-    >
-      <div className="pointer-events-auto max-w-lg mx-auto bg-white/95 backdrop-blur-sm px-3 py-1.5 border-t border-slate-200 shadow-[0_-2px_12px_rgba(15,23,42,0.08)]">
-        {gorunum === "ozet" ? (
-          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-            <p
+    <>
+      {/* Alt şerit — yalnızca özet */}
+      {gorunum === "ozet" ? (
+        <div
+          className="pointer-events-none fixed inset-x-0 z-[100] bottom-[var(--acil-sticky-cta-h,env(safe-area-inset-bottom,0px))]"
+          role="dialog"
+          aria-labelledby="cerez-banner-baslik"
+          aria-describedby="cerez-banner-aciklama"
+        >
+          <div className="pointer-events-auto mx-auto max-w-lg border-t border-[var(--acb-border,#e5e7eb)] bg-white/92 px-3 py-2.5 shadow-[0_-8px_28px_rgb(27_45_42/0.1)] backdrop-blur-md">
+            <h2
               id="cerez-banner-baslik"
-              className="text-[11px] text-slate-600 leading-snug min-w-0"
+              className="mb-2 text-center text-xs font-medium text-[var(--acb-muted,#64748b)]"
             >
-              Çerezleri yönetebilirsiniz.{" "}
-              <Link
-                href="/cerez-politikasi"
-                className="underline underline-offset-2 text-slate-500 hover:text-slate-700"
-              >
-                Politika
-              </Link>
-            </p>
+              Çerezleri kullanıyoruz
+            </h2>
             <p id="cerez-banner-aciklama" className="sr-only">
               Zorunlu çerezler site için gereklidir. İsteğe bağlı analitik
-              çerezlerini kabul edebilir veya reddedebilirsiniz.
-            </p>
-            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-              <button
-                type="button"
-                onClick={() => tercihKaydet("zorunlu", kapat)}
-                className={yalnizcaGerekliSinif}
-              >
-                Yalnızca gerekli
-              </button>
-              <button
-                type="button"
-                onClick={() => tercihKaydet("tumu", kapat)}
-                className="min-h-[32px] shrink-0 rounded-md border border-amber-500 bg-amber-500 text-white text-xs font-semibold px-2.5 py-1.5 hover:bg-amber-600 touch-manipulation whitespace-nowrap"
-              >
-                Tümünü kabul et
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAnalitikAcik(true);
-                  setGorunum("ayarlar");
-                }}
-                className="shrink-0 text-[11px] text-slate-500 underline underline-offset-2 hover:text-slate-700 touch-manipulation px-0.5 whitespace-nowrap"
-              >
-                Ayarlar
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {gorunum === "ayarlar" ? (
-          <div className="space-y-1">
-            <p
-              id="cerez-banner-baslik"
-              className="text-xs font-semibold text-slate-900"
-            >
-              Çerezleri ayarla
-            </p>
-            <div className="rounded-md border border-slate-100 bg-slate-50 px-2 divide-y divide-slate-200">
-              <Toggle
-                checked
-                disabled
-                label="Zorunlu"
-                aciklama="Oturum ve güvenlik."
-              />
-              <Toggle
-                checked={analitikAcik}
-                onChange={setAnalitikAcik}
-                label="Analitik ve reklam"
-                aciklama="Ölçüm ve dönüşüm."
-              />
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {analitikAcik ? (
-                <button
-                  type="button"
-                  onClick={() => tercihKaydet("tumu", kapat)}
-                  className={`${dugmeSinif} flex-1`}
-                >
-                  Kaydet
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setGorunum("onay")}
-                  className={`${dugmeSinif} flex-1`}
-                >
-                  Devam
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setGorunum("ozet")}
-                className="text-[11px] text-slate-500 underline touch-manipulation"
-              >
-                Geri
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {gorunum === "onay" ? (
-          <div className="space-y-1">
-            <p
-              id="cerez-banner-baslik"
-              className="text-xs font-semibold text-slate-900"
-            >
-              Analitik kapalı kalacak
-            </p>
-            <p
-              id="cerez-banner-aciklama"
-              className="text-[11px] text-slate-600 leading-snug"
-            >
-              Dönüşüm ölçümü sınırlı olabilir.
+              çerezlerini kabul edebilir veya ayarlardan yönetebilirsiniz.
             </p>
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => tercihKaydet("zorunlu", kapat)}
-                className={yalnizcaGerekliSinif}
+                onClick={() => tercihKaydet("tumu", kapat)}
+                className="min-h-9 flex-1 rounded-xl bg-[var(--acb-green,#089b2d)] px-3 py-2 text-xs font-bold tracking-[0.01em] text-white shadow-[var(--acb-shadow-cta)] transition hover:bg-[var(--acb-green-hover,#077f25)] touch-manipulation active:scale-[0.98]"
               >
-                Yalnızca gerekli
+                Kabul et
               </button>
               <button
                 type="button"
@@ -286,14 +274,95 @@ export function CerezOnayBanner() {
                   setAnalitikAcik(true);
                   setGorunum("ayarlar");
                 }}
-                className="text-[11px] text-slate-600 underline touch-manipulation"
+                className={yalnizcaGerekliSinif}
               >
-                Analitiği aç
+                Ayarla
               </button>
             </div>
           </div>
-        ) : null}
-      </div>
-    </div>
+        </div>
+      ) : null}
+
+      {gorunum === "ayarlar" ? (
+        <CerezPopup title="Çerezler" onClose={popupKapat} footer={
+          <>
+            <button
+              type="button"
+              onClick={popupKapat}
+              className="min-h-11 flex-1 rounded-xl border border-[var(--acb-border)] bg-white text-sm font-semibold text-[var(--acb-dark)] touch-manipulation"
+            >
+              Geri
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (analitikAcik) tercihKaydet("tumu", kapat);
+                else setGorunum("onay");
+              }}
+              className="min-h-11 flex-[1.4] rounded-xl bg-[var(--acb-green)] text-sm font-bold text-white shadow-[var(--acb-shadow-cta)] touch-manipulation active:scale-[0.98]"
+            >
+              Kaydet
+            </button>
+          </>
+        }>
+          <div className="mb-3 space-y-1.5">
+            <p className="text-sm font-semibold text-[var(--acb-dark)]">
+              Çerez (Cookie) Bilgilendirme Metni
+            </p>
+            <p className="text-[12px] leading-snug text-[var(--acb-muted)]">
+              Sitemizde, size en iyi deneyimi sunmak, siteyi nasıl kullandığınızı
+              anlamak ve içeriği geliştirmek için çerezler kullanıyoruz.{" "}
+              <Link
+                href="/cerez-politikasi"
+                onClick={() => setGorunum("ozet")}
+                className="font-medium text-[var(--acb-dark)] underline underline-offset-2"
+              >
+                İncelemek için buraya tıklayın.
+              </Link>
+            </p>
+          </div>
+          <div className="divide-y divide-[var(--acb-border)] rounded-xl border border-[var(--acb-border)] bg-[var(--acb-soft)]/40 px-3">
+            <Toggle checked disabled label="Zorunlu" />
+            <Toggle
+              checked={analitikAcik}
+              onChange={setAnalitikAcik}
+              label="Analitik"
+            />
+          </div>
+        </CerezPopup>
+      ) : null}
+
+      {gorunum === "onay" ? (
+        <CerezPopup
+          title="Emin misiniz?"
+          onClose={() => setGorunum("ayarlar")}
+          footer={
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setAnalitikAcik(true);
+                  setGorunum("ayarlar");
+                }}
+                className="min-h-11 flex-1 rounded-xl border border-[var(--acb-border)] bg-white text-sm font-semibold text-[var(--acb-dark)] touch-manipulation"
+              >
+                Geri
+              </button>
+              <button
+                type="button"
+                onClick={() => tercihKaydet("zorunlu", kapat)}
+                className="min-h-11 flex-[1.4] rounded-xl bg-[var(--acb-green)] text-sm font-bold text-white shadow-[var(--acb-shadow-cta)] touch-manipulation active:scale-[0.98]"
+              >
+                Gerekli
+              </button>
+            </>
+          }
+        >
+          <p className="text-sm leading-snug text-[var(--acb-muted)]">
+            Analitik kapalı kalacak.
+          </p>
+        </CerezPopup>
+      ) : null}
+    </>
   );
 }

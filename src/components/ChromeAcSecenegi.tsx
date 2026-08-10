@@ -22,10 +22,12 @@ export function ChromeAcSecenegi({
   const [tiklandi, setTiklandi] = useState(false);
 
   return (
-    <div className={`space-y-2 ${className}`}>
-      <p className="text-sm text-slate-600 leading-snug text-center">
-        Konum alınamadı. Başka bir tarayıcıda (ör. Chrome veya Safari) tekrar
-        deneyin; olmazsa şehri ve ilçeyi seçerek devam edebilirsiniz.
+    <div
+      className={`space-y-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 ${className}`}
+      role="status"
+    >
+      <p className="text-sm text-red-700 leading-snug text-center">
+        Konum alınamadı. Şehri ve ilçeyi seçerek devam edebilirsiniz.
       </p>
       {linkVar ? (
         vurgulu ? (
@@ -47,14 +49,14 @@ export function ChromeAcSecenegi({
               setTiklandi(true);
               chromeAc();
             }}
-            className="w-full text-sm text-amber-700 font-medium underline py-1"
+            className="w-full text-sm font-medium text-red-700 underline py-1"
           >
             Chrome’da dene
           </button>
         )
       ) : null}
       {tiklandi && (
-        <p className="text-xs text-slate-500 leading-relaxed text-center">
+        <p className="text-xs text-red-600/80 leading-relaxed text-center">
           Chrome yüklü değilse veya açılmazsa sorun değil — aşağıdan şehrinizi ve
           ilçenizi seçerek forma devam edebilirsiniz.
         </p>

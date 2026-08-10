@@ -11,6 +11,9 @@ export const MUSTERI_FUNNEL_OLAY_SABIT = [
   "form_adim_konum",
   "form_adim_detay",
   "form_adim_fotograf",
+  "form_adim_lastik_durumu",
+  "form_adim_yakit_tipi",
+  "form_adim_kilit_durumu",
   "form_adim_arac_tipi",
   "form_adim_arac_modeli",
   "form_adim_arac_durumu",
@@ -138,6 +141,21 @@ export const MUSTERI_FUNNEL_HUNI_A: readonly MusteriFunnelHuniAdimTanim[] = [
     olaylar: ["form_adim_fotograf", "form_adim_detay"],
   },
   {
+    id: "form_adim_lastik_durumu",
+    label: "Adım · Lastik durumu",
+    olaylar: ["form_adim_lastik_durumu", "form_adim_detay"],
+  },
+  {
+    id: "form_adim_yakit_tipi",
+    label: "Adım · Yakıt tipi",
+    olaylar: ["form_adim_yakit_tipi", "form_adim_detay"],
+  },
+  {
+    id: "form_adim_kilit_durumu",
+    label: "Adım · Kilit durumu",
+    olaylar: ["form_adim_kilit_durumu", "form_adim_detay"],
+  },
+  {
     id: "form_adim_arac_tipi",
     label: "Adım · Araç tipi",
     olaylar: ["form_adim_arac_tipi", "form_adim_detay"],
@@ -240,6 +258,9 @@ export const MUSTERI_FUNNEL_HUNI_ORTAK: readonly MusteriFunnelHuniAdimTanim[] = 
     olaylar: [
       "form_adim_detay",
       "form_adim_fotograf",
+      "form_adim_lastik_durumu",
+      "form_adim_yakit_tipi",
+      "form_adim_kilit_durumu",
       "form_adim_arac_tipi",
       "form_adim_arac_modeli",
       "form_adim_arac_durumu",

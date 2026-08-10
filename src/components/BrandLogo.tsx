@@ -1,20 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { MouseEventHandler } from "react";
-import { ACB_BRAND, isAcbBrand } from "@/lib/brand";
+import { ACB_BRAND } from "@/lib/brand";
 
-/** Header LCP yolu — ~11 KB WebP (640×416) */
-const LOGO_YAZILI_HEADER = "/acilcozumbul-logo-yazili-header.webp";
-/** OG / büyük yüzeyler için orijinal PNG */
-const LOGO_YAZILI_FULL = "/acilcozumbul-logo-yazili-dikdortgen.png";
-const LOGO_ICON = "/acilcozumbul-logo-icon-192.png";
-
-const yaziliSrc = isAcbBrand ? ACB_BRAND.logoYazili : LOGO_YAZILI_HEADER;
-const yaziliFullSrc = isAcbBrand ? ACB_BRAND.logoSocial : LOGO_YAZILI_FULL;
-const iconSrc = isAcbBrand ? ACB_BRAND.logoIcon : LOGO_ICON;
-const yaziliSize = isAcbBrand
-  ? { width: 1027, height: 851 }
-  : { width: 640, height: 416 };
+const yaziliSrc = ACB_BRAND.logoYazili;
+const yaziliFullSrc = ACB_BRAND.logoSocial;
+const iconSrc = ACB_BRAND.logoIcon;
+const yaziliSize = ACB_BRAND.logoYaziliBoyut;
 
 /** Yazılı marka logosu (header vb.) */
 export function BrandLogoYazili({
@@ -66,8 +58,8 @@ export function BrandLogoIcon({
     <Image
       src={iconSrc}
       alt=""
-      width={isAcbBrand ? 1276 : 192}
-      height={isAcbBrand ? 1276 : 192}
+      width={1276}
+      height={1276}
       className={className}
       style={{ width: size, height: size }}
       aria-hidden

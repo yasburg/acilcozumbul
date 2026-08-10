@@ -77,6 +77,10 @@ export type TalepRow = {
   sorun_detay: string | null;
   arac_modeli: string | null;
   lastik_durumu?: string | null;
+  yakit_tipi?: string | null;
+  kilit_durumu?: string | null;
+  arac_tipi?: string | null;
+  arac_durumu?: string | null;
   fotograf_urls: string[];
   durum: string;
   olusturulma: string;
@@ -242,7 +246,11 @@ export function talepFromRow(r: TalepRow): Talep {
     sorunTipi: r.sorun_tipi ?? undefined,
     sorunDetay: r.sorun_detay ?? undefined,
     aracModeli: r.arac_modeli ?? undefined,
+    aracTipi: r.arac_tipi ?? undefined,
+    aracDurumu: r.arac_durumu ?? undefined,
     lastikDurumu: r.lastik_durumu ?? undefined,
+    yakitTipi: r.yakit_tipi ?? undefined,
+    kilitDurumu: r.kilit_durumu ?? undefined,
     fotografUrls: r.fotograf_urls?.length ? r.fotograf_urls : undefined,
     durum: r.durum as Talep["durum"],
     olusturulma: r.olusturulma,
@@ -275,6 +283,11 @@ export function talepToRow(t: Talep): Record<string, unknown> {
     sorun_tipi: t.sorunTipi ?? null,
     sorun_detay: t.sorunDetay ?? null,
     arac_modeli: t.aracModeli ?? null,
+    arac_tipi: t.aracTipi ?? null,
+    arac_durumu: t.aracDurumu ?? null,
+    lastik_durumu: t.lastikDurumu ?? null,
+    yakit_tipi: t.yakitTipi ?? null,
+    kilit_durumu: t.kilitDurumu ?? null,
     fotograf_urls: t.fotografUrls ?? [],
     durum: t.durum,
     olusturulma: t.olusturulma,

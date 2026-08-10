@@ -11,9 +11,7 @@ export const SITE_DOMAIN = YASAL_SIRKET.platformDomain;
 const brandOgPath = isAcbBrand
   ? ACB_BRAND.logoSocial
   : "/acilcozumbul-logo-yazili.png";
-const brandIconPath = isAcbBrand
-  ? ACB_BRAND.logoIcon
-  : "/acilcozumbul-logo-icon-192.png";
+const brandIconPath = ACB_BRAND.logoIcon;
 
 /** Ana anahtar ifadeler — Google + AI cevap kutuları */
 export const SEO_ANAHTARLAR = [

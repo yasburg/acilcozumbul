@@ -41,9 +41,15 @@ interface TalepDurum {
   onizleme?: {
     bolge: string;
     sorunOzet: string;
+    sorunBaslik?: string;
+    sorunDetay?: string;
     hedefBolge?: string;
+    aracTipi?: string;
+    aracDurumu?: string;
     aracModeli?: string;
     lastikDurumu?: string;
+    yakitTipi?: string;
+    kilitDurumu?: string;
   };
   teklifUcretsiz?: boolean;
   erisimYok?: boolean;
@@ -77,16 +83,70 @@ interface TalepDurum {
 
 function LastikDurumuIhaleNotu({ etiket }: { etiket: string }) {
   return (
-    <div className="mt-2 space-y-2">
-      <p className="text-sm font-medium text-slate-800">
-        🛞 {etiket}
-      </p>
+    <div className="space-y-2">
+      <DetaySatir etiket="Lastik durumu" deger={etiket} />
       <div
         className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950 leading-relaxed"
         role="note"
       >
         {LASTIK_DURUMU_BILGI}
       </div>
+    </div>
+  );
+}
+
+function DetaySatir({ etiket, deger }: { etiket: string; deger: string }) {
+  return (
+    <div className="flex gap-2 text-sm leading-snug">
+      <span className="shrink-0 font-medium text-slate-500">{etiket}</span>
+      <span className="min-w-0 text-slate-900">{deger}</span>
+    </div>
+  );
+}
+
+/** İhale / kazanan özetinde müşterinin seçtiği tüm ekstra alanlar */
+function TalepEkstraDetaylar({
+  onizleme,
+  sorunFallback,
+}: {
+  onizleme?: TalepDurum["onizleme"];
+  sorunFallback?: string;
+}) {
+  if (!onizleme) {
+    return sorunFallback ? (
+      <p className="text-sm text-slate-600">{sorunFallback}</p>
+    ) : null;
+  }
+
+  const aracSatiri =
+    onizleme.aracTipi && onizleme.aracDurumu
+      ? `${onizleme.aracTipi} — ${onizleme.aracDurumu}`
+      : onizleme.aracTipi ||
+        onizleme.aracDurumu ||
+        onizleme.aracModeli ||
+        null;
+
+  return (
+    <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+      {(onizleme.sorunBaslik || onizleme.sorunOzet) && (
+        <DetaySatir
+          etiket="Sorun"
+          deger={onizleme.sorunBaslik || onizleme.sorunOzet}
+        />
+      )}
+      {onizleme.sorunDetay && (
+        <DetaySatir etiket="Teklif notu" deger={onizleme.sorunDetay} />
+      )}
+      {aracSatiri && <DetaySatir etiket="Araç" deger={aracSatiri} />}
+      {onizleme.yakitTipi && (
+        <DetaySatir etiket="Yakıt tipi" deger={onizleme.yakitTipi} />
+      )}
+      {onizleme.kilitDurumu && (
+        <DetaySatir etiket="Kilit / anahtar" deger={onizleme.kilitDurumu} />
+      )}
+      {onizleme.lastikDurumu && (
+        <LastikDurumuIhaleNotu etiket={onizleme.lastikDurumu} />
+      )}
     </div>
   );
 }
@@ -452,6 +512,50 @@ export default function CekiciTalepClient() {
                   compact
                 />
               )}
+              {talep.onizleme && (
+                <Card>
+                  <p className="text-xs text-slate-500 uppercase tracking-wide mb-2">
+                    Talep özeti
+                  </p>
+                  <p className="font-medium mb-1 text-slate-900">
+                    📍 {talep.onizleme.bolge}
+                  </p>
+                  {talep.onizleme.hedefBolge && (
+                    <p className="text-sm text-amber-700 mb-2">
+                      → {talep.onizleme.hedefBolge}
+                    </p>
+                  )}
+                  {talep.hedefBilinmiyor && (
+                    <div
+                      className="mb-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-950 leading-relaxed"
+                      role="note"
+                    >
+                      <p className="font-semibold">Hedef belirsiz</p>
+                    </div>
+                  )}
+                  <TalepEkstraDetaylar onizleme={talep.onizleme} />
+                  {talep.fotografUrls && talep.fotografUrls.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {talep.fotografUrls.map((url) => (
+                        <a
+                          key={url}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block rounded-lg overflow-hidden border border-slate-200"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={url}
+                            alt="Arıza fotoğrafı"
+                            className="w-full max-h-40 object-cover"
+                          />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              )}
               <Card className="border-amber-200 bg-amber-50">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   <p className="text-xs text-amber-700 uppercase tracking-wide">
@@ -501,15 +605,7 @@ export default function CekiciTalepClient() {
                     </p>
                   </div>
                 )}
-                <p className="text-sm text-slate-600">{talep.onizleme!.sorunOzet}</p>
-                {talep.onizleme!.aracModeli && (
-                  <p className="text-sm text-slate-700 mt-2">
-                    🚗 {talep.onizleme!.aracModeli}
-                  </p>
-                )}
-                {talep.onizleme!.lastikDurumu && (
-                  <LastikDurumuIhaleNotu etiket={talep.onizleme!.lastikDurumu} />
-                )}
+                <TalepEkstraDetaylar onizleme={talep.onizleme} />
                 {talep.fotografUrls && talep.fotografUrls.length > 0 && (
                   <div className="mt-3 space-y-2">
                     {talep.fotografUrls.map((url) => (
@@ -542,7 +638,7 @@ export default function CekiciTalepClient() {
                   onToplamSure={toplamSureAyarla}
                 />
               )}
-              <p className="text-sm text-emerald-700 text-center font-medium">
+              <p className="text-sm text-[var(--acb-green)] text-center font-semibold">
                 Teklif vermek ücretsizdir.
               </p>
               <Field
@@ -564,8 +660,13 @@ export default function CekiciTalepClient() {
                 value={mesaj}
                 onChange={(e) => setMesaj(e.target.value)}
               />
-              <Btn onClick={teklifVer} disabled={islem}>
-                {islem ? "Gönderiliyor…" : "Teklif Ver (Ücretsiz)"}
+              <Btn
+                variant="emergency"
+                onClick={teklifVer}
+                disabled={islem}
+                className="!text-base !tracking-wide"
+              >
+                {islem ? "Gönderiliyor…" : "TEKLİF VER"}
               </Btn>
             </>
           )}
@@ -619,17 +720,10 @@ export default function CekiciTalepClient() {
                     </p>
                   </div>
                 )}
-                <p className="text-sm text-slate-500 border-t border-slate-100 pt-3 mt-3">
-                  {talep.sorun}
-                </p>
-                {talep.aracModeli && (
-                  <p className="text-sm text-slate-700 mt-2">
-                    🚗 {talep.aracModeli}
-                  </p>
-                )}
-                {talep.lastikDurumu && (
-                  <LastikDurumuIhaleNotu etiket={talep.lastikDurumu} />
-                )}
+                <TalepEkstraDetaylar
+                  onizleme={talep.onizleme}
+                  sorunFallback={talep.sorun}
+                />
                 {talep.fotografUrls && talep.fotografUrls.length > 0 && (
                   <div className="mt-3 space-y-2">
                     <p className="text-xs text-slate-500">Arıza fotoğrafı</p>

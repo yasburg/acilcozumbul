@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { BrandLogoYazili } from "@/components/BrandLogo";
 import {
   OdemeKartLogolari,
   YerliUretimLogo,
 } from "@/components/yasal/OdemeKartLogolari";
 import { SosyalMedyaIkonlari } from "@/components/yasal/SosyalMedyaIkonlari";
+import { ACB_BRAND } from "@/lib/brand";
 import { YASAL_LINKLER } from "@/lib/yasal-sirket";
 
 const FOOTER_LINKLER = [
@@ -23,11 +23,24 @@ export function YasalSiteFooter() {
   return (
     <footer className="mt-auto border-t border-slate-200 bg-slate-50 px-4 py-4">
       <div className="mx-auto max-w-3xl space-y-3">
-        {/* Üst: logo + slogan | sosyal */}
+        {/* Üst: logo (header ile aynı) + slogan | sosyal */}
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <BrandLogoYazili className="h-8 w-auto max-w-[170px] object-contain object-left" />
-            <p className="mt-0.5 text-[11px] font-medium leading-tight text-slate-800 sm:text-xs">
+            <Link
+              href="/"
+              className="inline-flex shrink-0 touch-manipulation"
+              aria-label="Acil Çözüm Bul — ana sayfa"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={ACB_BRAND.logoOpening}
+                alt="Acil Çözüm Bul"
+                width={2000}
+                height={2002}
+                className="h-11 w-11 rounded-[0.7rem] object-contain"
+              />
+            </Link>
+            <p className="mt-1.5 text-[11px] font-medium leading-tight text-slate-800 sm:text-xs">
               Türkiye’nin acil yol yardım platformu
             </p>
           </div>

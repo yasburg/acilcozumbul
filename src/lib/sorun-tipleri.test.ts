@@ -3,6 +3,7 @@ import {
   HEDEF_BILINMIYOR_EK_SURE_DK,
   hizmetQuerydenSorunTipi,
   musteriTeklifSureKirilim,
+  sorunTeklifNotuPlaceholder,
 } from "./sorun-tipleri";
 
 describe("hizmetQuerydenSorunTipi", () => {
@@ -38,6 +39,15 @@ describe("SORUN_TIPLERI sırası", () => {
     expect(TUM_SORUN_TIP_IDLERI.at(-1)).toBe("diger");
     expect(TUM_SORUN_TIP_IDLERI.at(-2)).toBe("arac-tasima");
     expect(sorunHedefKonumGerekliMi("arac-tasima")).toBe(true);
+  });
+});
+
+describe("sorunTeklifNotuPlaceholder", () => {
+  it("sorun tipine özel örnek döner", () => {
+    expect(sorunTeklifNotuPlaceholder("lastik")).toMatch(/lastik/i);
+    expect(sorunTeklifNotuPlaceholder("aku")).toMatch(/akü/i);
+    expect(sorunTeklifNotuPlaceholder("kaza")).toMatch(/Kaza/i);
+    expect(sorunTeklifNotuPlaceholder("kilit")).toMatch(/Anahtar|kilit/i);
   });
 });
 

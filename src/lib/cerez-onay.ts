@@ -190,3 +190,36 @@ export function cerezBannerAc(): void {
   window.dispatchEvent(new Event("acil-cerez-banner-ac"));
   window.dispatchEvent(new Event("acil-cerez-banner"));
 }
+
+/**
+ * Localhost / dev: onay tercihi + bilinen analitik çerezleri + tüm document.cookie.
+ * Banner yeniden gösterilir.
+ */
+export function cerezleriSifirla(): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.removeItem(CEREZ_ONAY_STORAGE_KEY);
+    localStorage.removeItem(CEREZ_ANALITIK_ISARET_LS);
+  } catch {
+    /* private mode */
+  }
+  try {
+    sessionStorage.removeItem(BANNER_KAPALI_KEY);
+  } catch {
+    /* ignore */
+  }
+
+  analitikCerezleriSil();
+
+  const names = document.cookie
+    .split(";")
+    .map((c) => c.trim().split("=")[0])
+    .filter(Boolean) as string[];
+  for (const name of names) {
+    cerezAdiniSil(name);
+  }
+
+  window.dispatchEvent(new Event("acil-cerez-banner-ac"));
+  window.dispatchEvent(new Event("acil-cerez-banner"));
+}

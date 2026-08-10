@@ -10,6 +10,7 @@ import {
 import { MetaPixel } from "@/components/MetaPixel";
 import { TikTokPixel } from "@/components/TikTokPixel";
 import { PostHogProvider } from "@/components/PostHogProvider";
+import { IntroSplash } from "@/components/acb/IntroSplash";
 import {
   SEO_ACIKLAMA,
   SEO_ANAHTARLAR,
@@ -34,9 +35,7 @@ const geist = Geist({
   preload: true,
 });
 
-const brandIcon = isAcbBrand
-  ? ACB_BRAND.logoIcon
-  : "/acilcozumbul-logo-icon-192.png";
+const brandIcon = ACB_BRAND.logoIcon;
 const brandOg = isAcbBrand
   ? ACB_BRAND.logoSocial
   : "/acilcozumbul-logo-yazili.png";
@@ -91,8 +90,11 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: [{ url: brandIcon, type: "image/png", sizes: "192x192" }],
-    apple: brandIcon,
+    icon: [
+      { url: brandIcon, type: "image/png", sizes: "1276x1276" },
+      { url: "/acilcozumbul-logo-icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: [{ url: brandIcon, type: "image/png", sizes: "1276x1276" }],
     shortcut: brandIcon,
   },
   appleWebApp: {
@@ -111,7 +113,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   /* maximumScale/userScalable=false mobilde ~300ms dokunma gecikmesi + PSI INP cezası */
-  themeColor: isAcbBrand ? ACB_BRAND.themeColor : "#ffffff",
+  themeColor: ACB_BRAND.themeColor,
 };
 
 const googleConsentGerekli = Boolean(
@@ -127,6 +129,7 @@ export default function RootLayout({
     <html
       lang="tr"
       className={`${geist.variable} h-full${isAcbBrand ? " brand-acb" : ""}`}
+      suppressHydrationWarning
     >
       <head>
         {/*
@@ -141,8 +144,15 @@ export default function RootLayout({
             }}
           />
         ) : null}
+        <script
+          id="acb-intro-pending"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(sessionStorage.getItem("acb_intro_splash_seen")!=="1")document.documentElement.classList.add("acb-intro-pending")}catch(e){document.documentElement.classList.add("acb-intro-pending")}})();`,
+          }}
+        />
       </head>
       <body className="min-h-dvh font-sans antialiased">
+        <IntroSplash />
         <GoogleTagManagerNoscript />
         <GoogleTagManager />
         <GoogleAnalytics />

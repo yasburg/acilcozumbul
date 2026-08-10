@@ -28,6 +28,12 @@ interface MobileShellProps {
   headerBottom?: React.ReactNode;
   /** İlk ekranda daha alçak header */
   headerCompact?: boolean;
+  /** Sticky header’ı tamamen gizle (ör. müşteri acil akış) */
+  hideHeader?: boolean;
+  /** 100dvh kilit — sayfa scroll’u yok (acil talep akışı) */
+  lockViewport?: boolean;
+  /** Shell arka planı */
+  shellClassName?: string;
   footer?: React.ReactNode;
   /** Sticky alt nav varken footer’ın altında boşluk (ör. pb-24 / pb-44) */
   footerClassName?: string;
@@ -49,6 +55,9 @@ export function MobileShell({
   headerEnd,
   headerBottom,
   headerCompact = false,
+  hideHeader = false,
+  lockViewport = false,
+  shellClassName = "",
   footer,
   footerClassName,
 }: MobileShellProps) {
@@ -107,11 +116,20 @@ export function MobileShell({
   const logoSagda = brandAlign === "right";
 
   return (
-    <div className="min-h-dvh flex flex-col bg-slate-50 text-slate-900">
+    <div
+      className={[
+        "flex flex-col bg-white text-[var(--acb-dark)]",
+        lockViewport
+          ? "h-dvh max-h-dvh overflow-hidden"
+          : "min-h-dvh",
+        shellClassName,
+      ].join(" ")}
+    >
+      {hideHeader ? null : (
       <header
         id="app-shell-header"
         className={[
-          "sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-md shadow-sm",
+          "acb-chrome-bar sticky top-0 z-30",
           headerCompact ? "px-3 py-1.5" : "px-3 py-2",
         ].join(" ")}
       >
@@ -204,13 +222,23 @@ export function MobileShell({
           <div className="max-w-lg mx-auto w-full pt-1.5">{headerBottom}</div>
         ) : null}
       </header>
+      )}
       <main
         className={[
-          "flex-1 px-4 max-w-lg mx-auto w-full pb-24",
-          headerCompact ? "py-3" : "py-5",
+          "flex-1 w-full",
+          lockViewport
+            ? "min-h-0 overflow-x-hidden overflow-y-auto overscroll-y-contain pt-2 pb-[max(1rem,var(--acil-sticky-cta-h,5.5rem))] [-webkit-overflow-scrolling:touch]"
+            : [
+                hideHeader ? "pt-2" : "",
+                headerCompact ? "py-3" : hideHeader ? "pb-5" : "py-5",
+                "pb-24",
+              ]
+                .filter(Boolean)
+                .join(" "),
         ].join(" ")}
       >
-        {children}
+        {/* Content column stays max-w-lg; scroll surface is full-width so edges scroll too */}
+        <div className="mx-auto w-full max-w-lg px-4">{children}</div>
       </main>
       {footer ? (
         <div className={footerClassName}>{footer}</div>

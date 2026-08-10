@@ -20,15 +20,20 @@ import {
   sorunLastikDurumuGerekliMi,
   sorunMetniOlustur,
   sorunTipiBul,
+  sorunYakitTipiGerekliMi,
+  sorunKilitDurumuGerekliMi,
 } from "@/lib/sorun-tipleri";
-import { talepFotografYukle } from "@/lib/talep-fotograf";
-import { smsBaseUrl } from "@/lib/sms-base-url";
-import { getDogrulanmisTelefon } from "@/lib/musteri-auth";
-import { telefonGecerliMi, telefonNormalize } from "@/lib/telefon";
 import {
   lastikDurumuEtiket,
   lastikDurumuGecerliMi,
 } from "@/lib/lastik-durumu";
+import { yakitTipiEtiket, yakitTipiGecerliMi } from "@/lib/yakit-tipi";
+import { kilitDurumuEtiket, kilitDurumuGecerliMi } from "@/lib/kilit-durumu";
+import { aracTipiGecerliMi } from "@/lib/arac-tipi";
+import { aracDurumuGecerliMi } from "@/lib/arac-durumu";
+import { talepFotografYukle } from "@/lib/talep-fotograf";
+import { smsBaseUrl } from "@/lib/sms-base-url";
+import { telefonGecerliMi, telefonNormalize } from "@/lib/telefon";
 import type { KonumKaynak, Talep } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
@@ -46,12 +51,36 @@ export async function POST(request: NextRequest) {
     sorunDetay,
     sorun,
     aracModeli,
+    aracTipi: aracTipiRaw,
+    aracDurumu: aracDurumuRaw,
     lastikDurumu: lastikDurumuRaw,
+    yakitTipi: yakitTipiRaw,
+    kilitDurumu: kilitDurumuRaw,
     fotograf,
     fotograflar: fotograflarRaw,
     ihaleSureTipi: ihaleSureTipiRaw,
     ihaleOzelBitis: ihaleOzelBitisRaw,
   } = body;
+
+  const MAX_TALEP_FOTOGRAF = 5;
+  const fotografListesi: string[] = (() => {
+    if (Array.isArray(fotograflarRaw)) {
+      return fotograflarRaw
+        .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+        .map((x) => x.trim())
+        .slice(0, MAX_TALEP_FOTOGRAF);
+    }
+    if (Array.isArray(fotograf)) {
+      return fotograf
+        .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
+        .map((x) => x.trim())
+        .slice(0, MAX_TALEP_FOTOGRAF);
+    }
+    if (typeof fotograf === "string" && fotograf.trim()) {
+      return [fotograf.trim()];
+    }
+    return [];
+  })();
 
   const hedefBilinmiyor = Boolean(hedefBilinmiyorRaw);
 
@@ -76,10 +105,42 @@ export async function POST(request: NextRequest) {
   const lastikEtiket = lastikDurumuGecerliMi(lastikDurumu)
     ? lastikDurumuEtiket(lastikDurumu)
     : null;
-  const sorunMetni =
-    lastikEtiket && !sorunMetniHam.includes(lastikEtiket)
-      ? `${sorunMetniHam} · ${lastikEtiket}`
-      : sorunMetniHam;
+  const yakitTipi =
+    typeof yakitTipiRaw === "string" ? yakitTipiRaw.trim() : "";
+  if (sorunYakitTipiGerekliMi(tip)) {
+    if (!yakitTipiGecerliMi(yakitTipi)) {
+      return NextResponse.json(
+        { error: "Yakıt tipini seçin." },
+        { status: 400 }
+      );
+    }
+  }
+  const yakitEtiket = yakitTipiGecerliMi(yakitTipi)
+    ? yakitTipiEtiket(yakitTipi)
+    : null;
+  const kilitDurumu =
+    typeof kilitDurumuRaw === "string" ? kilitDurumuRaw.trim() : "";
+  if (sorunKilitDurumuGerekliMi(tip)) {
+    if (!kilitDurumuGecerliMi(kilitDurumu)) {
+      return NextResponse.json(
+        { error: "Kilit durumunu seçin." },
+        { status: 400 }
+      );
+    }
+  }
+  const kilitEtiket = kilitDurumuGecerliMi(kilitDurumu)
+    ? kilitDurumuEtiket(kilitDurumu)
+    : null;
+  let sorunMetni = sorunMetniHam;
+  if (lastikEtiket && !sorunMetni.includes(lastikEtiket)) {
+    sorunMetni = `${sorunMetni} · ${lastikEtiket}`;
+  }
+  if (yakitEtiket && !sorunMetni.includes(yakitEtiket)) {
+    sorunMetni = `${sorunMetni} · ${yakitEtiket}`;
+  }
+  if (kilitEtiket && !sorunMetni.includes(kilitEtiket)) {
+    sorunMetni = `${sorunMetni} · ${kilitEtiket}`;
+  }
 
   if (tip === "diger" && !sorunDetay?.trim() && !sorun?.trim()) {
     return NextResponse.json(
@@ -90,23 +151,14 @@ export async function POST(request: NextRequest) {
 
   if (sorunAracModeliGerekliMi(tip) && !aracModeli?.trim()) {
     return NextResponse.json(
-      { error: "Araç durumunu seçin." },
+      { error: "Araç modelini girin (ör. Audi A3 sedan)." },
       { status: 400 }
     );
   }
 
-  const fotografListesi: string[] = [];
-  if (Array.isArray(fotograflarRaw)) {
-    for (const f of fotograflarRaw.slice(0, 2)) {
-      if (typeof f === "string" && f.trim()) fotografListesi.push(f.trim());
-    }
-  } else if (typeof fotograf === "string" && fotograf.trim()) {
-    fotografListesi.push(fotograf.trim());
-  }
-
   if (sorunFotografGerekliMi(tip) && fotografListesi.length === 0) {
     return NextResponse.json(
-      { error: "Araç ve arıza fotoğrafı gerekli." },
+      { error: "Arıza fotoğrafı gerekli." },
       { status: 400 }
     );
   }
@@ -118,29 +170,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  /* İletişim + OTP form son adımında zorunlu (sesli müşteri araması için) */
+  /* İletişim (ad/soyad/telefon) teklif seçiminde alınır — oluşturmada opsiyonel */
   const adMetin = typeof ad === "string" ? ad.trim() : "";
-  const soyadMetin =
-    typeof soyad === "string" && soyad.trim() ? soyad.trim() : "-";
+  const soyadMetin = typeof soyad === "string" ? soyad.trim() : "";
   const telHam = typeof telefon === "string" ? telefon.trim() : "";
   const telNorm = telHam ? telefonNormalize(telHam) : "";
-  if (!adMetin) {
-    return NextResponse.json({ error: "İsminizi girin." }, { status: 400 });
-  }
-  if (!telefonGecerliMi(telNorm)) {
+  if (telHam && !telefonGecerliMi(telNorm)) {
     return NextResponse.json(
       { error: "Geçerli bir Türkiye cep telefonu girin." },
       { status: 400 }
-    );
-  }
-  const dogrulanmisTel = await getDogrulanmisTelefon();
-  if (!dogrulanmisTel || dogrulanmisTel !== telNorm) {
-    return NextResponse.json(
-      {
-        error: "Talep oluşturmak için telefon doğrulaması gerekli.",
-        telefonDogrulamaGerekli: true,
-      },
-      { status: 403 }
     );
   }
 
@@ -182,20 +220,22 @@ export async function POST(request: NextRequest) {
     const url = await talepFotografYukle(talepId, foto);
     if (url) fotografUrls.push(url);
   }
-  if (sorunFotografGerekliMi(tip) && fotografUrls.length === 0 && fotografListesi.length > 0) {
+  if (
+    sorunFotografGerekliMi(tip) &&
+    fotografListesi.length > 0 &&
+    fotografUrls.length === 0
+  ) {
     return NextResponse.json(
       { error: "Fotoğraf yüklenemedi. Lütfen tekrar deneyin." },
       { status: 400 }
     );
   }
-  if (sorunFotografGerekliMi(tip) && fotografUrls.length === 0) {
-    return NextResponse.json(
-      { error: "Araç ve arıza fotoğrafı gerekli." },
-      { status: 400 }
-    );
-  }
 
-  const modelMetni = aracModeli?.trim();
+  const modelMetni = typeof aracModeli === "string" ? aracModeli.trim() : "";
+  const aracTipi =
+    typeof aracTipiRaw === "string" ? aracTipiRaw.trim() : "";
+  const aracDurumu =
+    typeof aracDurumuRaw === "string" ? aracDurumuRaw.trim() : "";
   const sorunTam =
     modelMetni && sorunAracModeliAlaniGoster(tip)
       ? `${sorunMetni} · Araç: ${modelMetni}`
@@ -232,8 +272,12 @@ export async function POST(request: NextRequest) {
     sorun: sorunTam,
     sorunTipi: tip,
     sorunDetay: sorunDetay?.trim(),
-    aracModeli: modelMetni,
+    aracModeli: modelMetni || undefined,
+    ...(aracTipiGecerliMi(aracTipi) ? { aracTipi } : {}),
+    ...(aracDurumuGecerliMi(aracDurumu) ? { aracDurumu } : {}),
     ...(lastikDurumuGecerliMi(lastikDurumu) ? { lastikDurumu } : {}),
+    ...(yakitTipiGecerliMi(yakitTipi) ? { yakitTipi } : {}),
+    ...(kilitDurumuGecerliMi(kilitDurumu) ? { kilitDurumu } : {}),
     fotografUrls: fotografUrls.length ? fotografUrls : undefined,
     durum: "ihalede",
     olusturulma: olusturulma.toISOString(),

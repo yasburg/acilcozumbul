@@ -3,6 +3,31 @@
 import { useCallback, useEffect, useState } from "react";
 import { sorunAkisAciklama, type SorunAkisAdim } from "@/lib/sorun-akis-aciklama";
 import { sorunTipiBul } from "@/lib/sorun-tipleri";
+import { AcbIcons, ACB_ICON_STROKE, SorunIkon } from "@/lib/acb-icons";
+import { FileText, Flag, MessageCircle } from "lucide-react";
+
+function AkisAdimIkon({ ikon }: { ikon: SorunAkisAdim["ikon"] }) {
+  const cls = "size-3.5";
+  if (ikon === "location") {
+    return (
+      <AcbIcons.location className={cls} strokeWidth={ACB_ICON_STROKE} aria-hidden />
+    );
+  }
+  if (ikon === "detail") {
+    return <FileText className={cls} strokeWidth={ACB_ICON_STROKE} aria-hidden />;
+  }
+  if (ikon === "target") {
+    return <Flag className={cls} strokeWidth={ACB_ICON_STROKE} aria-hidden />;
+  }
+  if (ikon === "offers") {
+    return (
+      <MessageCircle className={cls} strokeWidth={ACB_ICON_STROKE} aria-hidden />
+    );
+  }
+  return (
+    <AcbIcons.check className={cls} strokeWidth={ACB_ICON_STROKE} aria-hidden />
+  );
+}
 
 const ADIM_SURE_MS = 2500;
 
@@ -119,7 +144,7 @@ function SorunAkisOzetiIcerik({
                             : "border-slate-200 bg-white text-slate-400 hover:border-amber-300 hover:text-slate-600",
                       ].join(" ")}
                     >
-                      <span className="text-[11px]">{adim.ikon}</span>
+                      <AkisAdimIkon ikon={adim.ikon} />
                     </button>
                   </div>
                   <p
@@ -220,9 +245,7 @@ export function SorunAkisOzeti({ sorunTipi, icinde = false }: Props) {
       aria-label={`${tip.label} süreci`}
     >
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-base shrink-0" aria-hidden>
-          {tip.icon}
-        </span>
+        <SorunIkon id={tip.id} className="size-4 shrink-0" active />
         <p className="text-xs font-semibold text-amber-900 leading-snug">
           {tip.label}
         </p>

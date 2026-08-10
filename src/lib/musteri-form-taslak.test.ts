@@ -30,10 +30,12 @@ function bosTaslak(
       aracModeli: "",
       aracDurumu: "",
       lastikDurumu: "",
+      yakitTipi: "",
+      kilitDurumu: "",
     },
     yasalOnay: false,
-    fotografOnizleme: [null, null],
-    fotografData: [null, null],
+    fotografOnizleme: [],
+    fotografData: [],
     ...patch,
   };
 }
@@ -85,7 +87,8 @@ describe("musteriFormTaslak", () => {
     expect(musteriFormTaslakOku()?.step).toBe("konum");
     expect(musteriFormAdimDonusumNormalize("konum")).toBe("sorun");
     expect(musteriFormAdimDonusumNormalize("detay")).toBe("sorun");
-    expect(musteriFormAdimDonusumNormalize("bilgi")).toBe("bilgi");
+    expect(musteriFormAdimDonusumNormalize("bilgi")).toBe("hedef");
+    expect(musteriFormAdimDonusumNormalize("telefon")).toBe("hedef");
   });
 
   it("boş taslağı ayırt eder", () => {
@@ -124,12 +127,25 @@ describe("musteriFormTaslak", () => {
       bosTaslak({
         step: "hedef",
         form: { ...bosTaslak().form, sorunTipi: "aku" },
-        fotografData: ["x".repeat(200), null],
-        fotografOnizleme: ["y".repeat(200), null],
+        fotografData: ["x".repeat(200)],
+        fotografOnizleme: ["y".repeat(200)],
       })
     );
     const t = musteriFormTaslakOku();
     expect(t?.form.sorunTipi).toBe("aku");
-    expect(t?.fotografData).toEqual([null, null]);
+    expect(t?.fotografData).toEqual([]);
+  });
+
+  it("eski tek string fotoğrafı diziye çevirir", () => {
+    sessionStorage.setItem(
+      "acilcozum_musteri_form_taslak",
+      JSON.stringify({
+        ...bosTaslak({ form: { ...bosTaslak().form, sorunTipi: "aku" } }),
+        fotografData: "data:image/jpeg;base64,abc",
+        fotografOnizleme: "data:image/jpeg;base64,abc",
+      })
+    );
+    const t = musteriFormTaslakOku();
+    expect(t?.fotografData).toEqual(["data:image/jpeg;base64,abc"]);
   });
 });
