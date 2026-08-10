@@ -7,6 +7,7 @@ import { PanelCekiciHarita } from "@/components/panel/PanelCekiciHarita";
 import { PanelTalepHaritaNoktalar } from "@/components/panel/PanelTalepHaritaNoktalar";
 import {
   panelTalepDurumEtiketi,
+  panelTalepIptalSureEtiketi,
   SEHIR_YOK,
   type PanelTalepOzet,
   type PanelTalepHaritaNokta,
@@ -353,6 +354,10 @@ export default function PanelTaleplerPage() {
                 ) ?? null;
               const teklifSecildi = Boolean(t.kazananCekiciId);
               const arandi = Boolean(t.musteriArandiAt);
+              const iptalSure = panelTalepIptalSureEtiketi(
+                t.olusturulma,
+                t.iptalAt
+              );
               return (
               <Card key={t.id}>
                 <div className="flex flex-wrap justify-between gap-2">
@@ -367,9 +372,16 @@ export default function PanelTaleplerPage() {
                     </p>
                     <p className="text-sm text-slate-600">{t.telefon}</p>
                   </div>
-                  <span className="text-xs font-medium uppercase tracking-wide text-amber-700 bg-amber-50 px-2 py-1 rounded-lg h-fit">
-                    {panelTalepDurumEtiketi(t.durum)}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-xs font-medium uppercase tracking-wide text-amber-700 bg-amber-50 px-2 py-1 rounded-lg h-fit inline-block">
+                      {panelTalepDurumEtiketi(t.durum)}
+                    </span>
+                    {t.durum === "iptal" && iptalSure ? (
+                      <p className="mt-1 text-xs text-slate-500 max-w-[14rem]">
+                        {iptalSure}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
                 <p className="text-sm text-slate-700 mt-2 line-clamp-2">
                   {t.sorun}

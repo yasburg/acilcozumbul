@@ -20,8 +20,12 @@ export async function POST(
 
   if (isDemoTalepId(id)) {
     try {
-      await demoMusteriTalepIptal(id, request);
-      return NextResponse.json({ ok: true, durum: "iptal" });
+      const t = await demoMusteriTalepIptal(id, request);
+      return NextResponse.json({
+        ok: true,
+        durum: "iptal",
+        iptalAt: t.iptalAt,
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "İptal edilemedi.";
       const status = msg.includes("bulunamadı") ? 404 : 400;
@@ -35,7 +39,11 @@ export async function POST(
   }
 
   if (talep.durum === "iptal") {
-    return NextResponse.json({ ok: true, durum: "iptal" });
+    return NextResponse.json({
+      ok: true,
+      durum: "iptal",
+      iptalAt: talep.iptalAt,
+    });
   }
 
   if (!IPTAL_EDILEBILIR.has(talep.durum)) {
@@ -49,7 +57,8 @@ export async function POST(
   }
 
   talep.durum = "iptal";
+  talep.iptalAt = talep.iptalAt ?? new Date().toISOString();
   await updateTalep(talep);
 
-  return NextResponse.json({ ok: true, durum: "iptal" });
+  return NextResponse.json({ ok: true, durum: "iptal", iptalAt: talep.iptalAt });
 }

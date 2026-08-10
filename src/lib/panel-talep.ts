@@ -54,3 +54,32 @@ export function panelTalepDurumEtiketi(durum: string): string {
       return durum;
   }
 }
+
+/** Oluşturma → iptal arası süre metni (kart üzerinde). */
+export function panelTalepIptalSureEtiketi(
+  olusturulma: string,
+  iptalAt: string | null | undefined
+): string | null {
+  if (!iptalAt) return null;
+  const bas = Date.parse(olusturulma);
+  const bit = Date.parse(iptalAt);
+  if (!Number.isFinite(bas) || !Number.isFinite(bit) || bit < bas) return null;
+  const sn = Math.max(0, Math.round((bit - bas) / 1000));
+  if (sn < 60) {
+    return `${sn} saniye sonra iptal edildi`;
+  }
+  const dk = Math.floor(sn / 60);
+  if (dk < 60) {
+    const kalanSn = sn % 60;
+    if (dk < 5 && kalanSn > 0) {
+      return `${dk} dk ${kalanSn} sn sonra iptal edildi`;
+    }
+    return `${dk} dakika sonra iptal edildi`;
+  }
+  const saat = Math.floor(dk / 60);
+  const kalanDk = dk % 60;
+  if (kalanDk === 0) {
+    return `${saat} saat sonra iptal edildi`;
+  }
+  return `${saat} saat ${kalanDk} dk sonra iptal edildi`;
+}

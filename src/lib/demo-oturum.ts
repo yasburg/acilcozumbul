@@ -423,6 +423,7 @@ export async function demoMusteriTalepIptal(
     talepGuncelle(d, talepId, (t) => ({
       ...t,
       durum: "iptal" as const,
+      iptalAt: t.iptalAt ?? new Date().toISOString(),
     }))
   );
   const t = demoTalepBul(yeni, talepId);

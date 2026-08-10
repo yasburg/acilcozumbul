@@ -212,6 +212,8 @@ export interface Talep {
   fotografUrls?: string[];
   durum: TalepDurumu;
   olusturulma: string;
+  /** Müşteri veya sistem iptal ettiği an */
+  iptalAt?: string;
   ihaleBitis: string;
   kazananCekiciId?: string;
   kazananTeklifId?: string;

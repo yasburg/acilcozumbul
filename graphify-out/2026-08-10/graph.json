@@ -4250,7 +4250,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app_api_panel_talepler_route",
-      "community": 15,
+      "community": 100,
       "norm_label": "route.ts"
     },
     {
@@ -4260,7 +4260,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_app_api_panel_talepler_route_get",
-      "community": 15,
+      "community": 100,
       "norm_label": "get()"
     },
     {
@@ -13750,7 +13750,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_cekici_belge",
-      "community": 124,
+      "community": 15,
       "norm_label": "cekici-belge.ts"
     },
     {
@@ -13760,7 +13760,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_cekici_belge_izinli_mime",
-      "community": 124,
+      "community": 15,
       "norm_label": "izinli_mime"
     },
     {
@@ -13770,7 +13770,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_cekici_belge_belgebase64ayikla",
-      "community": 124,
+      "community": 15,
       "norm_label": "belgebase64ayikla()"
     },
     {
@@ -13780,7 +13780,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_lib_cekici_belge_uzanti",
-      "community": 124,
+      "community": 15,
       "norm_label": "uzanti()"
     },
     {
@@ -13790,7 +13790,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_lib_cekici_belge_cekicibelgeyukle",
-      "community": 124,
+      "community": 15,
       "norm_label": "cekicibelgeyukle()"
     },
     {
@@ -16400,7 +16400,7 @@
       "source_location": "L419",
       "_origin": "ast",
       "id": "src_lib_db_gettaleplersayfali",
-      "community": 15,
+      "community": 100,
       "norm_label": "gettaleplersayfali()"
     },
     {
@@ -16410,7 +16410,7 @@
       "source_location": "L441",
       "_origin": "ast",
       "id": "src_lib_db_getpaneltalepozet",
-      "community": 15,
+      "community": 100,
       "norm_label": "getpaneltalepozet()"
     },
     {
@@ -16420,7 +16420,7 @@
       "source_location": "L513",
       "_origin": "ast",
       "id": "src_lib_db_getpaneltalepharitanoktalari",
-      "community": 15,
+      "community": 100,
       "norm_label": "getpaneltalepharitanoktalari()"
     },
     {
@@ -26920,7 +26920,7 @@
       "source_location": "L248",
       "_origin": "ast",
       "id": "src_lib_simulasyon_ihale_db_simulasyontalepidset",
-      "community": 15,
+      "community": 100,
       "norm_label": "simulasyontalepidset()"
     },
     {
@@ -91665,7 +91665,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2246",
+      "source_location": "L2252",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_components_musteri_musterianasayfa_progressadimlari",
@@ -91677,7 +91677,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2181",
+      "source_location": "L2187",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_google_maps_googlemapsyapilandirildi"
@@ -91688,7 +91688,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L3654",
+      "source_location": "L3665",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_hedef_oneri_data_ototamiraramasorgusu"
@@ -91699,7 +91699,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L3357",
+      "source_location": "L3368",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_il_ilce_ilcelistesi"
@@ -91710,7 +91710,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L3657",
+      "source_location": "L3668",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_konum_parse_parseililce"
@@ -91721,7 +91721,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2275",
+      "source_location": "L2281",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_seo_icerik_anasayfasehirbaglantilari"
@@ -91732,7 +91732,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2269",
+      "source_location": "L2275",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_seo_icerik_anasayfaseoicerik"
@@ -91743,7 +91743,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2274",
+      "source_location": "L2280",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_seo_icerik_seobolgebaglantilari"
@@ -91765,7 +91765,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L3114",
+      "source_location": "L3120",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_sorunteklifnotuplaceholder"
@@ -91776,7 +91776,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L2167",
+      "source_location": "L2173",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_sorun_tipleri_soruntipibul"
@@ -91787,7 +91787,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/musteri/MusteriAnaSayfa.tsx",
-      "source_location": "L3298",
+      "source_location": "L3309",
       "weight": 1.0,
       "source": "src_components_musteri_musterianasayfa_musterianasayfaicerik",
       "target": "src_lib_turkiye_il_nufus_illersecimsirasi"
