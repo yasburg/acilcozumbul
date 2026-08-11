@@ -12,6 +12,7 @@ import {
 } from "./davet-kayit";
 import { DAVETLI_BONUS_KREDI, davetKoduGecerliMi } from "./davet-kodu";
 import { getCekiciByDavetKodu } from "./db";
+import { kayitUcretsizKrediMiktari } from "./kayit-ucretsiz-kredi";
 import { kampanyaKoduSutunuVar } from "./supabase/kampanya-schema";
 
 export type KayitKoduTip = "kampanya" | "davet";
@@ -40,6 +41,12 @@ export type KayitKoduDogrulaSonuc =
       bonus: number;
       mesaj: string;
     };
+
+export type KayitBaslangicKrediKaynak =
+  | "kampanya"
+  | "davet"
+  | "ucretsiz"
+  | "yok";
 
 export async function kayitKoduDogrula(
   ham: string
@@ -147,10 +154,34 @@ export async function kayitKoduHazirla(
   };
 }
 
+/** Yalnızca kampanya / davet kodundan gelen kredi (ücretsiz ayar hariç). */
 export function kayitBaslangicKredisi(sonuc: KayitKoduSonuc): number {
   if (!sonuc.uygulandi) return 0;
   if (sonuc.tip === "kampanya") return sonuc.yeniUyeKredi;
   return davetKayitBaslangicKredisiFromSonuc(sonuc.davet);
+}
+
+/**
+ * Kayıt başlangıç kredisi: kod varsa o; yoksa (0 kredi) paneldeki
+ * ücretsiz kredi ayarı.
+ */
+export async function kayitBaslangicKredisiCoz(
+  sonuc: KayitKoduSonuc
+): Promise<{ kredi: number; kaynak: KayitBaslangicKrediKaynak }> {
+  if (sonuc.uygulandi) {
+    if (sonuc.tip === "kampanya") {
+      return { kredi: sonuc.yeniUyeKredi, kaynak: "kampanya" };
+    }
+    return {
+      kredi: davetKayitBaslangicKredisiFromSonuc(sonuc.davet),
+      kaynak: "davet",
+    };
+  }
+  const ucretsiz = await kayitUcretsizKrediMiktari();
+  if (ucretsiz > 0) {
+    return { kredi: ucretsiz, kaynak: "ucretsiz" };
+  }
+  return { kredi: 0, kaynak: "yok" };
 }
 
 export async function kayitKoduBonusTamamla(

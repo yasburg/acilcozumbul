@@ -4,7 +4,7 @@ import { addCekici, getCekiciByTelefon, updateCekici } from "@/lib/db";
 import { CEKICI_COOKIE, cekiciOturumCookieAyarlari } from "@/lib/auth";
 import { ensureSeedData } from "@/lib/seed";
 import {
-  kayitBaslangicKredisi,
+  kayitBaslangicKredisiCoz,
   kayitKoduBonusTamamla,
   kayitKoduHazirla,
 } from "@/lib/kayit-kodu";
@@ -121,7 +121,8 @@ export async function POST(request: NextRequest) {
   }
 
   const token = randomUUID();
-  const baslangicKredi = kayitBaslangicKredisi(kayitHazir.sonuc);
+  const baslangic = await kayitBaslangicKredisiCoz(kayitHazir.sonuc);
+  const baslangicKredi = baslangic.kredi;
   const cekiciId = randomUUID();
   const rastgeleSifre = cekiciAuthRastgeleSifre();
 

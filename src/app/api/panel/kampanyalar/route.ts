@@ -16,6 +16,7 @@ import {
   kampanyaKoduSutunuVar,
   MIGRATION_014_MESAJ,
 } from "@/lib/supabase/kampanya-schema";
+import { getKayitUcretsizKrediAyar } from "@/lib/kayit-ucretsiz-kredi";
 
 /** datetime-local / ISO / boş → ISO veya null (temizle) */
 function tarihAlani(v: unknown): string | null | undefined {
@@ -40,9 +41,13 @@ export async function GET() {
     return NextResponse.json({ error: MIGRATION_014_MESAJ }, { status: 503 });
   }
 
-  const [kampanyalar, kullanimlar] = await Promise.all([
+  const [kampanyalar, kullanimlar, ucretsizKrediAyar] = await Promise.all([
     getKampanyalar(),
     getKampanyaKullanimlari(),
+    getKayitUcretsizKrediAyar().catch(() => ({
+      aktif: true,
+      krediMiktar: 9,
+    })),
   ]);
 
   const siteUrl =
@@ -54,6 +59,7 @@ export async function GET() {
       kayitLink: `${siteUrl}/kayit/a?kampanya=${encodeURIComponent(k.kod)}`,
     })),
     kullanimlar,
+    ucretsizKrediAyar,
     ozet: {
       toplamKampanya: kampanyalar.length,
       aktifKampanya: kampanyalar.filter((k) => k.aktif).length,
