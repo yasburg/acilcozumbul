@@ -85,14 +85,14 @@ export default function PanelTalepAnalizPage() {
   const [satirlar, setSatirlar] = useState<TalepTeklifSureSatir[]>([]);
   const [sadeceTeklifli, setSadeceTeklifli] = useState(false);
   const [simulasyonFiltre, setSimulasyonFiltre] =
-    useState<SimulasyonFiltre>("");
+    useState<SimulasyonFiltre>("haric");
 
   const yukle = useCallback(async () => {
     setYukleniyor(true);
     setHata(null);
     try {
       const qs = new URLSearchParams({ from, to });
-      if (simulasyonFiltre) qs.set("simulasyon", simulasyonFiltre);
+      qs.set("simulasyon", simulasyonFiltre === "" ? "tumu" : simulasyonFiltre);
       const res = await fetch(`/api/panel/talep-analiz?${qs}`);
       const data = (await res.json()) as ApiCevap;
       if (!res.ok) {
@@ -169,8 +169,8 @@ export default function PanelTalepAnalizPage() {
                 setSimulasyonFiltre(e.target.value as SimulasyonFiltre)
               }
             >
-              <option value="">Tümü</option>
               <option value="haric">Yalnızca gerçek</option>
+              <option value="">Tümü</option>
               <option value="sadece">Yalnızca simülasyon</option>
             </SelectField>
           </div>
@@ -245,7 +245,8 @@ export default function PanelTalepAnalizPage() {
           İlk teklif süresi dağılımı
         </h2>
         <p className="mt-1 text-xs text-slate-500">
-          Talebin oluşmasından ilk teklife kadar geçen süre.
+          Talebin oluşmasından ilk gerçek teklife kadar geçen süre (tester /
+          simülasyon hesap teklifleri hariç).
         </p>
         <div className="mt-4 space-y-2">
           {kovalar.map((k) => (
