@@ -65,6 +65,7 @@ export default function PanelProfilFotograflariPage() {
   const [redNedeni, setRedNedeni] = useState("");
   const [mesaj, setMesaj] = useState("");
   const [hata, setHata] = useState("");
+  const [onaySmsYukleniyor, setOnaySmsYukleniyor] = useState(false);
 
   const yukle = useCallback(async () => {
     const res = await fetch("/api/panel/profil-fotograflari", {
@@ -102,7 +103,17 @@ export default function PanelProfilFotograflariPage() {
           typeof data.error === "string" ? data.error : "İşlem başarısız."
         );
       }
-      setMesaj(typeof data.mesaj === "string" ? data.mesaj : "Kaydedildi.");
+      const ana =
+        typeof data.mesaj === "string" ? data.mesaj : "Kaydedildi.";
+      if (data.smsKuyruk === false) {
+        const smsHata =
+          typeof data.smsHata === "string" && data.smsHata.trim()
+            ? data.smsHata
+            : "SMS kuyruğa alınamadı.";
+        setMesaj(`${ana} (${smsHata})`);
+      } else {
+        setMesaj(ana);
+      }
       setRedModal(null);
       setRedNedeni("");
       await yukle();
@@ -113,14 +124,61 @@ export default function PanelProfilFotograflariPage() {
     }
   }
 
+  async function onaylilaraSmsGonder() {
+    if (
+      !window.confirm(
+        "Onaylı profil fotoğrafı olan herkese bilgilendirme SMS’i kuyruğa alınsın mı?"
+      )
+    ) {
+      return;
+    }
+    setOnaySmsYukleniyor(true);
+    setHata("");
+    setMesaj("");
+    try {
+      const res = await fetch("/api/panel/profil-fotograflari/onay-sms", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string" ? data.error : "SMS kuyruğa alınamadı."
+        );
+      }
+      setMesaj(
+        typeof data.mesaj === "string"
+          ? data.mesaj
+          : "Onay SMS’i kuyruğa alındı."
+      );
+    } catch (e) {
+      setHata(e instanceof Error ? e.message : "SMS kuyruğa alınamadı.");
+    } finally {
+      setOnaySmsYukleniyor(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Profil fotoğrafları</h2>
-        <p className="text-sm text-slate-500 mt-1">
-          Hizmet veren profil fotoğrafı başvuruları. Onay sonrası müşteri
-          ekranında görünür.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold">Profil fotoğrafları</h2>
+          <p className="text-sm text-slate-500 mt-1">
+            Hizmet veren profil fotoğrafı başvuruları. Onay veya red sonrası
+            kişiye toplu SMS kuyruğuyla bilgilendirme gider (redde neden yazılır).
+          </p>
+        </div>
+        <Btn
+          type="button"
+          variant="secondary"
+          className="!w-auto !min-h-0 !py-2 !px-3 !text-xs"
+          disabled={onaySmsYukleniyor || !veri?.ozet.onayli}
+          onClick={() => void onaylilaraSmsGonder()}
+        >
+          {onaySmsYukleniyor
+            ? "SMS kuyruğa alınıyor…"
+            : "Onaylılara SMS gönder"}
+        </Btn>
       </div>
 
       {veri && (

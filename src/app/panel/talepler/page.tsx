@@ -399,9 +399,9 @@ export default function PanelTaleplerPage() {
                     <span className="text-xs font-medium uppercase tracking-wide text-amber-700 bg-amber-50 px-2 py-1 rounded-lg h-fit inline-block">
                       {panelTalepDurumEtiketi(t.durum)}
                     </span>
-                    {t.durum === "iptal" && iptalSure ? (
-                      <p className="mt-1 text-xs text-slate-500 max-w-[14rem]">
-                        {iptalSure}
+                    {t.durum === "iptal" && t.iptalAt ? (
+                      <p className="mt-1 text-xs text-slate-500 tabular-nums">
+                        {new Date(t.iptalAt).toLocaleString("tr-TR")}
                       </p>
                     ) : null}
                   </div>
@@ -416,7 +416,16 @@ export default function PanelTaleplerPage() {
                 <p className="text-xs text-slate-400 mt-2">
                   {new Date(t.olusturulma).toLocaleString("tr-TR")} ·{" "}
                   {teklifSayisi} teklif
+                  {t.durum === "iptal" && t.iptalAt ? (
+                    <>
+                      {" "}
+                      · İptal: {new Date(t.iptalAt).toLocaleString("tr-TR")}
+                    </>
+                  ) : null}
                 </p>
+                {t.durum === "iptal" && iptalSure ? (
+                  <p className="text-xs text-slate-500 mt-1">{iptalSure}</p>
+                ) : null}
                 <div className="mt-2 flex flex-wrap gap-2 text-xs">
                   {teklifSecildi ? (
                     <span className="rounded-lg bg-emerald-50 px-2 py-1 font-medium text-emerald-800">
