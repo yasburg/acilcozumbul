@@ -22,6 +22,39 @@ function tarihFormat(iso?: string) {
   return new Date(iso).toLocaleString("tr-TR");
 }
 
+function OdemeRozetleri({
+  abone,
+  krediAldi,
+  className = "",
+}: {
+  abone: boolean;
+  krediAldi: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={`flex flex-wrap gap-1.5 ${className}`.trim()}>
+      <span
+        className={
+          abone
+            ? "text-[11px] font-semibold bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full"
+            : "text-[11px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full"
+        }
+      >
+        {abone ? "Abone" : "Abone değil"}
+      </span>
+      <span
+        className={
+          krediAldi
+            ? "text-[11px] font-semibold bg-sky-50 text-sky-800 px-2 py-0.5 rounded-full"
+            : "text-[11px] font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full"
+        }
+      >
+        {krediAldi ? "Kredi almış" : "Kredi almamış"}
+      </span>
+    </div>
+  );
+}
+
 export default function PanelProfilFotograflariPage() {
   const [veri, setVeri] = useState<ProfilFotoPanelVerisi | null>(null);
   const [loading, setLoading] = useState(true);
@@ -165,6 +198,11 @@ export default function PanelProfilFotograflariPage() {
                           <p className="text-xs text-slate-500 mt-1">
                             Gönderim: {tarihFormat(s.profilFotoGonderim)}
                           </p>
+                          <OdemeRozetleri
+                            abone={Boolean(s.abone)}
+                            krediAldi={Boolean(s.krediAldi)}
+                            className="mt-1.5"
+                          />
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Btn
@@ -224,6 +262,7 @@ export default function PanelProfilFotograflariPage() {
                       <th className="px-4 py-3 font-medium">Hizmet veren</th>
                       <th className="px-4 py-3 font-medium">Telefon</th>
                       <th className="px-4 py-3 font-medium">Şehir</th>
+                      <th className="px-4 py-3 font-medium">Ödeme</th>
                       <th className="px-4 py-3 font-medium">Tarih</th>
                     </tr>
                   </thead>
@@ -250,6 +289,12 @@ export default function PanelProfilFotograflariPage() {
                         </td>
                         <td className="px-4 py-3 text-slate-600">{s.telefon}</td>
                         <td className="px-4 py-3 text-slate-600">{s.sehir}</td>
+                        <td className="px-4 py-3">
+                          <OdemeRozetleri
+                            abone={Boolean(s.abone)}
+                            krediAldi={Boolean(s.krediAldi)}
+                          />
+                        </td>
                         <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
                           {tarihFormat(s.profilFotoGonderim)}
                         </td>

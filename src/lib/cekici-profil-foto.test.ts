@@ -60,5 +60,21 @@ describe("profil-foto-panel", () => {
     expect(veri.ozet.reddedilen).toBe(1);
     expect(veri.bekleyen.map((s) => s.id)).toEqual(["a"]);
     expect(veri.onayli.map((s) => s.id)).toEqual(["b"]);
+    expect(veri.bekleyen[0]).toMatchObject({ abone: false, krediAldi: false });
+  });
+
+  it("abone ve kredi rozetlerini zenginleştirir", () => {
+    const veri = profilFotoPanelVerisi(
+      [
+        cekiciFixture({
+          id: "a",
+          profilFotoDurum: "beklemede",
+          profilFotoUrl: "https://x/a.jpg",
+          profilFotoGonderim: "2026-01-02T00:00:00.000Z",
+        }),
+      ],
+      { aboneIds: new Set(["a"]), krediAlanIds: new Set(["a"]) }
+    );
+    expect(veri.bekleyen[0]).toMatchObject({ abone: true, krediAldi: true });
   });
 });
