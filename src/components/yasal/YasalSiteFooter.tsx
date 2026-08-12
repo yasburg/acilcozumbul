@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   OdemeKartLogolari,
@@ -6,6 +8,7 @@ import {
 import { SosyalMedyaIkonlari } from "@/components/yasal/SosyalMedyaIkonlari";
 import { ACB_BRAND } from "@/lib/brand";
 import { YASAL_LINKLER } from "@/lib/yasal-sirket";
+import { cerezleriSifirla } from "@/lib/cerez-onay";
 
 const FOOTER_LINKLER = [
   { href: "/cekici-fiyat-hesaplama", label: "Çekici fiyat hesaplama" },
@@ -65,6 +68,16 @@ export function YasalSiteFooter() {
               </Link>
             </span>
           ))}
+          <span className="inline-flex items-center gap-2.5">
+            <span className="text-slate-300" aria-hidden>|</span>
+            <button
+              type="button"
+              onClick={() => cerezleriSifirla()}
+              className="hover:text-amber-700 underline-offset-2 hover:underline text-[11px] text-slate-600 cursor-pointer"
+            >
+              Çerezleri Sıfırla
+            </button>
+          </span>
         </nav>
 
         <div className="border-t border-slate-200/80" />

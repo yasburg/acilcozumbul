@@ -75,7 +75,7 @@ export function StatusChip({
   const chip = CHIP[id];
   return (
     <span
-      className={`inline-flex items-center rounded-lg border px-2 py-1 text-xs font-bold leading-none ${chip.className} ${className}`}
+      className={`inline-flex items-center rounded-[0.625rem] border px-2 py-1 text-xs font-bold leading-none shadow-[0_1px_1px_rgba(27,45,42,0.03)] ${chip.className} ${className}`}
     >
       {chip.label}
     </span>

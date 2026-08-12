@@ -1,4 +1,30 @@
-/** Centered sliding step window — physical sliding track with 350ms spring transition. */
+"use client";
+
+import { useEffect, useState } from "react";
+
+const EASE = "cubic-bezier(0.32,0.72,0,1)";
+
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
+
+/**
+ * Premium step indicator — a row of small segments, no numbers or step
+ * counts. Progress reads purely through color: filled up to the current
+ * step, with the active segment brighter and slightly wider. Advancing
+ * or going back just animates that color/width shift.
+ *
+ * Rendered as its own floating glass pill, separate from the solid
+ * background of the Geri/Devam button bar beneath it.
+ */
 export function FlowProgress({
   current,
   total,
@@ -11,58 +37,51 @@ export function FlowProgress({
   onStepClick?: (index: number) => void;
   className?: string;
 }) {
+  const reducedMotion = useReducedMotion();
   if (total <= 0) return null;
   const cur = Math.min(Math.max(current, 1), total);
   const curIndex = cur - 1;
-
-  // Each pill is 28px wide (w-7), gap is 6px (gap-1.5) -> total step slot = 34px
-  const PILL_WIDTH = 28;
-  const GAP_WIDTH = 6;
-  const STEP_SLOT = PILL_WIDTH + GAP_WIDTH;
-
-  // Visible window shows max 4 pills (1 previous, 1 active, 2 upcoming)
-  const shiftCount = Math.max(0, curIndex - 1);
-  const translateX = -(shiftCount * STEP_SLOT);
+  const transition = reducedMotion
+    ? "none"
+    : `width 320ms ${EASE}, background-color 320ms ${EASE}, opacity 320ms ${EASE}, box-shadow 320ms ${EASE}`;
 
   return (
-    <div
-      className={`mx-auto w-[130px] overflow-hidden ${className}`}
-      role="list"
-      aria-label={`Adım ${cur} / ${total}`}
-    >
+    <div className={`mx-auto flex w-fit justify-center ${className}`}>
       <div
-        className="flex items-center gap-1.5 transition-transform duration-350 ease-[cubic-bezier(0.32,0.72,0,1)]"
-        style={{ transform: `translateX(${translateX}px)` }}
+        className="flex items-center gap-[5px] rounded-full border border-[var(--acb-glass-border)] bg-[var(--acb-glass-bg-strong)] px-3 py-2.5 shadow-[0_10px_28px_-14px_rgba(27,45,42,0.35)] backdrop-blur-xl"
+        role="list"
+        aria-label={`Adım ${cur} / ${total}`}
       >
         {Array.from({ length: total }, (_, i) => {
-          const buradayiz = i === curIndex;
-          const gecildi = i < curIndex;
+          const isCurrent = i === curIndex;
+          const isPast = i < curIndex;
           return (
             <button
-              key={`step-bar-${i}`}
+              key={`flow-step-${i}`}
               type="button"
               role="listitem"
               onClick={() => onStepClick?.(i)}
               disabled={!onStepClick}
-              className={[
-                "relative h-2 w-7 shrink-0 overflow-hidden rounded-full transition-all duration-350 ease-[cubic-bezier(0.32,0.72,0,1)]",
-                onStepClick ? "touch-manipulation" : "pointer-events-none",
-                buradayiz
-                  ? "bg-[var(--acb-green)] shadow-[0_0_12px_2px_rgba(8,155,45,0.55)] scale-105"
-                  : gecildi
-                    ? "bg-[var(--acb-green)] opacity-90"
-                    : "bg-slate-200",
-              ].join(" ")}
+              aria-current={isCurrent ? "step" : undefined}
               aria-label={`Adım ${i + 1}`}
-              aria-current={buradayiz ? "step" : undefined}
+              className={`flex items-center justify-center p-0.5 ${
+                onStepClick ? "touch-manipulation" : "pointer-events-none"
+              }`}
             >
-              {/* Smooth animated fill layer */}
               <span
-                className={`absolute inset-0 rounded-full bg-[var(--acb-green)] transition-transform duration-350 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-                  buradayiz || gecildi
-                    ? "scale-x-100 origin-left"
-                    : "scale-x-0 origin-left"
-                }`}
+                className="block h-[5px] rounded-full"
+                style={{
+                  width: isCurrent ? 20 : 9,
+                  backgroundColor:
+                    isCurrent || isPast
+                      ? "var(--acb-green)"
+                      : "color-mix(in srgb, var(--acb-dark) 12%, white)",
+                  opacity: isPast ? 0.7 : 1,
+                  boxShadow: isCurrent
+                    ? "0 0 8px 1px rgba(8,155,45,0.55)"
+                    : "none",
+                  transition,
+                }}
               />
             </button>
           );

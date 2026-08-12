@@ -200,14 +200,14 @@ export function BottomSheet({
       )}
       <motion.div
         ref={sheetRef}
-        className={`pointer-events-auto relative z-10 w-full max-w-lg max-h-[min(70dvh,560px)] overflow-y-auto rounded-t-[1.35rem] border border-b-0 border-white/50 bg-white/92 shadow-[0_-12px_40px_rgb(27_45_42/0.16)] pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl backdrop-saturate-150 ${className}`}
+        className={`pointer-events-auto relative z-10 w-full max-w-lg max-h-[min(70dvh,560px)] overflow-y-auto rounded-t-[var(--acb-radius-xl)] border border-b-0 border-white/55 bg-white/92 shadow-[0_-12px_40px_rgb(27_45_42/0.16),inset_0_1px_0_rgba(255,255,255,0.55)] pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl backdrop-saturate-150 ${className}`}
         style={{ y, touchAction: onClose ? "none" : "pan-y" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <div className="sticky top-0 z-10 flex flex-col items-center bg-white/70 px-4 pt-2.5 pb-2 backdrop-blur-md backdrop-saturate-150">
+        <div className="sticky top-0 z-10 flex flex-col items-center bg-white/75 px-4 pt-2.5 pb-2 backdrop-blur-md backdrop-saturate-150">
           <div
             className="mb-2.5 h-1 w-10 rounded-full bg-[color-mix(in_srgb,var(--acb-dark)_18%,white)]"
             aria-hidden

@@ -68,7 +68,7 @@ export function MobileShell({
           ? "px-1 py-2 text-sm font-medium"
           : "h-9 w-9 text-lg font-semibold"
       }`
-    : `flex shrink-0 items-center justify-center gap-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300/80 touch-manipulation font-semibold shadow-sm shadow-amber-500/10 ${
+    : `flex shrink-0 items-center justify-center gap-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300/80 touch-manipulation font-semibold shadow-[var(--acb-shadow)] transition-[box-shadow,transform] duration-200 ease-out hover:shadow-[var(--acb-shadow-lg)] active:scale-[0.96] ${
         geriMetinli ? "px-3.5 py-2 text-sm" : "h-9 w-9 text-lg"
       }`;
   const geriAria = backLabel ?? "Geri";
@@ -118,7 +118,7 @@ export function MobileShell({
   return (
     <div
       className={[
-        "flex flex-col bg-white text-[var(--acb-dark)]",
+        "acb-app-bg flex flex-col text-[var(--acb-dark)]",
         lockViewport
           ? "h-dvh max-h-dvh overflow-hidden"
           : "min-h-dvh",

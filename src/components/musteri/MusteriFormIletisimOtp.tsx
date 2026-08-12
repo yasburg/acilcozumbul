@@ -28,6 +28,8 @@ type Props = {
   onHazir: () => void | Promise<void>;
   submitting?: boolean;
   submitEtiket?: React.ReactNode;
+  /** Step-window progress indicator, rendered above the Geri/Devam row */
+  progress?: React.ReactNode;
 };
 
 function dogrulanmisUserDataSakla(telefon: string, ad: string) {
@@ -61,6 +63,7 @@ export function MusteriFormIletisimOtp({
   onHazir,
   submitting = false,
   submitEtiket,
+  progress,
 }: Props) {
   const [adim, setAdim] = useState<"iletisim" | "otp">("iletisim");
   const [otpKod, setOtpKod] = useState("");
@@ -340,6 +343,7 @@ export function MusteriFormIletisimOtp({
         </p>
       ) : null}
 
+      {progress}
       <div className="flex gap-3 pt-1">
         <Btn
           type="button"

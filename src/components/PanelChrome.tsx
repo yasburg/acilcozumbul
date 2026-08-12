@@ -20,7 +20,7 @@ function MobilNavLink({
   return (
     <Link
       href={href}
-      className="whitespace-nowrap rounded-lg bg-slate-100 px-3 py-1.5 inline-flex items-center"
+      className="whitespace-nowrap rounded-[var(--acb-radius-sm)] bg-slate-100 px-3 py-1.5 inline-flex items-center shadow-[var(--acb-shadow)] transition-[background-color,box-shadow] duration-200 hover:bg-slate-200 hover:shadow-[var(--acb-shadow-lg)]"
     >
       {label}
       <NavSayacRozet adet={adet} aktif={false} />
@@ -74,7 +74,7 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-dvh bg-slate-100 text-slate-900">
-      <header className="border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
+      <header className="border-b border-slate-200 bg-white px-4 py-3 shadow-[0_1px_0_rgba(27,45,42,0.04),0_10px_24px_-18px_rgba(27,45,42,0.16)] lg:hidden">
         <div className="flex items-center justify-between gap-2">
           <Link
             href={muhasebe ? "/panel/kredi-odemeler" : "/panel"}
@@ -96,7 +96,7 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
       </header>
       <div className="flex w-full max-w-none gap-0 lg:gap-6 lg:p-6">
         <aside className="hidden w-56 shrink-0 lg:block">
-          <div className="sticky top-6 flex max-h-[calc(100dvh-3rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="sticky top-6 flex max-h-[calc(100dvh-3rem)] flex-col overflow-hidden rounded-[var(--acb-radius-lg)] border border-[var(--acb-border)] bg-white shadow-[var(--acb-shadow-lg)]">
             <div className="shrink-0 border-b border-slate-100 px-4 py-4 space-y-2">
               <BrandLogoYazili
                 href={null}

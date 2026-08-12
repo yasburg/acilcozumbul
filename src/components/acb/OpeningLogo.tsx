@@ -40,8 +40,9 @@ function syncHeroCtaCssVars() {
   const r = slot.getBoundingClientRect();
   if (r.width < 2 || r.height < 2 || r.top < 0) return;
   const root = document.documentElement;
+  const centeredLeft = (window.innerWidth - r.width) / 2;
   root.style.setProperty("--acb-hero-cta-top", `${r.top}px`);
-  root.style.setProperty("--acb-hero-cta-left", `${r.left}px`);
+  root.style.setProperty("--acb-hero-cta-left", `${centeredLeft}px`);
   root.style.setProperty("--acb-hero-cta-width", `${r.width}px`);
   root.style.setProperty("--acb-hero-cta-height", `${r.height}px`);
 }
@@ -81,6 +82,7 @@ function measureThresholds(): Thresholds {
 export function OpeningLogo({
   forceDocked = false,
   scrollDock = false,
+  heroReady = true,
   onClick,
   onDockedChange,
   onYardimAl,
@@ -90,6 +92,7 @@ export function OpeningLogo({
 }: {
   forceDocked?: boolean;
   scrollDock?: boolean;
+  heroReady?: boolean;
   onClick?: () => void;
   onDockedChange?: (docked: boolean) => void;
   onYardimAl?: () => void;
@@ -224,7 +227,15 @@ export function OpeningLogo({
 
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize, { passive: true });
+
+    // Post-paint sync when returning to step 0 (EmergencyHero mount reflow)
+    const postPaintTimer = setTimeout(() => {
+      thresholds.current = measureThresholds();
+      syncHeroCtaCssVars();
+    }, 60);
+
     return () => {
+      clearTimeout(postPaintTimer);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       if (raf) window.cancelAnimationFrame(raf);
@@ -264,28 +275,22 @@ export function OpeningLogo({
   return (
     <>
       <div
-        className={`pointer-events-none ${showSpacer ? "h-[4.75rem]" : "h-0"}`}
+        className={`pointer-events-none ${showSpacer ? "h-[5.75rem] sm:h-[6.25rem]" : "h-0"}`}
         aria-hidden
         id={showSpacer ? "app-shell-header" : undefined}
       />
 
       <div
-        className={`pointer-events-none fixed inset-x-0 top-0 z-40 transition-opacity duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${
-          chromeDocked ? "opacity-100" : "opacity-0"
-        }`}
-        aria-hidden
-      >
-        <div className="acb-chrome-bar h-[calc(4.5rem+env(safe-area-inset-top))]" />
-      </div>
-
-      <div
-        className={`pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-[max(0.55rem,env(safe-area-inset-top))] transition-opacity duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        className={`pointer-events-none fixed inset-x-3 top-[max(0.5rem,env(safe-area-inset-top))] z-50 flex justify-center transition-opacity duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${
           chromeDocked ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="pointer-events-auto flex w-full max-w-lg items-center gap-2.5">
+        <div
+          className="acb-chrome-bar pointer-events-auto grid w-full max-w-lg items-center gap-2 rounded-[var(--acb-radius)] px-3 py-2.5"
+          style={{ gridTemplateColumns: "1fr auto 1fr" }}
+        >
           <div
-            className={`flex shrink-0 items-center justify-start ${
+            className={`flex items-center justify-start ${
               leading
                 ? "max-w-[min(100%,11.5rem)]"
                 : showMorphCta
@@ -295,10 +300,10 @@ export function OpeningLogo({
           >
             {leading}
           </div>
-          <div className="flex min-w-0 flex-1 items-center justify-center">
+          <div className="flex min-w-0 items-center justify-center">
             {chromeDocked ? center : null}
           </div>
-          <div className="flex min-h-11 shrink-0 items-center justify-end gap-1.5">
+          <div className="flex min-h-11 items-center justify-end gap-1.5">
             {trailing}
           </div>
         </div>
@@ -310,8 +315,12 @@ export function OpeningLogo({
           ref={yardimCtaRef}
           type="button"
           onClick={onYardimAl}
-          className={`acb-yardim-cta touch-manipulation ${
+          className={`acb-yardim-cta touch-manipulation transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
             chromeDocked ? "acb-yardim-cta--nav" : "acb-yardim-cta--hero"
+          } ${
+            heroReady
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-8 pointer-events-none"
           }`}
           aria-label={ACB_CTA.acilYardim}
         >

@@ -55,7 +55,7 @@ export function ProviderOfferCard({
 
   return (
     <Card
-      className={`!p-0 overflow-hidden border-[var(--acb-border)] bg-white/95 shadow-[var(--acb-shadow)] transition-transform duration-[var(--acb-transition)] ease-out active:scale-[0.995] ${
+      className={`!p-0 overflow-hidden !rounded-[var(--acb-radius-lg)] border-[var(--acb-border)] bg-white/95 shadow-[var(--acb-shadow-lg)] transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-px hover:shadow-[var(--acb-shadow-xl)] active:duration-100 active:scale-[0.995] active:shadow-[var(--acb-shadow)] ${
         fiyatDegisti ? "border-red-200 bg-red-50/30" : ""
       }`}
     >
@@ -67,11 +67,11 @@ export function ProviderOfferCard({
               <img
                 src={profilFotoUrl}
                 alt=""
-                className="size-11 shrink-0 rounded-full border border-[var(--acb-border)] bg-slate-100 object-cover"
+                className="size-11 shrink-0 rounded-full border border-[var(--acb-border)] bg-slate-100 object-cover shadow-[var(--acb-shadow)]"
               />
             ) : (
               <div
-                className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[var(--acb-soft)] text-[var(--acb-dark)]"
+                className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[var(--acb-soft)] text-[var(--acb-dark)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),var(--acb-shadow)]"
                 aria-hidden
               >
                 <Truck className="size-5" strokeWidth={ACB_ICON_STROKE} />

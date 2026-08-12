@@ -54,13 +54,21 @@
   --acb-white: #ffffff;
   --acb-muted: color-mix(in srgb, #1b2d2a 55%, white);
   --acb-border: color-mix(in srgb, #1b2d2a 14%, white);
-  --acb-radius-sm: 0.75rem;
-  --acb-radius: 1rem;
-  --acb-radius-lg: 1.25rem;
+  /* Corner scale — small controls 14px, cards 18-24px, primary surfaces 28px */
+  --acb-radius-sm: 0.875rem;
+  --acb-radius: 1.125rem;
+  --acb-radius-lg: 1.5rem;
+  --acb-radius-xl: 1.75rem;
   --acb-touch: 2.75rem; /* 44px */
   --acb-cta: 3.25rem; /* 52px */
-  --acb-shadow: 0 1px 2px rgb(27 45 42 / 0.06);
-  --acb-shadow-cta: 0 4px 14px rgb(8 155 45 / 0.28);
+
+  /* Elevation — soft ambient + tight contact + inner bevel, never a hard drop shadow */
+  --acb-shadow: 0 1px 1px rgb(27 45 42 / 0.035), 0 8px 20px -11px rgb(27 45 42 / 0.16);
+  --acb-shadow-lg: 0 2px 6px rgb(27 45 42 / 0.05), 0 20px 44px -18px rgb(27 45 42 / 0.2);
+  --acb-shadow-xl: 0 4px 12px rgb(27 45 42 / 0.06), 0 32px 64px -24px rgb(27 45 42 / 0.26);
+  --acb-shadow-inset: inset 0 1px 0 rgb(255 255 255 / 0.7), inset 0 -1px 0 rgb(27 45 42 / 0.025);
+  --acb-shadow-cta: 0 1px 2px rgb(5 87 26 / 0.22), 0 8px 18px -8px rgb(8 155 45 / 0.42),
+    inset 0 1px 0 rgb(255 255 255 / 0.16);
   --acb-shadow-emergency: var(--acb-shadow-cta);
   --acb-transition: 100ms ease-out;
   --acb-spring: cubic-bezier(0.32, 0.72, 0, 1);
@@ -71,6 +79,12 @@
   --acb-emergency-hover: var(--acb-green-hover);
   --acb-material: rgb(255 255 255 / 0.72);
   --acb-material-blur: 20px;
+
+  /* Glass surfaces — restrained: translucent white, faint edge highlight, never neon */
+  --acb-glass-bg: var(--acb-material);
+  --acb-glass-bg-strong: rgb(255 255 255 / 0.88);
+  --acb-glass-border: rgb(255 255 255 / 0.55);
+  --acb-glass-blur: var(--acb-material-blur);
   /* Hero mark — sized to viewport, sits in band above copy */
   --acb-hero-logo: clamp(8.44rem, 37.5vw, 11.72rem);
   --acb-hero-logo-band: clamp(10.63rem, 38.75vh, 14.38rem);
@@ -84,13 +98,80 @@
   text-wrap: balance;
 }
 
-/* Floating chrome material */
+/*
+ * Layered depth system — background → ambient light → surface → glass → content.
+ * Kept deliberately restrained: one accent hue (green), soft shadows, no neon.
+ *
+ * Note: surface/glass treatments are applied as plain Tailwind arbitrary-value
+ * utilities at each call site (referencing the --acb-shadow-* and --acb-glass-*
+ * variables below), not as shared classes here. Tailwind v4 puts all utility
+ * classes inside `@layer utilities`; unlayered custom classes in this file
+ * would always beat them (per the CSS cascade-layers spec) even without
+ * `!important`, which would silently break the many per-instance overrides
+ * like `<Card className="bg-slate-50 ...">` used throughout the app.
+ */
+
+/* Layer 0+1: page background with a faint ambient glow anchored near the top.
+   Lives on the shell's own background-image (not a separate positioned layer)
+   so it never fights sticky/portal z-index stacks. Only ever applied bare
+   (no competing bg-* utility on the same element), so it's safe unlayered. */
+.acb-app-bg {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(58% 40vh at 16% -8%, color-mix(in srgb, var(--acb-green) 9%, transparent), transparent 70%),
+    radial-gradient(46% 32vh at 108% 2%, color-mix(in srgb, var(--acb-green) 6%, transparent), transparent 72%);
+  background-repeat: no-repeat;
+}
+
+@media (prefers-contrast: more) {
+  .acb-app-bg {
+    background-image: none;
+  }
+}
+
+/* Floating chrome material — blurry white glass background */
 .acb-chrome-bar {
-  background: var(--acb-material);
-  backdrop-filter: blur(var(--acb-material-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--acb-material-blur)) saturate(180%);
-  border-bottom: 1px solid rgb(255 255 255 / 0.45);
-  box-shadow: 0 1px 0 rgb(27 45 42 / 0.04);
+  background: rgba(255, 255, 255, 0.68);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  transform: translateZ(0);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: background 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Step-to-step content transition — fades + slides in the direction of travel,
+   so advancing/going back reads as motion instead of an instant content swap. */
+.acb-step-transition {
+  animation: acb-step-in-forward 300ms var(--acb-spring) both;
+}
+.acb-step-transition[data-direction="backward"] {
+  animation-name: acb-step-in-backward;
+}
+@keyframes acb-step-in-forward {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes acb-step-in-backward {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .acb-step-transition {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-transparency: reduce) {
@@ -291,18 +372,18 @@ html.acb-intro-pending body::before {
   align-items: center;
   justify-content: center;
   margin: 0;
-  border: 0;
-  background: var(--acb-primary, #089b2d);
-  color: var(--acb-primary-fg, #fff);
+  border: 1px solid #099a2c;
+  background: linear-gradient(180deg, #0aa932 0%, #068a27 100%);
+  color: #ffffff;
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: var(--acb-shadow-cta);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 14px rgba(8, 155, 45, 0.35);
   overflow: hidden;
   right: auto;
-  will-change: top, left, width, height, border-radius, font-size, padding;
+  will-change: top, left, width, height, border-radius, font-size, padding, transform, opacity;
   transition:
     top 0.48s var(--acb-spring),
     left 0.48s var(--acb-spring),
@@ -310,7 +391,19 @@ html.acb-intro-pending body::before {
     height 0.48s var(--acb-spring),
     border-radius 0.48s var(--acb-spring),
     font-size 0.48s var(--acb-spring),
-    padding 0.48s var(--acb-spring);
+    padding 0.48s var(--acb-spring),
+    transform 0.52s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.52s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.acb-yardim-cta:hover {
+  filter: brightness(1.03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 18px rgba(8, 155, 45, 0.4);
+}
+
+.acb-yardim-cta:active {
+  transform: scale(0.98) translateY(1px);
+  transition-duration: 100ms;
 }
 
 /* Vars --acb-hero-cta-* tepede ölçülür; yoksa yaklaşık hero yerleşimi */
@@ -323,7 +416,7 @@ html.acb-intro-pending body::before {
   );
   left: var(
     --acb-hero-cta-left,
-    max(1rem, calc(50% - 16rem + 1rem))
+    calc(50% - min(calc(100% - 2rem), calc(32rem - 2rem)) / 2)
   );
   width: var(
     --acb-hero-cta-width,
@@ -336,18 +429,16 @@ html.acb-intro-pending body::before {
 }
 
 .acb-yardim-cta--nav {
-  top: calc(env(safe-area-inset-top) + 0.85rem);
-  left: max(0.75rem, calc(50% - 16rem + 0.75rem));
+  top: calc(max(0.5rem, env(safe-area-inset-top)) + 0.625rem);
+  left: min(
+    calc(100% - 1.5rem - 5.75rem),
+    calc(50% + 16rem - 1.5rem - 5.75rem)
+  );
   width: 5.75rem;
   height: 2.75rem;
   border-radius: 0.85rem;
   font-size: 13px;
   padding: 0 0.875rem;
-}
-
-.acb-yardim-cta:active {
-  transform: scale(0.97);
-  transition-duration: 100ms;
 }
 
 /* Opening logo — CSS morph hero center ↔ header right (left-based both ways) */
@@ -391,10 +482,10 @@ html.acb-intro-pending body::before {
 
 .acb-opening-logo--nav {
   /* Positioned on the FAR LEFT of the header bar */
-  top: calc(env(safe-area-inset-top) + 0.85rem);
+  top: calc(max(0.5rem, env(safe-area-inset-top)) + 0.625rem);
   left: max(
-    0.75rem,
-    calc(50% - 16rem + 0.75rem)
+    1.5rem,
+    calc(50% - 16rem + 1.5rem)
   );
   width: 2.75rem;
   height: 2.75rem;
@@ -464,17 +555,17 @@ html.acb-intro-pending body::before {
   }
 }
 
-/* Sönme %33’te biter = döngünün 1/3’ü → sonraki satır boşluksuz başlar */
+/* Sönme %33.33’te biter = 3.0s döngünün 1/3'ü (1.0s) → her satır arasında 1.0 sn boşluk kalır, parlama süresi 0.2 sn */
 @keyframes acb-hero-trust-spotlight {
   0%,
-  33%,
+  33.33%,
   100% {
     color: var(--acb-muted);
     transform: scale(1);
     text-shadow: none;
   }
   2%,
-  18% {
+  8.67% {
     color: var(--acb-green);
     transform: scale(1.045);
     text-shadow: 0 0 18px color-mix(in srgb, var(--acb-green) 35%, transparent);
@@ -488,20 +579,20 @@ html.acb-intro-pending body::before {
   will-change: transform, color, opacity;
   animation:
     acb-hero-trust-in 0.5s cubic-bezier(0.32, 0.72, 0, 1) forwards,
-    acb-hero-trust-spotlight 1.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    acb-hero-trust-spotlight 3s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
-/* Gecikme aralığı = süre/3 (0.5s) — renk sönünce sonraki yanar */
+/* Her satır arasında 1.0 saniye boşluk (0.3s -> 1.3s -> 2.3s) */
 .acb-hero-trust-line:nth-child(1) {
-  animation-delay: 0.15s, 0.55s;
+  animation-delay: 0.15s, 0.3s;
 }
 
 .acb-hero-trust-line:nth-child(2) {
-  animation-delay: 0.28s, 1.05s;
+  animation-delay: 0.28s, 1.3s;
 }
 
 .acb-hero-trust-line:nth-child(3) {
-  animation-delay: 0.4s, 1.55s;
+  animation-delay: 0.4s, 2.3s;
 }
 
 @media (prefers-reduced-motion: reduce) {

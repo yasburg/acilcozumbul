@@ -25,7 +25,7 @@ export function TrustBadge({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-semibold leading-none ${VARIANT[variant]} ${className}`}
+      className={`inline-flex items-center gap-1 rounded-[0.625rem] border px-2 py-1 text-xs font-semibold leading-none shadow-[0_1px_1px_rgba(27,45,42,0.03)] ${VARIANT[variant]} ${className}`}
     >
       {children}
     </span>

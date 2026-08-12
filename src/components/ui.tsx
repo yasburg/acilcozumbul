@@ -5,6 +5,9 @@ import {
   TextareaHTMLAttributes,
   forwardRef,
   useState,
+  useEffect,
+  useRef,
+  useMemo,
 } from "react";
 import { ACB_BRAND, isAcbBrand } from "@/lib/brand";
 
@@ -60,22 +63,22 @@ export function Btn({
     | "dark";
 }) {
   const base =
-    "w-full min-h-[var(--acb-cta,52px)] rounded-[var(--acb-radius,1rem)] py-4 px-6 font-semibold text-base transition-[background-color,box-shadow,transform,opacity] duration-[var(--acb-transition,100ms)] ease-out touch-manipulation cursor-pointer active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
+    "w-full min-h-[var(--acb-cta,52px)] rounded-[var(--acb-radius,1.125rem)] py-3.5 px-3 xs:px-5 font-semibold text-[13px] xs:text-[15px] sm:text-base whitespace-nowrap overflow-hidden text-ellipsis transition-[background-color,box-shadow,transform,opacity,filter] duration-200 active:duration-100 ease-out touch-manipulation cursor-pointer hover:-translate-y-px active:translate-y-0 active:scale-[0.97] disabled:opacity-50 disabled:hover:translate-y-0 disabled:active:scale-100 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
   const variants = {
     primary:
-      "bg-[var(--acb-primary,#089b2d)] text-[var(--acb-primary-fg,#fff)] shadow-[var(--acb-shadow-cta)] hover:bg-[var(--acb-primary-hover,#077f25)] focus-visible:ring-[var(--acb-primary,#089b2d)]",
+      "bg-gradient-to-b from-[#0aa932] to-[#068a27] text-white border border-[#099a2c] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_rgba(8,155,45,0.35)] hover:brightness-[1.03] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_6px_18px_rgba(8,155,45,0.4)] active:translate-y-[1px] active:scale-[0.98] focus-visible:ring-[var(--acb-primary,#089b2d)]",
     secondary:
-      "bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200 focus-visible:ring-slate-400",
+      "bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200 hover:shadow-[var(--acb-shadow)] focus-visible:ring-slate-400",
     /** Sticky alt nav — white fill next to primary CTA */
-    geri: "bg-white text-[var(--acb-dark,#1b2d2a)] border border-[var(--acb-border,#e5e7eb)] shadow-none hover:bg-[var(--acb-soft,#eaf8ee)] focus-visible:ring-[var(--acb-border,#e5e7eb)]",
+    geri: "bg-white text-[var(--acb-dark,#1b2d2a)] border border-[var(--acb-border,#e5e7eb)] shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:bg-[var(--acb-soft,#eaf8ee)] hover:shadow-[var(--acb-shadow)] focus-visible:ring-[var(--acb-border,#e5e7eb)]",
     success:
-      "bg-[var(--acb-green,#089b2d)] text-white shadow-[var(--acb-shadow-cta)] hover:bg-[var(--acb-green-hover,#077f25)] focus-visible:ring-[var(--acb-green)]",
+      "bg-gradient-to-b from-[#0aa932] to-[#068a27] text-white border border-[#099a2c] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_rgba(8,155,45,0.35)] hover:brightness-[1.03] active:translate-y-[1px] focus-visible:ring-[var(--acb-green)]",
     outline:
-      "bg-white border-2 border-[var(--acb-primary,#089b2d)] text-[var(--acb-dark,#1b2d2a)] focus-visible:ring-[var(--acb-primary)]",
-    danger: "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 focus-visible:ring-red-400",
+      "bg-white border-2 border-[var(--acb-primary,#089b2d)] text-[var(--acb-dark,#1b2d2a)] hover:shadow-[var(--acb-shadow)] focus-visible:ring-[var(--acb-primary)]",
+    danger: "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 hover:shadow-[var(--acb-shadow)] focus-visible:ring-red-400",
     emergency:
-      "bg-[var(--acb-emergency,#089b2d)] text-white shadow-[var(--acb-shadow-emergency)] hover:bg-[var(--acb-emergency-hover,#077f25)] focus-visible:ring-[var(--acb-emergency)]",
-    dark: "bg-[var(--acb-dark,#1b2d2a)] text-white hover:opacity-95 focus-visible:ring-[var(--acb-dark)]",
+      "bg-gradient-to-b from-[#0aa932] to-[#068a27] text-white border border-[#099a2c] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_rgba(8,155,45,0.35)] hover:brightness-[1.03] active:translate-y-[1px] focus-visible:ring-[var(--acb-emergency)]",
+    dark: "bg-[var(--acb-dark,#1b2d2a)] text-white hover:opacity-95 hover:shadow-[var(--acb-shadow-lg)] focus-visible:ring-[var(--acb-dark)]",
   };
   return (
     <button
@@ -87,7 +90,7 @@ export function Btn({
 }
 
 const inputSinif = (invalid: boolean, ekstra = "") =>
-  `w-full rounded-xl bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-100 disabled:opacity-70 ${
+  `w-full rounded-[var(--acb-radius,1.125rem)] bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 shadow-[inset_0_1px_2px_rgba(27,45,42,0.035)] transition-[box-shadow,border-color] duration-200 ease-out focus:shadow-none focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-100 disabled:opacity-70 disabled:shadow-none ${
     invalid
       ? "border-red-500 ring-red-500/30 focus:ring-red-500/40 focus:border-red-500"
       : "border-slate-200 focus:ring-amber-500/40 focus:border-amber-500"
@@ -173,6 +176,234 @@ export function SelectField({
   );
 }
 
+export interface CustomSelectOption {
+  value: string;
+  label: string;
+}
+
+export interface CustomSelectProps {
+  label?: string;
+  value: string;
+  options: (string | CustomSelectOption)[];
+  placeholder?: string;
+  disabled?: boolean;
+  invalid?: boolean;
+  className?: string;
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  onChange: (value: string) => void;
+  "aria-label"?: string;
+}
+
+export function CustomSelect({
+  label,
+  value,
+  options,
+  placeholder = "Seçiniz",
+  disabled = false,
+  invalid = false,
+  className = "",
+  searchable,
+  searchPlaceholder = "Ara...",
+  onChange,
+  "aria-label": ariaLabel,
+}: CustomSelectProps) {
+  const [acik, setAcik] = useState(false);
+  const [aramaMetni, setAramaMetni] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const normalizeOptions = useMemo(() => {
+    return options.map((opt) =>
+      typeof opt === "string" ? { value: opt, label: opt } : opt
+    );
+  }, [options]);
+
+  const seciliOption = normalizeOptions.find((opt) => opt.value === value);
+
+  const shouldBeSearchable =
+    searchable !== undefined
+      ? searchable
+      : normalizeOptions.length > 6;
+
+  const filtreliOptions = useMemo(() => {
+    if (!aramaMetni.trim()) return normalizeOptions;
+    const q = aramaMetni.trim().toLocaleLowerCase("tr-TR");
+    return normalizeOptions.filter((opt) =>
+      opt.label.toLocaleLowerCase("tr-TR").includes(q)
+    );
+  }, [normalizeOptions, aramaMetni]);
+
+  useEffect(() => {
+    if (!acik) return;
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setAcik(false);
+        setAramaMetni("");
+      }
+    }
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () => {
+      document.removeEventListener("pointerdown", handleClickOutside);
+    };
+  }, [acik]);
+
+  useEffect(() => {
+    if (acik && shouldBeSearchable) {
+      const timer = setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [acik, shouldBeSearchable]);
+
+  useEffect(() => {
+    if (!acik) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setAcik(false);
+        setAramaMetni("");
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [acik]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={label ? "relative space-y-1.5" : "relative min-w-0 flex-1"}
+    >
+      {label ? (
+        <label
+          className={`block text-sm font-medium ${
+            invalid ? "text-red-700" : "text-slate-700"
+          }`}
+        >
+          {label}
+        </label>
+      ) : null}
+
+      <div className="relative">
+        <button
+          type="button"
+          disabled={disabled}
+          aria-label={ariaLabel || label || placeholder}
+          aria-expanded={acik}
+          aria-haspopup="listbox"
+          onClick={() => {
+            if (!disabled) setAcik((prev) => !prev);
+          }}
+          className={inputSinif(
+            invalid,
+            `flex w-full items-center justify-between gap-2 text-left transition-all ${
+              disabled
+                ? "cursor-not-allowed opacity-60 bg-slate-50 text-slate-400"
+                : "cursor-pointer bg-white"
+            } ${className}`
+          )}
+        >
+          <span
+            className={`block truncate ${
+              seciliOption ? "text-slate-900 font-medium" : "text-slate-400"
+            }`}
+          >
+            {seciliOption ? seciliOption.label : placeholder}
+          </span>
+          <span
+            className={`pointer-events-none transition-transform duration-200 shrink-0 text-slate-500 ${
+              acik ? "rotate-180 text-[var(--acb-green,#089b2d)]" : ""
+            }`}
+          >
+            <SelectOkIkonu />
+          </span>
+        </button>
+
+        {acik && !disabled && (
+          <div className="absolute left-0 right-0 top-[calc(100%+0.375rem)] z-50 rounded-[var(--acb-radius-lg)] bg-white border border-[var(--acb-border)] shadow-[var(--acb-shadow-lg)] overflow-hidden animate-in fade-in zoom-in-95 duration-150 min-w-[160px]">
+            {shouldBeSearchable && (
+              <div className="p-2 border-b border-slate-100 bg-slate-50/50">
+                <div className="relative flex items-center">
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={aramaMetni}
+                    onChange={(e) => setAramaMetni(e.target.value)}
+                    placeholder={searchPlaceholder}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-[var(--acb-green,#089b2d)] focus:outline-none focus:ring-2 focus:ring-[var(--acb-green,#089b2d)]/20"
+                  />
+                  {aramaMetni && (
+                    <button
+                      type="button"
+                      onClick={() => setAramaMetni("")}
+                      className="absolute right-2 text-slate-400 hover:text-slate-600 text-xs px-1"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <ul
+              role="listbox"
+              className="max-h-60 overflow-y-auto p-1.5 space-y-0.5"
+            >
+              {filtreliOptions.length === 0 ? (
+                <li className="px-3 py-3 text-center text-sm text-slate-400">
+                  Sonuç bulunamadı.
+                </li>
+              ) : (
+                filtreliOptions.map((opt) => {
+                  const isSelected = opt.value === value;
+                  return (
+                    <li key={opt.value}>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        onClick={() => {
+                          onChange(opt.value);
+                          setAcik(false);
+                          setAramaMetni("");
+                        }}
+                        className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition flex items-center justify-between gap-2 ${
+                          isSelected
+                            ? "bg-[var(--acb-soft,#eaf8ee)] text-[var(--acb-green,#089b2d)] font-semibold"
+                            : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                        }`}
+                      >
+                        <span className="truncate">{opt.label}</span>
+                        {isSelected && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="size-4 shrink-0 text-[var(--acb-green,#089b2d)]"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export const SifreAlani = forwardRef<
   HTMLInputElement,
   Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
@@ -226,7 +457,7 @@ export function TextArea({
       ) : null}
       <textarea
         rows={4}
-        className={`w-full rounded-xl bg-white border border-slate-200 px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none ${className}`}
+        className={`w-full rounded-[var(--acb-radius,1.125rem)] bg-white border border-slate-200 px-4 py-3.5 text-slate-900 placeholder:text-slate-400 shadow-[inset_0_1px_2px_rgba(27,45,42,0.035)] transition-[box-shadow,border-color] duration-200 ease-out focus:shadow-none focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 resize-none ${className}`}
         {...props}
       />
     </label>
@@ -241,7 +472,9 @@ export function Card({
   className?: string;
 }) {
   return (
-    <div className={`rounded-2xl bg-white border border-slate-200 shadow-sm p-4 ${className}`}>
+    <div
+      className={`rounded-[var(--acb-radius-lg)] bg-white border border-[var(--acb-border)] shadow-[var(--acb-shadow)] p-4 ${className}`}
+    >
       {children}
     </div>
   );

@@ -20,7 +20,7 @@ import { AnaSayfaOzellikSeridi } from "@/components/AnaSayfaOzellikSeridi";
 import { AnaSayfaFiyatHesaplamaTeaser } from "@/components/AnaSayfaFiyatHesaplamaTeaser";
 import { AnaSayfaHizmetVerCta } from "@/components/AnaSayfaHizmetVerCta";
 import { AnaSayfaHizliBaglantilar } from "@/components/AnaSayfaHizliBaglantilar";
-import { Btn, Field, Card, Spinner, TextArea, SelectField } from "@/components/ui";
+import { Btn, Field, Card, Spinner, TextArea, SelectField, CustomSelect } from "@/components/ui";
 import { ACB_CTA } from "@/lib/design-tokens";
 import { KULLANIMA_ACIK_ILLER } from "@/lib/cekici-sehir-acilis";
 import { ilceListesi } from "@/lib/il-ilce";
@@ -265,7 +265,7 @@ function sorunProps(sorunTipi: string): Record<string, unknown> {
 }
 
 /** Sticky alt nav — Geri solunda, beyaz zemin */
-const GERI_BTN_SINIF = "flex-1";
+const GERI_BTN_SINIF = "shrink-0 min-w-[4.25rem] max-w-[5.5rem] !px-3 text-xs xs:text-sm";
 
 function AcilYardimStickyCta({
   onClick,
@@ -274,6 +274,7 @@ function AcilYardimStickyCta({
   yukleniyor,
   label = ACB_CTA.konumOtomatikAl,
   devamGlow = false,
+  progress,
 }: {
   onClick: () => void;
   onGeri: () => void;
@@ -281,6 +282,8 @@ function AcilYardimStickyCta({
   yukleniyor?: boolean;
   label?: string;
   devamGlow?: boolean;
+  /** Step-window progress indicator, rendered above the Geri/Devam row */
+  progress?: React.ReactNode;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -308,40 +311,45 @@ function AcilYardimStickyCta({
   return createPortal(
     <div
       ref={rootRef}
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--acb-border)] bg-white/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]"
+      className="fixed inset-x-0 bottom-0 z-20 pointer-events-none px-4 pt-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
-      <div className="mx-auto flex max-w-lg gap-3">
-        <Btn
-          type="button"
-          variant="geri"
-          className={GERI_BTN_SINIF}
-          onClick={onGeri}
-        >
-          Geri
-        </Btn>
-        <Btn
-          type="button"
-          variant="primary"
-          onClick={onClick}
-          disabled={disabled}
-          className={[
-            "flex-[2] !font-bold !tracking-wide",
-            devamGlow && !disabled
-              ? "ring-2 ring-[color-mix(in_srgb,var(--acb-green)_45%,transparent)] shadow-[var(--acb-shadow-cta)] animate-devam-glow"
-              : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          {yukleniyor ? (
-            <span className="inline-flex items-center justify-center gap-2">
-              <Spinner className="size-4 border-white/40 border-t-white" />
-              Konum alınıyor…
-            </span>
-          ) : (
-            label
-          )}
-        </Btn>
+      <div className="mx-auto max-w-lg pointer-events-auto">
+        {progress ? (
+          <div className="-mt-8 mb-2 flex justify-center">{progress}</div>
+        ) : null}
+        <div className="flex gap-3">
+          <Btn
+            type="button"
+            variant="geri"
+            className={GERI_BTN_SINIF}
+            onClick={onGeri}
+          >
+            Geri
+          </Btn>
+          <Btn
+            type="button"
+            variant="primary"
+            onClick={onClick}
+            disabled={disabled}
+            className={[
+              "flex-[2] !font-bold !tracking-wide",
+              devamGlow && !disabled
+                ? "ring-2 ring-[color-mix(in_srgb,var(--acb-green)_45%,transparent)] shadow-[var(--acb-shadow-cta)] animate-devam-glow"
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {yukleniyor ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <Spinner className="size-4 border-white/40 border-t-white" />
+                Konum alınıyor…
+              </span>
+            ) : (
+              label
+            )}
+          </Btn>
+        </div>
       </div>
     </div>,
     document.body
@@ -360,6 +368,7 @@ function AdimAltNav({
   geriMetin = "Geri",
   onGeri,
   onDevam,
+  progress,
 }: {
   devamMetin: React.ReactNode;
   devamDisabled?: boolean;
@@ -368,6 +377,8 @@ function AdimAltNav({
   geriMetin?: string;
   onGeri: () => void;
   onDevam: () => void;
+  /** Step-window progress indicator, rendered above the Geri/Devam row */
+  progress?: React.ReactNode;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -395,30 +406,35 @@ function AdimAltNav({
   return createPortal(
     <div
       ref={rootRef}
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]"
+      className="fixed inset-x-0 bottom-0 z-20 pointer-events-none px-4 pt-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
-      <div className="mx-auto flex max-w-lg gap-3">
-        <Btn
-          type="button"
-          variant="geri"
-          className={GERI_BTN_SINIF}
-          onClick={onGeri}
-        >
-          {geriMetin}
-        </Btn>
-        <Btn
-          type="button"
-          className={[
-            "flex-[2]",
-            devamGlow && !devamDisabled ? "animate-devam-glow" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-          onClick={onDevam}
-          disabled={devamDisabled}
-        >
-          {devamMetin}
-        </Btn>
+      <div className="mx-auto max-w-lg pointer-events-auto">
+        {progress ? (
+          <div className="-mt-8 mb-2 flex justify-center">{progress}</div>
+        ) : null}
+        <div className="flex gap-3">
+          <Btn
+            type="button"
+            variant="geri"
+            className={GERI_BTN_SINIF}
+            onClick={onGeri}
+          >
+            {geriMetin}
+          </Btn>
+          <Btn
+            type="button"
+            className={[
+              "flex-[2]",
+              devamGlow && !devamDisabled ? "animate-devam-glow" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onClick={onDevam}
+            disabled={devamDisabled}
+          >
+            {devamMetin}
+          </Btn>
+        </div>
       </div>
     </div>,
     document.body
@@ -433,6 +449,7 @@ function HedefAltNav({
   devamDisabled = false,
   devamGlow = false,
   devamIcerik,
+  progress,
 }: {
   hedefSeciliMi: boolean;
   onGeri: () => void;
@@ -440,6 +457,8 @@ function HedefAltNav({
   devamDisabled?: boolean;
   devamGlow?: boolean;
   devamIcerik: React.ReactNode;
+  /** Step-window progress indicator, rendered above the Geri/Devam row */
+  progress?: React.ReactNode;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -467,30 +486,35 @@ function HedefAltNav({
   return createPortal(
     <div
       ref={rootRef}
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_-4px_rgba(0,0,0,0.08)]"
+      className="fixed inset-x-0 bottom-0 z-20 pointer-events-none px-4 pt-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
-      <div className="mx-auto flex max-w-lg gap-3">
-        <Btn
-          type="button"
-          variant="geri"
-          className={GERI_BTN_SINIF}
-          onClick={onGeri}
-        >
-          Geri
-        </Btn>
-        <Btn
-          type="button"
-          className={[
-            "flex-[2]",
-            devamGlow && !devamDisabled ? "animate-devam-glow" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-          onClick={onDevam}
-          disabled={devamDisabled}
-        >
-          {devamIcerik}
-        </Btn>
+      <div className="mx-auto max-w-lg pointer-events-auto">
+        {progress ? (
+          <div className="-mt-8 mb-2 flex justify-center">{progress}</div>
+        ) : null}
+        <div className="flex gap-3">
+          <Btn
+            type="button"
+            variant="geri"
+            className={GERI_BTN_SINIF}
+            onClick={onGeri}
+          >
+            Geri
+          </Btn>
+          <Btn
+            type="button"
+            className={[
+              "flex-[2]",
+              devamGlow && !devamDisabled ? "animate-devam-glow" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onClick={onDevam}
+            disabled={devamDisabled}
+          >
+            {devamIcerik}
+          </Btn>
+        </div>
       </div>
     </div>,
     document.body
@@ -551,8 +575,18 @@ function MusteriAnaSayfaIcerik({
   const searchParams = useSearchParams();
   const router = useRouter();
   const [step, setStep] = useState<Step>("giris");
+  /** Step-content enter animation direction — presentational only, never read by nav logic. */
+  const prevStepForAnimRef = useRef<Step>("giris");
+  const stepAnimDirectionRef = useRef<"forward" | "backward">("forward");
   /** Entry page: YARDIM AL docks into header top-left on scroll */
   const [girisHeaderDocked, setGirisHeaderDocked] = useState(false);
+  const [heroReady, setHeroReady] = useState(() => {
+    try {
+      return typeof window !== "undefined" && sessionStorage.getItem("acb_hero_intro_seen") === "1";
+    } catch {
+      return false;
+    }
+  });
   const [aracMarka, setAracMarka] = useState("");
   const [aracModelOnly, setAracModelOnly] = useState("");
   const [konumSheetAcik, setKonumSheetAcik] = useState(false);
@@ -1806,8 +1840,9 @@ function MusteriAnaSayfaIcerik({
     loading || adresGeocodeYukleniyor || !hedefGonderilebilir;
 
   const hedefGlowSinif =
-    "border-amber-400 bg-white text-slate-900 ring-2 ring-amber-300/80 shadow-[0_0_14px_3px_rgba(8,155,45,0.45)] animate-pulse";
-  const hedefNormalSinif = "border-slate-200 bg-white text-slate-900";
+    "border-amber-400 bg-white text-slate-900 ring-2 ring-amber-300/80 shadow-[0_0_14px_3px_rgba(8,155,45,0.45),var(--acb-shadow-lg)] animate-pulse";
+  const hedefNormalSinif =
+    "border-slate-200 bg-white text-slate-900 shadow-[var(--acb-shadow)] hover:shadow-[var(--acb-shadow-lg)]";
 
   function hedefOneriSeciliMi(o: KonumOneri): boolean {
     if (hedefBilinmiyor || hedefKendimArat || !form.hedefLat || !form.hedefLng) {
@@ -1879,7 +1914,7 @@ function MusteriAnaSayfaIcerik({
           </button>
         </div>
         {adresBulundu ? (
-          <div className="rounded-xl border-2 border-emerald-400 bg-emerald-50 px-3.5 py-3 space-y-2">
+          <div className="rounded-[var(--acb-radius)] border-2 border-emerald-400 bg-emerald-50 px-3.5 py-3 space-y-2 shadow-[var(--acb-shadow)]">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-800">
               Bulunan tam adres — kontrol edin
             </p>
@@ -2251,21 +2286,27 @@ function MusteriAnaSayfaIcerik({
   const progressCurrent =
     Math.max(1, progressSteps.indexOf(step as (typeof progressSteps)[number]) + 1);
 
+  /** Rendered once, reused across whichever bottom nav is mounted for the current step. */
+  const flowProgressBar =
+    step === "giris" ? null : (
+      <FlowProgress
+        current={progressCurrent}
+        total={progressSteps.length}
+        onStepClick={(i) => {
+          const hedef = progressSteps[i];
+          if (hedef) adimGit(hedef);
+        }}
+        className="mb-5"
+      />
+    );
+
   const adimUstBilgi =
     step === "giris" ? null : (
-      <div className="mx-auto w-full max-w-[14rem] space-y-1">
+      <div className="mx-auto w-full max-w-[14rem]">
         <HizmetVerenSayimAlani
           sorunTipi={form.sorunTipi || null}
           sehirAd={seciliSehir || null}
           compact
-        />
-        <FlowProgress
-          current={progressCurrent}
-          total={progressSteps.length}
-          onStepClick={(i) => {
-            const hedef = progressSteps[i];
-            if (hedef) adimGit(hedef);
-          }}
         />
       </div>
     );
@@ -2337,12 +2378,20 @@ function MusteriAnaSayfaIcerik({
         type="button"
         onClick={konumuDegistir}
         title={`Konumu değiştir: ${konumTamMetin}`}
-        className="group inline-flex max-w-[5.5rem] xs:max-w-[7rem] sm:max-w-[8.5rem] items-center gap-1 rounded-full border border-[var(--acb-border)] bg-white px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold text-[var(--acb-dark)] shadow-2xs transition hover:border-[var(--acb-green)] hover:bg-[var(--acb-soft)] active:scale-95 touch-manipulation"
+        className="group inline-flex max-w-[6rem] xs:max-w-[7.5rem] sm:max-w-[9.5rem] items-center gap-1.5 rounded-full border border-[#9ee3b2] bg-[#eaf8ee] px-2.5 py-1 text-[10px] sm:text-[11px] font-bold text-[#0b4e1e] shadow-[0_2px_8px_rgba(8,155,45,0.14)] transition-all duration-200 hover:border-[#089b2d] hover:bg-[#d5f3dc] hover:shadow-[0_4px_12px_rgba(8,155,45,0.22)] active:scale-95 touch-manipulation"
       >
-        <MapPin className="size-3 shrink-0 text-[var(--acb-green)] transition-transform group-hover:scale-110" />
-        <span className="truncate">{konumGosterimMetni}</span>
+        <MapPin className="size-3 shrink-0 text-[#089b2d] transition-transform group-hover:scale-110" strokeWidth={2.5} />
+        <span className="truncate tracking-tight">{konumGosterimMetni}</span>
       </button>
     ) : null;
+
+  /** Derived purely for the step-content enter animation direction — read-only, doesn't affect step/nav logic. */
+  if (prevStepForAnimRef.current !== step) {
+    const prevIndex = TUM_ADIMLAR.indexOf(prevStepForAnimRef.current);
+    const nextIndex = TUM_ADIMLAR.indexOf(step);
+    stepAnimDirectionRef.current = nextIndex >= prevIndex ? "forward" : "backward";
+    prevStepForAnimRef.current = step;
+  }
 
   return (
     <MobileShell
@@ -2355,6 +2404,7 @@ function MusteriAnaSayfaIcerik({
       <OpeningLogo
         forceDocked={!girisEkrani}
         scrollDock={girisEkrani}
+        heroReady={heroReady}
         onDockedChange={setGirisHeaderDocked}
         onYardimAl={girisEkrani ? yardimAlBaslat : undefined}
         onClick={() => {
@@ -2366,8 +2416,10 @@ function MusteriAnaSayfaIcerik({
         center={adimUstBilgi}
         trailing={konumHeaderTrailing}
       />
+      <div key={step} data-direction={stepAnimDirectionRef.current} className="acb-step-transition">
       {step === "konum" && !arizaKonumGpsAlindi ? (
         <AcilYardimStickyCta
+          progress={flowProgressBar}
           onGeri={oncekiAdimaDon}
           label={
             konumBasarisiz || (seciliSehir && seciliIlce) || !gpsGuvenli
@@ -2398,7 +2450,7 @@ function MusteriAnaSayfaIcerik({
       ) : null}
       {step === "giris" && (
         <>
-          <EmergencyHero ctaDocked={girisHeaderDocked} />
+          <EmergencyHero ctaDocked={girisHeaderDocked} onHeroReady={setHeroReady} />
           <div className="mt-10 space-y-8 border-t border-[var(--acb-border)] pt-8">
             <div id="nasil-calisir" className="scroll-mt-[calc(4.75rem+env(safe-area-inset-top))]">
               <AnaSayfaOzellikSeridi />
@@ -2521,9 +2573,9 @@ function MusteriAnaSayfaIcerik({
             sadeceTipSecimi
           />
           <AdimAltNav
+            progress={flowProgressBar}
             devamMetin={form.sorunTipi ? "Devam et" : "Önce hizmet seç"}
             devamDisabled={!form.sorunTipi}
-            devamGlow={!!form.sorunTipi}
             onGeri={konumuDegistir}
             onDevam={() => {
               if (sorunDevamTimerRef.current != null) {
@@ -2583,12 +2635,12 @@ function MusteriAnaSayfaIcerik({
                       if (sonraki) adimGit(sonraki);
                     }, ADIM_OTOMATIK_GECIS_MS);
                   }}
-                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4 py-3.5 flex items-center gap-2 transition touch-manipulation active:scale-[0.99] ${
+                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4 py-3.5 flex items-center gap-2 transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] ${
                     secili
-                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)] shadow-[var(--acb-shadow-lg)]"
                       : kilitDurumuHatasi
                         ? "border-red-400 bg-white"
-                        : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
+                        : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)] shadow-[var(--acb-shadow)] hover:shadow-[var(--acb-shadow-lg)]"
                   }`}
                 >
                   <span className="font-semibold text-sm flex-1 min-w-0 text-[var(--acb-dark)]">
@@ -2609,6 +2661,7 @@ function MusteriAnaSayfaIcerik({
             </p>
           )}
           <AdimAltNav
+            progress={flowProgressBar}
             devamMetin="Devam et"
             devamGlow={!!form.kilitDurumu}
             onGeri={oncekiAdimaDon}
@@ -2666,12 +2719,12 @@ function MusteriAnaSayfaIcerik({
                       if (sonraki) adimGit(sonraki);
                     }, ADIM_OTOMATIK_GECIS_MS);
                   }}
-                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4 py-3.5 flex items-center gap-2 transition touch-manipulation active:scale-[0.99] ${
+                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4 py-3.5 flex items-center gap-2 transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] ${
                     secili
-                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)] shadow-[var(--acb-shadow-lg)]"
                       : yakitTipiHatasi
                         ? "border-red-400 bg-white"
-                        : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
+                        : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)] shadow-[var(--acb-shadow)] hover:shadow-[var(--acb-shadow-lg)]"
                   }`}
                 >
                   <span className="font-semibold text-sm flex-1 min-w-0 text-[var(--acb-dark)]">
@@ -2692,6 +2745,7 @@ function MusteriAnaSayfaIcerik({
             </p>
           )}
           <AdimAltNav
+            progress={flowProgressBar}
             devamMetin="Devam et"
             devamGlow={!!form.yakitTipi}
             onGeri={oncekiAdimaDon}
@@ -2749,12 +2803,12 @@ function MusteriAnaSayfaIcerik({
                       if (sonraki) adimGit(sonraki);
                     }, ADIM_OTOMATIK_GECIS_MS);
                   }}
-                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4.5 py-4 flex items-center justify-between gap-3 transition touch-manipulation active:scale-[0.99] ${
+                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4.5 py-4 flex items-center justify-between gap-3 transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] ${
                     secili
-                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)] shadow-[var(--acb-shadow-lg)]"
                       : lastikDurumuHatasi
                         ? "border-red-400 bg-white"
-                        : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
+                        : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)] shadow-[var(--acb-shadow)] hover:shadow-[var(--acb-shadow-lg)]"
                   }`}
                 >
                   <span
@@ -2783,6 +2837,7 @@ function MusteriAnaSayfaIcerik({
             </p>
           )}
           <AdimAltNav
+            progress={flowProgressBar}
             devamMetin="Devam et"
             devamGlow={!!form.lastikDurumu}
             onGeri={oncekiAdimaDon}
@@ -2831,6 +2886,7 @@ function MusteriAnaSayfaIcerik({
             )}
           </div>
           <AdimAltNav
+            progress={flowProgressBar}
             devamMetin={
               fotografData.length || fotografOnizleme.length
                 ? "Devam et"
@@ -2883,10 +2939,10 @@ function MusteriAnaSayfaIcerik({
                       if (sonraki) adimGit(sonraki);
                     }, ADIM_OTOMATIK_GECIS_MS);
                   }}
-                  className={`flex h-full min-h-[6.25rem] w-full flex-col items-center justify-center gap-2 rounded-xl border px-2 py-3 text-center transition touch-manipulation [@media(min-height:740px)]:min-h-[7.25rem] ${
+                  className={`flex h-full min-h-[6.25rem] w-full flex-col items-center justify-center gap-2 rounded-[var(--acb-radius-lg)] border px-2 py-3 text-center transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 [@media(min-height:740px)]:min-h-[7.25rem] ${
                     secili
-                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
-                      : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)] shadow-[var(--acb-shadow-lg)]"
+                      : "border-[var(--acb-border)] bg-white shadow-[var(--acb-shadow)] hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)] hover:shadow-[var(--acb-shadow-lg)]"
                   }`}
                 >
                   <span
@@ -2909,6 +2965,7 @@ function MusteriAnaSayfaIcerik({
             })}
           </div>
           <AdimAltNav
+            progress={flowProgressBar}
             devamMetin="Devam et"
             onGeri={oncekiAdimaDon}
             onDevam={() => {
@@ -2969,6 +3026,7 @@ function MusteriAnaSayfaIcerik({
             />
           </div>
           <AdimAltNav
+            progress={flowProgressBar}
             devamMetin="Devam et"
             onGeri={oncekiAdimaDon}
             onDevam={() => {
@@ -3017,12 +3075,12 @@ function MusteriAnaSayfaIcerik({
                       if (sonraki) adimGit(sonraki);
                     }, ADIM_OTOMATIK_GECIS_MS);
                   }}
-                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4.5 py-4 flex items-center justify-between gap-3 transition touch-manipulation active:scale-[0.99] ${
+                  className={`w-full text-left rounded-[var(--acb-radius-lg)] border px-4.5 py-4 flex items-center justify-between gap-3 transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] ${
                     secili
-                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)]"
+                      ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_30%,transparent)] shadow-[var(--acb-shadow-lg)]"
                       : aracDurumuHatasi
                         ? "border-red-400 bg-white"
-                        : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
+                        : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)] shadow-[var(--acb-shadow)] hover:shadow-[var(--acb-shadow-lg)]"
                   }`}
                 >
                   <span
@@ -3045,6 +3103,7 @@ function MusteriAnaSayfaIcerik({
             </p>
           )}
           <AdimAltNav
+            progress={flowProgressBar}
             devamMetin="Devam et"
             devamGlow={!!form.aracDurumu}
             onGeri={oncekiAdimaDon}
@@ -3090,7 +3149,7 @@ function MusteriAnaSayfaIcerik({
                 value={form.sorunDetay}
                 onChange={(e) => update("sorunDetay", e.target.value)}
                 aria-invalid={sorunDetayHatasi || undefined}
-                className={`w-full rounded-xl bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 resize-none whitespace-pre-line ${
+                className={`w-full rounded-[var(--acb-radius)] bg-white border px-4 py-3.5 text-slate-900 placeholder:text-slate-400 shadow-[inset_0_1px_2px_rgba(27,45,42,0.035)] transition-[box-shadow,border-color] duration-200 ease-out focus:shadow-none focus:outline-none focus:ring-2 resize-none whitespace-pre-line ${
                   sorunDetayHatasi
                     ? "border-red-500 ring-red-500/30 focus:ring-red-500/40"
                     : "border-slate-200 focus:ring-amber-500/40 focus:border-amber-500"
@@ -3120,6 +3179,7 @@ function MusteriAnaSayfaIcerik({
           )}
 
           <AdimAltNav
+            progress={flowProgressBar}
             devamMetin="Devam et"
             onGeri={oncekiAdimaDon}
             onDevam={() => {
@@ -3168,6 +3228,7 @@ function MusteriAnaSayfaIcerik({
           />
 
           <AdimAltNav
+            progress={flowProgressBar}
             devamMetin="Devam Et"
             devamDisabled={loading}
             onGeri={oncekiAdimaDon}
@@ -3240,11 +3301,11 @@ function MusteriAnaSayfaIcerik({
             <div className="space-y-3">
               {!gpsGuvenli ? <GpsHttpsBanner compact /> : null}
 
-              <div className="rounded-[var(--acb-radius-lg)] border border-[var(--acb-border)] bg-white px-3.5 py-3.5 space-y-2.5 shadow-[var(--acb-shadow)]">
+              <div className="rounded-[var(--acb-radius-lg)] border border-[var(--acb-border)] bg-white px-3.5 py-3.5 space-y-2.5 shadow-[var(--acb-shadow-lg)]">
                   <p className="text-sm font-semibold text-[var(--acb-dark)]">
                     {ACB_CTA.adresAra}
                   </p>
-                  <div className="grid grid-cols-2 gap-2.5 items-end">
+                  <div className="space-y-2.5">
                     <div className="min-w-0 space-y-1.5">
                       <span className="block text-sm font-semibold text-slate-800">
                         Şehriniz
@@ -3256,15 +3317,21 @@ function MusteriAnaSayfaIcerik({
                             aria-hidden
                           />
                         ) : null}
-                        <SelectField
+                        <CustomSelect
                           aria-label="Şehir"
+                          placeholder="Şehir seçin"
+                          searchPlaceholder="Şehir ara…"
                           className={[
-                            "!py-2.5 !px-3 !pr-10 text-[0.9375rem]",
+                            "!py-2.5 !px-3 text-[0.9375rem]",
                             !seciliSehir ? KONUM_SELECT_GLOW : "",
                           ].join(" ")}
                           value={seciliSehir}
-                          onChange={(e) => {
-                            const il = e.target.value;
+                          options={illerSecimSirasi(
+                            acikIller.length > 0
+                              ? acikIller
+                              : [...KULLANIMA_ACIK_ILLER]
+                          )}
+                          onChange={(il) => {
                             if (ilceDevamTimerRef.current != null) {
                               window.clearTimeout(ilceDevamTimerRef.current);
                               ilceDevamTimerRef.current = null;
@@ -3273,18 +3340,7 @@ function MusteriAnaSayfaIcerik({
                             setSeciliIlce("");
                             setError("");
                           }}
-                        >
-                          <option value="">Şehir seçin</option>
-                          {illerSecimSirasi(
-                            acikIller.length > 0
-                              ? acikIller
-                              : [...KULLANIMA_ACIK_ILLER]
-                          ).map((il) => (
-                            <option key={il} value={il}>
-                              {il}
-                            </option>
-                          ))}
-                        </SelectField>
+                        />
                       </div>
                     </div>
                     <div
@@ -3306,16 +3362,18 @@ function MusteriAnaSayfaIcerik({
                             aria-hidden
                           />
                         ) : null}
-                        <SelectField
+                        <CustomSelect
                           aria-label="İlçe"
+                          placeholder={seciliSehir ? "İlçe seçin" : "Önce şehir"}
+                          searchPlaceholder="İlçe ara…"
+                          disabled={!seciliSehir}
                           className={[
-                            "!py-2.5 !px-3 !pr-10 text-[0.9375rem]",
+                            "!py-2.5 !px-3 text-[0.9375rem]",
                             seciliSehir && !seciliIlce ? KONUM_SELECT_GLOW : "",
                           ].join(" ")}
                           value={seciliIlce}
-                          disabled={!seciliSehir}
-                          onChange={(e) => {
-                            const ilce = e.target.value;
+                          options={seciliSehir ? ilceListesi(seciliSehir) : []}
+                          onChange={(ilce) => {
                             if (ilceDevamTimerRef.current != null) {
                               window.clearTimeout(ilceDevamTimerRef.current);
                               ilceDevamTimerRef.current = null;
@@ -3329,18 +3387,7 @@ function MusteriAnaSayfaIcerik({
                               void konumManuelDevam(sehir, ilce);
                             }, ADIM_OTOMATIK_GECIS_MS);
                           }}
-                        >
-                          <option value="">
-                            {seciliSehir ? "İlçe seçin" : "Önce şehir"}
-                          </option>
-                          {seciliSehir
-                            ? ilceListesi(seciliSehir).map((ilce) => (
-                                <option key={ilce} value={ilce}>
-                                  {ilce}
-                                </option>
-                              ))
-                            : null}
-                        </SelectField>
+                        />
                       </div>
                     </div>
                   </div>
@@ -3348,7 +3395,7 @@ function MusteriAnaSayfaIcerik({
               {error || konumIzniToast ? (
                 <div
                   role={error ? "alert" : "status"}
-                  className="w-full rounded-[var(--acb-radius-lg)] border border-red-200 bg-red-50 px-3.5 py-3 text-sm leading-snug text-red-700"
+                  className="!mt-5 w-full rounded-[var(--acb-radius-lg)] border border-red-200 bg-red-50 px-3.5 py-3 text-sm leading-snug text-red-700"
                 >
                   {error || konumIzniToast}
                 </div>
@@ -3358,6 +3405,7 @@ function MusteriAnaSayfaIcerik({
 
           {arizaKonumGpsAlindi && form.adres ? (
             <AdimAltNav
+              progress={flowProgressBar}
               devamMetin={
                 adresGeocodeYukleniyor ? (
                   <span className="inline-flex items-center justify-center gap-2">
@@ -3479,7 +3527,7 @@ function MusteriAnaSayfaIcerik({
               type="button"
               onClick={() => enYakinHedefSec("oto_tamir")}
               disabled={oneriYukleniyor && oneriler.length === 0}
-              className={`w-full rounded-xl border px-4 py-3.5 text-left font-semibold text-sm transition touch-manipulation active:scale-[0.99] disabled:opacity-50 ${
+              className={`w-full rounded-[var(--acb-radius-lg)] border px-4 py-3.5 text-left font-semibold text-sm transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] disabled:opacity-50 ${
                 enYakinModSeciliMi("oto_tamir") || hedefOpsiyon === "oto_tamir"
                   ? "border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-200"
                   : !hedefSeciliMi
@@ -3496,7 +3544,7 @@ function MusteriAnaSayfaIcerik({
               type="button"
               onClick={() => enYakinHedefSec("oto_sanayi")}
               disabled={oneriYukleniyor && oneriler.length === 0}
-              className={`w-full rounded-xl border px-4 py-3.5 text-left font-semibold text-sm transition touch-manipulation active:scale-[0.99] disabled:opacity-50 ${
+              className={`w-full rounded-[var(--acb-radius-lg)] border px-4 py-3.5 text-left font-semibold text-sm transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] disabled:opacity-50 ${
                 enYakinModSeciliMi("oto_sanayi") ||
                 hedefOpsiyon === "oto_sanayi"
                   ? "border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-200"
@@ -3515,7 +3563,7 @@ function MusteriAnaSayfaIcerik({
             {hedefBilinmiyor ? (
               <div
                 id="hedef-secim-ozeti"
-                className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
+                className="rounded-[var(--acb-radius-lg)] border border-amber-500 bg-amber-50 ring-2 ring-amber-200 shadow-[var(--acb-shadow-lg)] overflow-hidden scroll-mt-24"
               >
                 <button
                   type="button"
@@ -3534,7 +3582,7 @@ function MusteriAnaSayfaIcerik({
               <button
                 type="button"
                 onClick={hedefBilmiyorumSec}
-                className={`w-full rounded-xl border px-4 py-3.5 text-left font-semibold text-sm transition touch-manipulation active:scale-[0.99] ${
+                className={`w-full rounded-[var(--acb-radius-lg)] border px-4 py-3.5 text-left font-semibold text-sm transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] ${
                   !hedefSeciliMi
                     ? hedefGlowSinif
                     : `${hedefNormalSinif} hover:border-amber-400`
@@ -3547,7 +3595,7 @@ function MusteriAnaSayfaIcerik({
             {hedefKendimArat ? (
               <div
                 id="hedef-secim-ozeti"
-                className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
+                className="rounded-[var(--acb-radius-lg)] border border-amber-500 bg-amber-50 ring-2 ring-amber-200 shadow-[var(--acb-shadow-lg)] overflow-hidden scroll-mt-24"
               >
                 <button
                   type="button"
@@ -3564,7 +3612,7 @@ function MusteriAnaSayfaIcerik({
               <button
                 type="button"
                 onClick={hedefKendimAratSec}
-                className={`w-full rounded-xl border px-4 py-3.5 text-left font-semibold text-sm transition touch-manipulation active:scale-[0.99] ${
+                className={`w-full rounded-[var(--acb-radius-lg)] border px-4 py-3.5 text-left font-semibold text-sm transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] ${
                   !hedefSeciliMi
                     ? hedefGlowSinif
                     : `${hedefNormalSinif} hover:border-amber-400`
@@ -3577,7 +3625,7 @@ function MusteriAnaSayfaIcerik({
 
           {oneriYukleniyor && oneriler.length === 0 && (
             <div
-              className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+              className="flex items-center gap-3 rounded-[var(--acb-radius-lg)] border border-amber-200 bg-amber-50 px-4 py-3 shadow-[var(--acb-shadow)]"
               role="status"
             >
               <Spinner className="mt-0.5" />
@@ -3733,7 +3781,7 @@ function MusteriAnaSayfaIcerik({
                           <div
                             key={o.placeId ?? `${o.adres}-${i}`}
                             id="hedef-secim-ozeti"
-                            className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
+                            className="rounded-[var(--acb-radius-lg)] border border-amber-500 bg-amber-50 ring-2 ring-amber-200 shadow-[var(--acb-shadow-lg)] overflow-hidden scroll-mt-24"
                           >
                             <button
                               type="button"
@@ -3753,7 +3801,7 @@ function MusteriAnaSayfaIcerik({
                           type="button"
                           onClick={() => oneriSec(o)}
                           aria-pressed={false}
-                          className="w-full text-left rounded-xl border border-slate-200 bg-white px-4 py-3 transition hover:border-amber-400"
+                          className="w-full text-left rounded-[var(--acb-radius-lg)] border border-slate-200 bg-white px-4 py-3 shadow-[var(--acb-shadow)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-amber-400 hover:shadow-[var(--acb-shadow-lg)] active:translate-y-0 active:scale-[0.99]"
                         >
                           {icerik}
                         </button>
@@ -3793,7 +3841,7 @@ function MusteriAnaSayfaIcerik({
                         <div
                           key={o.placeId ?? o.adres}
                           id="hedef-secim-ozeti"
-                          className="rounded-xl border border-amber-500 bg-amber-50 ring-2 ring-amber-200 overflow-hidden scroll-mt-24"
+                          className="rounded-[var(--acb-radius-lg)] border border-amber-500 bg-amber-50 ring-2 ring-amber-200 shadow-[var(--acb-shadow-lg)] overflow-hidden scroll-mt-24"
                         >
                           <button
                             type="button"
@@ -3812,7 +3860,7 @@ function MusteriAnaSayfaIcerik({
                         type="button"
                         onClick={() => oneriSec(o)}
                         aria-pressed={false}
-                        className="w-full text-left rounded-xl border border-slate-200 bg-white px-4 py-3 transition hover:border-amber-400"
+                        className="w-full text-left rounded-[var(--acb-radius-lg)] border border-slate-200 bg-white px-4 py-3 shadow-[var(--acb-shadow)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-amber-400 hover:shadow-[var(--acb-shadow-lg)] active:translate-y-0 active:scale-[0.99]"
                       >
                         {icerik}
                       </button>
@@ -3840,6 +3888,7 @@ function MusteriAnaSayfaIcerik({
       )}
       {step === "telefon" && (
         <MusteriFormIletisimOtp
+          progress={flowProgressBar}
           funnelId={funnelId}
           ad={form.ad}
           telefon={form.telefon}
@@ -3871,6 +3920,7 @@ function MusteriAnaSayfaIcerik({
 
       {step === "hedef" && (
         <HedefAltNav
+          progress={flowProgressBar}
           hedefSeciliMi={hedefSeciliMi}
           onGeri={oncekiAdimaDon}
           devamDisabled={hedefIleriEngelli}
@@ -3890,6 +3940,7 @@ function MusteriAnaSayfaIcerik({
           }}
         />
       )}
+      </div>
     </MobileShell>
   );
 }

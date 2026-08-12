@@ -20,7 +20,7 @@ export function LiveRequestStatus({
           {baslik}
         </h2>
       ) : null}
-      <div className="rounded-[var(--acb-radius-lg)] border border-[var(--acb-border)] bg-white px-4 py-3.5 shadow-[var(--acb-shadow)]">
+      <div className="rounded-[var(--acb-radius-lg)] border border-[var(--acb-border)] bg-white px-4 py-3.5 shadow-[var(--acb-shadow-lg)]">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           {searching ? (
             <span className="inline-flex items-center gap-2 text-sm font-bold text-[var(--acb-dark)]">
