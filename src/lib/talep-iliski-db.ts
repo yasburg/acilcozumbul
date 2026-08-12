@@ -18,6 +18,9 @@ export async function listHaricCekiciIds(talepId: string): Promise<string[]> {
   return (data ?? []).map((r: { cekici_id: string }) => r.cekici_id);
 }
 
+/** PostgREST `.in()` URL limiti — çok ID tek istekte `fetch failed` verir. */
+const ILISKI_IN_CHUNK = 100;
+
 export async function hydrateTalepIliskileri(
   talepIds: string[]
 ): Promise<{
@@ -29,22 +32,28 @@ export async function hydrateTalepIliskileri(
   if (talepIds.length === 0) return { bildirilen, haric };
 
   const sb = getSupabaseAdmin();
-  const [bRes, hRes] = await Promise.all([
-    sb.from("talep_bildirimleri").select("talep_id, cekici_id").in("talep_id", talepIds),
-    sb.from("talep_haric").select("talep_id, cekici_id").in("talep_id", talepIds),
-  ]);
-  if (bRes.error) throw bRes.error;
-  if (hRes.error) throw hRes.error;
+  for (let i = 0; i < talepIds.length; i += ILISKI_IN_CHUNK) {
+    const parti = talepIds.slice(i, i + ILISKI_IN_CHUNK);
+    const [bRes, hRes] = await Promise.all([
+      sb
+        .from("talep_bildirimleri")
+        .select("talep_id, cekici_id")
+        .in("talep_id", parti),
+      sb.from("talep_haric").select("talep_id, cekici_id").in("talep_id", parti),
+    ]);
+    if (bRes.error) throw bRes.error;
+    if (hRes.error) throw hRes.error;
 
-  for (const r of bRes.data ?? []) {
-    const list = bildirilen.get(r.talep_id) ?? [];
-    list.push(r.cekici_id);
-    bildirilen.set(r.talep_id, list);
-  }
-  for (const r of hRes.data ?? []) {
-    const list = haric.get(r.talep_id) ?? [];
-    list.push(r.cekici_id);
-    haric.set(r.talep_id, list);
+    for (const r of bRes.data ?? []) {
+      const list = bildirilen.get(r.talep_id) ?? [];
+      list.push(r.cekici_id);
+      bildirilen.set(r.talep_id, list);
+    }
+    for (const r of hRes.data ?? []) {
+      const list = haric.get(r.talep_id) ?? [];
+      list.push(r.cekici_id);
+      haric.set(r.talep_id, list);
+    }
   }
   return { bildirilen, haric };
 }
