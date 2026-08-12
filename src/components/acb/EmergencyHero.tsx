@@ -122,13 +122,13 @@ export function EmergencyHero({
           aria-hidden
         />
         <div
-          className={`mt-1 px-4 transition-transform duration-600 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+          className={`mt-1 px-4 w-full max-w-md mx-auto transition-transform duration-600 ease-[cubic-bezier(0.32,0.72,0,1)] ${
             isCentered ? "translate-y-[18vh] sm:translate-y-[20vh]" : "translate-y-0"
           }`}
         >
           <h1
             id="acb-hero-baslik"
-            className="acb-display text-[2.15rem] font-bold text-[var(--acb-dark)] sm:text-[2.85rem] min-h-[3rem]"
+            className="acb-display text-[2.15rem] font-bold text-[var(--acb-dark)] sm:text-[2.85rem] leading-[1.12]"
           >
             {isIntro ? TITLE_FULL.slice(0, typedIndex) : TITLE_FULL}
             {isTyping && (
@@ -139,7 +139,7 @@ export function EmergencyHero({
             )}
           </h1>
           <p
-            className={`mt-2.5 mx-auto max-w-[17.5rem] text-center text-[1.0625rem] font-medium leading-snug tracking-[0.01em] text-[var(--acb-muted)] sm:max-w-sm sm:text-xl transition-all duration-400 ease-out ${
+            className={`mt-1 mx-auto max-w-[17.5rem] text-center text-[1.0625rem] font-medium leading-snug tracking-[0.01em] text-[var(--acb-muted)] sm:max-w-sm sm:text-xl transition-all duration-400 ease-out ${
               isSubtitleVisible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-2"
@@ -147,16 +147,16 @@ export function EmergencyHero({
           >
             {SUBTITLE_TEXT}
           </p>
-        </div>
-      </div>
 
-      {/* 2. Orta Bölüm: Ekranın tam ortası (50% / 50vh) - YARDIM AL Buton Yuvası (Sabit Yuva) */}
-      <div className="shrink-0 w-full max-w-md mx-auto px-4 py-1">
-        <div
-          id="acb-hero-yardim-cta"
-          className="min-h-[3.6rem] w-full"
-          aria-hidden
-        />
+          {/* 2. YARDIM AL Buton Yuvası — Başlık ve altbaşlık ile aynı hizada ve aynı dönüşüm konteynerinde */}
+          <div className="mt-5 w-full">
+            <div
+              id="acb-hero-yardim-cta"
+              className="min-h-[3.6rem] w-full"
+              aria-hidden
+            />
+          </div>
+        </div>
       </div>
 
       {/* 3. Alt Bölüm: Ekranın 3/4 noktası (~75% / 75vh) - Güven metinleri */}
