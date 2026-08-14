@@ -206,22 +206,6 @@ export function EmergencyHero({
             Acil Çözüm Bul Hakkında
           </span>
         </a>
-        <div className="mt-2 flex justify-center">
-          <button
-            type="button"
-            onClick={() => {
-              try {
-                sessionStorage.removeItem(SESSION_KEY);
-              } catch {
-                /* ignore */
-              }
-              window.location.reload();
-            }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-800 shadow-2xs hover:bg-amber-100 active:scale-95 touch-manipulation"
-          >
-            ⚡ Debug: İlk Açılış Animasyonunu Test Et
-          </button>
-        </div>
       </div>
     </section>
   );
