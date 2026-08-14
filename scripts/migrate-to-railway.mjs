@@ -96,6 +96,24 @@ async function main() {
       }
     }
 
+    // Ensure all 81 cities are enabled in sehir_acilis
+    const turkiyeIlIlcePath = path.join(process.cwd(), "src", "data", "turkiye-il-ilce.json");
+    try {
+      const ilData = JSON.parse(await readFile(turkiyeIlIlcePath, "utf-8"));
+      const iller = Object.keys(ilData);
+      for (const il of iller) {
+        await client.query(
+          `INSERT INTO public.sehir_acilis (il, acik, guncelleme)
+           VALUES ($1, true, NOW())
+           ON CONFLICT (il) DO UPDATE SET acik = true, guncelleme = NOW()`,
+          [il]
+        );
+      }
+      console.log(`[CITIES] Enabled ${iller.length} cities in sehir_acilis.`);
+    } catch (e) {
+      console.warn("[CITIES] Warning populating cities:", e.message);
+    }
+
     console.log("✅ All migrations applied successfully to Railway PostgreSQL!");
   } finally {
     client.release();
