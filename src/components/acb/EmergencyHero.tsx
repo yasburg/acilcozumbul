@@ -113,8 +113,8 @@ export function EmergencyHero({
 
   return (
     <section className="relative flex h-[100dvh] max-h-[100dvh] w-full flex-col justify-between overflow-hidden animate-fade-in">
-      {/* 1. Üst Bölüm: Logo bandı + Başlık + Altbaşlık */}
-      <div className="flex flex-1 flex-col items-center justify-center text-center pt-[max(0.5rem,env(safe-area-inset-top))]">
+      {/* 1. Üst Bölüm: Logo bandı + Başlık + Altbaşlık (Üst Yarım) */}
+      <div className="flex flex-1 flex-col items-center justify-between text-center pt-[max(0.5rem,env(safe-area-inset-top))] pb-2">
         <div
           id="acb-hero-logo-band"
           className="shrink-0"
@@ -122,24 +122,24 @@ export function EmergencyHero({
           aria-hidden
         />
         <div
-          className={`mt-1 px-4 w-full max-w-md mx-auto transition-transform duration-600 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-            isCentered ? "translate-y-[18vh] sm:translate-y-[20vh]" : "translate-y-0"
+          className={`my-auto px-4 w-full max-w-md mx-auto transition-transform duration-600 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+            isCentered ? "translate-y-[14vh] sm:translate-y-[16vh]" : "translate-y-0"
           }`}
         >
           <h1
             id="acb-hero-baslik"
-            className="acb-display text-[2.15rem] font-bold text-[var(--acb-dark)] sm:text-[2.85rem] leading-[1.12]"
+            className="acb-display text-[2.45rem] font-bold tracking-tight text-[var(--acb-dark)] sm:text-[3.25rem] leading-[1.12]"
           >
             {isIntro ? TITLE_FULL.slice(0, typedIndex) : TITLE_FULL}
             {isTyping && (
               <span
-                className="inline-block ml-0.5 w-[3px] h-[1.9rem] sm:h-[2.4rem] bg-[var(--acb-green,#089b2d)] align-middle animate-pulse"
+                className="inline-block ml-0.5 w-[3px] h-[2.1rem] sm:h-[2.7rem] bg-[var(--acb-green,#089b2d)] align-middle animate-pulse"
                 aria-hidden
               />
             )}
           </h1>
           <p
-            className={`mt-1 mx-auto max-w-[17.5rem] text-center text-[1.0625rem] font-medium leading-snug tracking-[0.01em] text-[var(--acb-muted)] sm:max-w-sm sm:text-xl transition-all duration-400 ease-out ${
+            className={`mt-2 mx-auto max-w-[20rem] text-center text-[1.1875rem] font-medium leading-snug tracking-[0.01em] text-[var(--acb-muted)] sm:max-w-md sm:text-[1.375rem] transition-all duration-400 ease-out ${
               isSubtitleVisible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-2"
@@ -147,28 +147,28 @@ export function EmergencyHero({
           >
             {SUBTITLE_TEXT}
           </p>
-
-          {/* 2. YARDIM AL Buton Yuvası — Başlık ve altbaşlık ile aynı hizada ve aynı dönüşüm konteynerinde */}
-          <div className="mt-5 w-full">
-            <div
-              id="acb-hero-yardim-cta"
-              className="min-h-[3.6rem] w-full"
-              aria-hidden
-            />
-          </div>
         </div>
       </div>
 
-      {/* 3. Alt Bölüm: Ekranın 3/4 noktası (~75% / 75vh) - Güven metinleri */}
+      {/* 2. Tam Orta Nokta (50vh / 50% Vertical Center): YARDIM AL Buton Yuvası (Tam Matematiksel Merkez) */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4 pointer-events-none z-0">
+        <div
+          id="acb-hero-yardim-cta"
+          className="min-h-[3.6rem] w-full"
+          aria-hidden
+        />
+      </div>
+
+      {/* 3. Alt Yarım: Güven metinleri (Eşit Dağıtılmış Alt Bölüm) */}
       <div
         className={`flex flex-1 flex-col items-center justify-center px-4 transition-all duration-600 delay-75 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           isContentVisible
             ? "opacity-100 translate-y-0"
-            : "opacity-0 translate-y-8 pointer-events-none"
+            : "opacity-0 translate-y-6 pointer-events-none"
         }`}
       >
         <p
-          className={`acb-hero-trust space-y-1 text-center text-[0.9375rem] font-medium leading-snug tracking-[0.01em] transition-opacity duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)] sm:text-base ${
+          className={`acb-hero-trust space-y-1.5 text-center text-[0.9375rem] font-medium leading-snug tracking-[0.01em] transition-opacity duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)] sm:text-base ${
             ctaDocked ? "opacity-0" : "opacity-100"
           }`}
           aria-hidden={ctaDocked}
@@ -176,10 +176,10 @@ export function EmergencyHero({
           <span className="acb-hero-trust-line block font-semibold">
             Kayıt yok
           </span>
-          <span className="acb-hero-trust-line block">
+          <span className="acb-hero-trust-line block text-slate-600">
             2 dakikada 5+ teklif al
           </span>
-          <span className="acb-hero-trust-line block">
+          <span className="acb-hero-trust-line block font-semibold text-[var(--acb-green)]">
             En uygunu seç.
           </span>
         </p>
@@ -190,7 +190,7 @@ export function EmergencyHero({
         className={`shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-center transition-all duration-600 delay-150 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           isContentVisible
             ? "opacity-100 translate-y-0"
-            : "opacity-0 translate-y-8 pointer-events-none"
+            : "opacity-0 translate-y-6 pointer-events-none"
         }`}
       >
         <a

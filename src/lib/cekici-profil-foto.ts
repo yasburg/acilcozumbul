@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { getSupabaseAdmin } from "./supabase/admin";
+import { uploadFile } from "./file-storage";
 import type { Cekici, ProfilFotoDurum } from "./types";
 
 const BUCKET = "cekici-profil-fotograflari";
@@ -58,20 +58,13 @@ export async function cekiciProfilFotoYukle(
   const ext = uzanti(parsed.mime);
   const path = `${cekiciId}/profil-${randomUUID()}.${ext}`;
 
-  const { error } = await getSupabaseAdmin()
-    .storage.from(BUCKET)
-    .upload(path, parsed.buffer, {
-      contentType: parsed.mime,
-      upsert: true,
-    });
-
-  if (error) {
+  try {
+    const publicUrl = await uploadFile(BUCKET, path, parsed.buffer);
+    return publicUrl;
+  } catch (error: any) {
     console.error("[cekici-profil-foto]", error.message);
     return null;
   }
-
-  const { data } = getSupabaseAdmin().storage.from(BUCKET).getPublicUrl(path);
-  return data.publicUrl || null;
 }
 
 /** Müşteriye yalnızca onaylı fotoğraf URL’si */

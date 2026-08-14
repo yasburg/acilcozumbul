@@ -1,6 +1,21 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["pg", "pg-pool", "pg-types"],
+  turbopack: {},
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        dns: false,
+        child_process: false,
+      };
+    }
+    return config;
+  },
   /** Telefondan yerel IP ile test (npm run dev:lan) */
   allowedDevOrigins: [
     "10.55.33.167",

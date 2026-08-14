@@ -1,6 +1,3 @@
-import { updateTalep } from "./db";
-import { setKaybedenTeklifler, updateTeklifDurum } from "./teklif-db";
-import { refreshCekiciPuanOzet } from "./puan-ozet-db";
 import { cekiciTalepBolgesineUygunMu } from "./cekici-bolge";
 import { cekiciMusaitMi } from "./cekici-musaitlik";
 import { cekiciTalepSorununaUygunMu } from "./cekici-sorun";
@@ -235,10 +232,10 @@ export function ihaleDatetimeLocal(d: Date): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-export function ihaleAcikMi(talep: Talep): boolean {
+export function ihaleAcikMi(talep: Talep, now: Date = new Date()): boolean {
   if (talep.durum !== "ihalede" && talep.durum !== "yeniden_ihalede") return false;
   if (talep.kazananCekiciId) return false;
-  return new Date() < new Date(talep.ihaleBitis);
+  return now < new Date(talep.ihaleBitis);
 }
 
 export function cekiciTeklifVerdiMi(talep: Talep, cekiciId: string): boolean {
@@ -262,6 +259,10 @@ export async function kaybedenTeklifleriIsaretle(
   talep: Talep,
   kazananTeklifId: string
 ): Promise<void> {
+  const { updateTalep } = await import("./db");
+  const { setKaybedenTeklifler, updateTeklifDurum } = await import("./teklif-db");
+  const { refreshCekiciPuanOzet } = await import("./puan-ozet-db");
+
   for (const teklif of talep.teklifler) {
     if (teklif.id !== kazananTeklifId && teklif.durum === "aktif") {
       teklif.durum = "kaybetti";

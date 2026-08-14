@@ -225,17 +225,17 @@ export function MusteriFormIletisimOtp({
 
   return (
     <div className="space-y-4 animate-fade-in pb-40">
-      <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">İletişim bilgileriniz</h2>
-      {sorunLabel ? (
-        <p className="text-sm text-slate-600">
-          Seçilen sorun:{" "}
-          <span className="font-medium text-slate-900">{sorunLabel}</span>
+      <div className="space-y-1">
+        <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">İletişim bilgileriniz</h2>
+        {sorunLabel ? (
+          <p className="text-xs font-semibold text-[var(--acb-green)]">
+            Seçilen sorun: <span className="text-[var(--acb-dark)]">{sorunLabel}</span>
+          </p>
+        ) : null}
+        <p className="text-sm text-[var(--acb-muted)] leading-snug">
+          Telefonunuzu SMS ile doğrulayın. Talebiniz alındığında sizi arayabilmemiz için gerekli.
         </p>
-      ) : null}
-      <p className="text-sm text-slate-600">
-        Telefonunuzu SMS ile doğrulayın. Talebiniz alındığında sizi arayabilmemiz
-        için gerekli.
-      </p>
+      </div>
 
       {adim === "iletisim" ? (
         <>

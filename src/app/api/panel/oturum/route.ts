@@ -1,25 +1,15 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { panelEpostaIzinli, panelRol } from "@/lib/supabase/env";
+import { NextRequest, NextResponse } from "next/server";
+import { getPanelSession } from "@/lib/panel-auth";
 
-/** Tarayıcıda panel yöneticisi oturumu var mı (çekici panelinde link göstermek için) */
-export async function GET() {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+export async function GET(request: NextRequest) {
+  const session = await getPanelSession(request);
 
-    if (!user?.email || !panelEpostaIzinli(user.email)) {
-      return NextResponse.json({ yetkili: false });
-    }
-
-    return NextResponse.json({
-      yetkili: true,
-      eposta: user.email,
-      rol: panelRol(user.email),
-    });
-  } catch {
-    return NextResponse.json({ yetkili: false });
+  if (!session) {
+    return NextResponse.json({ eposta: null, rol: null });
   }
+
+  return NextResponse.json({
+    eposta: session.email,
+    rol: session.role,
+  });
 }

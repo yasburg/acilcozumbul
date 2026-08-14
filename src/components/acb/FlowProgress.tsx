@@ -48,7 +48,7 @@ export function FlowProgress({
   return (
     <div className={`mx-auto flex w-fit justify-center ${className}`}>
       <div
-        className="flex items-center gap-[5px] rounded-full border border-[var(--acb-glass-border)] bg-[var(--acb-glass-bg-strong)] px-3 py-2.5 shadow-[0_10px_28px_-14px_rgba(27,45,42,0.35)] backdrop-blur-xl"
+        className="flex items-center gap-[6px] rounded-full border border-slate-200/90 bg-white/95 px-3.5 py-2 shadow-[0_6px_20px_rgba(0,0,0,0.14),0_2px_6px_rgba(0,0,0,0.06)] backdrop-blur-md transition-all duration-200"
         role="list"
         aria-label={`Adım ${cur} / ${total}`}
       >

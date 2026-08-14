@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { getSupabaseAdmin } from "./supabase/admin";
+import { uploadFile } from "./file-storage";
 
 const BUCKET = "cekici-belgeler";
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -56,18 +56,11 @@ export async function cekiciBelgeYukle(
   const ext = uzanti(parsed.mime);
   const path = `${cekiciId}/${tur}-${randomUUID()}.${ext}`;
 
-  const { error } = await getSupabaseAdmin()
-    .storage.from(BUCKET)
-    .upload(path, parsed.buffer, {
-      contentType: parsed.mime,
-      upsert: true,
-    });
-
-  if (error) {
+  try {
+    const publicUrl = await uploadFile(BUCKET, path, parsed.buffer);
+    return publicUrl;
+  } catch (error: any) {
     console.error("[cekici-belge]", error.message);
     return null;
   }
-
-  const { data } = getSupabaseAdmin().storage.from(BUCKET).getPublicUrl(path);
-  return data.publicUrl || null;
 }

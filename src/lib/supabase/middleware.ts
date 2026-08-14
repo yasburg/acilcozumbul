@@ -1,24 +1,15 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  getPanelSession,
+  clearPanelSessionCookie,
+} from "../panel-auth";
 import {
   panelEpostaIzinli,
   panelMuhasebeAnaSayfa,
   panelMuhasebeApiIzinli,
   panelMuhasebeSayfaIzinli,
   panelRol,
-  supabaseYapilandirildi,
 } from "./env";
-
-/** getUser / signOut ile yazılan oturum çerezlerini yeni yanıta taşı */
-function oturumCerezleriniKopyala(
-  kaynak: NextResponse,
-  hedef: NextResponse
-): NextResponse {
-  kaynak.cookies.getAll().forEach(({ name, value }) => {
-    hedef.cookies.set(name, value);
-  });
-  return hedef;
-}
 
 export async function updatePanelSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -34,84 +25,38 @@ export async function updatePanelSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  if (!supabaseYapilandirildi()) {
-    if (isPanelApi && !isCikisApi) {
-      return NextResponse.json(
-        { error: "Supabase yapılandırması eksik." },
-        { status: 503 }
-      );
-    }
-    if (isPanelPage && !isPanelGiris) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/panel";
-      url.searchParams.set("hata", "supabase-yok");
-      return NextResponse.redirect(url);
-    }
-    return NextResponse.next({ request });
-  }
+  const session = await getPanelSession(request);
+  const userEmail = session?.email;
+  const rol = panelRol(userEmail);
+  const yetkili = Boolean(session && panelEpostaIzinli(userEmail));
+  const muhasebe = rol === "muhasebe";
 
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const rol = panelRol(user?.email);
-  const yetkili = Boolean(user && panelEpostaIzinli(user.email));
-  const muhasebe = rol === "muhasebe";
-
-  if (user && !yetkili) {
-    await supabase.auth.signOut();
+  if (session && !yetkili) {
     if (isPanelPage && !isPanelGiris) {
       const url = request.nextUrl.clone();
       url.pathname = "/panel";
       url.searchParams.set("hata", "yetkisiz");
-      return oturumCerezleriniKopyala(response, NextResponse.redirect(url));
+      return clearPanelSessionCookie(NextResponse.redirect(url));
     }
   }
 
   if (!yetkili && isPanelApi && !isCikisApi && !isOturumApi && !isGirisApi) {
-    return oturumCerezleriniKopyala(
-      response,
-      NextResponse.json({ error: "Giriş gerekli." }, { status: 401 })
-    );
+    return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
   }
 
   if (!yetkili && isPanelPage && !isPanelGiris) {
     const url = request.nextUrl.clone();
     url.pathname = "/panel";
     url.searchParams.set("next", pathname);
-    return oturumCerezleriniKopyala(response, NextResponse.redirect(url));
+    return NextResponse.redirect(url);
   }
 
   if (yetkili && muhasebe && isPanelApi && !panelMuhasebeApiIzinli(pathname)) {
-    return oturumCerezleriniKopyala(
-      response,
-      NextResponse.json(
-        { error: "Bu işlem için yetkiniz yok." },
-        { status: 403 }
-      )
+    return NextResponse.json(
+      { error: "Bu işlem için yetkiniz yok." },
+      { status: 403 }
     );
   }
 
@@ -124,13 +69,13 @@ export async function updatePanelSession(request: NextRequest) {
         next && panelMuhasebeSayfaIzinli(next) ? next : ana;
       url.pathname = hedef;
       url.search = "";
-      return oturumCerezleriniKopyala(response, NextResponse.redirect(url));
+      return NextResponse.redirect(url);
     }
     if (!panelMuhasebeSayfaIzinli(pathname)) {
       const url = request.nextUrl.clone();
       url.pathname = ana;
       url.search = "";
-      return oturumCerezleriniKopyala(response, NextResponse.redirect(url));
+      return NextResponse.redirect(url);
     }
   }
 
@@ -139,7 +84,7 @@ export async function updatePanelSession(request: NextRequest) {
     const next = request.nextUrl.searchParams.get("next");
     url.pathname = next?.startsWith("/panel") ? next : "/panel";
     url.search = "";
-    return oturumCerezleriniKopyala(response, NextResponse.redirect(url));
+    return NextResponse.redirect(url);
   }
 
   return response;

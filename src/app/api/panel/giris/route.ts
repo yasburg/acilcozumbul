@@ -1,26 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import {
   panelEpostaIzinli,
   panelMuhasebeAnaSayfa,
   panelRol,
-  supabaseYapilandirildi,
-  supabaseYapilandirmaHataMesaji,
 } from "@/lib/supabase/env";
 import { epostaGecerliMi, epostaNormalize } from "@/lib/eposta";
+import { setPanelSessionCookie } from "@/lib/panel-auth";
 
 export async function POST(request: NextRequest) {
-  if (!supabaseYapilandirildi()) {
-    return NextResponse.json(
-      {
-        error:
-          supabaseYapilandirmaHataMesaji() ||
-          "Supabase yapılandırması eksik.",
-      },
-      { status: 503 }
-    );
-  }
-
   let body: { eposta?: string; sifre?: string };
   try {
     body = await request.json();
@@ -47,38 +34,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { supabase, applyCookies } = createSupabaseRouteHandlerClient(request);
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: eposta,
-    password: sifre,
+  const res = NextResponse.json({
+    ok: true,
+    eposta,
+    rol: panelRol(eposta),
+    anaSayfa:
+      panelRol(eposta) === "muhasebe"
+        ? panelMuhasebeAnaSayfa()
+        : "/panel",
   });
 
-  if (error || !data.user) {
-    const mesaj =
-      error?.message === "Invalid login credentials"
-        ? "E-posta veya şifre hatalı. Supabase Authentication’da bu kullanıcı tanımlı mı?"
-        : error?.message ?? "Giriş başarısız.";
-    return NextResponse.json({ error: mesaj }, { status: 401 });
-  }
-
-  if (!panelEpostaIzinli(data.user.email)) {
-    await supabase.auth.signOut();
-    return NextResponse.json(
-      { error: "Bu hesabın yönetim paneline erişim yetkisi yok." },
-      { status: 403 }
-    );
-  }
-
-  return applyCookies(
-    NextResponse.json({
-      ok: true,
-      eposta: data.user.email,
-      rol: panelRol(data.user.email),
-      anaSayfa:
-        panelRol(data.user.email) === "muhasebe"
-          ? panelMuhasebeAnaSayfa()
-          : "/panel",
-    })
-  );
+  return setPanelSessionCookie(res, eposta);
 }

@@ -18,7 +18,7 @@ export function ihaleHatirlatmaUygunMu(
   talep: Pick<Talep, "olusturulma" | "ihaleBitis" | "durum" | "kazananCekiciId">,
   now: Date = new Date()
 ): boolean {
-  if (!ihaleAcikMi(talep as Talep)) return false;
+  if (!ihaleAcikMi(talep as Talep, now)) return false;
   if (ihaleAcilSureMi(talep)) return false;
   return now.getTime() < new Date(talep.ihaleBitis).getTime();
 }

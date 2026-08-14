@@ -383,7 +383,7 @@ html.acb-intro-pending body::before {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 14px rgba(8, 155, 45, 0.35);
   overflow: hidden;
   right: auto;
-  will-change: top, left, width, height, border-radius, font-size, padding, transform, opacity;
+  will-change: top, left, width, height, border-radius, font-size, padding, transform, translate, opacity;
   transition:
     top 0.6s cubic-bezier(0.32, 0.72, 0, 1),
     left 0.48s var(--acb-spring),
@@ -393,6 +393,7 @@ html.acb-intro-pending body::before {
     font-size 0.48s var(--acb-spring),
     padding 0.48s var(--acb-spring),
     transform 0.6s cubic-bezier(0.32, 0.72, 0, 1),
+    translate 0.6s cubic-bezier(0.32, 0.72, 0, 1),
     opacity 0.52s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -408,12 +409,7 @@ html.acb-intro-pending body::before {
 
 /* Vars --acb-hero-cta-* tepede ölçülür; yoksa yaklaşık hero yerleşimi */
 .acb-yardim-cta--hero {
-  top: var(
-    --acb-hero-cta-top,
-    calc(
-      env(safe-area-inset-top) + var(--acb-hero-logo-band) + 5.25rem
-    )
-  );
+  top: var(--acb-hero-cta-top, calc(50dvh - 1.8rem));
   left: var(
     --acb-hero-cta-left,
     calc(50% - min(calc(100% - 2rem), calc(32rem - 2rem)) / 2)

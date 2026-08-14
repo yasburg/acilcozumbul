@@ -2490,17 +2490,17 @@ function MusteriAnaSayfaIcerik({
 
       {step === "sorun" && (
         <div className="space-y-5 animate-fade-in">
-          <div className="space-y-2">
-            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+          <div className="space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">
               Nasıl yardımcı olalım?
             </h2>
-            <p className="text-sm text-[var(--acb-muted)]">
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
               Bir hizmet seç — devam edelim.
             </p>
             {form.adres ? (
-              <p className="inline-flex items-start gap-1.5 pt-1 text-sm font-medium text-[var(--acb-dark)]">
+              <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--acb-dark)]">
                 <AcbIcons.location
-                  className="mt-0.5 size-4 shrink-0 text-[var(--acb-muted)]"
+                  className="size-3.5 shrink-0 text-[var(--acb-green)]"
                   strokeWidth={ACB_ICON_STROKE}
                   aria-hidden
                 />
@@ -2596,11 +2596,11 @@ function MusteriAnaSayfaIcerik({
 
       {step === "kilit_durumu" && (
         <div className="space-y-5 animate-fade-in">
-          <div className="space-y-2">
-            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+          <div className="space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">
               Kilit durumu
             </h2>
-            <p className="text-sm text-[var(--acb-muted)]">
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
               Durumu seçin — zorunlu.
             </p>
           </div>
@@ -2680,11 +2680,11 @@ function MusteriAnaSayfaIcerik({
 
       {step === "yakit_tipi" && (
         <div className="space-y-5 animate-fade-in">
-          <div className="space-y-2">
-            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+          <div className="space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">
               Yakıt tipi
             </h2>
-            <p className="text-sm text-[var(--acb-muted)]">
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
               Aracınızın yakıt / şarj tipini seçin — zorunlu.
             </p>
           </div>
@@ -2764,11 +2764,11 @@ function MusteriAnaSayfaIcerik({
 
       {step === "lastik_durumu" && (
         <div className="space-y-5 animate-fade-in">
-          <div className="space-y-2">
-            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+          <div className="space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">
               Lastik durumu
             </h2>
-            <p className="text-sm text-[var(--acb-muted)]">
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
               Lastiğin durumunu seçin — zorunlu.
             </p>
           </div>
@@ -2856,13 +2856,14 @@ function MusteriAnaSayfaIcerik({
 
       {step === "fotograf" && (
         <div className="space-y-4 animate-fade-in">
-          <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
-            Araç ve Arıza Fotoğrafı
-          </h2>
-          <p className="text-slate-500 text-sm">
-            Araç ve arıza fotoğrafı yükleyiniz — çekici doğru teklif
-            verebilsin.
-          </p>
+          <div className="space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">
+              Araç ve Arıza Fotoğrafı
+            </h2>
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
+              Araç ve arıza fotoğrafı yükleyiniz — çekici doğru teklif verebilsin.
+            </p>
+          </div>
           <div ref={fotografRef} className="scroll-mt-44 space-y-3">
             <ArizaFotografAlani
               fotograflar={fotografData.length ? fotografData : fotografOnizleme}
@@ -2904,9 +2905,9 @@ function MusteriAnaSayfaIcerik({
 
       {step === "arac_tipi" && (
         <div className="flex min-h-[calc(100dvh-10.5rem)] flex-col gap-1.5 animate-fade-in">
-          <div className="shrink-0 space-y-0.5">
-            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">Araç Tipi</h2>
-            <p className="text-slate-500 text-sm">
+          <div className="shrink-0 space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">Araç Tipi</h2>
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
               Aracınızın tipini seçin (isteğe bağlı).
             </p>
           </div>
@@ -2982,11 +2983,11 @@ function MusteriAnaSayfaIcerik({
 
       {step === "arac_modeli" && (
         <div className="space-y-5 animate-fade-in">
-          <div className="space-y-2">
-            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+          <div className="space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">
               Aracın hangisi?
             </h2>
-            <p className="text-sm text-[var(--acb-muted)]">
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
               Marka ve model yeterli.
             </p>
           </div>
@@ -3040,10 +3041,12 @@ function MusteriAnaSayfaIcerik({
 
       {step === "arac_durumu" && (
         <div className="space-y-4 animate-fade-in">
-          <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">Aracın Durumu</h2>
-          <p className="text-slate-500 text-sm">
-            Çekici doğru ekipmanla gelsin — aracın durumunu seçin.
-          </p>
+          <div className="space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">Aracın Durumu</h2>
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
+              Çekici doğru ekipmanla gelsin — aracın durumunu seçin.
+            </p>
+          </div>
           <div
             className="grid grid-cols-1 gap-3 scroll-mt-44"
             role="listbox"
@@ -3122,11 +3125,11 @@ function MusteriAnaSayfaIcerik({
 
       {step === "ek_detay" && (
         <div className="space-y-5 animate-fade-in">
-          <div className="space-y-2">
-            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
+          <div className="space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">
               Teklif Notu
             </h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
               Çekiciye iletilecek kısa not — doğru teklif için yardımcı olur.
             </p>
           </div>
@@ -3193,11 +3196,12 @@ function MusteriAnaSayfaIcerik({
 
       {step === "ihale" && (
         <div className="space-y-4 animate-fade-in">
-          <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">İhale Süresi</h2>
-          <p className="text-slate-500 text-sm">
-            Teklif toplama süresini seçin — süre dolunca en uygun teklifi
-            seçersiniz.
-          </p>
+          <div className="space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">İhale Süresi</h2>
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
+              Teklif toplama süresini seçin — süre dolunca en uygun teklifi seçersiniz.
+            </p>
+          </div>
 
           <IhaleSureSecimi
             value={ihaleSureTipi}
@@ -3247,9 +3251,14 @@ function MusteriAnaSayfaIcerik({
 
       {step === "konum" && (
         <div className="space-y-5 animate-fade-in">
-          <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">
-            Önce konumunu bulalım.
-          </h2>
+          <div className="space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">
+              Önce konumunu bulalım.
+            </h2>
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
+              Bulunduğunuz şehir ve ilçeyi seçin.
+            </p>
+          </div>
           {arizaKonumGpsAlindi && form.adres ? (
             <Card className="!bg-[var(--acb-soft)] !border-[color-mix(in_srgb,var(--acb-green)_35%,white)] !rounded-[var(--acb-radius-lg)]">
               <p className="mb-1 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--acb-green)]">
@@ -3513,14 +3522,16 @@ function MusteriAnaSayfaIcerik({
 
       {step === "hedef" && (
         <div className="space-y-4 animate-fade-in">
-          <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.1] tracking-tight text-[var(--acb-dark)]">Nereye Çekilecek?</h2>
-          <p className="text-slate-500 text-sm">
-            {sorunLabel
-              ? googleOneriAktif
-                ? `${sorunLabel} için semtinizdeki oto tamirleri ve yakındaki oto sanayileri öneriyoruz — birini seçin veya adresi siz yazın.`
-                : `${sorunLabel} için semtinizdeki oto tamirleri ve yakındaki oto sanayileri öneriyoruz — birini seçin veya adresi siz yazın.`
-              : "Aracınızın götürülmesini istediğiniz adresi belirtin."}
-          </p>
+          <div className="space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">Nereye Çekilecek?</h2>
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
+              {sorunLabel
+                ? googleOneriAktif
+                  ? `${sorunLabel} için semtinizdeki oto tamirleri ve yakındaki oto sanayileri öneriyoruz — birini seçin veya adresi siz yazın.`
+                  : `${sorunLabel} için semtinizdeki oto tamirleri ve yakındaki oto sanayileri öneriyoruz — birini seçin veya adresi siz yazın.`
+                : "Aracınızın götürülmesini istediğiniz adresi belirtin."}
+            </p>
+          </div>
 
           <div className="grid gap-2">
             <button

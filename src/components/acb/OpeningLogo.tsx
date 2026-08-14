@@ -315,12 +315,12 @@ export function OpeningLogo({
           ref={yardimCtaRef}
           type="button"
           onClick={onYardimAl}
-          className={`acb-yardim-cta touch-manipulation transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+          className={`acb-yardim-cta touch-manipulation transition-all duration-600 ease-[cubic-bezier(0.32,0.72,0,1)] ${
             chromeDocked ? "acb-yardim-cta--nav" : "acb-yardim-cta--hero"
           } ${
             heroReady
               ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-8 pointer-events-none"
+              : "opacity-0 translate-y-[14vh] sm:translate-y-[16vh] pointer-events-none"
           }`}
           aria-label={ACB_CTA.acilYardim}
         >

@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "./supabase/admin";
+import { deleteFile, getFile, uploadFile } from "./file-storage";
 
 export const FATURA_STORAGE_BUCKET = "faturalar";
 export const FATURA_PDF_MAX_BYTES = 5 * 1024 * 1024;
@@ -18,29 +18,13 @@ export async function faturaPdfYukle(
   pdf: Uint8Array | Buffer
 ): Promise<void> {
   const body = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
-  const { error } = await getSupabaseAdmin()
-    .storage.from(FATURA_STORAGE_BUCKET)
-    .upload(storagePath, body, {
-      contentType: "application/pdf",
-      upsert: true,
-    });
-  if (error) {
-    throw new Error(`Fatura PDF yüklenemedi: ${error.message}`);
-  }
+  await uploadFile(FATURA_STORAGE_BUCKET, storagePath, body);
 }
 
 export async function faturaPdfIndir(
   storagePath: string
 ): Promise<Uint8Array | null> {
-  const { data, error } = await getSupabaseAdmin()
-    .storage.from(FATURA_STORAGE_BUCKET)
-    .download(storagePath);
-  if (error || !data) {
-    if (error) {
-      console.error("[fatura-storage] download", error.message);
-    }
-    return null;
-  }
-  const buf = Buffer.from(await data.arrayBuffer());
+  const buf = await getFile(FATURA_STORAGE_BUCKET, storagePath);
+  if (!buf) return null;
   return new Uint8Array(buf);
 }
