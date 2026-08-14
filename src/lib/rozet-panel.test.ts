@@ -4,7 +4,6 @@ import type { Cekici } from "./types";
 
 function cekici(partial: Partial<Cekici> & Pick<Cekici, "id">): Cekici {
   return {
-    id: partial.id,
     ad: partial.ad ?? "Test",
     telefon: partial.telefon ?? "05551111111",
     token: "t",

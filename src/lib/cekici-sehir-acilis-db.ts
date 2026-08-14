@@ -54,8 +54,8 @@ export async function getAcikIller(): Promise<string[]> {
   }
 
   const iller = (data ?? [])
-    .map((r) => String(r.il))
-    .filter((il) => ilGecerliMi(il));
+    .map((r: any) => String(r.il))
+    .filter((il: string) => ilGecerliMi(il));
 
   const sonuc = iller.length > 0 ? iller : [...KULLANIMA_ACIK_ILLER];
   cache = { iller: sonuc, at: Date.now() };

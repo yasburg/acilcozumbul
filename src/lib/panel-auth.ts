@@ -21,9 +21,11 @@ export function parsePanelSession(token: string | undefined): PanelSession | nul
     const raw = Buffer.from(token, "base64url").toString("utf-8");
     const parsed = JSON.parse(raw);
     if (parsed && parsed.email && panelEpostaIzinli(parsed.email)) {
+      const role = panelRol(parsed.email);
+      if (!role) return null;
       return {
         email: parsed.email,
-        role: panelRol(parsed.email),
+        role,
       };
     }
   } catch {}

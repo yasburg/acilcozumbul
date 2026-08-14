@@ -172,7 +172,7 @@ export async function listeHizmetVerenDuyuruSablonlari(): Promise<
     .order("sira", { ascending: true })
     .order("olusturulma", { ascending: true });
   if (error) throw error;
-  return (data ?? []).map((r) => satirMap(r as Record<string, unknown>));
+  return (data ?? []).map((r: any) => satirMap(r as Record<string, unknown>));
 }
 
 export async function listeAktifHizmetVerenDuyuruSablonlari(
@@ -205,7 +205,7 @@ export async function listeAktifHizmetVerenDuyuruSablonlari(
     .order("olusturulma", { ascending: true });
   if (error) throw error;
 
-  const liste = (data ?? []).map((r) =>
+  const liste = (data ?? []).map((r: any) =>
     kurAktifSablon(satirMap(r as Record<string, unknown>), ayarlarUrl)
   );
 

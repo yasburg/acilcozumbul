@@ -92,8 +92,9 @@ async function genelDeftereYaz(
       .select("telefon, ad, gonderim_sayisi, basarili_sayisi")
       .in("telefon", telefonlar);
 
-    const mevcutMap = new Map(
-      (mevcut ?? []).map((r) => [
+    const mevcutt = (mevcut ?? []) as any[];
+    const mevcuttMap = new Map(
+      mevcutt.map((r: any) => [
         String(r.telefon),
         {
           ad: r.ad as string | null,
@@ -104,7 +105,7 @@ async function genelDeftereYaz(
     );
 
     const upsertRows = parti.map((a) => {
-      const onceki = mevcutMap.get(a.telefon);
+      const onceki: any = mevcuttMap.get(a.telefon);
       return {
         telefon: a.telefon,
         ad: a.ad?.trim() || onceki?.ad || null,
@@ -114,8 +115,8 @@ async function genelDeftereYaz(
       };
     });
 
-    const yeni = upsertRows.filter((r) => !mevcutMap.has(r.telefon));
-    const guncelle = upsertRows.filter((r) => mevcutMap.has(r.telefon));
+    const yeni = upsertRows.filter((r) => !mevcuttMap.has(r.telefon));
+    const guncelle = upsertRows.filter((r) => mevcuttMap.has(r.telefon));
 
     if (yeni.length > 0) {
       const { error } = await sb.from("panel_toplu_sms_telefonlar").insert(
@@ -270,7 +271,7 @@ export async function getTopluSmsListeler(
     .order("olusturulma", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return (data ?? []).map((r) => ({
+  return (data ?? []).map((r: any) => ({
     id: String(r.id),
     olusturulma: String(r.olusturulma),
     gonderenEposta: r.gonderen_eposta ? String(r.gonderen_eposta) : null,
@@ -293,7 +294,7 @@ export async function getTopluSmsListeAlicilar(
     .eq("liste_id", listeId)
     .order("telefon");
   if (error) throw error;
-  return (data ?? []).map((r) => ({
+  return (data ?? []).map((r: any) => ({
     telefon: String(r.telefon),
     ad: r.ad ? String(r.ad) : null,
     basarili: Boolean(r.basarili),
@@ -315,9 +316,9 @@ export async function getTopluSmsGenelTelefonlar(
   if (error) throw error;
 
   const rows = (data ?? []).filter(
-    (r) => !topluSmsAdminTestTelefonMu(String(r.telefon))
+    (r: any) => !topluSmsAdminTestTelefonMu(String(r.telefon))
   );
-  const telefonlar = rows.map((r) => String(r.telefon));
+  const telefonlar = rows.map((r: any) => String(r.telefon));
   const tokenMap = await getSms50TokenOzetByTelefonlar(telefonlar);
 
   const kayitliSet = new Set<string>();
@@ -332,7 +333,7 @@ export async function getTopluSmsGenelTelefonlar(
     }
   }
 
-  return rows.map((r) => {
+  return rows.map((r: any) => {
     const telefon = String(r.telefon);
     const token = tokenMap.get(telefon);
     const kayitAt = token?.kayitAt ?? null;

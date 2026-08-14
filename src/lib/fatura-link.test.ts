@@ -56,19 +56,19 @@ describe("faturaDeepLink", () => {
 
   it("başka çekici / yok / süresi dolmuş → genel gecersiz", () => {
     expect(
-      faturaDeepLinkDegerlendir({
+      (faturaDeepLinkDegerlendir({
         oturumCekiciId: "c2",
         kayit: { id: "f1", cekiciId: "c1", expiresAt },
-      }).neden
+      }) as any).neden
     ).toBe("gecersiz");
     expect(
-      faturaDeepLinkDegerlendir({
+      (faturaDeepLinkDegerlendir({
         oturumCekiciId: "c1",
         kayit: null,
-      }).neden
+      }) as any).neden
     ).toBe("gecersiz");
     expect(
-      faturaDeepLinkDegerlendir({
+      (faturaDeepLinkDegerlendir({
         oturumCekiciId: "c1",
         kayit: { id: "f1", cekiciId: "c1", expiresAt },
         now: new Date(
@@ -76,7 +76,7 @@ describe("faturaDeepLink", () => {
             FATURA_DEEP_LINK_TTL_MS +
             1
         ),
-      }).neden
+      }) as any).neden
     ).toBe("gecersiz");
   });
 

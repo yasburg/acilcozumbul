@@ -157,15 +157,15 @@ export async function getTumDegerlendirmeler(): Promise<
     ])
   );
   const cekiciMap = new Map(
-    (cekiciler ?? []).map((c: { id: string; ad: string }) => [c.id, c.ad])
+    (cekiciler ?? []).map((c: any) => [c.id, String(c.ad || "")])
   );
 
-  return rows.map((r) => {
-    const t = talepMap.get(r.talep_id);
+  return rows.map((r: any) => {
+    const t: any = talepMap.get(r.talep_id);
     return {
       ...rowToDegerlendirme(r),
       musteriAd: t ? `${t.ad} ${t.soyad}` : undefined,
-      cekiciAd: cekiciMap.get(r.cekici_id),
+      cekiciAd: cekiciMap.get(r.cekici_id) as string | undefined,
     };
   });
 }

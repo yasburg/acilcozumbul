@@ -602,7 +602,7 @@ export async function getSmsLog(opts?: {
   if (opts?.limit != null) q = q.limit(opts.limit);
   const { data, error } = await q;
   if (error) throw error;
-  return (data ?? []).map((r) => smsFromRow(r as SmsLogRow));
+  return (data ?? []).map((r: any) => smsFromRow(r as SmsLogRow));
 }
 
 export async function countSmsLog(opts?: {

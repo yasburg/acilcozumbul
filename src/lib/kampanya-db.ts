@@ -161,7 +161,7 @@ export async function getKampanyaKullanimlari(): Promise<KampanyaKullanimSatir[]
   const rows = data ?? [];
   if (rows.length === 0) return [];
 
-  const cekiciIds = [...new Set(rows.map((r) => r.yeni_cekici_id as string))];
+  const cekiciIds = [...new Set(rows.map((r: any) => r.yeni_cekici_id as string))];
   const { data: cekiciler, error: cErr } = await getSupabaseAdmin()
     .from("cekiciler")
     .select("id, ad")

@@ -59,7 +59,7 @@ export async function listeAktifSmsSablonOzetleri(): Promise<PanelSmsSablonOzet[
     .order("sira", { ascending: true })
     .order("olusturulma", { ascending: true });
   if (error) throw error;
-  return (data ?? []).map((r) => ({
+  return (data ?? []).map((r: any) => ({
     id: String(r.id),
     etiket: String(r.etiket ?? ""),
     govde: String(r.govde ?? ""),
@@ -76,7 +76,7 @@ export async function listeTumSmsSablonlari(): Promise<PanelSmsSablon[]> {
     .order("sira", { ascending: true })
     .order("olusturulma", { ascending: true });
   if (error) throw error;
-  return (data ?? []).map((r) => satirMap(r as Record<string, unknown>));
+  return (data ?? []).map((r: any) => satirMap(r as Record<string, unknown>));
 }
 
 export function smsSablonAlanDogrula(opts: {

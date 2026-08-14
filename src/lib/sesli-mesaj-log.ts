@@ -192,7 +192,7 @@ export async function getSesliMesajLog(opts?: {
     console.error("[sesli_mesaj_log] select", error.message);
     return [];
   }
-  return (data ?? []).map((r) => ({
+  return (data ?? []).map((r: any) => ({
     id: String(r.id),
     olayTipi: r.olay_tipi as SesliMesajOlayTipi,
     sablonId: r.sablon_id ?? undefined,

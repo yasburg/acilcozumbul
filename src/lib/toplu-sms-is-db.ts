@@ -379,7 +379,7 @@ export async function isleTopluSmsSiradakiParti(
     return { devam: false, bitti: true, iptal: false, bekleMs: 0, ozet };
   }
 
-  const adayIds = adayAlicilar.map((a) => a.id);
+  const adayIds = adayAlicilar.map((a: any) => a.id);
   const { data: alicilar, error: kilitErr } = await sb
     .from("panel_toplu_sms_is_alicilar")
     .update({ durum: "gonderiliyor" })
@@ -421,14 +421,14 @@ export async function isleTopluSmsSiradakiParti(
     .in("durum", ["beklemede", "suruyor"]);
   if (suruyorErr) throw suruyorErr;
 
-  const telefonlar = kilitli.map((a) => String(a.telefon));
+  const telefonlar = kilitli.map((a: any) => String(a.telefon));
   let sonuclar: Array<{ telefon: string; basarili: boolean; hata?: string }>;
   const kisiBazli =
     Boolean(is.kisi_bazli_takip) &&
     is.varyant &&
     sms50VaryantMi(String(is.varyant));
   const kisiselMesajVar = kilitli.some(
-    (a) => typeof (a as { mesaj?: string | null }).mesaj === "string" &&
+    (a: any) => typeof (a as { mesaj?: string | null }).mesaj === "string" &&
       Boolean(String((a as { mesaj?: string | null }).mesaj).trim())
   );
   try {
@@ -492,7 +492,7 @@ export async function isleTopluSmsSiradakiParti(
       .update({ durum: "beklemede", hata: null })
       .in(
         "id",
-        kilitli.map((a) => a.id)
+        kilitli.map((a: any) => a.id)
       )
       .eq("durum", "gonderiliyor");
     await sb
@@ -705,7 +705,7 @@ export async function isleBekleyenTopluSmsIsleri(
 
   const now = Date.now();
   const adaylar = (data ?? [])
-    .filter((row) => {
+    .filter((row: any) => {
       if (!row.sonraki_parti_at) return true;
       const t = new Date(String(row.sonraki_parti_at)).getTime();
       return !Number.isFinite(t) || t <= now;
@@ -713,7 +713,7 @@ export async function isleBekleyenTopluSmsIsleri(
     .slice(0, limit);
 
   const sonuclar = await Promise.all(
-    adaylar.map(async (row) => {
+    adaylar.map(async (row: any) => {
       const id = String(row.id);
       if (calisanIsler.has(id)) return null;
       calisanIsler.add(id);

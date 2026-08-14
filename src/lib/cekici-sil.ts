@@ -11,9 +11,9 @@ async function cekiciBelgeleriniSil(cekiciId: string): Promise<void> {
     .list(cekiciId);
   if (listErr || !files?.length) return;
 
-  const paths = files
-    .filter((f) => f.name)
-    .map((f) => `${cekiciId}/${f.name}`);
+  const paths = (files || [])
+    .filter((f: any) => f.name)
+    .map((f: any) => `${cekiciId}/${f.name}`);
   if (paths.length === 0) return;
 
   const { error: removeErr } = await sb.storage.from(BELGE_BUCKET).remove(paths);
