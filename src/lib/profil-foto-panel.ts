@@ -93,7 +93,9 @@ async function aktifAboneCekiciIds(): Promise<Set<string>> {
     .in("status", ["active", "past_due"]);
   if (error) throw error;
   return new Set(
-    (data ?? []).map((r) => String((r as { cekici_id: string }).cekici_id))
+    ((data as Array<{ cekici_id: string }>) ?? []).map((r) =>
+      String(r.cekici_id)
+    )
   );
 }
 
