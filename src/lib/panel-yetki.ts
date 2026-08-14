@@ -38,6 +38,39 @@ export function panelEpostaIzinli(eposta: string | undefined): boolean {
   return panelRol(eposta) !== null;
 }
 
+/**
+ * Panel şifre kontrolü.
+ * - `PANEL_ADMIN_PASSWORDS` JSON: `{"mail@x.com":"sifre"}` → o e-posta için zorunlu
+ * - yoksa `PANEL_ADMIN_PASSWORD` ortak şifre
+ * - ikisi de yoksa (geçiş dönemi) boş olmayan her şifre kabul
+ */
+export function panelSifreDogru(
+  eposta: string | undefined,
+  sifre: string
+): boolean {
+  if (!eposta || !sifre) return false;
+  const e = epostaNormalize(eposta);
+
+  const mapRaw = process.env.PANEL_ADMIN_PASSWORDS?.trim();
+  if (mapRaw) {
+    try {
+      const map = JSON.parse(mapRaw) as Record<string, unknown>;
+      for (const [k, v] of Object.entries(map)) {
+        if (epostaNormalize(k) === e && typeof v === "string") {
+          return v === sifre;
+        }
+      }
+    } catch {
+      /* JSON değilse yok say */
+    }
+  }
+
+  const ortak = process.env.PANEL_ADMIN_PASSWORD?.trim();
+  if (ortak) return sifre === ortak;
+
+  return sifre.length > 0;
+}
+
 export function panelMuhasebeAnaSayfa(): string {
   return "/panel/kredi-odemeler";
 }
