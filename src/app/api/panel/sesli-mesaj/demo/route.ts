@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Geçerli bir şablon seçin (musteri_talep_alindi | cekici_yeni_talep | cekici_yetersiz_kredi).",
+          "Geçerli bir şablon seçin (musteri_talep_alindi | cekici_yeni_talep | cekici_yetersiz_kredi | cekici_ihale_kazandi).",
       },
       { status: 400 }
     );

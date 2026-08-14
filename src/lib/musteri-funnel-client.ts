@@ -128,6 +128,14 @@ export async function musteriFunnelOlayGonder(
     musteriFunnelOlay(olay, props);
   }
 
+  const meta: Record<string, string | number | boolean> = {
+    ...(ekstra?.meta ?? {}),
+  };
+  const sorunTipi = ekstra?.props?.sorun_tipi;
+  if (typeof sorunTipi === "string" && sorunTipi.trim()) {
+    meta.sorun_tipi = sorunTipi.trim().slice(0, 40);
+  }
+
   try {
     await fetch("/api/musteri/funnel-olay", {
       method: "POST",
@@ -138,7 +146,7 @@ export async function musteriFunnelOlayGonder(
         sessionId,
         telefon,
         talepId: ekstra?.talepId,
-        meta: ekstra?.meta,
+        meta: Object.keys(meta).length ? meta : undefined,
       }),
       keepalive: true,
     });

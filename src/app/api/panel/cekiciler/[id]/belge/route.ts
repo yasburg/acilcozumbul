@@ -63,11 +63,16 @@ export async function PATCH(
     return NextResponse.json({
       mesaj:
         kaydedilen === "onaylandi"
-          ? "Belgeler onaylandı. Çekici rozet satın alabilir."
-          : "Belgeler reddedildi.",
+          ? sms.ok
+            ? "Belgeler onaylandı. Bilgilendirme SMS’i kuyruğa alındı."
+            : "Belgeler onaylandı; SMS kuyruğa alınamadı."
+          : sms.ok
+            ? "Belgeler reddedildi. Red nedeniyle SMS kuyruğa alındı."
+            : "Belgeler reddedildi; SMS kuyruğa alınamadı.",
       belgeDurum: kaydedilen,
       smsKuyruk: sms.ok,
       smsIsId: sms.isId ?? null,
+      smsHata: sms.hata ?? null,
     });
   } catch (e) {
     const mesaj = e instanceof Error ? e.message : "Belge güncellenemedi.";

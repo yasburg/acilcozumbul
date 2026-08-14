@@ -17,7 +17,8 @@ import { telefonGecerliMi } from "./telefon";
 export type SesliMesajSablonId =
   | "musteri_talep_alindi"
   | "cekici_yeni_talep"
-  | "cekici_yetersiz_kredi";
+  | "cekici_yetersiz_kredi"
+  | "cekici_ihale_kazandi";
 
 export type SesliMesajSablon = {
   id: SesliMesajSablonId;
@@ -34,6 +35,8 @@ export const MUSTERI_TALEP_ALINDI_AUDIO_ID_DEFAULT = "170247953";
 export const CEKICI_YENI_TALEP_AUDIO_ID_DEFAULT = "170280647";
 /** Netgsm Ses Kayıtları — yetersiz kredi hatırlatma */
 export const CEKICI_YETERSIZ_KREDI_AUDIO_ID_DEFAULT = "170249942";
+/** Netgsm Ses Kayıtları — ihale / teklif kazanma bildirimi */
+export const CEKICI_IHALE_KAZANDI_AUDIO_ID_DEFAULT = "170416055";
 
 export function sesliMesajSablonlari(): SesliMesajSablon[] {
   const musteriId =
@@ -45,6 +48,9 @@ export function sesliMesajSablonlari(): SesliMesajSablon[] {
   const yetersizKrediId =
     process.env.NETGSM_VOICE_YETERSIZ_KREDI_AUDIO_ID?.trim() ||
     CEKICI_YETERSIZ_KREDI_AUDIO_ID_DEFAULT;
+  const ihaleKazandiId =
+    process.env.NETGSM_VOICE_IHALE_KAZANDI_AUDIO_ID?.trim() ||
+    CEKICI_IHALE_KAZANDI_AUDIO_ID_DEFAULT;
 
   return [
     {
@@ -70,6 +76,14 @@ export function sesliMesajSablonlari(): SesliMesajSablon[] {
         "SMS ile aynı kural: kredisi yetmeyene en fazla 3 kez; otomatikte aralarında ≥24 saat.",
       audioId: yetersizKrediId || null,
       sureSn: 22,
+    },
+    {
+      id: "cekici_ihale_kazandi",
+      label: "Çekici — ihale kazandı",
+      aciklama:
+        "Müşteri teklifi seçti; kazanan hizmet vereni arayın. SMS’teki link ve müşteri numarası ile devam.",
+      audioId: ihaleKazandiId || null,
+      sureSn: 28,
     },
   ];
 }

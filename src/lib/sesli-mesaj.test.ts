@@ -8,16 +8,20 @@ import {
 } from "./sesli-mesaj";
 
 describe("sesliMesajSablonlari", () => {
-  it("üç şablon ve AudioID dolu", () => {
+  it("dört şablon ve AudioID dolu", () => {
     const list = sesliMesajSablonlari();
     expect(list.map((s) => s.id)).toEqual([
       "musteri_talep_alindi",
       "cekici_yeni_talep",
       "cekici_yetersiz_kredi",
+      "cekici_ihale_kazandi",
     ]);
     expect(sesliMesajSablonBul("musteri_talep_alindi")?.audioId).toBeTruthy();
     expect(sesliMesajSablonBul("cekici_yeni_talep")?.audioId).toBeTruthy();
     expect(sesliMesajSablonBul("cekici_yetersiz_kredi")?.audioId).toBeTruthy();
+    expect(sesliMesajSablonBul("cekici_ihale_kazandi")?.audioId).toBe(
+      "170416055"
+    );
   });
 });
 

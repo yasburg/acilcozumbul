@@ -3,11 +3,20 @@ import { createClient } from "@/lib/supabase/server";
 import { panelEpostaIzinli } from "@/lib/supabase/env";
 import { getSupabaseAdmin, supabaseDbAktif } from "@/lib/supabase/admin";
 import { PANEL_TALEP_MIN_OLUSTURULMA } from "@/lib/panel-talep";
+import { simulasyonTalepIdSet } from "@/lib/simulasyon-ihale-db";
 import {
   talepTeklifAnalizOzetHesapla,
   talepTeklifSureKovalariHesapla,
   talepTeklifSureSatirlariHesapla,
 } from "@/lib/talep-teklif-analiz";
+
+type SimulasyonFiltre = "" | "sadece" | "haric";
+
+function parseSimulasyonFiltre(raw: string | null): SimulasyonFiltre {
+  if (raw === "sadece" || raw === "haric") return raw;
+  /* "", "tumu", null → tümü (tester teklifleri yine elenir) */
+  return "";
+}
 
 const SAYFA = 1000;
 const TEKLIF_CHUNK = 100;
@@ -63,23 +72,55 @@ async function talepleriCek(
 }
 
 async function teklifTarihleriCek(
-  talepIds: string[]
+  talepIds: string[],
+  haricCekiciIds?: ReadonlySet<string>
 ): Promise<Map<string, { tarih: string }[]>> {
   const map = new Map<string, { tarih: string }[]>();
   for (let i = 0; i < talepIds.length; i += TEKLIF_CHUNK) {
     const chunk = talepIds.slice(i, i + TEKLIF_CHUNK);
     const { data, error } = await getSupabaseAdmin()
       .from("teklifler")
-      .select("talep_id, tarih")
+      .select("talep_id, tarih, cekici_id")
       .in("talep_id", chunk);
     if (error) throw error;
-    for (const row of (data ?? []) as { talep_id: string; tarih: string }[]) {
+    for (const row of (data ?? []) as {
+      talep_id: string;
+      tarih: string;
+      cekici_id: string | null;
+    }[]) {
+      const cekiciId = String(row.cekici_id ?? "");
+      if (haricCekiciIds && cekiciId && haricCekiciIds.has(cekiciId)) {
+        continue;
+      }
       const list = map.get(row.talep_id) ?? [];
       list.push({ tarih: row.tarih });
       map.set(row.talep_id, list);
     }
   }
   return map;
+}
+
+async function testerCekiciIdSet(): Promise<Set<string>> {
+  const ids = new Set<string>();
+  const sb = getSupabaseAdmin();
+  const page = 1000;
+  let from = 0;
+  for (;;) {
+    const { data, error } = await sb
+      .from("cekiciler")
+      .select("id")
+      .eq("tester_hesap", true)
+      .range(from, from + page - 1);
+    if (error) throw error;
+    const rows = data ?? [];
+    for (const r of rows) {
+      const id = String((r as { id?: string }).id ?? "");
+      if (id) ids.add(id);
+    }
+    if (rows.length < page) break;
+    from += page;
+  }
+  return ids;
 }
 
 export async function GET(request: NextRequest) {
@@ -98,6 +139,10 @@ export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
   const to = sp.get("to")?.trim() || bugunUtc();
   let from = sp.get("from")?.trim() || gunEksi(to, 6);
+  /* Varsayılan: simülasyon talepleri hariç */
+  const simulasyon = parseSimulasyonFiltre(
+    sp.get("simulasyon") ?? "haric"
+  );
 
   let fromIso = gunBaslangicIso(from);
   if (fromIso < PANEL_TALEP_MIN_OLUSTURULMA) {
@@ -107,14 +152,29 @@ export async function GET(request: NextRequest) {
   const toIso = gunBitisIso(to);
 
   try {
-    const talepler = await talepleriCek(fromIso, toIso);
-    const teklifMap = await teklifTarihleriCek(talepler.map((t) => t.id));
+    const tumTalepler = await talepleriCek(fromIso, toIso);
+    const [simIds, testerIds] = await Promise.all([
+      simulasyonTalepIdSet(tumTalepler.map((t) => t.id)),
+      testerCekiciIdSet(),
+    ]);
+    const talepler = tumTalepler.filter((t) => {
+      const sim = simIds.has(t.id);
+      if (simulasyon === "sadece") return sim;
+      if (simulasyon === "haric") return !sim;
+      return true;
+    });
+    const teklifMap = await teklifTarihleriCek(
+      talepler.map((t) => t.id),
+      /* Simülasyon / tester hesap teklifleri süre hesabına girmez */
+      testerIds
+    );
     const satirlar = talepTeklifSureSatirlariHesapla(
       talepler.map((t) => ({
         id: t.id,
         olusturulma: t.olusturulma,
         durum: t.durum,
         sehir: t.konum_il,
+        simulasyon: simIds.has(t.id),
       })),
       teklifMap
     );
@@ -125,6 +185,7 @@ export async function GET(request: NextRequest) {
       filtre: {
         from,
         to,
+        simulasyon,
         minOlusturulma: PANEL_TALEP_MIN_OLUSTURULMA,
       },
       ozet,

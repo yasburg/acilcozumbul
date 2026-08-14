@@ -8,6 +8,8 @@ export type TalepTeklifSureSatir = {
   durum: string;
   sehir: string;
   teklifSayisi: number;
+  /** Simülasyon ihalesinden mi */
+  simulasyon?: boolean;
   /** İlk teklife kadar geçen ms; teklif yoksa null */
   ilkTeklifMs: number | null;
   /** Son teklife kadar geçen ms */
@@ -80,6 +82,7 @@ export function talepTeklifSureSatirlariHesapla(
     olusturulma: string;
     durum: string;
     sehir?: string | null;
+    simulasyon?: boolean;
   }[],
   tekliflerByTalep: Map<string, { tarih: string }[]>
 ): TalepTeklifSureSatir[] {
@@ -97,6 +100,7 @@ export function talepTeklifSureSatirlariHesapla(
       durum: t.durum,
       sehir: (t.sehir ?? "").trim() || "—",
       teklifSayisi: teklifler.length,
+      simulasyon: Boolean(t.simulasyon),
       ilkTeklifMs: gecikmeler[0] ?? null,
       sonTeklifMs: gecikmeler.length
         ? gecikmeler[gecikmeler.length - 1]!

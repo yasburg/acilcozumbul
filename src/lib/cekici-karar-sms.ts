@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { smsBaseUrl } from "./sms-base-url";
 import { telefonGecerliMi } from "./telefon";
 import {
@@ -85,8 +86,11 @@ async function kararSmsKuyrugaAl(opts: {
         },
       ],
     });
-    void tetikleTopluSmsKuyruk().catch((e) => {
-      console.error(`[${opts.logEtiket}] kuyruk tetik`, e);
+    /* Serverless: void fire-and-forget kesilebilir — after ile sürdür */
+    after(() => {
+      void tetikleTopluSmsKuyruk().catch((e) => {
+        console.error(`[${opts.logEtiket}] kuyruk tetik`, e);
+      });
     });
     return { ok: true, isId: is.id };
   } catch (e) {
@@ -140,4 +144,53 @@ export async function profilFotoSonucSmsKuyrugaAl(opts: {
     gonderenEposta: opts.gonderenEposta ?? "panel:profil-foto",
     logEtiket: "profil-foto-sms",
   });
+}
+
+/**
+ * Zaten onaylı profil foto sahiplerine toplu onay SMS’i (tek iş, çok alıcı).
+ * `tetikleMod`: "after" = Next route (serverless güvenli), "await" = script/cron.
+ */
+export async function profilFotoOnaySmsTopluKuyrugaAl(opts: {
+  alicilar: Array<{ telefon: string; ad?: string | null }>;
+  baseUrl?: string;
+  gonderenEposta?: string | null;
+  tetikleMod?: "after" | "await" | "yok";
+}): Promise<{
+  ok: boolean;
+  isId?: string;
+  aliciSayisi: number;
+  hata?: string;
+}> {
+  const gecerli = opts.alicilar.filter((a) => telefonGecerliMi(a.telefon));
+  if (gecerli.length === 0) {
+    return { ok: false, aliciSayisi: 0, hata: "Gecerli alici yok." };
+  }
+  const baseUrl = smsBaseUrl(opts.baseUrl);
+  const mesaj = profilFotoOnaySmsMetni(baseUrl);
+  const tetikleMod = opts.tetikleMod ?? "after";
+  try {
+    const is = await olusturTopluSmsIsi({
+      gonderenEposta: opts.gonderenEposta ?? "panel:profil-foto-onay-toplu",
+      mesaj,
+      tempo: { ...TOPLU_SMS_TEMPO_VARSAYILAN, partiBoyutu: 20, beklemeSn: 2 },
+      alicilar: gecerli.map((a) => ({
+        telefon: a.telefon,
+        ad: a.ad?.trim() || undefined,
+      })),
+    });
+    if (tetikleMod === "after") {
+      after(() => {
+        void tetikleTopluSmsKuyruk().catch((e) => {
+          console.error("[profil-foto-onay-toplu] kuyruk tetik", e);
+        });
+      });
+    } else if (tetikleMod === "await") {
+      await tetikleTopluSmsKuyruk();
+    }
+    return { ok: true, isId: is.id, aliciSayisi: gecerli.length };
+  } catch (e) {
+    const hata = e instanceof Error ? e.message : String(e);
+    console.error("[profil-foto-onay-toplu]", hata);
+    return { ok: false, aliciSayisi: gecerli.length, hata };
+  }
 }

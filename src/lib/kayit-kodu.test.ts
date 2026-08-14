@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cekiciFixture } from "@/test/fixtures";
-import { kayitKoduHazirla } from "./kayit-kodu";
+import { kayitBaslangicKredisiCoz, kayitKoduHazirla } from "./kayit-kodu";
 
 vi.mock("./kampanya-db", () => ({
   getKampanyaByKod: vi.fn(),
@@ -18,8 +18,13 @@ vi.mock("./db", () => ({
   updateCekici: vi.fn(),
 }));
 
+vi.mock("./kayit-ucretsiz-kredi", () => ({
+  kayitUcretsizKrediMiktari: vi.fn().mockResolvedValue(9),
+}));
+
 import { getKampanyaByKod } from "./kampanya-db";
 import { getCekiciByDavetKodu } from "./db";
+import { kayitUcretsizKrediMiktari } from "./kayit-ucretsiz-kredi";
 
 describe("kayitKoduHazirla", () => {
   beforeEach(() => {
@@ -74,5 +79,34 @@ describe("kayitKoduHazirla", () => {
 
     const sonuc = await kayitKoduHazirla("BILINMEZ99", "05321111111");
     expect(sonuc.ok).toBe(false);
+  });
+});
+
+describe("kayitBaslangicKredisiCoz", () => {
+  beforeEach(() => {
+    vi.mocked(kayitUcretsizKrediMiktari).mockReset();
+    vi.mocked(kayitUcretsizKrediMiktari).mockResolvedValue(9);
+  });
+
+  it("kodsuz kayıtta ücretsiz krediyi verir", async () => {
+    const r = await kayitBaslangicKredisiCoz({ uygulandi: false });
+    expect(r).toEqual({ kredi: 9, kaynak: "ucretsiz" });
+  });
+
+  it("ücretsiz ayar kapalıysa 0 verir", async () => {
+    vi.mocked(kayitUcretsizKrediMiktari).mockResolvedValue(0);
+    const r = await kayitBaslangicKredisiCoz({ uygulandi: false });
+    expect(r).toEqual({ kredi: 0, kaynak: "yok" });
+  });
+
+  it("kampanya kodu varken ücretsiz ayarı yok sayar", async () => {
+    const r = await kayitBaslangicKredisiCoz({
+      uygulandi: true,
+      tip: "kampanya",
+      kod: "TIKTOK100",
+      yeniUyeKredi: 100,
+    });
+    expect(r).toEqual({ kredi: 100, kaynak: "kampanya" });
+    expect(kayitUcretsizKrediMiktari).not.toHaveBeenCalled();
   });
 });

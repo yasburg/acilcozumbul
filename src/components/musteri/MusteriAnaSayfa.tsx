@@ -57,6 +57,8 @@ import { AracTipiIkon } from "@/components/AracTipiIkon";
 import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import { MusteriFormIletisimOtp } from "@/components/musteri/MusteriFormIletisimOtp";
+import { useMusteriAktifTalepYonlendir } from "@/components/musteri/useMusteriAktifTalepYonlendir";
+import { musteriAktifTalepKaydet } from "@/lib/musteri-aktif-talep";
 import {
   geocodeAdres,
   cihazPlatformu,
@@ -574,6 +576,7 @@ function MusteriAnaSayfaIcerik({
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  useMusteriAktifTalepYonlendir();
   const [step, setStep] = useState<Step>("giris");
   /** Step-content enter animation direction — presentational only, never read by nav logic. */
   const prevStepForAnimRef = useRef<Step>("giris");
@@ -2095,6 +2098,7 @@ function MusteriAnaSayfaIcerik({
       });
       if (typeof data.id === "string" || data.id != null) {
         musteriFunnelIdTalepKaydet(String(data.id), funnelId);
+        musteriAktifTalepKaydet(String(data.id));
       }
       /* Meta + TikTok Lead: bekle sayfasına gitmeden önce + bir kez (bekle yedek) */
       try {

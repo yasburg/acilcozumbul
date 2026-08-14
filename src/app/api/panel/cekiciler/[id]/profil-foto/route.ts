@@ -72,11 +72,16 @@ export async function PATCH(
     return NextResponse.json({
       mesaj:
         kaydedilen === "onaylandi"
-          ? "Profil fotoğrafı onaylandı."
-          : "Profil fotoğrafı reddedildi.",
+          ? sms.ok
+            ? "Profil fotoğrafı onaylandı. Bilgilendirme SMS’i kuyruğa alındı."
+            : "Profil fotoğrafı onaylandı; SMS kuyruğa alınamadı."
+          : sms.ok
+            ? "Profil fotoğrafı reddedildi. Red nedeniyle SMS kuyruğa alındı."
+            : "Profil fotoğrafı reddedildi; SMS kuyruğa alınamadı.",
       profilFotoDurum: kaydedilen,
       smsKuyruk: sms.ok,
       smsIsId: sms.isId ?? null,
+      smsHata: sms.hata ?? null,
     });
   } catch (e) {
     const mesaj = e instanceof Error ? e.message : "Güncellenemedi.";

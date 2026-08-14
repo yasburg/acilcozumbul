@@ -84,6 +84,7 @@ export type TalepRow = {
   fotograf_urls: string[];
   durum: string;
   olusturulma: string;
+  iptal_at?: string | null;
   ihale_bitis: string;
   kazanan_cekici_id: string | null;
   kazanan_teklif_id: string | null;
@@ -254,6 +255,7 @@ export function talepFromRow(r: TalepRow): Talep {
     fotografUrls: r.fotograf_urls?.length ? r.fotograf_urls : undefined,
     durum: r.durum as Talep["durum"],
     olusturulma: r.olusturulma,
+    iptalAt: r.iptal_at ?? undefined,
     ihaleBitis: r.ihale_bitis,
     kazananCekiciId: r.kazanan_cekici_id ?? undefined,
     kazananTeklifId: r.kazanan_teklif_id ?? undefined,
@@ -297,6 +299,7 @@ export function talepToRow(t: Talep): Record<string, unknown> {
     anlasma_durumu: t.anlasmaDurumu ?? null,
     anlasildi_at: t.anlasildiAt ?? null,
     memnuniyet_sms_gonderildi: t.memnuniyetSmsGonderildi ?? false,
+    ...(t.iptalAt ? { iptal_at: t.iptalAt } : {}),
     ...(t.musteriArandiAt
       ? { musteri_arandi_at: t.musteriArandiAt }
       : {}),

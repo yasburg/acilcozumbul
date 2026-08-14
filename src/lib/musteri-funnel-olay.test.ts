@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   MUSTERI_FUNNEL_HUNI_A,
   MUSTERI_FUNNEL_HUNI_ORTAK,
+  musteriFunnelHuniASorunIcin,
   musteriFunnelOlayHacmiHesapla,
   musteriFunnelOzetHesapla,
   musteriFunnelSessionHuniHesapla,
+  musteriFunnelSorunHunileriHesapla,
 } from "./musteri-funnel-olay";
 
 describe("musteri-funnel-olay", () => {
@@ -70,9 +72,12 @@ describe("musteri-funnel-olay", () => {
     ]);
   });
 
-  it("A hunisinde detay alt adımları hizmet ile hedef arasındadır", () => {
+  it("A hunisinde lastik yakıttan önce, hedef ihale sonrasındadır", () => {
     const ids = MUSTERI_FUNNEL_HUNI_A.map((a) => a.id);
     expect(ids.indexOf("form_adim_sorun")).toBeLessThan(
+      ids.indexOf("form_adim_lastik_durumu")
+    );
+    expect(ids.indexOf("form_adim_lastik_durumu")).toBeLessThan(
       ids.indexOf("form_adim_fotograf")
     );
     expect(ids.indexOf("form_adim_ihale")).toBeLessThan(
@@ -81,12 +86,49 @@ describe("musteri-funnel-olay", () => {
     expect(ids.indexOf("form_adim_hedef")).toBeLessThan(
       ids.indexOf("form_adim_bilgi")
     );
-    expect(ids.indexOf("form_adim_bilgi")).toBeLessThan(
-      ids.indexOf("otp_gonder")
+    expect(ids.filter((id) => id === "form_adim_lastik_durumu")).toHaveLength(
+      1
     );
-    expect(ids.indexOf("otp_dogrulandi")).toBeLessThan(
-      ids.indexOf("talep_olustur")
-    );
+  });
+
+  it("lastik sorun hunisinde yakıt/kilit adımı yok", () => {
+    const ids = musteriFunnelHuniASorunIcin("lastik").map((a) => a.id);
+    expect(ids).toContain("form_adim_lastik_durumu");
+    expect(ids).toContain("form_adim_fotograf");
+    expect(ids).not.toContain("form_adim_yakit_tipi");
+    expect(ids).not.toContain("form_adim_kilit_durumu");
+    expect(ids).not.toContain("form_adim_hedef");
+  });
+
+  it("sorun hunileri lastik session’ını ayırır", () => {
+    const huniler = musteriFunnelSorunHunileriHesapla([
+      { funnel: "a", olay: "goruldu", session_id: "s1" },
+      { funnel: "a", olay: "form_adim_konum", session_id: "s1" },
+      {
+        funnel: "a",
+        olay: "form_adim_sorun",
+        session_id: "s1",
+        meta: { sorun_tipi: "lastik" },
+      },
+      { funnel: "a", olay: "form_adim_lastik_durumu", session_id: "s1" },
+      { funnel: "a", olay: "goruldu", session_id: "s2" },
+      {
+        funnel: "a",
+        olay: "form_adim_sorun",
+        session_id: "s2",
+        meta: { sorun_tipi: "yakit" },
+      },
+      { funnel: "a", olay: "form_adim_yakit_tipi", session_id: "s2" },
+    ]);
+    expect(huniler.map((h) => h.sorunTipi).sort()).toEqual(["lastik", "yakit"]);
+    const lastik = huniler.find((h) => h.sorunTipi === "lastik")!;
+    expect(
+      lastik.adimlar.find((a) => a.adim === "form_adim_lastik_durumu")
+        ?.sessionSayisi
+    ).toBe(1);
+    expect(
+      lastik.adimlar.find((a) => a.adim === "form_adim_yakit_tipi")
+    ).toBeUndefined();
   });
 
   it("konum hizmetten fazla olsa bile huniyi şişirmez", () => {

@@ -311,7 +311,7 @@ export async function notifyCekiciSecildi(
     ? `Musteri sizi secti (${yer})`
     : "Musteri sizi secti";
   const mesaj = `${onek}. Musteriyi arayin: ${talep.telefon}\n${link}`;
-  await sendSms(cekici.telefon, mesaj, {
+  const sonuc = await sendSms(cekici.telefon, mesaj, {
     aliciTipi: "cekici",
     cekiciId: cekici.id,
     talepId: talep.id,
@@ -319,4 +319,18 @@ export async function notifyCekiciSecildi(
     krediDus: false,
     kanal: "otp",
   });
+
+  if (sonuc.basarili) {
+    const voice = await sesliMesajGonder(
+      "cekici_ihale_kazandi",
+      cekici.telefon,
+      { relationid: `kazandi:t:${talep.id}:c:${cekici.id}` }
+    );
+    if (!voice.basarili) {
+      console.error(
+        `[sesli] cekici-kazandi ${cekici.id}`,
+        voice.hata ?? "başarısız"
+      );
+    }
+  }
 }

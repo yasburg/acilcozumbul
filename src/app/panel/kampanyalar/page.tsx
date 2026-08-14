@@ -23,6 +23,11 @@ type Ozet = {
   toplamVerilenKredi: number;
 };
 
+type UcretsizKrediAyar = {
+  aktif: boolean;
+  krediMiktar: number;
+};
+
 type KampanyaTaslak = {
   maxKullanim: string;
   bitis: string;
@@ -57,6 +62,15 @@ export default function PanelKampanyalarPage() {
   const [liste, setListe] = useState<KampanyaSatir[]>([]);
   const [kullanimlar, setKullanimlar] = useState<KullanimSatir[]>([]);
   const [ozet, setOzet] = useState<Ozet | null>(null);
+  const [ucretsizAyar, setUcretsizAyar] = useState<UcretsizKrediAyar>({
+    aktif: true,
+    krediMiktar: 9,
+  });
+  const [ucretsizTaslak, setUcretsizTaslak] = useState({
+    aktif: true,
+    krediMiktar: "9",
+  });
+  const [ucretsizKaydediyor, setUcretsizKaydediyor] = useState(false);
   const [form, setForm] = useState(BOS_FORM);
   const [taslaklar, setTaslaklar] = useState<Record<string, KampanyaTaslak>>(
     {}
@@ -82,6 +96,14 @@ export default function PanelKampanyalarPage() {
         setListe(d.liste ?? []);
         setKullanimlar(d.kullanimlar ?? []);
         setOzet(d.ozet ?? null);
+        const ua = d.ucretsizKrediAyar as UcretsizKrediAyar | undefined;
+        if (ua) {
+          setUcretsizAyar(ua);
+          setUcretsizTaslak({
+            aktif: Boolean(ua.aktif),
+            krediMiktar: String(ua.krediMiktar ?? 9),
+          });
+        }
         setTaslaklar({});
         setHata("");
       })
@@ -186,6 +208,38 @@ export default function PanelKampanyalarPage() {
     }
   }
 
+  async function ucretsizKrediKaydet(e: React.FormEvent) {
+    e.preventDefault();
+    setUcretsizKaydediyor(true);
+    setHata("");
+    setMesaj("");
+    try {
+      const res = await fetch("/api/panel/kampanyalar/ucretsiz-kredi", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          aktif: ucretsizTaslak.aktif,
+          krediMiktar: Number(ucretsizTaslak.krediMiktar),
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "Güncellenemedi.");
+      setMesaj(d.mesaj ?? "Ücretsiz kayıt kredisi güncellendi.");
+      if (d.ayar) {
+        setUcretsizAyar(d.ayar);
+        setUcretsizTaslak({
+          aktif: Boolean(d.ayar.aktif),
+          krediMiktar: String(d.ayar.krediMiktar ?? 9),
+        });
+      }
+    } catch (err) {
+      setHata(err instanceof Error ? err.message : "Güncellenemedi.");
+    } finally {
+      setUcretsizKaydediyor(false);
+    }
+  }
+
   async function linkKopyala(link: string, kod: string) {
     try {
       await navigator.clipboard.writeText(link);
@@ -235,6 +289,58 @@ export default function PanelKampanyalarPage() {
           </Card>
         </div>
       )}
+
+      <Card>
+        <h3 className="font-semibold text-slate-900 mb-1">
+          Kodsuz kayıt — ücretsiz kredi
+        </h3>
+        <p className="text-sm text-slate-500 mb-4">
+          Kampanya veya davet kodu girmeden kayıt olanlara (0 kredi alacaklara)
+          otomatik hediye. Şu an:{" "}
+          {ucretsizAyar.aktif
+            ? `${ucretsizAyar.krediMiktar} kredi`
+            : "kapalı"}
+          .
+        </p>
+        <form
+          onSubmit={ucretsizKrediKaydet}
+          className="flex flex-wrap items-end gap-3"
+        >
+          <label className="flex items-center gap-2 text-sm text-slate-700 pb-2">
+            <input
+              type="checkbox"
+              checked={ucretsizTaslak.aktif}
+              onChange={(e) =>
+                setUcretsizTaslak((t) => ({ ...t, aktif: e.target.checked }))
+              }
+              className="rounded border-slate-300"
+            />
+            Aktif
+          </label>
+          <Field
+            label="Kredi miktarı"
+            type="number"
+            min={0}
+            max={50000}
+            value={ucretsizTaslak.krediMiktar}
+            onChange={(e) =>
+              setUcretsizTaslak((t) => ({
+                ...t,
+                krediMiktar: e.target.value,
+              }))
+            }
+            className="!w-32"
+          />
+          <Btn
+            type="submit"
+            variant="secondary"
+            className="!w-auto"
+            disabled={ucretsizKaydediyor}
+          >
+            {ucretsizKaydediyor ? "Kaydediliyor…" : "Kaydet"}
+          </Btn>
+        </form>
+      </Card>
 
       <Card>
         <h3 className="font-semibold text-slate-900 mb-4">Yeni kampanya kodu</h3>

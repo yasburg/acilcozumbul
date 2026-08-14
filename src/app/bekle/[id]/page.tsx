@@ -33,6 +33,7 @@ import { tiktokPixelContact, tiktokPixelLead } from "@/lib/tiktok-pixel";
 import { whatsappKonumMesaji } from "@/lib/harita-yonlendirme";
 import { whatsappUrl } from "@/lib/telefon";
 import { MusteriTeklifSecOtp } from "@/components/musteri/MusteriTeklifSecOtp";
+import { musteriAktifTalepTemizleEger } from "@/lib/musteri-aktif-talep";
 
 type Durum =
   | "ihale_bekliyor"
@@ -124,7 +125,6 @@ function BekleIcerik() {
   const [kazananFiyat, setKazananFiyat] = useState<number | null>(null);
   const [islem, setIslem] = useState(false);
   const [mesaj, setMesaj] = useState("");
-  const [iptalOnay, setIptalOnay] = useState(false);
   const [ihaleBitis, setIhaleBitis] = useState<string | null>(null);
   const [memnuniyet, setMemnuniyet] = useState<MemnuniyetState | null>(null);
   const [memnuniyetYenile, setMemnuniyetYenile] = useState(0);
@@ -364,6 +364,7 @@ function BekleIcerik() {
 
         if (data.iptal || data.durum === "iptal") {
           setDurum("iptal");
+          musteriAktifTalepTemizleEger(id);
           return;
         }
 
@@ -656,28 +657,29 @@ function BekleIcerik() {
     }
   }
 
-  async function talebiIptalEt() {
+  async function iptalVeYeniTalep() {
+    if (islem) return;
     setIslem(true);
     setMesaj("");
     try {
-      const res = await fetch(`/api/talep/${id}/iptal`, {
-        method: "POST",
-        credentials: "include",
-      });
-      const data = await res.json().catch(() => ({}));
+      const res = await fetch(`/api/talep/${id}/iptal`, { method: "POST" });
       if (!res.ok) {
-        throw new Error(
-          typeof data.error === "string" ? data.error : "İptal edilemedi."
-        );
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(data.error || "İptal edilemedi.");
       }
-      setIptalOnay(false);
-      setDurum("iptal");
+      musteriAktifTalepTemizleEger(id);
+      window.location.href = "/?yeni=1";
     } catch (e) {
       setMesaj(e instanceof Error ? e.message : "İptal edilemedi.");
-      setIptalOnay(false);
-    } finally {
       setIslem(false);
     }
+  }
+
+  function yeniTalepOlustur() {
+    musteriAktifTalepTemizleEger(id);
+    window.location.href = "/?yeni=1";
   }
 
   function otpModal() {
@@ -709,55 +711,6 @@ function BekleIcerik() {
     );
   }
 
-  function talebiIptalAlani() {
-    return (
-      <div className="w-full max-w-xs mx-auto mt-auto pt-10 pb-2 space-y-2">
-        {mesaj && (
-          <p className="text-sm text-red-600 text-center" role="alert">
-            {mesaj}
-          </p>
-        )}
-        {iptalOnay ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 space-y-3 text-center">
-            <p className="text-sm text-red-800 font-medium">
-              Talebi iptal etmek istediğinize emin misiniz?
-            </p>
-            <div className="flex flex-col gap-2">
-              <Btn
-                variant="danger"
-                className="!min-h-0 !py-3 !text-sm"
-                disabled={islem}
-                onClick={() => void talebiIptalEt()}
-              >
-                {islem ? "İptal ediliyor…" : "Evet, iptal et"}
-              </Btn>
-              <button
-                type="button"
-                disabled={islem}
-                onClick={() => setIptalOnay(false)}
-                className="w-full text-center text-sm font-medium text-slate-400 hover:text-slate-500 touch-manipulation py-2 disabled:opacity-50"
-              >
-                Vazgeç
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            type="button"
-            disabled={islem}
-            onClick={() => {
-              setMesaj("");
-              setIptalOnay(true);
-            }}
-            className="w-full text-center text-sm font-medium text-slate-400 hover:text-slate-500 touch-manipulation py-2 disabled:opacity-50"
-          >
-            Talebi iptal et
-          </button>
-        )}
-      </div>
-    );
-  }
-
   if (durum === "iptal") {
     return (
       <MobileShell headerBadge={demoTalep ? demoHeaderBadge : undefined}>
@@ -765,15 +718,16 @@ function BekleIcerik() {
           <h2 className="text-xl font-bold text-slate-900">Talebiniz iptal edildi</h2>
           <p className="text-sm text-slate-500 max-w-xs">
             Yakındaki operatörlere bildirim gönderilmeyecek. Yeni bir talep için
-            ana sayfaya dönebilirsiniz.
+            devam edebilirsiniz.
           </p>
           <Btn
             className="max-w-xs"
             onClick={() => {
-              window.location.href = "/";
+              musteriAktifTalepTemizleEger(id);
+              window.location.href = "/?yeni=1";
             }}
           >
-            Ana sayfaya dön
+            İptal et ve yeni talep oluştur
           </Btn>
         </div>
       </MobileShell>
@@ -945,6 +899,16 @@ function BekleIcerik() {
               )}
             </>
           )}
+
+          {anlasildi ? (
+            <button
+              type="button"
+              onClick={yeniTalepOlustur}
+              className="w-full py-3 text-sm font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline touch-manipulation"
+            >
+              Yeni talep oluştur
+            </button>
+          ) : null}
         </div>
       </MobileShell>
     );
@@ -1055,7 +1019,14 @@ function BekleIcerik() {
             </p>
           </Card>
 
-          {talebiIptalAlani()}
+          <button
+            type="button"
+            disabled={islem}
+            onClick={() => void iptalVeYeniTalep()}
+            className="w-full py-3 text-sm font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline disabled:opacity-50 touch-manipulation"
+          >
+            İptal et ve yeni talep oluştur
+          </button>
         </div>
       </MobileShell>
       {otpModal()}
@@ -1101,7 +1072,6 @@ function BekleIcerik() {
                 {smsBekleMesaji()}
               </div>
             </div>
-            {talebiIptalAlani()}
           </div>
         ) : (
           <div className="w-full max-w-lg space-y-3">
@@ -1153,10 +1123,17 @@ function BekleIcerik() {
                   }}
                 />
               )}
-
-            {talebiIptalAlani()}
           </div>
         )}
+
+        <button
+          type="button"
+          disabled={islem}
+          onClick={() => void iptalVeYeniTalep()}
+          className="mt-6 w-full max-w-lg py-3 text-sm font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline disabled:opacity-50 touch-manipulation"
+        >
+          İptal et ve yeni talep oluştur
+        </button>
       </div>
     </MobileShell>
     {otpModal()}

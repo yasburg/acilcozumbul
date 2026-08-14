@@ -155,8 +155,6 @@ export function ArizaFotografAlani({
           En fazla {max} fotoğraf eklenebilir.
         </p>
       )}
-
-
       {hata && (
         <p className="text-sm text-red-600" role="alert">
           {hata}

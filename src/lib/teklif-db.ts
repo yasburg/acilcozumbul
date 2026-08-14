@@ -68,20 +68,27 @@ export async function listTekliflerByCekici(cekiciId: string): Promise<Teklif[]>
   return ((data ?? []) as TeklifRow[]).map(teklifFromRow);
 }
 
+/** PostgREST `.in()` URL limiti — çok ID tek istekte `fetch failed` verir. */
+const TEKLIF_IN_CHUNK = 100;
+
 export async function listTekliflerByTalepIds(
   talepIds: string[]
 ): Promise<Map<string, Teklif[]>> {
   const map = new Map<string, Teklif[]>();
   if (talepIds.length === 0) return map;
-  const { data, error } = await getSupabaseAdmin()
-    .from("teklifler")
-    .select("*")
-    .in("talep_id", talepIds);
-  if (error) throw error;
-  for (const row of (data ?? []) as TeklifRow[]) {
-    const list = map.get(row.talep_id) ?? [];
-    list.push(teklifFromRow(row));
-    map.set(row.talep_id, list);
+  const sb = getSupabaseAdmin();
+  for (let i = 0; i < talepIds.length; i += TEKLIF_IN_CHUNK) {
+    const parti = talepIds.slice(i, i + TEKLIF_IN_CHUNK);
+    const { data, error } = await sb
+      .from("teklifler")
+      .select("*")
+      .in("talep_id", parti);
+    if (error) throw error;
+    for (const row of (data ?? []) as TeklifRow[]) {
+      const list = map.get(row.talep_id) ?? [];
+      list.push(teklifFromRow(row));
+      map.set(row.talep_id, list);
+    }
   }
   return map;
 }
