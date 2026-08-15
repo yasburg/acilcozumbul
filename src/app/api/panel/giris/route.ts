@@ -4,6 +4,7 @@ import {
   panelMuhasebeAnaSayfa,
   panelRol,
 } from "@/lib/supabase/env";
+import { panelSifreDogru } from "@/lib/panel-yetki";
 import { epostaGecerliMi, epostaNormalize } from "@/lib/eposta";
 import { setPanelSessionCookie } from "@/lib/panel-auth";
 
@@ -31,6 +32,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Bu e-postanın yönetim paneline erişim yetkisi yok." },
       { status: 403 }
+    );
+  }
+
+  if (!panelSifreDogru(eposta, sifre)) {
+    return NextResponse.json(
+      { error: "E-posta veya şifre hatalı." },
+      { status: 401 }
     );
   }
 

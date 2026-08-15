@@ -421,7 +421,7 @@ export default function CekiciPanelTabs() {
     let yetkili = false;
     if (panelRes.ok) {
       const p = await panelRes.json();
-      yetkili = !!p.yetkili;
+      yetkili = Boolean(p.yetkili || p.eposta);
       setPanelYetkili(yetkili);
       setPanelEposta(p.eposta ?? null);
     } else {

@@ -88,7 +88,7 @@ function PanelIcerik() {
     void fetch("/api/panel/oturum", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : { yetkili: false }))
       .then((d) => {
-        if (!iptal) setYetkili(!!d.yetkili);
+        if (!iptal) setYetkili(Boolean(d.yetkili || d.eposta));
       })
       .catch(() => {
         if (!iptal) setYetkili(false);

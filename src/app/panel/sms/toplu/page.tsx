@@ -657,7 +657,7 @@ export default function PanelTopluSmsPage() {
         credentials: "include",
       });
       const oturum = await oturumRes.json().catch(() => ({ yetkili: false }));
-      if (!oturum?.yetkili) {
+      if (!(oturum?.yetkili || oturum?.eposta)) {
         setHata("Oturum sona ermiş. Tekrar giriş yapıp yeniden deneyin.");
         setGonderiyor(false);
         return;

@@ -46,7 +46,7 @@ export function PanelChrome({ children }: { children: React.ReactNode }) {
       .then((r) => (r.ok ? r.json() : { yetkili: false }))
       .then((d) => {
         if (iptal) return;
-        setPanelYetkili(!!d.yetkili);
+        setPanelYetkili(Boolean(d.yetkili || d.eposta));
         setRol(d.rol === "muhasebe" ? "muhasebe" : "admin");
       })
       .catch(() => {
