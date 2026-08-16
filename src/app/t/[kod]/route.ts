@@ -6,6 +6,8 @@ import {
   smsTalepKisaTokenGecerliMi,
   smsTalepUzunUrl,
 } from "@/lib/sms-talep-kisa-link";
+import { getCekiciByToken } from "@/lib/db";
+import { CEKICI_COOKIE, cekiciOturumCookieAyarlari } from "@/lib/auth";
 
 /**
  * /t/{token} — çekici talep SMS kısa linki → ihale sayfası
@@ -26,6 +28,11 @@ export async function GET(
     return new NextResponse("Not Found", { status: 404 });
   }
 
+  const cekici = await getCekiciByToken(kayit.cekiciToken);
+  if (!cekici?.aktif) {
+    return new NextResponse("Not Found", { status: 404 });
+  }
+
   try {
     await kaydetSmsTalepKisaLinkTiklama(token);
   } catch (e) {
@@ -35,8 +42,14 @@ export async function GET(
   const base = smsBaseUrl(
     `${request.nextUrl.protocol}//${request.nextUrl.host}`
   );
-  return NextResponse.redirect(
-    smsTalepUzunUrl(kayit.talepId, kayit.cekiciToken, base),
+  const response = NextResponse.redirect(
+    smsTalepUzunUrl(kayit.talepId, base),
     302
   );
+  response.cookies.set(
+    CEKICI_COOKIE,
+    kayit.cekiciToken,
+    cekiciOturumCookieAyarlari(true)
+  );
+  return response;
 }

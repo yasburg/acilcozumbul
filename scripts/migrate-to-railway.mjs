@@ -2,11 +2,13 @@
 import pg from "pg";
 import { readdir, readFile } from "fs/promises";
 import path from "path";
+import { hashleCekiciPlaintext } from "./hash-cekici-plaintext.mjs";
 
-const dbUrl =
-  process.env.DATABASE_URL ||
-  process.env.POSTGRES_URL ||
-  "postgresql://postgres:mRdlyMtcLEzKjCKRYnBDGjLIWOjcqmnc@altaria.proxy.rlwy.net:32348/railway";
+const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+if (!dbUrl) {
+  console.error("DATABASE_URL or POSTGRES_URL is required.");
+  process.exit(1);
+}
 
 console.log("Connecting to Railway Postgres...");
 const pool = new pg.Pool({
@@ -113,6 +115,8 @@ async function main() {
     } catch (e) {
       console.warn("[CITIES] Warning populating cities:", e.message);
     }
+
+    await hashleCekiciPlaintext(client);
 
     console.log("✅ All migrations applied successfully to Railway PostgreSQL!");
   } finally {

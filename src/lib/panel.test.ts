@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { cekiciPanelTesterAyir } from "./panel";
+import { cekiciPanelOzet, cekiciPanelTesterAyir } from "./panel";
 import type { CekiciPanelOzet } from "./panel";
+import { cekiciFixture } from "@/test/fixtures";
 
 function ozet(id: string, kayit: string, tester = false): CekiciPanelOzet {
   return {
@@ -26,5 +27,21 @@ describe("cekiciPanelTesterAyir", () => {
     ]);
     expect(testerler.map((c) => c.id)).toEqual(["t1", "t2"]);
     expect(cekiciler.map((c) => c.id)).toEqual(["c3", "c1"]);
+  });
+});
+
+describe("cekiciPanelOzet", () => {
+  it("şifre ve hash alanlarını çıkarır", () => {
+    const ozet = cekiciPanelOzet(
+      cekiciFixture({
+        sifre: "gizli",
+        sifreHash: "scrypt$1$1$1$x$y",
+        token: "super-secret-token",
+      })
+    );
+    expect(ozet).not.toHaveProperty("sifre");
+    expect(ozet).not.toHaveProperty("sifreHash");
+    expect(ozet).not.toHaveProperty("token");
+    expect(ozet.tokenOnizleme).toMatch(/^super-se…$/);
   });
 });

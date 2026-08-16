@@ -2,6 +2,7 @@ import { getCekiciler, saveCekiciler } from "./db";
 import type { Cekici } from "./types";
 import { tumSorunTipIdleri } from "./sorun-tipleri";
 import { hizmetBolgeSutunlariVar } from "./supabase/bolge-schema";
+import { sifreHashle } from "./sifre-hash";
 
 const SEED_CEKICILER: Cekici[] = [
   {
@@ -65,7 +66,13 @@ export async function ensureSeedData(): Promise<void> {
   const existing = await getCekiciler();
 
   if (existing.length === 0 && process.env.DEMO_SEED === "true") {
-    await saveCekiciler(SEED_CEKICILER);
+    await saveCekiciler(
+      SEED_CEKICILER.map((c) => ({
+        ...c,
+        sifre: "",
+        sifreHash: sifreHashle(c.sifre),
+      }))
+    );
     return;
   }
 

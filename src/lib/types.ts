@@ -95,11 +95,12 @@ export interface Cekici {
   telefon: string;
   token: string;
   /**
-   * @deprecated Düz metin şifre — yalnızca legacy satırlar.
-   * Yeni kayıtlar Supabase Auth kullanır; alan boş bırakılır.
+   * @deprecated Düz metin şifre — yalnızca hash yokken bir kez okunur, sonra silinir.
    */
   sifre: string;
-  /** Supabase auth.users.id */
+  /** scrypt$N$r$p$salt$hash — API yanıtlarında dönülmez */
+  sifreHash?: string;
+  /** Eski Auth kullanıcı kimliği; artık cekici.id ile aynı olabilir */
   authUserId?: string;
   /** Satın alınan / hediye / kalıcı kredi (ay sonunda sıfırlanmaz) */
   kredi: number;

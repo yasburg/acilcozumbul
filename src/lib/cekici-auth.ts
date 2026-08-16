@@ -1,6 +1,8 @@
 import { randomBytes } from "crypto";
 import type { Cekici } from "./types";
 import { telefonNormalize } from "./telefon";
+import { sifreHashDogrula, sifreHashle, bcryptHashMi } from "./sifre-hash";
+import { getCekiciByTelefon, updateCekici } from "./db";
 
 /** Auth e-posta kimliği (telefon → geçerli e-posta formatı) */
 export function cekiciAuthEmail(telefonHam: string): string {
@@ -23,41 +25,56 @@ export async function cekiciAuthKullaniciOlustur(input: {
 }
 
 export async function cekiciAuthSifreGuncelle(
-  _authUserId: string,
-  _sifre: string
-): Promise<void> {
-  // No-op for Railway Postgres
+  cekici: Cekici,
+  sifre: string
+): Promise<Cekici> {
+  return cekiciSifreyiAuthaTasi(cekici, sifre);
 }
 
 export async function cekiciAuthKullaniciSil(
   _authUserId: string
 ): Promise<void> {
-  // No-op for Railway Postgres
+  // Auth kullanıcı tablosu yok; çekici satırı ayrı silinir
 }
 
-/** Şifreyi doğrula */
 export async function cekiciAuthSifreDogrula(
-  _telefon: string,
-  _sifre: string
+  telefon: string,
+  sifre: string
 ): Promise<boolean> {
-  return true;
+  const cekici = await getCekiciByTelefon(telefonNormalize(telefon));
+  if (!cekici) return false;
+  return cekiciGirisSifreKontrol(cekici, sifre);
 }
 
 export async function cekiciSifreyiAuthaTasi(
   cekici: Cekici,
-  _sifre: string
+  sifre: string
 ): Promise<Cekici> {
-  return cekici;
+  const sifreHash = sifreHashle(sifre);
+  const guncel: Cekici = { ...cekici, sifre: "", sifreHash };
+  await updateCekici(guncel);
+  return guncel;
 }
 
 /**
- * Giriş doğrulama: Şifre kontrolü
+ * Giriş doğrulama: hash varsa onu kullan; yoksa tek seferlik plaintext rehash.
+ * Hash yok ve plaintext eşleşmezse reddet.
  */
 export async function cekiciGirisSifreKontrol(
   cekici: Cekici,
   sifre: string
 ): Promise<boolean> {
   if (!sifre) return false;
-  if (cekici.sifre && cekici.sifre === sifre) return true;
-  return true;
+  if (cekici.sifreHash) {
+    const ok = sifreHashDogrula(sifre, cekici.sifreHash);
+    if (ok && bcryptHashMi(cekici.sifreHash)) {
+      await cekiciSifreyiAuthaTasi(cekici, sifre);
+    }
+    return ok;
+  }
+  if (cekici.sifre && cekici.sifre === sifre) {
+    await cekiciSifreyiAuthaTasi(cekici, sifre);
+    return true;
+  }
+  return false;
 }

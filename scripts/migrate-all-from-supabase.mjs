@@ -4,17 +4,16 @@ import pg from "pg";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://nhmozloekphnjhjembus.supabase.co";
-const serviceRoleKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5obW96bG9la3BobmpoamVtYnVzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDIyMTkyOSwiZXhwIjoyMDk1Nzk3OTI5fQ.x2CJc7S1c_QIa3L5WhmkjGMH1pJJAttTofNoLWm9wiQ";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+const dbUrl = process.env.DATABASE_URL?.trim() || process.env.POSTGRES_URL?.trim();
 
-const dbUrl =
-  process.env.DATABASE_URL ||
-  process.env.POSTGRES_URL ||
-  "postgresql://postgres:mRdlyMtcLEzKjCKRYnBDGjLIWOjcqmnc@altaria.proxy.rlwy.net:32348/railway";
+if (!supabaseUrl || !serviceRoleKey || !dbUrl) {
+  console.error(
+    "NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and DATABASE_URL (or POSTGRES_URL) are required."
+  );
+  process.exit(1);
+}
 
 const uploadsDir =
   process.env.UPLOADS_DIR || path.join(process.cwd(), "uploads");

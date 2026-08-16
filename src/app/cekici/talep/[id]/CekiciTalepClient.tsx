@@ -184,17 +184,18 @@ export default function CekiciTalepClient() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
         });
-        if (!authRes.ok) {
+        if (authRes.status !== 410 && !authRes.ok) {
           setError("SMS linki geçersiz veya süresi dolmuş.");
           setLoading(false);
           return;
         }
-        // SMS linki = giriş adımı (panel şifre girişi olmadan)
-        posthogOlayBirKez(`acil_ph_cekici_giris_sms_${id}`, "cekici_giris", {
-          rol: "cekici",
-          yontem: "sms_link",
-          talep_id: id,
-        });
+        if (authRes.ok) {
+          posthogOlayBirKez(`acil_ph_cekici_giris_sms_${id}`, "cekici_giris", {
+            rol: "cekici",
+            yontem: "sms_link",
+            talep_id: id,
+          });
+        }
       }
 
       const [meRes, talepRes, demoRes] = await Promise.all([

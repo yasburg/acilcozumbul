@@ -20,6 +20,7 @@ export type CekiciRow = {
   telefon: string;
   token: string;
   sifre: string | null;
+  sifre_hash?: string | null;
   auth_user_id?: string | null;
   kredi: number;
   abonelik_kredi?: number | null;
@@ -115,6 +116,7 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     telefon: r.telefon,
     token: r.token,
     sifre: r.sifre ?? "",
+    sifreHash: r.sifre_hash ?? undefined,
     authUserId: r.auth_user_id ?? undefined,
     kredi: Number(r.kredi),
     abonelikKredi: Number(r.abonelik_kredi ?? 0),
@@ -177,6 +179,7 @@ export function cekiciToRow(
     telefon: c.telefon,
     token: c.token,
     sifre: c.sifre || null,
+    sifre_hash: c.sifreHash || null,
     auth_user_id: c.authUserId ?? null,
     kredi: c.kredi,
     abonelik_kredi: c.abonelikKredi ?? 0,

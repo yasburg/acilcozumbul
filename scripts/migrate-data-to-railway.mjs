@@ -3,10 +3,11 @@ import pg from "pg";
 import { readFile } from "fs/promises";
 import path from "path";
 
-const dbUrl =
-  process.env.DATABASE_URL ||
-  process.env.POSTGRES_URL ||
-  "postgresql://postgres:mRdlyMtcLEzKjCKRYnBDGjLIWOjcqmnc@altaria.proxy.rlwy.net:32348/railway";
+const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+if (!dbUrl) {
+  console.error("DATABASE_URL or POSTGRES_URL is required.");
+  process.exit(1);
+}
 
 console.log("Connecting to Railway Postgres for Data Import...");
 const pool = new pg.Pool({

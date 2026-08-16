@@ -53,7 +53,7 @@ export function cekiciTalepSmsMetni(
 ): { mesaj: string; link: string } {
   const link =
     opts?.link?.trim() ||
-    smsTalepUzunUrl(talep.id, cekici.token, baseUrl);
+    smsTalepUzunUrl(talep.id, baseUrl);
   const yer = smsTalepYer(talep);
   const baslik = yenidenArama
     ? "Yeni yol yardim talebi (tekrar)"
@@ -70,7 +70,7 @@ export async function cekiciTalepSmsHazirla(
   baseUrl: string,
   yenidenArama = false
 ): Promise<{ mesaj: string; link: string }> {
-  let link = smsTalepUzunUrl(talep.id, cekici.token, baseUrl);
+  let link = smsTalepUzunUrl(talep.id, baseUrl);
   try {
     const kisa = await olusturSmsTalepKisaLink({
       talepId: talep.id,
@@ -295,7 +295,7 @@ export async function notifyCekiciSecildi(
   talep: Talep,
   baseUrl: string
 ): Promise<void> {
-  let link = smsTalepUzunUrl(talep.id, cekici.token, baseUrl);
+  let link = smsTalepUzunUrl(talep.id, baseUrl);
   try {
     const kisa = await olusturSmsTalepKisaLink({
       talepId: talep.id,

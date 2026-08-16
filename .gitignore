@@ -47,6 +47,10 @@ next-env.d.ts
 
 .env.local
 
+# Şifre hash dump (asla commit etme)
+auth-users.json
+*-auth-users.json
+
 certificates
 /uploads/
 .claude/

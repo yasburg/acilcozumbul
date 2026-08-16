@@ -1,5 +1,13 @@
 let pool: any = null;
 
+function databaseUrl(): string {
+  const dbUrl = process.env.DATABASE_URL?.trim() || process.env.POSTGRES_URL?.trim();
+  if (!dbUrl) {
+    throw new Error("DATABASE_URL or POSTGRES_URL is required.");
+  }
+  return dbUrl;
+}
+
 async function getPgPool(): Promise<any> {
   if (typeof window !== "undefined") {
     throw new Error("getPgPool can only be called on the server.");
@@ -7,10 +15,7 @@ async function getPgPool(): Promise<any> {
   if (!pool) {
     const pgModule = await import("pg");
     const Pool = pgModule.Pool || pgModule.default?.Pool;
-    const dbUrl =
-      process.env.DATABASE_URL ||
-      process.env.POSTGRES_URL ||
-      "postgresql://postgres:mRdlyMtcLEzKjCKRYnBDGjLIWOjcqmnc@altaria.proxy.rlwy.net:32348/railway";
+    const dbUrl = databaseUrl();
 
     pool = new Pool({
       connectionString: dbUrl,

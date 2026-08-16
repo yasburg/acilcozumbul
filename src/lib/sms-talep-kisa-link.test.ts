@@ -48,7 +48,7 @@ describe("sms-talep-kisa-link", () => {
       "https://www.acilcozumbul.com/t/Aa0Bb1Cc"
     );
     expect(
-      smsTalepUzunUrl("t1", "tok", "https://www.acilcozumbul.com/")
-    ).toBe("https://www.acilcozumbul.com/cekici/talep/t1?t=tok");
+      smsTalepUzunUrl("t1", "https://www.acilcozumbul.com/")
+    ).toBe("https://www.acilcozumbul.com/cekici/talep/t1");
   });
 });

@@ -52,5 +52,12 @@ export async function POST(request: NextRequest) {
         : "/panel",
   });
 
-  return setPanelSessionCookie(res, eposta);
+  try {
+    return setPanelSessionCookie(res, eposta);
+  } catch {
+    return NextResponse.json(
+      { error: "PANEL_SESSION_SECRET tanımlı değil." },
+      { status: 503 }
+    );
+  }
 }

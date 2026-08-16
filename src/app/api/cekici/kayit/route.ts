@@ -26,6 +26,7 @@ import {
   cekiciAuthKullaniciOlustur,
   cekiciAuthKullaniciSil,
 } from "@/lib/cekici-auth";
+import { sifreHashle } from "@/lib/sifre-hash";
 import { dogumTarihiDogrula } from "@/lib/dogum-tarihi";
 import { baglaSms50TokenKayit } from "@/lib/sms50-token";
 import { sms50TokenGecerliMi } from "@/lib/sms50-kampanya";
@@ -142,6 +143,7 @@ export async function POST(request: NextRequest) {
     telefon: tel,
     token,
     sifre: "",
+    sifreHash: sifreHashle(sifreTemiz),
     authUserId,
     kredi: baslangicKredi,
     sehir,

@@ -46,16 +46,12 @@ export function smsTalepKisaUrl(token: string, baseUrl: string): string {
   return `${baseUrl.replace(/\/$/, "")}${smsTalepKisaPath(token)}`;
 }
 
-export function smsTalepUzunPath(talepId: string, cekiciToken: string): string {
-  return `/cekici/talep/${talepId}?t=${cekiciToken}`;
+export function smsTalepUzunPath(talepId: string): string {
+  return `/cekici/talep/${talepId}`;
 }
 
-export function smsTalepUzunUrl(
-  talepId: string,
-  cekiciToken: string,
-  baseUrl: string
-): string {
-  return `${baseUrl.replace(/\/$/, "")}${smsTalepUzunPath(talepId, cekiciToken)}`;
+export function smsTalepUzunUrl(talepId: string, baseUrl: string): string {
+  return `${baseUrl.replace(/\/$/, "")}${smsTalepUzunPath(talepId)}`;
 }
 
 async function smsTalepKisaTabloVar(): Promise<boolean> {

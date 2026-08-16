@@ -4,7 +4,9 @@ import {
   panelMuhasebeApiIzinli,
   panelMuhasebeSayfaIzinli,
   panelRol,
+  panelSifreDogru,
 } from "./panel-yetki";
+import { sifreHashle } from "./sifre-hash";
 
 describe("panelRol", () => {
   const prevAdmin = process.env.PANEL_ADMIN_EMAILS;
@@ -43,5 +45,41 @@ describe("panelMuhasebe yollar", () => {
     expect(panelMuhasebeApiIzinli("/api/panel/faturalar")).toBe(true);
     expect(panelMuhasebeApiIzinli("/api/panel/cekiciler")).toBe(true);
     expect(panelMuhasebeApiIzinli("/api/panel/ozet")).toBe(false);
+  });
+});
+
+describe("panelSifreDogru", () => {
+  const prevMap = process.env.PANEL_ADMIN_PASSWORDS;
+  const prevHash = process.env.PANEL_ADMIN_PASSWORD_HASH;
+  const prevPlain = process.env.PANEL_ADMIN_PASSWORD;
+
+  afterEach(() => {
+    process.env.PANEL_ADMIN_PASSWORDS = prevMap;
+    process.env.PANEL_ADMIN_PASSWORD_HASH = prevHash;
+    process.env.PANEL_ADMIN_PASSWORD = prevPlain;
+  });
+
+  it("hash yoksa her şifreyi reddeder", () => {
+    delete process.env.PANEL_ADMIN_PASSWORDS;
+    delete process.env.PANEL_ADMIN_PASSWORD_HASH;
+    process.env.PANEL_ADMIN_PASSWORD = "duz-metin";
+    expect(panelSifreDogru("admin@example.com", "duz-metin")).toBe(false);
+  });
+
+  it("ortak scrypt hash eşleşmesini kabul eder", () => {
+    delete process.env.PANEL_ADMIN_PASSWORDS;
+    process.env.PANEL_ADMIN_PASSWORD_HASH = sifreHashle("ortak-sifre");
+    expect(panelSifreDogru("admin@example.com", "ortak-sifre")).toBe(true);
+    expect(panelSifreDogru("admin@example.com", "yanlis")).toBe(false);
+  });
+
+  it("e-posta map hash'ini zorunlu tutar", () => {
+    process.env.PANEL_ADMIN_PASSWORDS = JSON.stringify({
+      "yasin@example.com": sifreHashle("yasin-sifre"),
+    });
+    process.env.PANEL_ADMIN_PASSWORD_HASH = sifreHashle("ortak");
+    expect(panelSifreDogru("yasin@example.com", "yasin-sifre")).toBe(true);
+    expect(panelSifreDogru("yasin@example.com", "ortak")).toBe(false);
+    expect(panelSifreDogru("admin@example.com", "ortak")).toBe(true);
   });
 });

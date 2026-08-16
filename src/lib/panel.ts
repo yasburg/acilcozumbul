@@ -1,13 +1,16 @@
 import type { Cekici } from "./types";
 
-export type CekiciPanelOzet = Omit<Cekici, "sifre" | "token" | "authUserId"> & {
+export type CekiciPanelOzet = Omit<
+  Cekici,
+  "sifre" | "sifreHash" | "token" | "authUserId"
+> & {
   tokenOnizleme: string;
   /** Verilen teklif adedi (panel listesi) */
   teklifSayisi?: number;
 };
 
 export function cekiciPanelOzet(cekici: Cekici): CekiciPanelOzet {
-  const { sifre: _s, token, authUserId: _a, ...rest } = cekici;
+  const { sifre: _s, sifreHash: _h, token, authUserId: _a, ...rest } = cekici;
   return {
     ...rest,
     tokenOnizleme: `${token.slice(0, 8)}…`,
