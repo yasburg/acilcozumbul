@@ -293,20 +293,21 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
 
         let sql = `INSERT INTO public."${this.tableName}" (${colNames}) VALUES ${valuesSql.join(", ")}`;
 
-        if (this.onConflictCols) {
+        if (this.onConflictCols || this.operation === "UPSERT") {
           const conflictCols = this.onConflictCols
-            .split(",")
-            .map((c) => `"${c.trim()}"`)
-            .join(", ");
+            ? this.onConflictCols
+                .split(",")
+                .map((c) => `"${c.trim()}"`)
+                .join(", ")
+            : this.tableName.endsWith("_otp")
+            ? `"telefon"`
+            : this.tableName === "sehir_acilis"
+            ? `"il"`
+            : `"id"`;
           const updateAssigns = keys
             .map((k) => `"${k}" = EXCLUDED."${k}"`)
             .join(", ");
           sql += ` ON CONFLICT (${conflictCols}) DO UPDATE SET ${updateAssigns}`;
-        } else if (this.operation === "UPSERT") {
-          const updateAssigns = keys
-            .map((k) => `"${k}" = EXCLUDED."${k}"`)
-            .join(", ");
-          sql += ` ON CONFLICT ("id") DO UPDATE SET ${updateAssigns}`;
         }
 
         sql += ` RETURNING ${this.selectCols}`;

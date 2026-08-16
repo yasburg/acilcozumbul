@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
+import { ACB_SHELL_MAX_W } from "@/lib/design-tokens";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { odemeOnaySessionKey, type OdemeOnayKayit } from "@/lib/odeme-onay";
 import { posthogOlayYakala } from "@/lib/posthog-client";
@@ -334,7 +335,7 @@ export default function OdemePage() {
       footer={
         !odemeAnimasyon ? (
           <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(15,23,42,0.06)]">
-            <div className="mx-auto w-full max-w-lg">
+            <div className={`mx-auto w-full ${ACB_SHELL_MAX_W}`}>
               <Btn
                 type="submit"
                 form="odeme-form"

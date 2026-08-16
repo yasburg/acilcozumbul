@@ -63,22 +63,22 @@ export function Btn({
     | "dark";
 }) {
   const base =
-    "w-full min-h-[var(--acb-cta,52px)] rounded-[var(--acb-radius,1.125rem)] py-3.5 px-3 xs:px-5 font-semibold text-[13px] xs:text-[15px] sm:text-base whitespace-nowrap overflow-hidden text-ellipsis transition-[background-color,box-shadow,transform,opacity,filter] duration-200 active:duration-100 ease-out touch-manipulation cursor-pointer hover:-translate-y-px active:translate-y-0 active:scale-[0.97] disabled:opacity-50 disabled:hover:translate-y-0 disabled:active:scale-100 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
+    "w-full min-h-[var(--acb-cta,52px)] rounded-[var(--acb-radius,1.125rem)] py-3.5 px-3 xs:px-5 font-semibold text-[13px] xs:text-[15px] sm:text-base whitespace-nowrap overflow-hidden text-ellipsis transition-[background-color,box-shadow,transform,opacity,filter] duration-200 active:duration-100 ease-out touch-manipulation cursor-pointer hover:-translate-y-px active:translate-y-0 active:scale-[0.97] disabled:opacity-100 disabled:hover:translate-y-0 disabled:active:scale-100 disabled:cursor-not-allowed disabled:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
   const variants = {
     primary:
-      "bg-gradient-to-b from-[#0aa932] to-[#068a27] text-white border border-[#099a2c] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_rgba(8,155,45,0.35)] hover:brightness-[1.03] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_6px_18px_rgba(8,155,45,0.4)] active:translate-y-[1px] active:scale-[0.98] focus-visible:ring-[var(--acb-primary,#089b2d)]",
+      "bg-gradient-to-b from-[#0aa932] to-[#068a27] text-white border border-[#099a2c] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_rgba(8,155,45,0.35)] hover:brightness-[1.03] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_6px_18px_rgba(8,155,45,0.4)] active:translate-y-[1px] active:scale-[0.98] focus-visible:ring-[var(--acb-primary,#089b2d)] disabled:bg-none disabled:bg-slate-200 disabled:text-slate-400 disabled:border-slate-200",
     secondary:
-      "bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200 hover:shadow-[var(--acb-shadow)] focus-visible:ring-slate-400",
+      "bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200 hover:shadow-[var(--acb-shadow)] focus-visible:ring-slate-400 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200",
     /** Sticky alt nav — white fill next to primary CTA */
-    geri: "bg-white text-[var(--acb-dark,#1b2d2a)] border border-[var(--acb-border,#e5e7eb)] shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:bg-[var(--acb-soft,#eaf8ee)] hover:shadow-[var(--acb-shadow)] focus-visible:ring-[var(--acb-border,#e5e7eb)]",
+    geri: "bg-white text-[var(--acb-dark,#1b2d2a)] border border-[var(--acb-border,#e5e7eb)] shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:bg-[var(--acb-soft,#eaf8ee)] hover:shadow-[var(--acb-shadow)] focus-visible:ring-[var(--acb-border,#e5e7eb)] disabled:bg-slate-50 disabled:text-slate-300 disabled:border-slate-200",
     success:
-      "bg-gradient-to-b from-[#0aa932] to-[#068a27] text-white border border-[#099a2c] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_rgba(8,155,45,0.35)] hover:brightness-[1.03] active:translate-y-[1px] focus-visible:ring-[var(--acb-green)]",
+      "bg-gradient-to-b from-[#0aa932] to-[#068a27] text-white border border-[#099a2c] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_rgba(8,155,45,0.35)] hover:brightness-[1.03] active:translate-y-[1px] focus-visible:ring-[var(--acb-green)] disabled:bg-none disabled:bg-slate-200 disabled:text-slate-400 disabled:border-slate-200",
     outline:
-      "bg-white border-2 border-[var(--acb-primary,#089b2d)] text-[var(--acb-dark,#1b2d2a)] hover:shadow-[var(--acb-shadow)] focus-visible:ring-[var(--acb-primary)]",
-    danger: "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 hover:shadow-[var(--acb-shadow)] focus-visible:ring-red-400",
+      "bg-white border-2 border-[var(--acb-primary,#089b2d)] text-[var(--acb-dark,#1b2d2a)] hover:shadow-[var(--acb-shadow)] focus-visible:ring-[var(--acb-primary)] disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200",
+    danger: "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 hover:shadow-[var(--acb-shadow)] focus-visible:ring-red-400 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200",
     emergency:
-      "bg-gradient-to-b from-[#0aa932] to-[#068a27] text-white border border-[#099a2c] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_rgba(8,155,45,0.35)] hover:brightness-[1.03] active:translate-y-[1px] focus-visible:ring-[var(--acb-emergency)]",
-    dark: "bg-[var(--acb-dark,#1b2d2a)] text-white hover:opacity-95 hover:shadow-[var(--acb-shadow-lg)] focus-visible:ring-[var(--acb-dark)]",
+      "bg-gradient-to-b from-[#0aa932] to-[#068a27] text-white border border-[#099a2c] shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_rgba(8,155,45,0.35)] hover:brightness-[1.03] active:translate-y-[1px] focus-visible:ring-[var(--acb-emergency)] disabled:bg-none disabled:bg-slate-200 disabled:text-slate-400 disabled:border-slate-200",
+    dark: "bg-[var(--acb-dark,#1b2d2a)] text-white hover:opacity-95 hover:shadow-[var(--acb-shadow-lg)] focus-visible:ring-[var(--acb-dark)] disabled:bg-slate-300 disabled:text-slate-500 disabled:border-slate-300",
   };
   return (
     <button

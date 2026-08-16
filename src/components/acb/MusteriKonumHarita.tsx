@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
 
 type LeafletNS = typeof import("leaflet");
 
@@ -87,8 +88,13 @@ export function MusteriKonumHarita({
       aria-label="Konumunuz haritada"
     >
       <div ref={elRef} className="absolute inset-0 z-0" />
-      <div className="pointer-events-none absolute left-2 top-2 z-10 rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-[var(--acb-dark)] shadow-sm">
-        📍 Konumunuz
+      <div className="pointer-events-none absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-[var(--acb-radius-sm)] bg-white/95 px-2.5 py-1 text-xs font-semibold text-[var(--acb-dark)] shadow-[var(--acb-shadow)]">
+        <AcbIcons.location
+          className="size-3.5 text-[var(--acb-green)]"
+          strokeWidth={ACB_ICON_STROKE}
+          aria-hidden
+        />
+        Konumunuz
       </div>
     </div>
   );

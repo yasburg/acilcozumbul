@@ -186,8 +186,12 @@ export async function cekiciKayitOtpDogrula(
   const telefon = telefonNormalize(telefonHam);
   const kayit = await otpGet(telefon);
 
-  if (!kayit || kayit.dogrulandi) {
+  if (!kayit) {
     return { ok: false, hata: "Kod bulunamadı. Yeni kod isteyin." };
+  }
+
+  if (kayit.dogrulandi) {
+    return { ok: true, telefon };
   }
 
   if (otpSuresiDolduMu(kayit)) {

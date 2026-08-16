@@ -7,6 +7,7 @@ import type { KonumOneri } from "@/lib/hedef-oneri-data";
 import { otoTamirAramaSorgusu } from "@/lib/hedef-oneri-data";
 import { parseIlIlce } from "@/lib/konum-parse";
 import type { HedefOneriKaynak } from "@/lib/konum-oneri";
+import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
 
 type Konum = { lat: number; lng: number; adres: string };
 
@@ -22,7 +23,7 @@ interface BekleHedefDegistirProps {
 function puanSatiri(o: KonumOneri): string | null {
   if (o.puan == null) return null;
   const n = o.puanSayisi != null ? ` · ${o.puanSayisi} değerlendirme` : "";
-  return `★ ${o.puan}${n}`;
+  return `${o.puan}${n}`;
 }
 
 function OneriListe({
@@ -74,7 +75,12 @@ function OneriListe({
                 {o.ad}
               </p>
               {puan && (
-                <span className="shrink-0 text-xs font-semibold text-amber-700">
+                <span className="inline-flex shrink-0 items-center gap-0.5 text-xs font-semibold text-[var(--acb-dark)]">
+                  <AcbIcons.rating
+                    className="size-3"
+                    strokeWidth={ACB_ICON_STROKE}
+                    aria-hidden
+                  />
                   {puan.split(" · ")[0]}
                 </span>
               )}
@@ -313,9 +319,7 @@ export function BekleHedefDegistir({
             <p className="text-sm text-slate-600 leading-relaxed">
               Hedef servis{" "}
               <strong className="text-slate-900">{onayOneri.ad}</strong>
-              {onayOneri.puan != null && (
-                <> (★ {onayOneri.puan})</>
-              )}{" "}
+              {onayOneri.puan != null && <> ({onayOneri.puan} puan)</>}{" "}
               olarak güncellenecek. Bu işlemi yalnızca bir kez yapabilirsiniz;
               bir daha değiştiremezsiniz.
             </p>

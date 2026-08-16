@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card, Field, SifreAlani } from "@/components/ui";
+import { ACB_SHELL_MAX_W } from "@/lib/design-tokens";
 import { formatKredi } from "@/lib/talep-utils";
 import type { ListeDurumu } from "@/lib/types";
 import { cekiciFetch } from "@/lib/cekici-fetch";
@@ -517,7 +518,7 @@ export default function CekiciPanelTabs() {
 
   const tabBar = (
     <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-200 bg-white safe-bottom">
-      <div className="flex max-w-lg mx-auto">
+      <div className={`flex ${ACB_SHELL_MAX_W} mx-auto`}>
         {(
           [
             { key: "musteriler" as Tab, label: "İhaleler", icon: "🚛" },

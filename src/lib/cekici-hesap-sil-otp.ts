@@ -161,8 +161,11 @@ export async function cekiciHesapSilOtpDogrula(
   }
 
   const kayit = await otpGet(telefon);
-  if (!kayit || kayit.dogrulandi) {
+  if (!kayit) {
     return { ok: false, hata: "Önce telefonunuza kod gönderin." };
+  }
+  if (kayit.dogrulandi) {
+    return { ok: true, telefon };
   }
   if (otpSuresiDolduMu(kayit)) {
     await cekiciHesapSilOtpSil(telefon);

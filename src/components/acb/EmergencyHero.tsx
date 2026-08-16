@@ -3,24 +3,24 @@
 import { useEffect, useState } from "react";
 import { ChevronUp } from "lucide-react";
 import { ACB_ICON_STROKE } from "@/lib/acb-icons";
+import { Btn } from "@/components/ui";
 
 const TITLE_FULL = "Yolda mı kaldın?";
 const SUBTITLE_TEXT = "Acil çözüm bulalım.";
 const SESSION_KEY = "acb_hero_typewriter_seen";
 
 /**
- * Emergency entry — one job: ask for help.
- * Features a smooth typewriter + slide-up intro animation on first visit,
- * and a fast center-to-top slide-up reveal on repeat visits.
+ * Emergency entry hero.
+ * Features a clean typewriter intro sequence on first visit,
+ * and a smooth reveal of the main YARDIM AL button.
  */
 export function EmergencyHero({
-  ctaDocked = false,
   onHeroReady,
+  onYardimAl,
 }: {
-  /** True when YARDIM AL has moved into the sticky header */
-  ctaDocked?: boolean;
   /** Callback when hero intro finishes or is already ready */
   onHeroReady?: (ready: boolean) => void;
+  onYardimAl?: () => void;
 }) {
   const [stage, setStage] = useState<"typing" | "subtitle" | "short_intro" | "sliding" | "ready">("typing");
   const [typedIndex, setTypedIndex] = useState(0);
@@ -28,7 +28,6 @@ export function EmergencyHero({
   useEffect(() => {
     try {
       if (sessionStorage.getItem(SESSION_KEY) === "1") {
-        // Repeat visit: start centered with full text, then slide up immediately
         setStage("short_intro");
         onHeroReady?.(false);
         return;
@@ -37,13 +36,11 @@ export function EmergencyHero({
       /* ignore */
     }
 
-    // First visit in session: full typewriter intro sequence
     setStage("typing");
     onHeroReady?.(false);
     setTypedIndex(0);
   }, [onHeroReady]);
 
-  // Short intro mode: slide up automatically after brief mount frame
   useEffect(() => {
     if (stage !== "short_intro") return;
 
@@ -108,27 +105,16 @@ export function EmergencyHero({
   const isIntro = stage === "typing";
   const isTyping = stage === "typing";
   const isSubtitleVisible = stage === "subtitle" || stage === "short_intro" || stage === "sliding" || stage === "ready";
-  const isCentered = stage === "typing" || stage === "subtitle" || stage === "short_intro";
   const isContentVisible = stage === "sliding" || stage === "ready";
 
   return (
-    <section className="relative flex h-[100dvh] max-h-[100dvh] w-full flex-col justify-between overflow-hidden animate-fade-in">
-      {/* 1. Üst Bölüm: Logo bandı + Başlık + Altbaşlık (Üst Yarım) */}
-      <div className="flex flex-1 flex-col items-center justify-between text-center pt-[max(0.5rem,env(safe-area-inset-top))] pb-2">
-        <div
-          id="acb-hero-logo-band"
-          className="shrink-0"
-          style={{ height: "var(--acb-hero-logo-band)" }}
-          aria-hidden
-        />
-        <div
-          className={`my-auto px-4 w-full max-w-md mx-auto transition-transform duration-600 ease-[cubic-bezier(0.32,0.72,0,1)] ${
-            isCentered ? "translate-y-[14vh] sm:translate-y-[16vh]" : "translate-y-0"
-          }`}
-        >
+    <section className="relative flex h-[calc(100dvh-8.75rem-env(safe-area-inset-top))] sm:h-[calc(100dvh-10.75rem)] max-h-[calc(100dvh-8.75rem-env(safe-area-inset-top))] w-full flex-col justify-between overflow-hidden animate-fade-in px-4 pt-1 pb-[max(0.75rem,calc(env(safe-area-inset-bottom)+0.25rem))]">
+      {/* 1. Üst Bölüm: Başlık + Altbaşlık */}
+      <div className="flex flex-1 flex-col items-center justify-center text-center pb-6 sm:pb-10">
+        <div className="w-full max-w-md mx-auto space-y-2">
           <h1
             id="acb-hero-baslik"
-            className="acb-display text-[2.45rem] font-bold tracking-tight text-[var(--acb-dark)] sm:text-[3.25rem] leading-[1.12]"
+            className="acb-display text-[2.45rem] sm:text-[3.25rem] font-bold tracking-tight text-[var(--acb-dark)] leading-[1.12]"
           >
             {isIntro ? TITLE_FULL.slice(0, typedIndex) : TITLE_FULL}
             {isTyping && (
@@ -139,7 +125,7 @@ export function EmergencyHero({
             )}
           </h1>
           <p
-            className={`mt-2 mx-auto max-w-[20rem] text-center text-[1.1875rem] font-medium leading-snug tracking-[0.01em] text-[var(--acb-muted)] sm:max-w-md sm:text-[1.375rem] transition-all duration-400 ease-out ${
+            className={`mx-auto max-w-[20rem] sm:max-w-md text-center text-[1.1875rem] sm:text-[1.375rem] font-medium leading-snug tracking-[0.01em] text-[var(--acb-muted)] transition-all duration-400 ease-out ${
               isSubtitleVisible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-2"
@@ -150,55 +136,59 @@ export function EmergencyHero({
         </div>
       </div>
 
-      {/* 2. Tam Orta Nokta (50vh / 50% Vertical Center): YARDIM AL Buton Yuvası (Tam Matematiksel Merkez) */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4 pointer-events-none z-0">
-        <div
-          id="acb-hero-yardim-cta"
-          className="min-h-[3.6rem] w-full"
-          aria-hidden
-        />
-      </div>
-
-      {/* 3. Alt Yarım: Güven metinleri (Eşit Dağıtılmış Alt Bölüm) */}
+      {/* 2. SAYFANIN TAM DIKEY ORTASI (50vh Center): YARDIM AL Butonu (Birebir aynı Btn bileşeni) */}
       <div
-        className={`flex flex-1 flex-col items-center justify-center px-4 transition-all duration-600 delay-75 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-md px-4 text-center z-10 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           isContentVisible
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 translate-y-6 pointer-events-none"
+            ? "opacity-100 scale-100"
+            : "opacity-0 scale-95 pointer-events-none"
         }`}
       >
-        <p
-          className={`acb-hero-trust space-y-1.5 text-center text-[0.9375rem] font-medium leading-snug tracking-[0.01em] transition-opacity duration-[420ms] ease-[cubic-bezier(0.32,0.72,0,1)] sm:text-base ${
-            ctaDocked ? "opacity-0" : "opacity-100"
+        <Btn
+          type="button"
+          variant="primary"
+          onClick={onYardimAl}
+          className="w-full !font-bold !tracking-wider text-base sm:text-lg"
+        >
+          YARDIM AL
+        </Btn>
+      </div>
+
+      {/* 3. Alt Orta Bölüm: 3 Satır Güven Metni */}
+      <div className="flex flex-1 flex-col items-center justify-center text-center pt-6 sm:pt-10">
+        <div
+          className={`acb-hero-trust space-y-1.5 text-center text-sm sm:text-base leading-snug tracking-[0.01em] transition-all duration-600 delay-75 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+            isContentVisible
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-4 pointer-events-none"
           }`}
-          aria-hidden={ctaDocked}
         >
           <span className="acb-hero-trust-line block font-semibold">
             Kayıt yok
           </span>
-          <span className="acb-hero-trust-line block text-slate-600">
+          <span className="acb-hero-trust-line block font-medium">
             2 dakikada 5+ teklif al
           </span>
-          <span className="acb-hero-trust-line block font-semibold text-[var(--acb-green)]">
+          <span className="acb-hero-trust-line block font-bold">
             En uygunu seç.
           </span>
-        </p>
+        </div>
       </div>
 
-      {/* 4. En Alt Bölüm: Chevron yukarı bakan Hakkında butonu */}
+      {/* 4. SAYFANIN EN ALTI: Chevron yukarı bakan Hakkında linki */}
       <div
-        className={`shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-center transition-all duration-600 delay-150 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+        className={`shrink-0 text-center transition-all duration-600 delay-150 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           isContentVisible
             ? "opacity-100 translate-y-0"
-            : "opacity-0 translate-y-6 pointer-events-none"
+            : "opacity-0 translate-y-4 pointer-events-none"
         }`}
       >
         <a
           href="#nasil-calisir"
-          className="acb-scroll-hint group inline-flex flex-col items-center gap-0 py-1.5 text-[var(--acb-muted)] touch-manipulation active:opacity-70"
+          className="acb-scroll-hint group inline-flex flex-col items-center gap-0.5 py-1 text-[var(--acb-muted)] touch-manipulation active:opacity-70"
         >
           <ChevronUp
-            className="size-4 -mb-0.5"
+            className="size-4"
             strokeWidth={ACB_ICON_STROKE}
             aria-hidden
           />
@@ -210,4 +200,3 @@ export function EmergencyHero({
     </section>
   );
 }
-

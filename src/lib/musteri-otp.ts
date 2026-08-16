@@ -236,7 +236,14 @@ export async function otpDogrula(
   const telefon = telefonNormalize(telefonHam);
   const kayit = await otpGet(telefon);
 
-  if (!kayit || kayit.dogrulandi) {
+  if (!kayit) {
+    return { ok: false, hata: "Kod bulunamadı. Yeni kod isteyin." };
+  }
+
+  if (kayit.dogrulandi) {
+    if (ayniIstanbulGunuMu(kayit.olusturulma)) {
+      return { ok: true, telefon };
+    }
     return { ok: false, hata: "Kod bulunamadı. Yeni kod isteyin." };
   }
 

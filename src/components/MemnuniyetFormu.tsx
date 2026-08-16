@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Btn, Card, Field } from "@/components/ui";
 import { YildizPuani } from "@/components/YildizPuani";
 import { posthogOlayYakala } from "@/lib/posthog-client";
+import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
 
 interface MemnuniyetFormuProps {
   talepId: string;
@@ -64,10 +65,14 @@ export function MemnuniyetFormu({
 
   if (tesekkur) {
     return (
-      <Card className="bg-emerald-50 border-emerald-200 text-center py-6">
-        <p className="text-4xl mb-2">🙏</p>
-        <p className="font-semibold text-emerald-800">Teşekkürler!</p>
-        <p className="text-sm text-emerald-700 mt-1">
+      <Card className="!bg-[var(--acb-soft)] !border-[color-mix(in_srgb,var(--acb-green)_35%,white)] text-center py-8">
+        <AcbIcons.check
+          className="mx-auto mb-2 size-10 text-[var(--acb-green)]"
+          strokeWidth={ACB_ICON_STROKE}
+          aria-hidden
+        />
+        <p className="font-semibold text-[var(--acb-dark)]">Teşekkürler!</p>
+        <p className="text-sm text-[var(--acb-muted)] mt-1">
           Geri bildiriminiz kaydedildi.
         </p>
       </Card>

@@ -56,7 +56,7 @@ export function ProviderOfferCard({
   return (
     <Card
       className={`!p-0 overflow-hidden !rounded-[var(--acb-radius-lg)] border-[var(--acb-border)] bg-white/95 shadow-[var(--acb-shadow-lg)] transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-px hover:shadow-[var(--acb-shadow-xl)] active:duration-100 active:scale-[0.995] active:shadow-[var(--acb-shadow)] ${
-        fiyatDegisti ? "border-red-200 bg-red-50/30" : ""
+        fiyatDegisti ? "border-[var(--acb-warn-border)] bg-[var(--acb-warn-soft)]" : ""
       }`}
     >
       <div className="flex gap-3 p-4">
@@ -145,7 +145,7 @@ export function ProviderOfferCard({
           ) : null}
 
           {fiyatDegisti && ilkFiyat != null && ilkFiyat !== fiyat ? (
-            <p className="text-xs font-medium text-red-600">
+            <p className="text-xs font-medium text-[var(--acb-warn-hover)]">
               İlk teklif {formatTl(ilkFiyat)} idi — fiyat değiştirildi
             </p>
           ) : null}
@@ -160,9 +160,16 @@ export function ProviderOfferCard({
 
       <div className="border-t border-[var(--acb-border)] px-4 py-3">
         {fiyatDegisti ? (
-          <div className="rounded-[var(--acb-radius-sm)] border border-red-200 bg-red-50 px-3 py-2 text-xs leading-relaxed text-red-800">
-            Bu çekici teklif fiyatını sonradan değiştirdi. Güvenlik nedeniyle bu
-            teklifle anlaşamazsınız.
+          <div className="flex items-start gap-2 rounded-[var(--acb-radius-sm)] border border-[var(--acb-warn-border)] bg-[var(--acb-warn-soft)] px-3 py-2 text-xs leading-relaxed text-[var(--acb-dark)]">
+            <AcbIcons.warning
+              className="mt-0.5 size-3.5 shrink-0 text-[var(--acb-warn-hover)]"
+              strokeWidth={ACB_ICON_STROKE}
+              aria-hidden
+            />
+            <span>
+              Bu çekici teklif fiyatını sonradan değiştirdi. Güvenlik nedeniyle bu
+              teklifle anlaşamazsınız.
+            </span>
           </div>
         ) : (
           <Btn

@@ -3,6 +3,14 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pg", "pg-pool", "pg-types"],
   turbopack: {},
+  experimental: {
+    // Turbopack's dev filesystem cache DB is corrupted in this environment
+    // ("Failed to open database ... invalid digit found in string" on boot,
+    // reproducible even after a full `.next` wipe) — disable it so `next dev`
+    // can actually serve requests. Safe: dev-only persistence, no effect on
+    // build output or runtime behavior, just slower cold starts.
+    turbopackFileSystemCacheForDev: false,
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {

@@ -56,6 +56,7 @@ export type MusteriFormAdim =
   | "ek_detay"
   | "ihale"
   | "hedef"
+  | "ozet"
   | "telefon";
 
 /** Eski tek string veya yeni dizi — okurken diziye normalize edilir */
@@ -100,6 +101,7 @@ const ADIMLAR: ReadonlySet<string> = new Set([
   "ek_detay",
   "ihale",
   "hedef",
+  "ozet",
   "telefon",
 ]);
 

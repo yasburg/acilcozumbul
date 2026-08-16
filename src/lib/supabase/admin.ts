@@ -1,3 +1,5 @@
+import { fromTable } from "../pg";
+
 export function supabaseDbAktif(): boolean {
   return true;
 }
@@ -13,7 +15,6 @@ export function getSupabaseAdmin(): any {
     };
   }
 
-  const { fromTable } = require("../pg");
   return {
     from: (tableName: string) => fromTable(tableName),
     rpc: async (_fnName: string, _args: any) => {
@@ -21,3 +22,4 @@ export function getSupabaseAdmin(): any {
     },
   };
 }
+

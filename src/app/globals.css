@@ -88,6 +88,14 @@
   /* Hero mark — sized to viewport, sits in band above copy */
   --acb-hero-logo: clamp(8.44rem, 37.5vw, 11.72rem);
   --acb-hero-logo-band: clamp(10.63rem, 38.75vh, 14.38rem);
+
+  /* Warning/urgency — kept distinct from green (success/primary). Additive:
+     does NOT touch the amber/orange/yellow → green alias above, which ~650
+     existing utility usages already rely on rendering green on purpose. */
+  --acb-warn: #ff9b42;
+  --acb-warn-hover: #e8823a;
+  --acb-warn-soft: color-mix(in srgb, #ff9b42 14%, white);
+  --acb-warn-border: color-mix(in srgb, #ff9b42 45%, white);
 }
 
 /* Display type — size-specific tracking (apple typography) */
@@ -257,6 +265,8 @@ html.brand-acb .animate-nasil-glow {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter), system-ui, sans-serif;
+  /* `xs:` is used throughout the app but was never defined — silently a no-op. */
+  --breakpoint-xs: 30rem;
 }
 
 * {
@@ -352,89 +362,6 @@ select {
 
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
-}
-
-/* Intro splash — cover before hydration, then React overlay takes over */
-html.acb-intro-pending body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 199;
-  background: #fff;
-  pointer-events: none;
-}
-
-/* YARDIM AL — logo ile aynı: sabit hero ↔ nav CSS morph (inline yok) */
-.acb-yardim-cta {
-  position: fixed;
-  z-index: 56;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  border: 1px solid #099a2c;
-  background: linear-gradient(180deg, #0aa932 0%, #068a27 100%);
-  color: #ffffff;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 14px rgba(8, 155, 45, 0.35);
-  overflow: hidden;
-  right: auto;
-  will-change: top, left, width, height, border-radius, font-size, padding, transform, translate, opacity;
-  transition:
-    top 0.6s cubic-bezier(0.32, 0.72, 0, 1),
-    left 0.48s var(--acb-spring),
-    width 0.48s var(--acb-spring),
-    height 0.48s var(--acb-spring),
-    border-radius 0.48s var(--acb-spring),
-    font-size 0.48s var(--acb-spring),
-    padding 0.48s var(--acb-spring),
-    transform 0.6s cubic-bezier(0.32, 0.72, 0, 1),
-    translate 0.6s cubic-bezier(0.32, 0.72, 0, 1),
-    opacity 0.52s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.acb-yardim-cta:hover {
-  filter: brightness(1.03);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 18px rgba(8, 155, 45, 0.4);
-}
-
-.acb-yardim-cta:active {
-  transform: scale(0.98) translateY(1px);
-  transition-duration: 100ms;
-}
-
-/* Vars --acb-hero-cta-* tepede ölçülür; yoksa yaklaşık hero yerleşimi */
-.acb-yardim-cta--hero {
-  top: var(--acb-hero-cta-top, calc(50dvh - 1.8rem));
-  left: var(
-    --acb-hero-cta-left,
-    calc(50% - min(calc(100% - 2rem), calc(32rem - 2rem)) / 2)
-  );
-  width: var(
-    --acb-hero-cta-width,
-    min(calc(100% - 2rem), calc(32rem - 2rem))
-  );
-  height: var(--acb-hero-cta-height, 3.6rem);
-  border-radius: var(--acb-radius, 1rem);
-  font-size: 1.05rem;
-  padding: 0 1.5rem;
-}
-
-.acb-yardim-cta--nav {
-  top: calc(max(0.5rem, env(safe-area-inset-top)) + 0.625rem);
-  left: min(
-    calc(100% - 1.5rem - 5.75rem),
-    calc(50% + 16rem - 1.5rem - 5.75rem)
-  );
-  width: 5.75rem;
-  height: 2.75rem;
-  border-radius: 0.85rem;
-  font-size: 13px;
-  padding: 0 0.875rem;
 }
 
 /* Opening logo — CSS morph hero center ↔ header right (left-based both ways) */

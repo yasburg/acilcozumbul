@@ -7,6 +7,7 @@ import {
 } from "@/lib/konum-client";
 import { ChromeAcSecenegi } from "@/components/ChromeAcSecenegi";
 import { Card } from "@/components/ui";
+import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
 
 interface KonumIzniYardimProps {
   durum: KonumIzniDurumu;
@@ -54,9 +55,14 @@ export function KonumIzniYardim({
 
   if (durum === "granted") {
     return (
-      <Card className="bg-emerald-50 border-emerald-200">
-        <p className="text-sm text-emerald-800">
-          ✓ Konum izni verildi. «Konumumu Paylaş» ile devam edebilirsiniz.
+      <Card className="!bg-[var(--acb-soft)] !border-[color-mix(in_srgb,var(--acb-green)_35%,white)]">
+        <p className="flex items-start gap-2 text-sm text-[var(--acb-dark)]">
+          <AcbIcons.check
+            className="mt-0.5 size-4 shrink-0 text-[var(--acb-green)]"
+            strokeWidth={ACB_ICON_STROKE}
+            aria-hidden
+          />
+          <span>Konum izni verildi. «Konumumu Paylaş» ile devam edebilirsiniz.</span>
         </p>
       </Card>
     );

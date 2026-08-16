@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, Card } from "@/components/ui";
+import { ACB_SHELL_MAX_W } from "@/lib/design-tokens";
 import { KayitKontenjanBilgi } from "@/components/KayitKontenjanBilgi";
 import { CekiciKayitLandingHero } from "@/components/cekici/CekiciKayitLandingHero";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
@@ -401,7 +402,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
       footer={
         !otpAsama ? (
           <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(15,23,42,0.06)]">
-            <div className="mx-auto w-full max-w-lg space-y-1.5">
+            <div className={`mx-auto w-full ${ACB_SHELL_MAX_W} space-y-1.5`}>
               <Btn
                 className="w-full min-h-[48px] text-base bg-amber-600 hover:bg-amber-700"
                 disabled={loading}

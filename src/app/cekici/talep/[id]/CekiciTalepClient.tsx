@@ -8,6 +8,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card, Field } from "@/components/ui";
+import { ACB_SHELL_MAX_W } from "@/lib/design-tokens";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { DemoHeaderBadge } from "@/components/DemoHeaderBadge";
 import { OnayliCekiciRozeti } from "@/components/OnayliCekiciRozeti";
@@ -433,7 +434,7 @@ export default function CekiciTalepClient() {
       footer={
         talep?.kazandim && !loading ? (
           <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(15,23,42,0.06)]">
-            <div className="mx-auto w-full max-w-lg space-y-2">
+            <div className={`mx-auto w-full ${ACB_SHELL_MAX_W} space-y-2`}>
               {isTamamlandi ? (
                 <Btn variant="secondary" disabled>
                   İş tamamlandı

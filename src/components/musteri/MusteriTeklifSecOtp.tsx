@@ -326,7 +326,7 @@ export function MusteriTeklifSecOtp({
               </Btn>
             ) : (
               <>
-                {mesaj && <p className="text-sm text-emerald-700">{mesaj}</p>}
+                {mesaj && <p className="text-sm text-[var(--acb-green-hover)]">{mesaj}</p>}
                 {gelistirmeKodu && (
                   <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                     Geliştirme kodu:{" "}

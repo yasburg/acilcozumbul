@@ -9,7 +9,7 @@ type LeafletNS = typeof import("leaflet");
 const KATEGORI_RENK = {
   oto_tamir: { bg: "#2563eb", ring: "#93c5fd", label: "Oto Tamir" },
   oto_sanayi: { bg: "#059669", ring: "#6ee7b7", label: "Oto sanayi" },
-  varsayilan: { bg: "#f59e0b", ring: "#fde68a", label: "Öneri" },
+  varsayilan: { bg: "var(--acb-warn)", ring: "var(--acb-warn-border)", label: "Öneri" },
 } as const;
 
 /** ~25 m — bu mesafeden yakın pinler ayrılır */
@@ -84,7 +84,7 @@ function kategoriRenk(kategori?: KonumOneri["kategori"]) {
 function puanMetin(o: KonumOneri): string {
   if (o.puan == null) return "";
   const n = o.puanSayisi != null ? ` (${o.puanSayisi})` : "";
-  return ` ★ ${o.puan}${n}`;
+  return ` · ${o.puan} puan${n}`;
 }
 
 function mesafeKm(a: Nokta, b: Nokta): number {
@@ -185,13 +185,13 @@ function numaraIkon(
   const puanHtml =
     puan != null && Number.isFinite(puan)
       ? `<span style="
-          display:inline-flex;align-items:center;gap:1px;flex-shrink:0;
+          display:inline-flex;align-items:center;gap:2px;flex-shrink:0;
           height:22px;padding:0 6px;border-radius:9999px;
-          background:#fff;color:#92400e;font-weight:700;font-size:10px;
-          box-shadow:0 1px 4px rgba(0,0,0,.2);border:1px solid #fcd34d;
+          background:#fff;color:var(--acb-dark,#1b2d2a);font-weight:700;font-size:10px;
+          box-shadow:0 1px 4px rgba(0,0,0,.2);border:1px solid var(--acb-border,#e2e8f0);
           font-family:system-ui,sans-serif;white-space:nowrap;
           line-height:1;
-        "><span style="color:#f59e0b;font-size:11px">★</span>${puan.toFixed(1)}</span>`
+        "><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg>${puan.toFixed(1)}</span>`
       : "";
 
   const ic = puanHtml

@@ -1,112 +1,145 @@
-/** Ana sayfa özellik şeridi — enyakin tarzı 4 sütun, telefonsuz */
+/** Ana sayfa özellik şeridi — Yüksek kontrastlı Uber tarzı kart ızgarası */
+
+function Ikon724() {
+  return (
+    <svg viewBox="0 0 64 64" className="size-full" fill="none" aria-hidden>
+      <rect x="1" y="1" width="62" height="62" rx="19" fill="#dcfce7" stroke="#86efac" strokeWidth="1.5" />
+      <path
+        d="M18 28.5v-2A14 14 0 0 1 32 12.5 14 14 0 0 1 46 26.5v2"
+        stroke="#15803d"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <rect
+        x="14"
+        y="28"
+        width="10"
+        height="16"
+        rx="3.5"
+        fill="white"
+        stroke="#15803d"
+        strokeWidth="2.4"
+      />
+      <rect
+        x="40"
+        y="28"
+        width="10"
+        height="16"
+        rx="3.5"
+        fill="white"
+        stroke="#15803d"
+        strokeWidth="2.4"
+      />
+      <path
+        d="M42 44.5v2.2A6.5 6.5 0 0 1 35.5 53h-2.2a4.8 4.8 0 0 1-4.8-4.8"
+        stroke="#15803d"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IkonGuven() {
+  return (
+    <svg viewBox="0 0 64 64" className="size-full" fill="none" aria-hidden>
+      <rect x="1" y="1" width="62" height="62" rx="19" fill="#dcfce7" stroke="#86efac" strokeWidth="1.5" />
+      <path
+        d="M32 12.5 17.5 18v12.2c0 9.6 6.4 18.2 14.5 20.8 8.1-2.6 14.5-11.2 14.5-20.8V18L32 12.5Z"
+        fill="white"
+        stroke="#15803d"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+      />
+      <path
+        d="m24.5 32.2 5 5 10.2-10.4"
+        stroke="#15803d"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IkonKarsilastir() {
+  return (
+    <svg viewBox="0 0 64 64" className="size-full" fill="none" aria-hidden>
+      <rect x="1" y="1" width="62" height="62" rx="19" fill="#dcfce7" stroke="#86efac" strokeWidth="1.5" />
+      <circle cx="23" cy="26" r="7.2" fill="white" stroke="#15803d" strokeWidth="2.4" />
+      <circle cx="41" cy="26" r="7.2" fill="white" stroke="#15803d" strokeWidth="2.4" />
+      <circle cx="32" cy="43" r="7.2" fill="white" stroke="#15803d" strokeWidth="2.4" />
+      <path
+        d="m28.2 20.4 2.2-5.2M35.8 20.4 33.6 15.2M32 35.8V31"
+        stroke="#15803d"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IkonYakin() {
+  return (
+    <svg viewBox="0 0 64 64" className="size-full" fill="none" aria-hidden>
+      <rect x="1" y="1" width="62" height="62" rx="19" fill="#dcfce7" stroke="#86efac" strokeWidth="1.5" />
+      <path
+        d="M32 13.5c-7.2 0-13 5.6-13 12.6 0 9.4 13 24.4 13 24.4s13-15 13-24.4c0-7-5.8-12.6-13-12.6Z"
+        fill="white"
+        stroke="#15803d"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+      />
+      <circle cx="32" cy="26" r="4.4" fill="#15803d" />
+    </svg>
+  );
+}
 
 const OZELLIKLER = [
   {
     baslik: "7/24 hizmetinizdeyiz",
     aciklama: "Burada siz sorunu paylaşın, biz sizi arayıp gelelim",
-    ikon: (
-      <svg viewBox="0 0 24 24" className="size-7" fill="none" aria-hidden>
-        <path
-          d="M4.5 10.5v-1A7.5 7.5 0 0 1 12 2a7.5 7.5 0 0 1 7.5 7.5v1"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-        />
-        <path
-          d="M4 11.5h1.8A1.7 1.7 0 0 1 7.5 13.2v2.1A1.7 1.7 0 0 1 5.8 17H4.5A1.5 1.5 0 0 1 3 15.5v-2.5A1.5 1.5 0 0 1 4.5 11.5Zm16 0h-1.8a1.7 1.7 0 0 0-1.7 1.7v2.1a1.7 1.7 0 0 0 1.7 1.7h1.3A1.5 1.5 0 0 0 21 15.5v-2.5a1.5 1.5 0 0 0-1.5-1.5Z"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M16.5 17.5v.8A2.7 2.7 0 0 1 13.8 21h-1.1a2 2 0 0 1-2-2"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
+    ikon: <Ikon724 />,
   },
   {
     baslik: "Güvenilir Hizmet",
     aciklama: "%100 Onaylı güvenilir işletmelerden dilediğinizi seçin",
-    ikon: (
-      <svg viewBox="0 0 24 24" className="size-7" fill="none" aria-hidden>
-        <path
-          d="M12 2.8 4.8 5.6v5.2c0 4.6 3.1 8.8 7.2 10 4.1-1.2 7.2-5.4 7.2-10V5.6L12 2.8Z"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinejoin="round"
-        />
-        <path
-          d="m8.8 12 2.2 2.2 4.4-4.4"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
+    ikon: <IkonGuven />,
   },
   {
     baslik: "Seçin, Karşılaştırın",
     aciklama: "En iyi işletmelerden en uygun fiyatları karşılaştırın",
-    ikon: (
-      <svg viewBox="0 0 24 24" className="size-7" fill="none" aria-hidden>
-        <circle cx="8" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.7" />
-        <circle cx="16" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.7" />
-        <circle cx="12" cy="15.5" r="2.4" stroke="currentColor" strokeWidth="1.7" />
-        <path
-          d="m14.2 7.4 1.4-2.2M9.8 7.4 8.4 5.2M12 13.2V11"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
+    ikon: <IkonKarsilastir />,
   },
   {
     baslik: "Yakınında Bulun",
     aciklama: "Size en yakın işletmelerden hızlı ve uygun hizmet alın",
-    ikon: (
-      <svg viewBox="0 0 24 24" className="size-7" fill="none" aria-hidden>
-        <path
-          d="M8 3.8h8.2A2.2 2.2 0 0 1 18.4 6v12.5a1.3 1.3 0 0 1-2 1.1l-1.7-1-1.7 1a1.3 1.3 0 0 1-1.3 0l-1.7-1-1.7 1a1.3 1.3 0 0 1-2-1.1V6A2.2 2.2 0 0 1 8 3.8Z"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinejoin="round"
-        />
-        <circle cx="14.2" cy="11.2" r="3.1" stroke="currentColor" strokeWidth="1.7" />
-        <path
-          d="m16.3 13.3 2.2 2.2"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-        />
-      </svg>
-    ),
+    ikon: <IkonYakin />,
   },
 ] as const;
 
 export function AnaSayfaOzellikSeridi() {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white px-4 py-6 sm:px-5">
-      <h2 className="text-center text-lg sm:text-xl font-bold tracking-tight text-slate-900">
-        <span className="text-amber-600">Acil Çözüm Bul</span>
-        <span className="text-slate-700"> “En hızlı ve uygun çözüm”</span>
+    <section>
+      <h2 className="max-w-[18ch] text-[1.65rem] font-bold leading-[1.15] tracking-tight text-[var(--acb-dark)] sm:max-w-none sm:text-3xl">
+        Acil Çözüm Bul ile neler yapabilirsiniz
       </h2>
-      <ul className="mt-6 grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-4 sm:gap-4">
+      <ul className="mt-5 grid grid-cols-1 gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-4">
         {OZELLIKLER.map((o) => (
-          <li key={o.baslik} className="flex flex-col items-center text-center">
-            <span className="flex size-14 items-center justify-center rounded-full bg-amber-500 text-white shadow-sm shadow-amber-500/25">
-              {o.ikon}
-            </span>
-            <p className="mt-3 text-sm font-bold text-slate-900 leading-snug">
-              {o.baslik}
-            </p>
-            <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">
-              {o.aciklama}
-            </p>
+          <li key={o.baslik}>
+            <article className="flex min-h-[10.5rem] items-stretch overflow-hidden rounded-[1.25rem] bg-white border border-slate-200/80 p-5 sm:min-h-[12rem] sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:border-slate-300 hover:shadow-md">
+              <div className="flex min-w-0 flex-1 flex-col pr-2 sm:pr-3">
+                <h3 className="text-[1.05rem] font-bold leading-snug tracking-tight text-[var(--acb-dark)] sm:text-lg">
+                  {o.baslik}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-[var(--acb-dark)]/70 sm:mt-2">
+                  {o.aciklama}
+                </p>
+              </div>
+              <div className="flex w-[4.5rem] shrink-0 items-end justify-end self-end sm:w-[5.5rem]">
+                <span className="block size-[4.5rem] sm:size-[5.5rem]">{o.ikon}</span>
+              </div>
+            </article>
           </li>
         ))}
       </ul>

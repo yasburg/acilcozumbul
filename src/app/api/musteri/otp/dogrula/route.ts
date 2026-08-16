@@ -5,6 +5,7 @@ import { otpDogrula } from "@/lib/musteri-otp";
 import { funnelOlayKaydet } from "@/lib/funnel";
 import { ipHash, istekIp } from "@/lib/request-ip";
 import { musteriTelCookieAyarla } from "@/lib/musteri-auth";
+import { telefonGecerliMi } from "@/lib/telefon";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
@@ -18,6 +19,15 @@ export async function POST(request: NextRequest) {
     const talep = await getTalepById(talepId);
     if (!talep) {
       return NextResponse.json({ error: "Talep bulunamadı." }, { status: 404 });
+    }
+    if (!telefonGecerliMi(talep.telefon)) {
+      return NextResponse.json(
+        {
+          error: "Önce iletişim bilgilerinizi girin.",
+          iletisimGerekli: true,
+        },
+        { status: 400 }
+      );
     }
     telefon = talep.telefon;
   }

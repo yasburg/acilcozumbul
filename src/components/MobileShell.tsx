@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandLogoYazili } from "@/components/BrandLogo";
+import { ACB_SHELL_MAX_W } from "@/lib/design-tokens";
 
 interface MobileShellProps {
   children: React.ReactNode;
@@ -134,7 +135,7 @@ export function MobileShell({
         ].join(" ")}
       >
         {logoSagda ? (
-          <div className="flex min-h-[3.9rem] items-center gap-2 max-w-lg mx-auto">
+          <div className={`flex min-h-[3.9rem] items-center gap-2 ${ACB_SHELL_MAX_W} mx-auto`}>
             <div className="shrink-0">{geriDugmesi}</div>
             <div className="min-w-0 flex-1 flex flex-col items-stretch justify-center px-1">
               {headerCenter ??
@@ -155,7 +156,7 @@ export function MobileShell({
         ) : (
           <div
             className={[
-              "relative flex items-center max-w-lg mx-auto",
+              `relative flex items-center ${ACB_SHELL_MAX_W} mx-auto`,
               headerCompact ? "min-h-9" : "min-h-[3.25rem]",
               subtitleAlign === "right" || headerEnd
                 ? "justify-between gap-2"
@@ -219,7 +220,7 @@ export function MobileShell({
           </div>
         )}
         {headerBottom ? (
-          <div className="max-w-lg mx-auto w-full pt-1.5">{headerBottom}</div>
+          <div className={`${ACB_SHELL_MAX_W} mx-auto w-full pt-1.5`}>{headerBottom}</div>
         ) : null}
       </header>
       )}
@@ -241,8 +242,8 @@ export function MobileShell({
                 .join(" "),
         ].join(" ")}
       >
-        {/* Content column stays max-w-lg; scroll surface is full-width so edges scroll too */}
-        <div className="mx-auto w-full max-w-lg px-4">{children}</div>
+        {/* Content column grows with the viewport; scroll surface stays full-width so edges scroll too */}
+        <div className={`mx-auto w-full ${ACB_SHELL_MAX_W} px-4 sm:px-6`}>{children}</div>
       </main>
       {footer ? (
         <div className={footerClassName}>{footer}</div>

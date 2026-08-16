@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
+import { ACB_SHELL_MAX_W } from "@/lib/design-tokens";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 
 type FaturaOzet = {
@@ -100,7 +101,7 @@ function FaturalarIcerik() {
 
   return (
     <MobileShell subtitle="Faturalarım">
-      <div className="px-4 py-6 max-w-lg mx-auto space-y-4">
+      <div className={`px-4 py-6 ${ACB_SHELL_MAX_W} mx-auto space-y-4`}>
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold text-slate-900">Faturalarım</h1>

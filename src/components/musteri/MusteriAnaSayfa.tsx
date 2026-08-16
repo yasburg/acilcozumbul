@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import {
+  stickyCtaGercekYukseklik,
   stickyCtaOffsetAyarla,
   stickyCtaOffsetTemizle,
 } from "@/lib/sticky-cta-offset";
@@ -15,13 +16,13 @@ import { SorunSecimi } from "@/components/SorunSecimi";
 import { EmergencyHero } from "@/components/acb/EmergencyHero";
 import { FlowProgress } from "@/components/acb/FlowProgress";
 import { OpeningLogo } from "@/components/acb/OpeningLogo";
-import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
+import { AcbIcons, ACB_ICON_STROKE, SorunIkon } from "@/lib/acb-icons";
 import { AnaSayfaOzellikSeridi } from "@/components/AnaSayfaOzellikSeridi";
 import { AnaSayfaFiyatHesaplamaTeaser } from "@/components/AnaSayfaFiyatHesaplamaTeaser";
 import { AnaSayfaHizmetVerCta } from "@/components/AnaSayfaHizmetVerCta";
 import { AnaSayfaHizliBaglantilar } from "@/components/AnaSayfaHizliBaglantilar";
 import { Btn, Field, Card, Spinner, TextArea, SelectField, CustomSelect } from "@/components/ui";
-import { ACB_CTA } from "@/lib/design-tokens";
+import { ACB_CTA, ACB_SHELL_MAX_W } from "@/lib/design-tokens";
 import { KULLANIMA_ACIK_ILLER } from "@/lib/cekici-sehir-acilis";
 import { ilceListesi } from "@/lib/il-ilce";
 import { illerSecimSirasi, sehirdeYazi } from "@/lib/turkiye-il-nufus";
@@ -44,7 +45,7 @@ import {
   UCRETSIZ_TEKLIF_CTA,
 } from "@/lib/sorun-tipleri";
 import { telefonDogrulamaHatasi } from "@/lib/telefon";
-import { ARAC_TIPLERI, aracDurumuMetniOlustur } from "@/lib/arac-tipi";
+import { ARAC_TIPLERI, aracDurumuMetniOlustur, aracTipiEtiket } from "@/lib/arac-tipi";
 import { ARAC_DURUMLARI, aracDurumuEtiket } from "@/lib/arac-durumu";
 import {
   LASTIK_DURUMLARI,
@@ -170,6 +171,7 @@ type Step =
   | "ek_detay"
   | "ihale"
   | "hedef"
+  | "ozet"
   | "telefon";
 
 /** Seçim sonrası otomatik sonraki adıma geçiş gecikmesi */
@@ -190,6 +192,7 @@ const TUM_ADIMLAR: Step[] = [
   "ek_detay",
   "ihale",
   "hedef",
+  "ozet",
   "telefon",
 ];
 
@@ -218,6 +221,14 @@ function progressAdimlari(sorunTipi: string, hedefGerekli: boolean): Step[] {
   return aktifAdimlar(sorunTipi, hedefGerekli).filter((a) => a !== "giris");
 }
 
+/** Özet ekranında ihale süresi görüntüleme etiketleri — IhaleSureSecimi ile aynı metinler */
+const IHALE_SURE_ETIKET: Record<IhaleSureTipi, string> = {
+  acil: "Acil — 1 saat",
+  "1_gun": "1 Gün",
+  "1_hafta": "1 Hafta",
+  ozel: "Özel tarih",
+};
+
 /** Eski tek «detay» adımının bölündüğü alt adımlar */
 const DETAY_ALT_ADIMLARI: Step[] = [
   "lastik_durumu",
@@ -245,6 +256,7 @@ const ADIM_OLAYLARI: Partial<Record<Step, string>> = {
   ek_detay: "form_adim_ek_detay",
   ihale: "form_adim_ihale",
   hedef: "form_adim_hedef",
+  ozet: "form_adim_ozet",
   telefon: "form_adim_bilgi",
 };
 
@@ -298,7 +310,7 @@ function AcilYardimStickyCta({
     if (!mounted) return;
     const el = rootRef.current;
     if (!el) return;
-    const guncelle = () => stickyCtaOffsetAyarla(el.offsetHeight);
+    const guncelle = () => stickyCtaOffsetAyarla(stickyCtaGercekYukseklik(el));
     guncelle();
     const ro = new ResizeObserver(guncelle);
     ro.observe(el);
@@ -315,7 +327,7 @@ function AcilYardimStickyCta({
       ref={rootRef}
       className="fixed inset-x-0 bottom-0 z-20 pointer-events-none px-4 pt-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
-      <div className="mx-auto max-w-lg pointer-events-auto">
+      <div className={`mx-auto ${ACB_SHELL_MAX_W} pointer-events-auto`}>
         {progress ? (
           <div className="-mt-8 mb-2 flex justify-center">{progress}</div>
         ) : null}
@@ -393,7 +405,7 @@ function AdimAltNav({
     if (!mounted) return;
     const el = rootRef.current;
     if (!el) return;
-    const guncelle = () => stickyCtaOffsetAyarla(el.offsetHeight);
+    const guncelle = () => stickyCtaOffsetAyarla(stickyCtaGercekYukseklik(el));
     guncelle();
     const ro = new ResizeObserver(guncelle);
     ro.observe(el);
@@ -410,7 +422,7 @@ function AdimAltNav({
       ref={rootRef}
       className="fixed inset-x-0 bottom-0 z-20 pointer-events-none px-4 pt-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
-      <div className="mx-auto max-w-lg pointer-events-auto">
+      <div className={`mx-auto ${ACB_SHELL_MAX_W} pointer-events-auto`}>
         {progress ? (
           <div className="-mt-8 mb-2 flex justify-center">{progress}</div>
         ) : null}
@@ -473,7 +485,7 @@ function HedefAltNav({
     if (!mounted) return;
     const el = rootRef.current;
     if (!el) return;
-    const guncelle = () => stickyCtaOffsetAyarla(el.offsetHeight);
+    const guncelle = () => stickyCtaOffsetAyarla(stickyCtaGercekYukseklik(el));
     guncelle();
     const ro = new ResizeObserver(guncelle);
     ro.observe(el);
@@ -490,7 +502,7 @@ function HedefAltNav({
       ref={rootRef}
       className="fixed inset-x-0 bottom-0 z-20 pointer-events-none px-4 pt-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
-      <div className="mx-auto max-w-lg pointer-events-auto">
+      <div className={`mx-auto ${ACB_SHELL_MAX_W} pointer-events-auto`}>
         {progress ? (
           <div className="-mt-8 mb-2 flex justify-center">{progress}</div>
         ) : null}
@@ -581,8 +593,6 @@ function MusteriAnaSayfaIcerik({
   /** Step-content enter animation direction — presentational only, never read by nav logic. */
   const prevStepForAnimRef = useRef<Step>("giris");
   const stepAnimDirectionRef = useRef<"forward" | "backward">("forward");
-  /** Entry page: YARDIM AL docks into header top-left on scroll */
-  const [girisHeaderDocked, setGirisHeaderDocked] = useState(false);
   const [heroReady, setHeroReady] = useState(() => {
     try {
       return typeof window !== "undefined" && sessionStorage.getItem("acb_hero_intro_seen") === "1";
@@ -1825,10 +1835,10 @@ function MusteriAnaSayfaIcerik({
   async function hedefIleriGit() {
     if (gpsYukleniyor) gpsIptal();
     if (hedefBilinmiyor) {
-      adimGit("telefon");
+      adimGit("ozet");
       return;
     }
-    if (await adresKoordinatDoldur(true)) adimGit("telefon");
+    if (await adresKoordinatDoldur(true)) adimGit("ozet");
   }
 
   const hedefSeciliMi = hedefOpsiyon != null;
@@ -1842,8 +1852,6 @@ function MusteriAnaSayfaIcerik({
   const hedefIleriEngelli =
     loading || adresGeocodeYukleniyor || !hedefGonderilebilir;
 
-  const hedefGlowSinif =
-    "border-amber-400 bg-white text-slate-900 ring-2 ring-amber-300/80 shadow-[0_0_14px_3px_rgba(8,155,45,0.45),var(--acb-shadow-lg)] animate-pulse";
   const hedefNormalSinif =
     "border-slate-200 bg-white text-slate-900 shadow-[var(--acb-shadow)] hover:shadow-[var(--acb-shadow-lg)]";
 
@@ -2377,7 +2385,16 @@ function MusteriAnaSayfaIcerik({
       : seciliSehir || form.adres;
 
   const konumHeaderTrailing =
-    step !== "giris" && step !== "konum" ? (
+    step === "giris" ? (
+      <Btn
+        type="button"
+        variant="primary"
+        onClick={yardimAlBaslat}
+        className="!w-auto !min-h-0 !py-1.5 !px-3.5 !text-xs !font-bold !tracking-wider !rounded-[10px]"
+      >
+        YARDIM AL
+      </Btn>
+    ) : step !== "konum" ? (
       <button
         type="button"
         onClick={konumuDegistir}
@@ -2409,8 +2426,6 @@ function MusteriAnaSayfaIcerik({
         forceDocked={!girisEkrani}
         scrollDock={girisEkrani}
         heroReady={heroReady}
-        onDockedChange={setGirisHeaderDocked}
-        onYardimAl={girisEkrani ? yardimAlBaslat : undefined}
         onClick={() => {
           setStep("giris");
           setKonumSheetAcik(false);
@@ -2454,7 +2469,7 @@ function MusteriAnaSayfaIcerik({
       ) : null}
       {step === "giris" && (
         <>
-          <EmergencyHero ctaDocked={girisHeaderDocked} onHeroReady={setHeroReady} />
+          <EmergencyHero onHeroReady={setHeroReady} onYardimAl={yardimAlBaslat} />
           <div className="mt-10 space-y-8 border-t border-[var(--acb-border)] pt-8">
             <div id="nasil-calisir" className="scroll-mt-[calc(4.75rem+env(safe-area-inset-top))]">
               <AnaSayfaOzellikSeridi />
@@ -2651,9 +2666,11 @@ function MusteriAnaSayfaIcerik({
                     {d.etiket}
                   </span>
                   {secili ? (
-                    <span className="shrink-0 text-[var(--acb-green)] text-base">
-                      ✓
-                    </span>
+                    <AcbIcons.check
+                      className="size-4 shrink-0 text-[var(--acb-green)]"
+                      strokeWidth={ACB_ICON_STROKE}
+                      aria-hidden
+                    />
                   ) : null}
                 </button>
               );
@@ -2735,9 +2752,11 @@ function MusteriAnaSayfaIcerik({
                     {d.etiket}
                   </span>
                   {secili ? (
-                    <span className="shrink-0 text-[var(--acb-green)] text-base">
-                      ✓
-                    </span>
+                    <AcbIcons.check
+                      className="size-4 shrink-0 text-[var(--acb-green)]"
+                      strokeWidth={ACB_ICON_STROKE}
+                      aria-hidden
+                    />
                   ) : null}
                 </button>
               );
@@ -2821,16 +2840,18 @@ function MusteriAnaSayfaIcerik({
                     {d.etiket}
                   </span>
                   {secili ? (
-                    <span className="shrink-0 text-[var(--acb-green)] text-lg font-bold">
-                      ✓
-                    </span>
+                    <AcbIcons.check
+                      className="size-5 shrink-0 text-[var(--acb-green)]"
+                      strokeWidth={ACB_ICON_STROKE}
+                      aria-hidden
+                    />
                   ) : null}
                 </button>
               );
             })}
           </div>
           <div
-            className="rounded-[var(--acb-radius-lg)] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 leading-relaxed"
+            className="rounded-[var(--acb-radius-lg)] border border-[var(--acb-warn-border)] bg-[var(--acb-warn-soft)] px-4 py-3 text-sm text-[var(--acb-dark)] leading-relaxed"
             role="note"
           >
             {LASTIK_DURUMU_BILGI}
@@ -3096,9 +3117,11 @@ function MusteriAnaSayfaIcerik({
                     {d.etiket}
                   </span>
                   {secili ? (
-                    <span className="shrink-0 text-[var(--acb-green)] text-lg font-bold">
-                      ✓
-                    </span>
+                    <AcbIcons.check
+                      className="size-5 shrink-0 text-[var(--acb-green)]"
+                      strokeWidth={ACB_ICON_STROKE}
+                      aria-hidden
+                    />
                   ) : null}
                 </button>
               );
@@ -3542,37 +3565,41 @@ function MusteriAnaSayfaIcerik({
               type="button"
               onClick={() => enYakinHedefSec("oto_tamir")}
               disabled={oneriYukleniyor && oneriler.length === 0}
-              className={`w-full rounded-[var(--acb-radius-lg)] border px-4 py-3.5 text-left font-semibold text-sm transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] disabled:opacity-50 ${
+              className={`w-full flex items-center justify-between gap-2 rounded-[var(--acb-radius-lg)] border px-4 py-3.5 text-left font-semibold text-sm transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] disabled:opacity-50 ${
                 enYakinModSeciliMi("oto_tamir") || hedefOpsiyon === "oto_tamir"
-                  ? "border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-200"
-                  : !hedefSeciliMi
-                    ? hedefGlowSinif
-                    : `${hedefNormalSinif} hover:border-blue-400`
+                  ? "border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-200 shadow-sm"
+                  : `${hedefNormalSinif} hover:border-blue-400`
               }`}
             >
-              En yakın oto servis
-              {enYakinModSeciliMi("oto_tamir") || hedefOpsiyon === "oto_tamir"
-                ? " ✓"
-                : ""}
+              <span>En yakın oto servis</span>
+              {enYakinModSeciliMi("oto_tamir") || hedefOpsiyon === "oto_tamir" ? (
+                <AcbIcons.check
+                  className="size-4 shrink-0"
+                  strokeWidth={ACB_ICON_STROKE}
+                  aria-hidden
+                />
+              ) : null}
             </button>
             <button
               type="button"
               onClick={() => enYakinHedefSec("oto_sanayi")}
               disabled={oneriYukleniyor && oneriler.length === 0}
-              className={`w-full rounded-[var(--acb-radius-lg)] border px-4 py-3.5 text-left font-semibold text-sm transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] disabled:opacity-50 ${
+              className={`w-full flex items-center justify-between gap-2 rounded-[var(--acb-radius-lg)] border px-4 py-3.5 text-left font-semibold text-sm transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] disabled:opacity-50 ${
                 enYakinModSeciliMi("oto_sanayi") ||
                 hedefOpsiyon === "oto_sanayi"
-                  ? "border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-200"
-                  : !hedefSeciliMi
-                    ? hedefGlowSinif
-                    : `${hedefNormalSinif} hover:border-emerald-400`
+                  ? "border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-200 shadow-sm"
+                  : `${hedefNormalSinif} hover:border-emerald-400`
               }`}
             >
-              En yakın oto sanayi
+              <span>En yakın oto sanayi</span>
               {enYakinModSeciliMi("oto_sanayi") ||
-              hedefOpsiyon === "oto_sanayi"
-                ? " ✓"
-                : ""}
+              hedefOpsiyon === "oto_sanayi" ? (
+                <AcbIcons.check
+                  className="size-4 shrink-0"
+                  strokeWidth={ACB_ICON_STROKE}
+                  aria-hidden
+                />
+              ) : null}
             </button>
 
             {hedefBilinmiyor ? (
@@ -3583,9 +3610,14 @@ function MusteriAnaSayfaIcerik({
                 <button
                   type="button"
                   onClick={hedefBilmiyorumSec}
-                  className="w-full text-left px-4 pt-3.5 pb-2 font-semibold text-sm text-amber-950"
+                  className="w-full flex items-center justify-between gap-2 text-left px-4 pt-3.5 pb-2 font-semibold text-sm text-amber-950"
                 >
-                  Bilmiyorum, sonra seçeceğim ✓
+                  <span>Bilmiyorum, sonra seçeceğim</span>
+                  <AcbIcons.check
+                    className="size-4 shrink-0"
+                    strokeWidth={ACB_ICON_STROKE}
+                    aria-hidden
+                  />
                 </button>
                 <div className="px-4 pb-3">
                   <p className="text-sm text-amber-900 leading-relaxed">
@@ -3597,11 +3629,7 @@ function MusteriAnaSayfaIcerik({
               <button
                 type="button"
                 onClick={hedefBilmiyorumSec}
-                className={`w-full rounded-[var(--acb-radius-lg)] border px-4 py-3.5 text-left font-semibold text-sm transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] ${
-                  !hedefSeciliMi
-                    ? hedefGlowSinif
-                    : `${hedefNormalSinif} hover:border-amber-400`
-                }`}
+                className={`w-full rounded-[var(--acb-radius-lg)] border px-4 py-3.5 text-left font-semibold text-sm transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] ${hedefNormalSinif} hover:border-amber-400`}
               >
                 Bilmiyorum, sonra seçeceğim
               </button>
@@ -3615,9 +3643,14 @@ function MusteriAnaSayfaIcerik({
                 <button
                   type="button"
                   onClick={hedefKendimAratSec}
-                  className="w-full text-left px-4 pt-3.5 pb-2 font-semibold text-sm text-amber-950"
+                  className="w-full flex items-center justify-between gap-2 text-left px-4 pt-3.5 pb-2 font-semibold text-sm text-amber-950"
                 >
-                  Çekeceğim adresi kendim aratacağım ✓
+                  <span>Çekeceğim adresi kendim aratacağım</span>
+                  <AcbIcons.check
+                    className="size-4 shrink-0"
+                    strokeWidth={ACB_ICON_STROKE}
+                    aria-hidden
+                  />
                 </button>
                 <div className="px-4 pb-3 space-y-1">
                   {hedefAdresAramaAlani()}
@@ -3627,11 +3660,7 @@ function MusteriAnaSayfaIcerik({
               <button
                 type="button"
                 onClick={hedefKendimAratSec}
-                className={`w-full rounded-[var(--acb-radius-lg)] border px-4 py-3.5 text-left font-semibold text-sm transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] ${
-                  !hedefSeciliMi
-                    ? hedefGlowSinif
-                    : `${hedefNormalSinif} hover:border-amber-400`
-                }`}
+                className={`w-full rounded-[var(--acb-radius-lg)] border px-4 py-3.5 text-left font-semibold text-sm transition-[border-color,background-color,box-shadow,transform] duration-200 active:duration-100 ease-out touch-manipulation hover:-translate-y-px active:translate-y-0 active:scale-[0.99] ${hedefNormalSinif} hover:border-amber-400`}
               >
                 Çekeceğim adresi kendim aratacağım
               </button>
@@ -3713,10 +3742,17 @@ function MusteriAnaSayfaIcerik({
                     <Spinner className="size-4 border-slate-400 border-t-slate-600" />
                     Yeni öneriler aranıyor…
                   </span>
-                ) : yeniOneriApiSayisi >= 5 ? (
-                  "🔄 Önceki önerilerden rastgele"
                 ) : (
-                  `🔄 Yeni öneriler ver (${5 - yeniOneriApiSayisi} kaldı)`
+                  <span className="inline-flex items-center justify-center gap-1.5">
+                    <AcbIcons.refresh
+                      className="size-4"
+                      strokeWidth={ACB_ICON_STROKE}
+                      aria-hidden
+                    />
+                    {yeniOneriApiSayisi >= 5
+                      ? "Önceki önerilerden rastgele"
+                      : `Yeni öneriler ver (${5 - yeniOneriApiSayisi} kaldı)`}
+                  </span>
                 )}
               </Btn>
               {(
@@ -3766,8 +3802,13 @@ function MusteriAnaSayfaIcerik({
                             </p>
                             <div className="shrink-0 flex flex-col items-end gap-1">
                               {o.puan != null && (
-                                <span className="text-xs font-semibold text-amber-700">
-                                  ★ {o.puan}
+                                <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-[var(--acb-dark)]">
+                                  <AcbIcons.rating
+                                    className="size-3"
+                                    strokeWidth={ACB_ICON_STROKE}
+                                    aria-hidden
+                                  />
+                                  {o.puan}
                                 </span>
                               )}
                               {oneriAcikFiltre && (
@@ -3899,6 +3940,178 @@ function MusteriAnaSayfaIcerik({
               </Btn>
             )}
 
+        </div>
+      )}
+      {step === "ozet" && (
+        <div className="space-y-5 animate-fade-in">
+          <div className="space-y-1">
+            <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">
+              Talebini kontrol et
+            </h2>
+            <p className="text-sm text-[var(--acb-muted)] leading-snug">
+              Göndermeden önce bilgilerini gözden geçir.
+            </p>
+          </div>
+
+          <div className="overflow-hidden rounded-[var(--acb-radius-lg)] border border-[var(--acb-border)] bg-white shadow-[var(--acb-shadow)] divide-y divide-[var(--acb-border)]">
+            <div className="flex items-start justify-between gap-3 px-4 py-3.5">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--acb-soft)]">
+                  <SorunIkon id={form.sorunTipi} className="size-5" active />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--acb-muted)]">
+                    Hizmet
+                  </p>
+                  <p className="truncate text-sm font-semibold text-[var(--acb-dark)]">
+                    {sorunLabel ?? "—"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => adimGit("sorun")}
+                className="shrink-0 text-xs font-semibold text-[var(--acb-dark)] underline touch-manipulation"
+              >
+                Değiştir
+              </button>
+            </div>
+
+            <div className="flex items-start justify-between gap-3 px-4 py-3.5">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--acb-soft)]">
+                  <AcbIcons.location
+                    className="size-5 text-[var(--acb-green)]"
+                    strokeWidth={ACB_ICON_STROKE}
+                    aria-hidden
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--acb-muted)]">
+                    Konum
+                  </p>
+                  <p className="text-sm font-semibold leading-snug text-[var(--acb-dark)]">
+                    {form.adres || "—"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => adimGit("konum")}
+                className="shrink-0 text-xs font-semibold text-[var(--acb-dark)] underline touch-manipulation"
+              >
+                Değiştir
+              </button>
+            </div>
+
+            {sorunAracModeliAlaniGoster(form.sorunTipi) &&
+            (form.aracTipi || form.aracDurumu) ? (
+              <div className="flex items-start justify-between gap-3 px-4 py-3.5">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--acb-soft)]">
+                    <AcbIcons.car
+                      className="size-5 text-[var(--acb-green)]"
+                      strokeWidth={ACB_ICON_STROKE}
+                      aria-hidden
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--acb-muted)]">
+                      Araç
+                    </p>
+                    <p className="text-sm font-semibold leading-snug text-[var(--acb-dark)]">
+                      {[aracTipiEtiket(form.aracTipi), aracDurumuEtiket(form.aracDurumu)]
+                        .filter(Boolean)
+                        .join(" · ") || "—"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => adimGit("arac_tipi")}
+                  className="shrink-0 text-xs font-semibold text-[var(--acb-dark)] underline touch-manipulation"
+                >
+                  Değiştir
+                </button>
+              </div>
+            ) : null}
+
+            {hedefKonumGerekli ? (
+              <div className="flex items-start justify-between gap-3 px-4 py-3.5">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--acb-soft)]">
+                    <AcbIcons.navigation
+                      className="size-5 text-[var(--acb-green)]"
+                      strokeWidth={ACB_ICON_STROKE}
+                      aria-hidden
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--acb-muted)]">
+                      Nereye çekilecek
+                    </p>
+                    <p className="text-sm font-semibold leading-snug text-[var(--acb-dark)]">
+                      {hedefBilinmiyor
+                        ? "Bilmiyorum, sonra seçeceğim"
+                        : form.hedefAdres || "—"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => adimGit("hedef")}
+                  className="shrink-0 text-xs font-semibold text-[var(--acb-dark)] underline touch-manipulation"
+                >
+                  Değiştir
+                </button>
+              </div>
+            ) : null}
+
+            <div className="flex items-start justify-between gap-3 px-4 py-3.5">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--acb-soft)]">
+                  <AcbIcons.clock
+                    className="size-5 text-[var(--acb-green)]"
+                    strokeWidth={ACB_ICON_STROKE}
+                    aria-hidden
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--acb-muted)]">
+                    Teklif toplama süresi
+                  </p>
+                  <p className="text-sm font-semibold text-[var(--acb-dark)]">
+                    {IHALE_SURE_ETIKET[ihaleSureTipi]}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => adimGit("ihale")}
+                className="shrink-0 text-xs font-semibold text-[var(--acb-dark)] underline touch-manipulation"
+              >
+                Değiştir
+              </button>
+            </div>
+          </div>
+
+          {form.sorunDetay.trim() ? (
+            <div className="rounded-[var(--acb-radius-lg)] border border-[var(--acb-border)] bg-white px-4 py-3.5 shadow-[var(--acb-shadow)]">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--acb-muted)]">
+                Teklif notu
+              </p>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--acb-dark)]">
+                {form.sorunDetay}
+              </p>
+            </div>
+          ) : null}
+
+          <AdimAltNav
+            progress={flowProgressBar}
+            devamMetin="Devam et"
+            onGeri={oncekiAdimaDon}
+            onDevam={() => adimGit("telefon")}
+          />
         </div>
       )}
       {step === "telefon" && (

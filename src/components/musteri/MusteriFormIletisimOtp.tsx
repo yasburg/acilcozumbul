@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Btn, Field, Spinner } from "@/components/ui";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import { gtagUserDataAyarla } from "@/lib/gtag";
@@ -11,6 +12,15 @@ import {
 } from "@/lib/musteri-funnel-client";
 import type { MusteriFunnelId } from "@/lib/musteri-funnel";
 import { telefonDogrulamaHatasi } from "@/lib/telefon";
+import { ACB_SHELL_MAX_W } from "@/lib/design-tokens";
+import {
+  stickyCtaGercekYukseklik,
+  stickyCtaOffsetAyarla,
+  stickyCtaOffsetTemizle,
+} from "@/lib/sticky-cta-offset";
+
+const GERI_BTN_SINIF =
+  "shrink-0 min-w-[4.25rem] max-w-[5.5rem] !px-3 text-xs xs:text-sm";
 
 type Props = {
   funnelId: MusteriFunnelId;
@@ -76,6 +86,26 @@ export function MusteriFormIletisimOtp({
   const [maske, setMaske] = useState("");
   const yasalOnayRef = useRef<HTMLDivElement>(null);
   const gonderildiRef = useRef(false);
+  const navRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const el = navRef.current;
+    if (!el) return;
+    const guncelle = () => stickyCtaOffsetAyarla(stickyCtaGercekYukseklik(el));
+    guncelle();
+    const ro = new ResizeObserver(guncelle);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      stickyCtaOffsetTemizle();
+    };
+  }, [mounted]);
 
   useEffect(() => {
     musteriFunnelOlayBirKez(funnelId, "form_adim_bilgi", {
@@ -226,10 +256,13 @@ export function MusteriFormIletisimOtp({
   return (
     <div className="space-y-4 animate-fade-in pb-40">
       <div className="space-y-1">
-        <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">İletişim bilgileriniz</h2>
+        <h2 className="text-[1.75rem] sm:text-3xl font-bold leading-[1.12] tracking-tight text-[var(--acb-dark)]">
+          İletişim bilgileriniz
+        </h2>
         {sorunLabel ? (
           <p className="text-xs font-semibold text-[var(--acb-green)]">
-            Seçilen sorun: <span className="text-[var(--acb-dark)]">{sorunLabel}</span>
+            Seçilen sorun:{" "}
+            <span className="text-[var(--acb-dark)]">{sorunLabel}</span>
           </p>
         ) : null}
         <p className="text-sm text-[var(--acb-muted)] leading-snug">
@@ -292,7 +325,9 @@ export function MusteriFormIletisimOtp({
           <p className="text-sm text-slate-600">
             {maske || "Telefonunuza"} gelen 6 haneli kodu girin.
           </p>
-          {mesaj ? <p className="text-sm text-emerald-700">{mesaj}</p> : null}
+          {mesaj ? (
+            <p className="text-sm text-[var(--acb-green-hover)]">{mesaj}</p>
+          ) : null}
           {gelistirmeKodu ? (
             <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
               Geliştirme kodu:{" "}
@@ -343,51 +378,70 @@ export function MusteriFormIletisimOtp({
         </p>
       ) : null}
 
-      {progress}
-      <div className="flex gap-3 pt-1">
-        <Btn
-          type="button"
-          variant="secondary"
-          className="!w-auto flex-1"
-          disabled={mesgul}
-          onClick={onGeri}
-        >
-          Geri
-        </Btn>
-        {adim === "iletisim" ? (
-          <Btn
-            type="button"
-            className="flex-[2]"
-            disabled={mesgul}
-            onClick={() => void kodGonder()}
-          >
-            {loading ? (
-              <span className="inline-flex items-center justify-center gap-2">
-                <Spinner className="size-4 border-white/40 border-t-white" />
-                Gönderiliyor…
-              </span>
-            ) : (
-              "Doğrulama kodu gönder"
-            )}
-          </Btn>
-        ) : (
-          <Btn
-            type="button"
-            className="flex-[2]"
-            disabled={mesgul || (kodGonderildi && otpKod.length !== 6)}
-            onClick={() => void kodDogrula()}
-          >
-            {submitting || loading ? (
-              <span className="inline-flex items-center justify-center gap-2">
-                <Spinner className="size-4 border-white/40 border-t-white" />
-                {submitting ? "Gönderiliyor…" : "Doğrulanıyor…"}
-              </span>
-            ) : (
-              submitEtiket ?? "Onayla ve teklif iste"
-            )}
-          </Btn>
-        )}
-      </div>
+      {mounted
+        ? createPortal(
+            <div
+              ref={navRef}
+              className="fixed inset-x-0 bottom-0 z-20 pointer-events-none px-4 pt-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+            >
+              <div className={`mx-auto ${ACB_SHELL_MAX_W} pointer-events-auto`}>
+                {progress ? (
+                  <div className="-mt-8 mb-2 flex justify-center">
+                    {progress}
+                  </div>
+                ) : null}
+                <div className="flex gap-3">
+                  <Btn
+                    type="button"
+                    variant="geri"
+                    className={GERI_BTN_SINIF}
+                    disabled={mesgul}
+                    onClick={onGeri}
+                  >
+                    Geri
+                  </Btn>
+                  {adim === "iletisim" ? (
+                    <Btn
+                      type="button"
+                      className="flex-[2]"
+                      disabled={mesgul}
+                      onClick={() => void kodGonder()}
+                    >
+                      {loading ? (
+                        <span className="inline-flex items-center justify-center gap-2">
+                          <Spinner className="size-4 border-white/40 border-t-white" />
+                          Gönderiliyor…
+                        </span>
+                      ) : (
+                        "Doğrulama kodu gönder"
+                      )}
+                    </Btn>
+                  ) : (
+                    <Btn
+                      type="button"
+                      className="flex-[2]"
+                      disabled={
+                        mesgul || (kodGonderildi && otpKod.length !== 6)
+                      }
+                      onClick={() => void kodDogrula()}
+                    >
+                      {submitting || loading ? (
+                        <span className="inline-flex items-center justify-center gap-2">
+                          <Spinner className="size-4 border-white/40 border-t-white" />
+                          {submitting ? "Gönderiliyor…" : "Doğrulanıyor…"}
+                        </span>
+                      ) : (
+                        submitEtiket ?? "Onayla ve teklif iste"
+                      )}
+                    </Btn>
+                  )}
+                </div>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }
+

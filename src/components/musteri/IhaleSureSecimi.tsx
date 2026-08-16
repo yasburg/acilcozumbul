@@ -10,7 +10,7 @@ import {
   ihaleDatetimeLocal,
   type IhaleSureTipi,
 } from "@/lib/ihale";
-import { ACB_ICON_STROKE } from "@/lib/acb-icons";
+import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
 
 const SECENEKLER: {
   id: IhaleSureTipi;
@@ -22,7 +22,7 @@ const SECENEKLER: {
     id: "acil",
     label: "Acil",
     aciklama: "1 saat · Yakındaki çekicilere anında bildirim",
-    badge: "⚡ En Hızlı",
+    badge: "En Hızlı",
   },
   { id: "1_gun", label: "1 Gün", aciklama: "24 saat" },
   { id: "1_hafta", label: "1 Hafta", aciklama: "7 gün" },
@@ -406,7 +406,7 @@ export function IhaleSureSecimi({
                 secili
                   ? "border-[var(--acb-green)] bg-[var(--acb-soft)] ring-2 ring-[color-mix(in_srgb,var(--acb-green)_35%,transparent)] shadow-sm"
                   : isAcil
-                    ? "border-emerald-300 bg-emerald-50/40 hover:border-[var(--acb-green)]"
+                    ? "border-[color-mix(in_srgb,var(--acb-green)_38%,white)] bg-[color-mix(in_srgb,var(--acb-green)_6%,white)] hover:border-[var(--acb-green)]"
                     : invalid
                       ? "border-red-300 bg-white"
                       : "border-[var(--acb-border)] bg-white hover:border-[color-mix(in_srgb,var(--acb-green)_45%,white)]"
@@ -418,7 +418,7 @@ export function IhaleSureSecimi({
                     {s.label}
                   </span>
                   {s.badge ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/90 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 border border-emerald-300/80 shadow-2xs">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--acb-soft)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--acb-green-hover)] border border-[color-mix(in_srgb,var(--acb-green)_35%,white)] shadow-2xs">
                       {s.badge}
                     </span>
                   ) : null}
@@ -428,9 +428,11 @@ export function IhaleSureSecimi({
                 </span>
               </div>
               {secili ? (
-                <span className="shrink-0 text-[var(--acb-green)] text-lg font-bold">
-                  ✓
-                </span>
+                <AcbIcons.check
+                  className="size-5 shrink-0 text-[var(--acb-green)]"
+                  strokeWidth={ACB_ICON_STROKE}
+                  aria-hidden
+                />
               ) : null}
             </button>
           );

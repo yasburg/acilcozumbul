@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
+import { ACB_SHELL_MAX_W } from "@/lib/design-tokens";
 import { DemoHeaderBadge } from "@/components/DemoHeaderBadge";
 import { Btn, Card } from "@/components/ui";
 import { MemnuniyetFormu } from "@/components/MemnuniyetFormu";
@@ -1074,7 +1075,7 @@ function BekleIcerik() {
             </div>
           </div>
         ) : (
-          <div className="w-full max-w-lg space-y-3">
+          <div className={`w-full ${ACB_SHELL_MAX_W} space-y-3`}>
             {musteriKonum && koordinatGecerli(musteriKonum) ? (
               <MusteriKonumHarita
                 lat={musteriKonum.lat}
@@ -1130,7 +1131,7 @@ function BekleIcerik() {
           type="button"
           disabled={islem}
           onClick={() => void iptalVeYeniTalep()}
-          className="mt-6 w-full max-w-lg py-3 text-sm font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline disabled:opacity-50 touch-manipulation"
+          className={`mt-6 w-full ${ACB_SHELL_MAX_W} py-3 text-sm font-medium text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline disabled:opacity-50 touch-manipulation`}
         >
           İptal et ve yeni talep oluştur
         </button>

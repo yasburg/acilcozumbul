@@ -1,5 +1,4 @@
 export { TrustBadge, VerifiedBadge } from "./TrustBadge";
-export { ServiceCategoryGrid } from "./ServiceCategoryGrid";
 export { ProviderOfferCard } from "./ProviderOfferCard";
 export type { ProviderOfferCardProps } from "./ProviderOfferCard";
 export { BottomSheet } from "./BottomSheet";

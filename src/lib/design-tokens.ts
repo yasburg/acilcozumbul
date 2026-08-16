@@ -17,6 +17,14 @@ export const ACB_TOKENS = {
   pressMs: 100,
 } as const;
 
+/**
+ * Shared content-column width for the app shell — grows with the viewport so
+ * pages stop looking phone-width once there's real tablet/desktop room.
+ * Mirrored across MobileShell, OpeningLogo's docked bar, and every
+ * sticky/portal nav bar so their edges stay aligned with the content column.
+ */
+export const ACB_SHELL_MAX_W = "max-w-lg sm:max-w-xl md:max-w-2xl lg:max-w-3xl";
+
 export const ACB_CTA = {
   acilYardim: "YARDIM AL",
   yardimBul: "YARDIM BUL",
