@@ -48,5 +48,5 @@ next-env.d.ts
 .env.local
 
 certificates
-uploads/
+/uploads/
 .claude/

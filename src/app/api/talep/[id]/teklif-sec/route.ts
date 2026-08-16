@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCekiciById, getTalepById } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import { teklifFiyatDegistiMi } from "@/lib/cekici-puan";
-import { kaybedenTeklifleriIsaretle } from "@/lib/ihale";
+import { kaybedenTeklifleriIsaretle } from "@/lib/ihale-db";
 import {
   demoTalepGetir,
   demoTeklifSec,

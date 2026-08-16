@@ -255,36 +255,6 @@ export function cekiciTeklifVerebilirMi(talep: Talep, cekiciId: string): boolean
   return true;
 }
 
-export async function kaybedenTeklifleriIsaretle(
-  talep: Talep,
-  kazananTeklifId: string
-): Promise<void> {
-  const { updateTalep } = await import("./db");
-  const { setKaybedenTeklifler, updateTeklifDurum } = await import("./teklif-db");
-  const { refreshCekiciPuanOzet } = await import("./puan-ozet-db");
-
-  for (const teklif of talep.teklifler) {
-    if (teklif.id !== kazananTeklifId && teklif.durum === "aktif") {
-      teklif.durum = "kaybetti";
-    }
-  }
-  await updateTalep(talep);
-  try {
-    await updateTeklifDurum(kazananTeklifId, "kazandi");
-    await setKaybedenTeklifler(talep.id, kazananTeklifId);
-    const kazanan = talep.teklifler.find((t) => t.id === kazananTeklifId);
-    if (kazanan) await refreshCekiciPuanOzet(kazanan.cekiciId);
-    for (const t of talep.teklifler) {
-      if (t.id !== kazananTeklifId && t.cekiciId !== kazanan?.cekiciId) {
-        await refreshCekiciPuanOzet(t.cekiciId).catch(() => {});
-      }
-    }
-  } catch (e) {
-    const code = e && typeof e === "object" && "code" in e ? String(e.code) : "";
-    if (code !== "42P01" && code !== "PGRST205") throw e;
-  }
-}
-
 export function aktifTeklifler(talep: Talep): Teklif[] {
   return (talep.teklifler ?? []).filter((t) => t.durum === "aktif");
 }
