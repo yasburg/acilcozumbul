@@ -4,7 +4,7 @@ import {
   panelMuhasebeAnaSayfa,
   panelRol,
 } from "@/lib/supabase/env";
-import { panelSifreDogru } from "@/lib/panel-yetki";
+import { panelSifreDogru } from "@/lib/panel-sifre";
 import { epostaGecerliMi, epostaNormalize } from "@/lib/eposta";
 import { setPanelSessionCookie } from "@/lib/panel-auth";
 
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
   });
 
   try {
-    return setPanelSessionCookie(res, eposta);
+    return await setPanelSessionCookie(res, eposta);
   } catch {
     return NextResponse.json(
       { error: "PANEL_SESSION_SECRET tanımlı değil." },

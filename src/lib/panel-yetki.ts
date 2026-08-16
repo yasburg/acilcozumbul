@@ -1,5 +1,4 @@
 import { epostaNormalize } from "./eposta";
-import { sifreHashDogrula, sifreHashMi } from "./sifre-hash";
 
 export type PanelRol = "admin" | "muhasebe";
 
@@ -37,44 +36,6 @@ export function panelRol(eposta: string | undefined): PanelRol | null {
 
 export function panelEpostaIzinli(eposta: string | undefined): boolean {
   return panelRol(eposta) !== null;
-}
-
-function panelHashDogrula(sifre: string, kayit: string): boolean {
-  if (!sifreHashMi(kayit)) return false;
-  return sifreHashDogrula(sifre, kayit);
-}
-
-/**
- * Panel şifre kontrolü (fail-closed).
- * - `PANEL_ADMIN_PASSWORDS` JSON: `{"mail@x.com":"scrypt$..."}` o e-posta için zorunlu
- * - yoksa `PANEL_ADMIN_PASSWORD_HASH` ortak hash
- * Düz metin env ve “her şifre geçer” yok.
- */
-export function panelSifreDogru(
-  eposta: string | undefined,
-  sifre: string
-): boolean {
-  if (!eposta || !sifre) return false;
-  const e = epostaNormalize(eposta);
-
-  const mapRaw = process.env.PANEL_ADMIN_PASSWORDS?.trim();
-  if (mapRaw) {
-    try {
-      const map = JSON.parse(mapRaw) as Record<string, unknown>;
-      for (const [k, v] of Object.entries(map)) {
-        if (epostaNormalize(k) === e && typeof v === "string") {
-          return panelHashDogrula(sifre, v);
-        }
-      }
-    } catch {
-      return false;
-    }
-  }
-
-  const ortakHash = process.env.PANEL_ADMIN_PASSWORD_HASH?.trim();
-  if (ortakHash) return panelHashDogrula(sifre, ortakHash);
-
-  return false;
 }
 
 export function panelMuhasebeAnaSayfa(): string {

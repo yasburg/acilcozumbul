@@ -4,8 +4,8 @@ import {
   panelMuhasebeApiIzinli,
   panelMuhasebeSayfaIzinli,
   panelRol,
-  panelSifreDogru,
 } from "./panel-yetki";
+import { panelSifreDogru } from "./panel-sifre";
 import { sifreHashle } from "./sifre-hash";
 
 describe("panelRol", () => {

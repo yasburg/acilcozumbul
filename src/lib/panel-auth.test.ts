@@ -15,38 +15,41 @@ describe("panel oturum çerezi", () => {
     process.env.PANEL_ADMIN_EMAILS = prevAdmin;
   });
 
-  it("imzalı çerezi doğrular", () => {
-    const token = signPanelSession("admin@example.com");
+  it("imzalı çerezi doğrular", async () => {
+    const token = await signPanelSession("admin@example.com");
     expect(token.startsWith("v1.")).toBe(true);
-    expect(parsePanelSession(token)).toEqual({
+    expect(await parsePanelSession(token)).toEqual({
       email: "admin@example.com",
       role: "admin",
     });
   });
 
-  it("imzasız eski base64 JSON çerezi reddeder", () => {
-    const sahte = Buffer.from(
+  it("imzasız eski base64 JSON çerezi reddeder", async () => {
+    const sahte = btoa(
       JSON.stringify({
         email: "admin@example.com",
         role: "admin",
         ts: Date.now(),
       })
-    ).toString("base64url");
-    expect(parsePanelSession(sahte)).toBeNull();
+    )
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+    expect(await parsePanelSession(sahte)).toBeNull();
   });
 
-  it("bozulmuş imzayı reddeder", () => {
-    const token = signPanelSession("admin@example.com");
+  it("bozulmuş imzayı reddeder", async () => {
+    const token = await signPanelSession("admin@example.com");
     const parts = token.split(".");
     parts[2] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    expect(parsePanelSession(parts.join("."))).toBeNull();
+    expect(await parsePanelSession(parts.join("."))).toBeNull();
   });
 
-  it("secret yoksa imzalama hata verir ve parse reddeder", () => {
+  it("secret yoksa imzalama hata verir ve parse reddeder", async () => {
     delete process.env.PANEL_SESSION_SECRET;
-    expect(() => signPanelSession("admin@example.com")).toThrow(
+    await expect(signPanelSession("admin@example.com")).rejects.toThrow(
       /PANEL_SESSION_SECRET/
     );
-    expect(parsePanelSession("v1.abc.def")).toBeNull();
+    expect(await parsePanelSession("v1.abc.def")).toBeNull();
   });
 });
