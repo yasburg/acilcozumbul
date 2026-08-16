@@ -1,25 +1,13 @@
 import { getCekiciById } from "./db";
+import { deletePrefix } from "./file-storage";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { cekiciAuthKullaniciSil } from "./cekici-auth";
 
-const BELGE_BUCKET = "cekici-belgeler";
-
-async function cekiciBelgeleriniSil(cekiciId: string): Promise<void> {
-  const sb = getSupabaseAdmin();
-  const { data: files, error: listErr } = await sb.storage
-    .from(BELGE_BUCKET)
-    .list(cekiciId);
-  if (listErr || !files?.length) return;
-
-  const paths = (files || [])
-    .filter((f: any) => f.name)
-    .map((f: any) => `${cekiciId}/${f.name}`);
-  if (paths.length === 0) return;
-
-  const { error: removeErr } = await sb.storage.from(BELGE_BUCKET).remove(paths);
-  if (removeErr) {
-    console.warn("[cekici-sil] belge storage silinemedi:", removeErr.message);
-  }
+async function cekiciDosyalariniSil(cekiciId: string): Promise<void> {
+  await Promise.all([
+    deletePrefix("cekici-belgeler", cekiciId),
+    deletePrefix("cekici-profil-fotograflari", cekiciId),
+  ]);
 }
 
 /** Panel: çekici ve ilişkili kayıtları siler */
@@ -60,7 +48,11 @@ export async function silCekiciCascade(id: string): Promise<void> {
 
   await sb.from("cekici_kayit_otp").delete().eq("telefon", cekici.telefon);
 
-  await cekiciBelgeleriniSil(id);
+  try {
+    await cekiciDosyalariniSil(id);
+  } catch (e) {
+    console.warn("[cekici-sil] volume silinemedi:", e);
+  }
 
   if (cekici.authUserId) {
     await cekiciAuthKullaniciSil(cekici.authUserId);

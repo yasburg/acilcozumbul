@@ -32,6 +32,7 @@ import { ilGecerliMi, ilceListesi } from "@/lib/il-ilce";
 import { gecerliSorunTipi } from "@/lib/sorun-tipleri";
 import { ISTANBUL_IL } from "@/lib/istanbul-ilceler";
 import { kayitCarkOdulTalepEt } from "@/lib/kayit-cark-db";
+import { sifreHashle } from "@/lib/sifre-hash";
 
 /**
  * Passwordless hızlı kayıt: OTP doğrula → hesap oluştur → cookie.
@@ -145,6 +146,7 @@ export async function POST(request: NextRequest) {
     telefon: tel,
     token,
     sifre: "",
+    sifreHash: sifreHashle(rastgeleSifre),
     authUserId,
     kredi: baslangicKredi,
     sehir,

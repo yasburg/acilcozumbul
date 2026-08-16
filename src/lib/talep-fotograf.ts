@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { getSupabaseAdmin } from "./supabase/admin";
+import { uploadFile } from "./file-storage";
 
 const BUCKET = "talep-fotograflari";
 const MAX_BYTES = 4 * 1024 * 1024;
@@ -34,7 +34,7 @@ function uzanti(mime: string): string {
   return "jpg";
 }
 
-/** Talep fotoğrafını Supabase Storage'a yükler; public URL döner */
+/** Talep fotoğrafını volume'a yükler; public URL döner */
 export async function talepFotografYukle(
   talepId: string,
   base64: string
@@ -45,18 +45,11 @@ export async function talepFotografYukle(
   const ext = uzanti(parsed.mime);
   const path = `${talepId}/${randomUUID()}.${ext}`;
 
-  const { error } = await getSupabaseAdmin()
-    .storage.from(BUCKET)
-    .upload(path, parsed.buffer, {
-      contentType: parsed.mime,
-      upsert: false,
-    });
-
-  if (error) {
-    console.error("[talep-fotograf]", error.message);
+  try {
+    return await uploadFile(BUCKET, path, parsed.buffer);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[talep-fotograf]", msg);
     return null;
   }
-
-  const { data } = getSupabaseAdmin().storage.from(BUCKET).getPublicUrl(path);
-  return data.publicUrl || null;
 }

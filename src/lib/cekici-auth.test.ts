@@ -6,12 +6,15 @@ import { bcryptHashMi, sifreHashDogrula, sifreHashle } from "./sifre-hash";
 vi.mock("./db", () => ({
   updateCekici: vi.fn(async () => {}),
   getCekiciByTelefon: vi.fn(),
+  getCekiciler: vi.fn(async () => []),
 }));
 
-import { updateCekici } from "./db";
+import { updateCekici, getCekiciler } from "./db";
 import {
   cekiciAuthEmail,
   cekiciGirisSifreKontrol,
+  cekiciSifreHashleriniTasi,
+  cekiciSifreKayitiniGuvenliyeAl,
   cekiciSifreyiAuthaTasi,
 } from "./cekici-auth";
 
@@ -71,6 +74,60 @@ describe("cekiciGirisSifreKontrol", () => {
     expect(sifreHashDogrula("eski-sifre", kayit.sifreHash)).toBe(true);
     expect(bcryptHashMi(kayit.sifreHash)).toBe(false);
     expect(await cekiciGirisSifreKontrol(cekici, "yanlis")).toBe(false);
+  });
+});
+
+describe("cekiciSifreKayitiniGuvenliyeAl", () => {
+  it("düz metni hash'ler ve siler", () => {
+    const cekici = cekiciFixture({ sifre: "acik123", sifreHash: undefined });
+    const guncel = cekiciSifreKayitiniGuvenliyeAl(cekici);
+    expect(guncel.sifre).toBe("");
+    expect(sifreHashDogrula("acik123", guncel.sifreHash)).toBe(true);
+  });
+
+  it("hash varken düz metni siler", () => {
+    const sifreHash = sifreHashle("gizli");
+    const guncel = cekiciSifreKayitiniGuvenliyeAl(
+      cekiciFixture({ sifre: "gizli", sifreHash })
+    );
+    expect(guncel.sifre).toBe("");
+    expect(guncel.sifreHash).toBe(sifreHash);
+  });
+
+  it("ikisi de yoksa rastgele hash yazar", () => {
+    const guncel = cekiciSifreKayitiniGuvenliyeAl(
+      cekiciFixture({ sifre: "", sifreHash: undefined })
+    );
+    expect(guncel.sifre).toBe("");
+    expect(guncel.sifreHash).toBeTruthy();
+    expect(sifreHashDogrula("", guncel.sifreHash)).toBe(false);
+  });
+});
+
+describe("cekiciSifreHashleriniTasi", () => {
+  beforeEach(() => {
+    vi.mocked(updateCekici).mockClear();
+    vi.mocked(getCekiciler).mockReset();
+  });
+
+  it("yalnızca hash'siz satırları günceller", async () => {
+    const hashed = cekiciFixture({
+      id: "h1",
+      sifre: "",
+      sifreHash: sifreHashle("ok"),
+    });
+    const duz = cekiciFixture({
+      id: "p1",
+      sifre: "eski123",
+      sifreHash: undefined,
+    });
+    vi.mocked(getCekiciler).mockResolvedValue([hashed, duz]);
+    expect(await cekiciSifreHashleriniTasi()).toBe(1);
+    expect(updateCekici).toHaveBeenCalledTimes(1);
+    const kayit = vi.mocked(updateCekici).mock.calls[0]![0];
+    expect(kayit.id).toBe("p1");
+    expect(kayit.sifre).toBe("");
+    expect(sifreHashDogrula("eski123", kayit.sifreHash)).toBe(true);
   });
 });
 

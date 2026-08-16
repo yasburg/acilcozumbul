@@ -2,16 +2,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cekiciFixture } from "@/test/fixtures";
 
 const mockFrom = vi.fn();
-const mockStorageFrom = vi.fn();
+const mockDeletePrefix = vi.fn();
 
 vi.mock("./db", () => ({
   getCekiciById: vi.fn(),
 }));
 
+vi.mock("./file-storage", () => ({
+  deletePrefix: (...args: unknown[]) => mockDeletePrefix(...args),
+}));
+
 vi.mock("./supabase/admin", () => ({
   getSupabaseAdmin: () => ({
     from: mockFrom,
-    storage: { from: mockStorageFrom },
   }),
 }));
 
@@ -33,7 +36,8 @@ describe("silCekiciCascade", () => {
   beforeEach(() => {
     vi.mocked(getCekiciById).mockReset();
     mockFrom.mockReset();
-    mockStorageFrom.mockReset();
+    mockDeletePrefix.mockReset();
+    mockDeletePrefix.mockResolvedValue(undefined);
   });
 
   it("çekici yoksa hata verir", async () => {
@@ -41,7 +45,7 @@ describe("silCekiciCascade", () => {
     await expect(silCekiciCascade("yok")).rejects.toThrow("Çekici bulunamadı.");
   });
 
-  it("ilişkili tabloları temizleyip çekiciyi siler", async () => {
+  it("ilişkili tabloları ve volume dosyalarını temizleyip çekiciyi siler", async () => {
     vi.mocked(getCekiciById).mockResolvedValue(
       cekiciFixture({ id: "c-1", telefon: "05321111111" })
     );
@@ -67,11 +71,6 @@ describe("silCekiciCascade", () => {
       };
     });
 
-    mockStorageFrom.mockReturnValue({
-      list: vi.fn(() => Promise.resolve({ data: [], error: null })),
-      remove: vi.fn(),
-    });
-
     await silCekiciCascade("c-1");
 
     expect(mockFrom).toHaveBeenCalledWith("davet_kullanimlari");
@@ -79,5 +78,10 @@ describe("silCekiciCascade", () => {
     expect(mockFrom).toHaveBeenCalledWith("sms_log");
     expect(mockFrom).toHaveBeenCalledWith("cekici_sifre_otp");
     expect(mockFrom).toHaveBeenCalledWith("cekiciler");
+    expect(mockDeletePrefix).toHaveBeenCalledWith("cekici-belgeler", "c-1");
+    expect(mockDeletePrefix).toHaveBeenCalledWith(
+      "cekici-profil-fotograflari",
+      "c-1"
+    );
   });
 });

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { smsBaseUrl } from "@/lib/sms-base-url";
-import { simulasyonCalistir } from "@/lib/simulasyon-ihale-db";
+import { cronPeriyodikCalistir } from "@/lib/cron-periyodik";
 
 /**
- * Zamanı gelen simülasyon ihalelerini açar / hayalet kazananla kapatır.
- * Railway cron: her 5–10 dk — POST /api/cron/simulasyon-calistir
+ * 5 dakikalık cron: simülasyon aç/kapat + memnuniyet SMS + ihale hatırlatma
+ * + toplu SMS kuyruk kurtarma.
+ * Railway: POST /api/cron/simulasyon-calistir
  * Header: Authorization: Bearer CRON_SECRET
  */
 export async function POST(request: NextRequest) {
@@ -25,7 +26,15 @@ export async function POST(request: NextRequest) {
     `${request.nextUrl.protocol}//${request.nextUrl.host}`
   );
 
-  const sonuc = await simulasyonCalistir({ baseUrl });
+  const sonuc = await cronPeriyodikCalistir({ baseUrl });
 
-  return NextResponse.json({ ok: true, ...sonuc });
+  return NextResponse.json({
+    ok: sonuc.hatalar.length === 0,
+    acilan: sonuc.sim.acilan,
+    kapanan: sonuc.sim.kapanan,
+    hatalar: [...sonuc.sim.hatalar, ...sonuc.hatalar],
+    memnuniyet: sonuc.memnuniyet,
+    ihale: sonuc.ihale,
+    topluSms: sonuc.topluSms,
+  });
 }

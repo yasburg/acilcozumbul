@@ -3,6 +3,7 @@ import type { Cekici } from "./types";
 import { tumSorunTipIdleri } from "./sorun-tipleri";
 import { hizmetBolgeSutunlariVar } from "./supabase/bolge-schema";
 import { sifreHashle } from "./sifre-hash";
+import { cekiciSifreHashleriniTasi } from "./cekici-auth";
 
 const SEED_CEKICILER: Cekici[] = [
   {
@@ -78,11 +79,16 @@ export async function ensureSeedData(): Promise<void> {
 
   if (existing.length === 0) return;
 
+  try {
+    await cekiciSifreHashleriniTasi();
+  } catch (e) {
+    console.warn("[ensureSeedData] şifre hash taşıma atlandı:", e);
+  }
+
   const bolgeSutunlari = await hizmetBolgeSutunlariVar();
   let guncellendi = false;
   const migrated = existing.map((c) => {
     let row = c as Cekici;
-    // Artık eksik sifre için plaintext "123456" yazmıyoruz — Auth kullanılır
     if (!row.kayitTarihi) {
       guncellendi = true;
       row = { ...row, kayitTarihi: new Date().toISOString() };

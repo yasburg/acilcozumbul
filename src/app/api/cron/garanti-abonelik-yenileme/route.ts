@@ -26,10 +26,15 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const ozet = await processGarantiAbonelikYenilemeleri({
-    startDate: typeof body.startDate === "string" ? body.startDate : undefined,
-    endDate: typeof body.endDate === "string" ? body.endDate : undefined,
-  });
-
-  return NextResponse.json({ ok: true, ...ozet });
+  try {
+    const ozet = await processGarantiAbonelikYenilemeleri({
+      startDate: typeof body.startDate === "string" ? body.startDate : undefined,
+      endDate: typeof body.endDate === "string" ? body.endDate : undefined,
+    });
+    return NextResponse.json({ ok: true, ...ozet });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Yenileme hatası.";
+    console.error("[cron/garanti-abonelik-yenileme]", e);
+    return NextResponse.json({ ok: false, error: msg.slice(0, 500) });
+  }
 }

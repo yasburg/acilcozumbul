@@ -178,7 +178,7 @@ export function cekiciToRow(
     ad: c.ad,
     telefon: c.telefon,
     token: c.token,
-    sifre: c.sifre || null,
+    sifre: null,
     sifre_hash: c.sifreHash || null,
     auth_user_id: c.authUserId ?? null,
     kredi: c.kredi,
