@@ -15,6 +15,11 @@ async function getPgPool(): Promise<any> {
   if (!pool) {
     const pgModule = await import("pg");
     const Pool = pgModule.Pool || pgModule.default?.Pool;
+    const types = pgModule.types || pgModule.default?.types;
+    /* DATE'i JS Date yapma — String(date).slice(0,10) "Sat Aug 16" olur */
+    if (types?.setTypeParser) {
+      types.setTypeParser(1082, (val: string) => val);
+    }
     const dbUrl = databaseUrl();
 
     pool = new Pool({

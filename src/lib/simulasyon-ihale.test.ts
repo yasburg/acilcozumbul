@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  pgDateAnahtari,
   rastgeleGunIciAcilis,
   rastgeleIkiFarkliIlce,
   rastgeleKapanisAt,
@@ -197,5 +198,22 @@ describe("simulasyonTalepOlustur", () => {
     });
     expect(talep.hedefBilinmiyor).toBe(true);
     expect(talep.hedefKonum).toBeUndefined();
+  });
+});
+
+describe("pgDateAnahtari", () => {
+  it("ISO tarihi YYYY-MM-DD olarak korur", () => {
+    expect(pgDateAnahtari("2026-08-16")).toBe("2026-08-16");
+    expect(pgDateAnahtari("2026-08-16T21:15:40.291Z")).toBe("2026-08-16");
+  });
+
+  it("JS Date'i hafta günü stringine çevirmez", () => {
+    const d = new Date(2026, 7, 16);
+    expect(pgDateAnahtari(d)).toBe("2026-08-16");
+    expect(String(d).slice(0, 10)).not.toBe("2026-08-16");
+  });
+
+  it("hafta günü tarihini Postgres'e göndermez", () => {
+    expect(() => pgDateAnahtari("Sun Aug 16")).toThrow(/Geçersiz gün/);
   });
 });

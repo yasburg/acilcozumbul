@@ -17,15 +17,31 @@ import {
   simulasyonSlotUret,
   simulasyonTalepOlustur,
   istanbulYarinAnahtari,
+  pgDateAnahtari,
   type SimulasyonFormulAyar,
   type SimulasyonPlan,
   type SimulasyonPlanDurum,
   type SimulasyonSorunTipi,
 } from "./simulasyon-ihale";
 
+function dbHataMesaji(e: unknown): string {
+  if (e instanceof Error && e.message) return e.message;
+  if (e && typeof e === "object" && "message" in e) {
+    const o = e as { message?: unknown; code?: unknown };
+    const msg = typeof o.message === "string" ? o.message : "";
+    const code = typeof o.code === "string" ? o.code : "";
+    if (msg) return code ? `${code}: ${msg}` : msg;
+  }
+  try {
+    return JSON.stringify(e);
+  } catch {
+    return String(e);
+  }
+}
+
 type PlanRow = {
   id: string;
-  hedef_gun: string;
+  hedef_gun: string | Date;
   il: string;
   kaynak_ilce: string;
   hedef_ilce: string | null;
@@ -46,7 +62,7 @@ type PlanRow = {
 function planFromRow(r: PlanRow): SimulasyonPlan {
   return {
     id: r.id,
-    hedefGun: String(r.hedef_gun).slice(0, 10),
+    hedefGun: pgDateAnahtari(r.hedef_gun),
     il: r.il,
     kaynakIlce: r.kaynak_ilce,
     hedefIlce: r.hedef_ilce,
@@ -68,7 +84,7 @@ function planFromRow(r: PlanRow): SimulasyonPlan {
 function planToRow(p: SimulasyonPlan): PlanRow {
   return {
     id: p.id,
-    hedef_gun: p.hedefGun,
+    hedef_gun: pgDateAnahtari(p.hedefGun),
     il: p.il,
     kaynak_ilce: p.kaynakIlce,
     hedef_ilce: p.hedefIlce,
@@ -151,6 +167,48 @@ export async function getSimulasyonPlanById(
   return data ? planFromRow(data as PlanRow) : null;
 }
 
+async function sonSimulasyonTalepByPlanId(planId: string): Promise<{
+  talepId: string;
+  planlananKapanisAt: string | null;
+} | null> {
+  const { data, error } = await getSupabaseAdmin()
+    .from("simulasyon_talep")
+    .select("talep_id, planlanan_kapanis_at")
+    .eq("plan_id", planId)
+    .order("olusturulma", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") return null;
+    throw error;
+  }
+  if (!data?.talep_id) return null;
+  return {
+    talepId: String(data.talep_id),
+    planlananKapanisAt: data.planlanan_kapanis_at
+      ? String(data.planlanan_kapanis_at)
+      : null,
+  };
+}
+
+async function simulasyonPlaniMevcutTaleptenOnar(
+  plan: SimulasyonPlan,
+  mevcut: { talepId: string; planlananKapanisAt: string | null }
+): Promise<void> {
+  const talep = await getTalepById(mevcut.talepId);
+  const kapali =
+    talep &&
+    (talep.durum === "anlaşıldı" ||
+      talep.durum === "iptal" ||
+      Boolean(talep.kazananCekiciId));
+  plan.durum = kapali ? "kapandi" : "acildi";
+  plan.talepId = mevcut.talepId;
+  plan.planlananKapanisAt =
+    mevcut.planlananKapanisAt ?? plan.planlananKapanisAt;
+  plan.hataMesaj = null;
+  await updateSimulasyonPlan(plan);
+}
+
 export async function updateSimulasyonPlan(
   plan: SimulasyonPlan
 ): Promise<void> {
@@ -160,6 +218,25 @@ export async function updateSimulasyonPlan(
     .update(planToRow(plan))
     .eq("id", plan.id);
   if (error) throw error;
+}
+
+/** Planlı satırları iptal et — hedef_gun'u yeniden yazmaz (date parse hatası olmaz). */
+export async function simulasyonPlanlariTopluIptal(
+  hedefGun: string
+): Promise<number> {
+  if (!supabaseDbAktif()) return 0;
+  const gun = pgDateAnahtari(hedefGun);
+  const { data, error } = await getSupabaseAdmin()
+    .from("simulasyon_plan")
+    .update({
+      durum: "iptal",
+      guncelleme: new Date().toISOString(),
+    })
+    .eq("hedef_gun", gun)
+    .eq("durum", "planli")
+    .select("id");
+  if (error) throw error;
+  return Array.isArray(data) ? data.length : 0;
 }
 
 async function insertPlanlar(planlar: SimulasyonPlan[]): Promise<void> {
@@ -373,6 +450,12 @@ export async function simulasyonPlanAc(
   opts?: { rand?: () => number; simdi?: Date }
 ): Promise<{ talepId: string }> {
   await ensureSimulasyonGhostCekici();
+  const mevcut = await sonSimulasyonTalepByPlanId(plan.id);
+  if (mevcut) {
+    await simulasyonPlaniMevcutTaleptenOnar(plan, mevcut);
+    return { talepId: mevcut.talepId };
+  }
+
   const simdi = opts?.simdi ?? new Date();
   const rand = opts?.rand ?? Math.random;
 
@@ -588,7 +671,7 @@ export async function simulasyonCalistir(opts: {
       await simulasyonPlanAc(plan, opts.baseUrl, { simdi });
       acilan += 1;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = dbHataMesaji(e);
       hatalar.push(`ac:${plan.id}:${msg}`);
       plan.durum = "hata";
       plan.hataMesaj = msg.slice(0, 500);
@@ -606,7 +689,7 @@ export async function simulasyonCalistir(opts: {
       const ok = await simulasyonIhaleyiKapat(k.talepId, { simdi });
       if (ok) kapanan += 1;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+      const msg = dbHataMesaji(e);
       hatalar.push(`kap:${k.talepId}:${msg}`);
     }
   }

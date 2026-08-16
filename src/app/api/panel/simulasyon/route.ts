@@ -11,11 +11,13 @@ import {
   saveSimulasyonFormulAyar,
   simulasyonCalistir,
   simulasyonGunPlanla,
+  simulasyonPlanlariTopluIptal,
   updateSimulasyonPlan,
 } from "@/lib/simulasyon-ihale-db";
 import {
   formulAyarEtiket,
   formulAyarNormalize,
+  pgDateAnahtari,
   sehirAktifCekiciSayisi,
   SIMULASYON_SORUN_TIPLERI,
   type SimulasyonFormulAyar,
@@ -262,14 +264,7 @@ async function postSimulasyon(request: NextRequest) {
 
     // Tüm gün: mevcut planlı yoksa üret; force=true ise tüm planlıları silip yeniden
     if (body.force === true && hedefGun) {
-      const mevcut = await listSimulasyonPlanlar({
-        hedefGun,
-        durumlar: ["planli"],
-      });
-      for (const p of mevcut) {
-        p.durum = "iptal";
-        await updateSimulasyonPlan(p);
-      }
+      await simulasyonPlanlariTopluIptal(hedefGun);
       const sonuc = await simulasyonGunPlanla({
         hedefGun,
         kaynagi: "manuel",
@@ -294,25 +289,17 @@ async function postSimulasyon(request: NextRequest) {
   }
 
   if (eylem === "toplu_iptal") {
-    const hedefGun =
-      typeof body.hedefGun === "string" && body.hedefGun.trim()
-        ? body.hedefGun.trim().slice(0, 10)
-        : undefined;
-    if (!hedefGun) {
+    const ham =
+      typeof body.hedefGun === "string" ? body.hedefGun.trim() : "";
+    if (!ham) {
       return NextResponse.json(
         { error: "hedefGun gerekli." },
         { status: 400 }
       );
     }
-    const mevcut = await listSimulasyonPlanlar({
-      hedefGun,
-      durumlar: ["planli"],
-    });
-    for (const p of mevcut) {
-      p.durum = "iptal";
-      await updateSimulasyonPlan(p);
-    }
-    return NextResponse.json({ ok: true, iptal: mevcut.length, hedefGun });
+    const hedefGun = pgDateAnahtari(ham);
+    const iptal = await simulasyonPlanlariTopluIptal(hedefGun);
+    return NextResponse.json({ ok: true, iptal, hedefGun });
   }
 
   if (eylem === "ayar_kaydet") {

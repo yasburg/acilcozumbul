@@ -77,6 +77,24 @@ export function istanbulYarinAnahtari(simdi: Date = new Date()): string {
   return istanbulGunAnahtari(d);
 }
 
+/**
+ * Postgres `date` (node-pg Date veya ISO string) → YYYY-MM-DD.
+ * String(date).slice(0, 10) "Sat Aug 16" üretir ve UPDATE'i kırar.
+ */
+export function pgDateAnahtari(v: unknown): string {
+  if (typeof v === "string") {
+    const m = /^\d{4}-\d{2}-\d{2}/.exec(v);
+    if (m) return m[0];
+  }
+  if (v instanceof Date && !Number.isNaN(v.getTime())) {
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, "0");
+    const d = String(v.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  throw new Error(`Geçersiz gün: ${String(v ?? "").slice(0, 40)}`);
+}
+
 /** Şehirdeki aktif + hizmet bölgeli çekici sayısı (hayalet hariç) */
 export function sehirAktifCekiciSayisi(
   cekiciler: Cekici[],
