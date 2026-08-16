@@ -8,7 +8,6 @@ import {
 import { SosyalMedyaIkonlari } from "@/components/yasal/SosyalMedyaIkonlari";
 import { ACB_BRAND } from "@/lib/brand";
 import { YASAL_LINKLER } from "@/lib/yasal-sirket";
-import { cerezleriSifirla } from "@/lib/cerez-onay";
 
 const PLATFORM_LINKLER = [
   { href: "/cekici-fiyat-hesaplama", label: "Çekici fiyat hesaplama" },
@@ -79,15 +78,6 @@ export function YasalSiteFooter() {
                   </Link>
                 </li>
               ))}
-              <li>
-                <button
-                  type="button"
-                  onClick={() => cerezleriSifirla()}
-                  className={`${linkSinif} cursor-pointer text-left`}
-                >
-                  Çerezleri sıfırla
-                </button>
-              </li>
             </ul>
           </nav>
         </div>
