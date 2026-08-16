@@ -169,9 +169,9 @@ export default function PanelTalepAnalizPage() {
                 setSimulasyonFiltre(e.target.value as SimulasyonFiltre)
               }
             >
-              <option value="haric">Yalnızca gerçek</option>
+              <option value="haric">Gerçek ihaleler</option>
               <option value="">Tümü</option>
-              <option value="sadece">Yalnızca simülasyon</option>
+              <option value="sadece">Simülasyon</option>
             </SelectField>
           </div>
           <button

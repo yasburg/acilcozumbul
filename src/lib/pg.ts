@@ -149,6 +149,20 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
     return this;
   }
 
+  inSelect(column: string, fromTable: string, fromColumn: string) {
+    this.whereClause.push(
+      `"${column}" IN (SELECT "${fromColumn}" FROM public."${fromTable}")`
+    );
+    return this;
+  }
+
+  notInSelect(column: string, fromTable: string, fromColumn: string) {
+    this.whereClause.push(
+      `"${column}" NOT IN (SELECT "${fromColumn}" FROM public."${fromTable}")`
+    );
+    return this;
+  }
+
   is(column: string, value: any) {
     if (value === null) {
       this.whereClause.push(`"${column}" IS NULL`);

@@ -56,8 +56,12 @@ export default function PanelTaleplerPage() {
     if (append) setLoadingMore(true);
     else setLoading(true);
     try {
+      const simQ =
+        simulasyonFiltre === "sadece" || simulasyonFiltre === "haric"
+          ? `&sim=${simulasyonFiltre}`
+          : "";
       const r = await fetch(
-        `/api/panel/talepler?limit=${PAGE_SIZE}&offset=${nextOffset}`
+        `/api/panel/talepler?limit=${PAGE_SIZE}&offset=${nextOffset}${simQ}`
       );
       const data = await r.json();
       const items: PanelTalepSatir[] = data.talepler ?? [];
@@ -68,7 +72,7 @@ export default function PanelTaleplerPage() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, []);
+  }, [simulasyonFiltre]);
 
   const yukleOzet = useCallback(async () => {
     const r = await fetch("/api/panel/talepler?ozet=1");
@@ -203,8 +207,8 @@ export default function PanelTaleplerPage() {
                 }
               >
                 <option value="">Tümü</option>
-                <option value="sadece">Yalnızca simülasyon</option>
-                <option value="haric">Simülasyon hariç</option>
+                <option value="haric">Gerçek ihaleler</option>
+                <option value="sadece">Simülasyon</option>
               </SelectField>
             </div>
           )}

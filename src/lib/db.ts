@@ -420,6 +420,7 @@ export async function getTaleplerSayfali(opts?: {
   limit?: number;
   offset?: number;
   sinceIso?: string;
+  simulasyon?: "" | "sadece" | "haric";
 }): Promise<{ talepler: Talep[]; total: number }> {
   const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 200);
   const offset = Math.max(opts?.offset ?? 0, 0);
@@ -429,6 +430,11 @@ export async function getTaleplerSayfali(opts?: {
     .order("olusturulma", { ascending: false });
   if (opts?.sinceIso) {
     q = q.gte("olusturulma", opts.sinceIso);
+  }
+  if (opts?.simulasyon === "haric") {
+    q = q.notInSelect("id", "simulasyon_talep", "talep_id");
+  } else if (opts?.simulasyon === "sadece") {
+    q = q.inSelect("id", "simulasyon_talep", "talep_id");
   }
   const { data, error, count } = await q.range(offset, offset + limit - 1);
   if (error) throw error;

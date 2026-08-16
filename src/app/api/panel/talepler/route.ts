@@ -23,10 +23,14 @@ export async function GET(request: NextRequest) {
 
   const limit = Number(searchParams.get("limit") ?? "50");
   const offset = Number(searchParams.get("offset") ?? "0");
+  const simHam = searchParams.get("sim") ?? "";
+  const simulasyon =
+    simHam === "sadece" || simHam === "haric" ? simHam : "";
   const { talepler, total } = await getTaleplerSayfali({
     limit: Number.isFinite(limit) ? limit : 50,
     offset: Number.isFinite(offset) ? offset : 0,
     sinceIso: since,
+    simulasyon,
   });
 
   const simIds = await simulasyonTalepIdSet(talepler.map((t) => t.id));
