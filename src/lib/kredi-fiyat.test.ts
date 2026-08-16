@@ -12,7 +12,7 @@ describe("kredi-fiyat", () => {
   it("kredi satın al paketleri", () => {
     expect(krediPaketBul(499, "kredi")?.kredi).toBe(250);
     expect(krediPaketBul(999, "kredi")?.kredi).toBe(750);
-    expect(krediPaketBul(1999, "kredi")?.kredi).toBe(1000);
+    expect(krediPaketBul(1999, "kredi")?.kredi).toBe(2000);
     for (const p of KREDI_SATIN_AL_PAKETLERI) {
       expect(p.bonusKredi).toBe(0);
       expect(krediPaketOdenecekTL(p)).toBe(p.tutarTL);

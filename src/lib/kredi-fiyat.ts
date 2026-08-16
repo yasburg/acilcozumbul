@@ -22,7 +22,7 @@ export type KrediPaket = {
 export const KREDI_SATIN_AL_PAKETLERI: readonly KrediPaket[] = [
   { tutarTL: 499, kredi: 250, bonusKredi: 0, indirimYuzde: 0 },
   { tutarTL: 999, kredi: 750, bonusKredi: 0, indirimYuzde: 0 },
-  { tutarTL: 1999, kredi: 1000, bonusKredi: 0, indirimYuzde: 0 },
+  { tutarTL: 1999, kredi: 2000, bonusKredi: 0, indirimYuzde: 0 },
 ];
 
 /** Aylık abonelik — bonus 2./3. pakette */
