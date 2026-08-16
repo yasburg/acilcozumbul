@@ -3,10 +3,10 @@
 function Ikon724() {
   return (
     <svg viewBox="0 0 64 64" className="size-full" fill="none" aria-hidden>
-      <rect x="1" y="1" width="62" height="62" rx="19" fill="#dcfce7" stroke="#86efac" strokeWidth="1.5" />
+      <rect x="1" y="1" width="62" height="62" rx="19" fill="#eaf8ee" stroke="#9ee3b2" strokeWidth="1.5" />
       <path
         d="M18 28.5v-2A14 14 0 0 1 32 12.5 14 14 0 0 1 46 26.5v2"
-        stroke="#15803d"
+        stroke="#0b4e1e"
         strokeWidth="2.8"
         strokeLinecap="round"
       />
@@ -17,7 +17,7 @@ function Ikon724() {
         height="16"
         rx="3.5"
         fill="white"
-        stroke="#15803d"
+        stroke="#0b4e1e"
         strokeWidth="2.4"
       />
       <rect
@@ -27,12 +27,12 @@ function Ikon724() {
         height="16"
         rx="3.5"
         fill="white"
-        stroke="#15803d"
+        stroke="#0b4e1e"
         strokeWidth="2.4"
       />
       <path
         d="M42 44.5v2.2A6.5 6.5 0 0 1 35.5 53h-2.2a4.8 4.8 0 0 1-4.8-4.8"
-        stroke="#15803d"
+        stroke="#0b4e1e"
         strokeWidth="2.4"
         strokeLinecap="round"
       />
@@ -43,17 +43,17 @@ function Ikon724() {
 function IkonGuven() {
   return (
     <svg viewBox="0 0 64 64" className="size-full" fill="none" aria-hidden>
-      <rect x="1" y="1" width="62" height="62" rx="19" fill="#dcfce7" stroke="#86efac" strokeWidth="1.5" />
+      <rect x="1" y="1" width="62" height="62" rx="19" fill="#eaf8ee" stroke="#9ee3b2" strokeWidth="1.5" />
       <path
         d="M32 12.5 17.5 18v12.2c0 9.6 6.4 18.2 14.5 20.8 8.1-2.6 14.5-11.2 14.5-20.8V18L32 12.5Z"
         fill="white"
-        stroke="#15803d"
+        stroke="#0b4e1e"
         strokeWidth="2.4"
         strokeLinejoin="round"
       />
       <path
         d="m24.5 32.2 5 5 10.2-10.4"
-        stroke="#15803d"
+        stroke="#0b4e1e"
         strokeWidth="2.8"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -65,13 +65,13 @@ function IkonGuven() {
 function IkonKarsilastir() {
   return (
     <svg viewBox="0 0 64 64" className="size-full" fill="none" aria-hidden>
-      <rect x="1" y="1" width="62" height="62" rx="19" fill="#dcfce7" stroke="#86efac" strokeWidth="1.5" />
-      <circle cx="23" cy="26" r="7.2" fill="white" stroke="#15803d" strokeWidth="2.4" />
-      <circle cx="41" cy="26" r="7.2" fill="white" stroke="#15803d" strokeWidth="2.4" />
-      <circle cx="32" cy="43" r="7.2" fill="white" stroke="#15803d" strokeWidth="2.4" />
+      <rect x="1" y="1" width="62" height="62" rx="19" fill="#eaf8ee" stroke="#9ee3b2" strokeWidth="1.5" />
+      <circle cx="23" cy="26" r="7.2" fill="white" stroke="#0b4e1e" strokeWidth="2.4" />
+      <circle cx="41" cy="26" r="7.2" fill="white" stroke="#0b4e1e" strokeWidth="2.4" />
+      <circle cx="32" cy="43" r="7.2" fill="white" stroke="#0b4e1e" strokeWidth="2.4" />
       <path
         d="m28.2 20.4 2.2-5.2M35.8 20.4 33.6 15.2M32 35.8V31"
-        stroke="#15803d"
+        stroke="#0b4e1e"
         strokeWidth="2.4"
         strokeLinecap="round"
       />
@@ -82,15 +82,15 @@ function IkonKarsilastir() {
 function IkonYakin() {
   return (
     <svg viewBox="0 0 64 64" className="size-full" fill="none" aria-hidden>
-      <rect x="1" y="1" width="62" height="62" rx="19" fill="#dcfce7" stroke="#86efac" strokeWidth="1.5" />
+      <rect x="1" y="1" width="62" height="62" rx="19" fill="#eaf8ee" stroke="#9ee3b2" strokeWidth="1.5" />
       <path
         d="M32 13.5c-7.2 0-13 5.6-13 12.6 0 9.4 13 24.4 13 24.4s13-15 13-24.4c0-7-5.8-12.6-13-12.6Z"
         fill="white"
-        stroke="#15803d"
+        stroke="#0b4e1e"
         strokeWidth="2.4"
         strokeLinejoin="round"
       />
-      <circle cx="32" cy="26" r="4.4" fill="#15803d" />
+      <circle cx="32" cy="26" r="4.4" fill="#0b4e1e" />
     </svg>
   );
 }
