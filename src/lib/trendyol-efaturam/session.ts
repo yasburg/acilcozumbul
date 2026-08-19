@@ -36,23 +36,7 @@ function companyIdFromPrivs(claims: Record<string, unknown>): number | null {
   return null;
 }
 
-export async function efaturamOturumAl(): Promise<EfaturamOturum> {
-  const cfg = trendyolEfaturamConfigOku();
-  const envCompany = Number(cfg.companyId);
-  const envUser = Number(cfg.userId);
-
-  if (Number.isFinite(envCompany) && envCompany > 0 && Number.isFinite(envUser) && envUser > 0) {
-    return { companyId: envCompany, userId: envUser };
-  }
-
-  const token = await trendyolEfaturamAccessTokenAl();
-  const claims = jwtClaimOku(token);
-  if (!claims) {
-    throw new Error(
-      "Trendyol E-Faturam companyId/userId bulunamadı. TRENDYOL_EFATURAM_COMPANY_ID ve TRENDYOL_EFATURAM_USER_ID env değerlerini girin."
-    );
-  }
-
+function oturumJwtDen(claims: Record<string, unknown>): EfaturamOturum | null {
   const companyId =
     sayiClaim(claims.companyId) ??
     sayiClaim(claims.company_id) ??
@@ -64,11 +48,25 @@ export async function efaturamOturumAl(): Promise<EfaturamOturum> {
     sayiClaim(claims.uid) ??
     sayiClaim(claims.sub);
 
-  if (!companyId || !userId) {
-    throw new Error(
-      "JWT içinde companyId/userId yok. TRENDYOL_EFATURAM_COMPANY_ID ve TRENDYOL_EFATURAM_USER_ID env değerlerini girin."
-    );
+  if (!companyId || !userId) return null;
+  return { companyId, userId };
+}
+
+/** Giriş token'ındaki companyId/userId önceliklidir — stage/prod env karışmasını önler. */
+export async function efaturamOturumAl(): Promise<EfaturamOturum> {
+  const cfg = trendyolEfaturamConfigOku();
+  const token = await trendyolEfaturamAccessTokenAl();
+  const claims = jwtClaimOku(token);
+  const jwtOturum = claims ? oturumJwtDen(claims) : null;
+  if (jwtOturum) return jwtOturum;
+
+  const envCompany = Number(cfg.companyId);
+  const envUser = Number(cfg.userId);
+  if (Number.isFinite(envCompany) && envCompany > 0 && Number.isFinite(envUser) && envUser > 0) {
+    return { companyId: envCompany, userId: envUser };
   }
 
-  return { companyId, userId };
+  throw new Error(
+    "Trendyol E-Faturam companyId/userId bulunamadı. TRENDYOL_EFATURAM_COMPANY_ID ve TRENDYOL_EFATURAM_USER_ID env değerlerini girin."
+  );
 }

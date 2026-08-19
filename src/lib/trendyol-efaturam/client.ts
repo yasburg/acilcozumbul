@@ -26,12 +26,10 @@ export async function efaturamApiJson<T>(
   const res = await efaturamApiFetch(path, init);
   const text = await res.text();
   if (!res.ok) {
-    const auth401 =
-      res.status === 401 &&
-      text.includes("Authorization Error");
+    const auth401 = res.status === 401;
     throw new Error(
       auth401
-        ? `Trendyol E-Faturam ${path} (401): Yetkilendirme reddedildi. Giriş başarılı olsa bile fatura API'leri genelde IP whitelist gerektirir — Trendyol E-Faturam panelinde sunucu çıkış IP'nizi tanımlayın veya Railway/prod üzerinden deneyin. Yanıt: ${text.slice(0, 200)}`
+        ? `Trendyol E-Faturam ${path} (401): Giriş başarılı olsa bile fatura API'leri IP whitelist ister (Trendyol hata metnini yanıltıcı gösterir). Local: çıkış IP'nizi panele ekleyin; prod: Railway static IP'ler (208.77.244.240–242). Stage/prod için gateway, şifre ve companyId/userId aynı ortama ait olmalı. Yanıt: ${text.slice(0, 200)}`
         : `Trendyol E-Faturam ${path} (${res.status})${text ? `: ${text.slice(0, 300)}` : ""}`
     );
   }
