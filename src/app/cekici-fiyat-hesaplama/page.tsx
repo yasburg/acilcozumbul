@@ -259,7 +259,7 @@ export default function CekiciFiyatHesaplamaPage() {
               </p>
               <p>
                 <Link
-                  href="/"
+                  href="/?hizmet=arac-tasima"
                   className="font-semibold text-amber-700 hover:underline"
                 >
                   Ana sayfadan teklif al →

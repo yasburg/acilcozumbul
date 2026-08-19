@@ -5,7 +5,7 @@ import {
 } from "@/lib/abonelik-db";
 import { getCurrentCekici } from "@/lib/auth";
 import { getCekiciById, updateCekici } from "@/lib/db";
-import { garantiYapilandirildi } from "@/lib/garanti/config";
+import { garantiYapilandirildi, odemeDemoMu } from "@/lib/garanti/config";
 import {
   aylikRecurringOpts,
   garantiKrediOdemesiYap,
@@ -27,6 +27,7 @@ import {
 } from "@/lib/kredi-bakiye";
 import { ensureSeedData } from "@/lib/seed";
 import { adminOdemeSmsGonder } from "@/lib/admin-odeme-sms";
+import { kurumsalOdemeSonrasiTrendyolFatura } from "@/lib/fatura-trendyol";
 
 function sonKullanmaAyir(sonKullanma: string): { ay: string; yil: string } | null {
   const temiz = sonKullanma.replace(/\s/g, "");
@@ -84,7 +85,7 @@ export async function POST(
 
   let referans = `VPOS-${id.slice(0, 8).toUpperCase()}`;
   let garantiRespCode: string | undefined;
-  const demo = !garantiYapilandirildi();
+  const demo = odemeDemoMu();
 
   if (garantiYapilandirildi()) {
     if (!kartNo || !sonKullanma || !cvv) {
@@ -185,7 +186,7 @@ export async function POST(
     });
   }
 
-  await kaydetKrediOdeme({
+  const krediOdemeKayit = {
     id: bekleyen.id,
     cekiciId: cekici.id,
     cekiciAd: guncelCekici.ad,
@@ -194,7 +195,10 @@ export async function POST(
     tutar: bekleyen.tutar,
     listeFiyati: bekleyen.listeFiyati,
     paketTl: bekleyen.paketTl ?? bekleyen.listeFiyati ?? bekleyen.tutar,
-    odemeTipi: bekleyen.odemeTipi === "abonelik" ? "abonelik" : "kredi",
+    odemeTipi:
+      (bekleyen.odemeTipi === "abonelik" ? "abonelik" : "kredi") as
+        | "kredi"
+        | "abonelik",
     faturaEposta: faturaSonuc.data.faturaEposta ?? "",
     faturaAdres: faturaSonuc.data.faturaAdres,
     faturaTcKimlik: faturaSonuc.data.faturaTcKimlik,
@@ -205,7 +209,15 @@ export async function POST(
     garantiRespCode,
     demoOdeme: demo,
     olusturulma: new Date().toISOString(),
-  });
+  };
+
+  await kaydetKrediOdeme(krediOdemeKayit);
+
+  if (faturaSonuc.data.kurumsal) {
+    void kurumsalOdemeSonrasiTrendyolFatura(krediOdemeKayit).catch((e) =>
+      console.error("[trendyol-fatura] tamamla", e)
+    );
+  }
 
   try {
     await baglaKrediHatirlatmaYukleme(cekici.id);

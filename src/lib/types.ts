@@ -224,6 +224,10 @@ export interface Talep {
   anlasildiAt?: string;
   /** Kazanan çekici müşteri telefonuna ilk tıkladığında */
   musteriArandiAt?: string;
+  /** Müşteri «WhatsApp'tan konum at» butonuna tıkladığında */
+  musteriWhatsappAt?: string;
+  /** Müşteri değerlendirme formunda «Hizmeti aldım» dediğinde (puan yok) */
+  musteriHizmetAlindiAt?: string;
   memnuniyetSmsGonderildi?: boolean;
   teklifler: Teklif[];
   haricTutulanCekiciIds?: string[];

@@ -20,6 +20,8 @@ import {
   type CekiciSaatId,
   type LatLngNokta,
 } from "@/lib/cekici-fiyat-hesaplama";
+import { fiyatHesaplamaTalepTaslagi } from "@/lib/fiyat-hesaplama-talep";
+import { musteriFormTaslakKaydet } from "@/lib/musteri-form-taslak";
 
 const ILLER = illerSecimSirasi(DESTEKLENEN_ILLER);
 
@@ -46,6 +48,12 @@ export function CekiciFiyatHesaplamaAraci() {
   const [hata, setHata] = useState("");
   const [mesafeKm, setMesafeKm] = useState<number | null>(null);
   const [sonuc, setSonuc] = useState<CekiciFiyatSonuc | null>(null);
+  const [cikisKoordinat, setCikisKoordinat] = useState<LatLngNokta | null>(
+    null
+  );
+  const [varisKoordinat, setVarisKoordinat] = useState<LatLngNokta | null>(
+    null
+  );
 
   const formHazir = useMemo(
     () => Boolean(cikisIl && cikisIlce && varisIl && varisIlce),
@@ -59,6 +67,32 @@ export function CekiciFiyatHesaplamaAraci() {
     setSonuc(null);
     setMesafeKm(null);
     setHata("");
+    setCikisKoordinat(null);
+    setVarisKoordinat(null);
+  }
+
+  function gercekTeklifAl() {
+    const taslak = fiyatHesaplamaTalepTaslagi({
+      cikisIl,
+      cikisIlce,
+      varisIl,
+      varisIlce,
+      cikisKoordinat,
+      varisKoordinat,
+      aracTipi,
+      durum,
+    });
+    if (!taslak) {
+      router.push("/?hizmet=arac-tasima");
+      return;
+    }
+    musteriFormTaslakKaydet(taslak);
+    try {
+      sessionStorage.setItem("acb_hero_intro_seen", "1");
+    } catch {
+      /* ignore */
+    }
+    router.push("/?hizmet=arac-tasima");
   }
 
   async function hesapla() {
@@ -108,6 +142,8 @@ export function CekiciFiyatHesaplamaAraci() {
 
     setMesafeKm(km);
     setSonuc(fiyat);
+    setCikisKoordinat(aKoord);
+    setVarisKoordinat(bKoord);
     setYukleniyor(false);
   }
 
@@ -340,7 +376,7 @@ export function CekiciFiyatHesaplamaAraci() {
           <Btn
             type="button"
             className="w-full"
-            onClick={() => router.push("/?hizmet=cekici")}
+            onClick={() => gercekTeklifAl()}
           >
             Gerçek teklif al
           </Btn>

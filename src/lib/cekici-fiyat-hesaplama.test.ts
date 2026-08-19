@@ -19,7 +19,7 @@ describe("cekiciFiyatTahmini", () => {
     });
     expect(s.dusuk).toBeLessThan(s.orta);
     expect(s.orta).toBeLessThan(s.yuksek);
-    expect(s.orta).toBeGreaterThan(1000);
+    expect(s.orta).toBeGreaterThan(3500);
     expect(s.kmBasiOrtalama).toBeGreaterThan(0);
   });
 

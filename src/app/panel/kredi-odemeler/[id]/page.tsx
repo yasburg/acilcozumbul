@@ -48,6 +48,7 @@ export default function PanelSatinAlmaDetayPage() {
   const [kayit, setKayit] = useState<Detay | null>(null);
   const [loading, setLoading] = useState(true);
   const [yukleniyor, setYukleniyor] = useState(false);
+  const [trendyolOlusturuyor, setTrendyolOlusturuyor] = useState(false);
   const [mesaj, setMesaj] = useState("");
   const [hata, setHata] = useState("");
   const dosyaRef = useRef<HTMLInputElement>(null);
@@ -94,6 +95,38 @@ export default function PanelSatinAlmaDetayPage() {
       setHata(err instanceof Error ? err.message : "Yükleme başarısız.");
     } finally {
       setYukleniyor(false);
+    }
+  }
+
+  async function trendyolFaturaOlustur() {
+    setHata("");
+    setMesaj("");
+    setTrendyolOlusturuyor(true);
+    try {
+      const res = await fetch(
+        `/api/panel/kredi-odemeler/${id}/fatura/olustur`,
+        { method: "POST", credentials: "include" }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string"
+            ? data.error
+            : "Trendyol fatura oluşturulamadı."
+        );
+      }
+      if (data.atlandi) {
+        setMesaj(data.mesaj ?? "İşlem atlandı.");
+      } else {
+        setMesaj(
+          `Trendyol ${data.belgeTipi === "e-fatura" ? "e-fatura" : "e-arşiv"} oluşturuldu.`
+        );
+      }
+      await yukle();
+    } catch (err) {
+      setHata(err instanceof Error ? err.message : "Oluşturma başarısız.");
+    } finally {
+      setTrendyolOlusturuyor(false);
     }
   }
 
@@ -173,26 +206,40 @@ export default function PanelSatinAlmaDetayPage() {
             </span>
           </p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <p className="text-sm text-slate-600">
-              PDF yükleyin. E-posta varsa e-posta, yoksa SMS ile fatura linki
-              gider.
+              PDF yükleyin veya Trendyol E-Faturam ile otomatik oluşturun.
+              Kurumsal alımlarda e-fatura/e-arşiv; bireyselde e-arşiv kesilir
+              (TC yoksa 11111111111 kullanılır).
+              E-posta varsa e-posta, yoksa SMS ile fatura linki gider.
             </p>
-            <input
-              ref={dosyaRef}
-              type="file"
-              accept="application/pdf,.pdf"
-              className="hidden"
-              onChange={(e) => void faturaYukle(e)}
-            />
-            <Btn
-              type="button"
-              className="!w-auto min-h-0 py-2.5 px-4 text-sm"
-              disabled={yukleniyor}
-              onClick={() => dosyaRef.current?.click()}
-            >
-              {yukleniyor ? "Yükleniyor…" : "Fatura yükle"}
-            </Btn>
+            <div className="flex flex-wrap gap-2">
+              <Btn
+                type="button"
+                className="!w-auto min-h-0 py-2.5 px-4 text-sm !bg-emerald-600 hover:!bg-emerald-700"
+                disabled={yukleniyor || trendyolOlusturuyor}
+                onClick={() => void trendyolFaturaOlustur()}
+              >
+                {trendyolOlusturuyor
+                  ? "Oluşturuluyor…"
+                  : "Trendyol'dan fatura oluştur"}
+              </Btn>
+              <input
+                ref={dosyaRef}
+                type="file"
+                accept="application/pdf,.pdf"
+                className="hidden"
+                onChange={(e) => void faturaYukle(e)}
+              />
+              <Btn
+                type="button"
+                className="!w-auto min-h-0 py-2.5 px-4 text-sm"
+                disabled={yukleniyor || trendyolOlusturuyor}
+                onClick={() => dosyaRef.current?.click()}
+              >
+                {yukleniyor ? "Yükleniyor…" : "Fatura yükle"}
+              </Btn>
+            </div>
           </div>
         )}
         {mesaj && <p className="text-sm text-emerald-700 mt-2">{mesaj}</p>}

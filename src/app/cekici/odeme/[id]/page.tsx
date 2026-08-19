@@ -99,6 +99,10 @@ export default function OdemePage() {
   const [kurumsal, setKurumsal] = useState(false);
   const [sirketUnvan, setSirketUnvan] = useState("");
   const [vergiNo, setVergiNo] = useState("");
+  const [vergiNoSorgu, setVergiNoSorgu] = useState<
+    "pasif" | "yukleniyor" | "mukellef" | "degil" | "hata"
+  >("pasif");
+  const [vergiNoUnvan, setVergiNoUnvan] = useState<string | null>(null);
   const [kartNo, setKartNo] = useState("");
   const [sktAy, setSktAy] = useState("");
   const [sktYil, setSktYil] = useState("");
@@ -192,6 +196,57 @@ export default function OdemePage() {
       iptal = true;
     };
   }, [odemeId, router]);
+
+  useEffect(() => {
+    if (!kurumsal) {
+      setVergiNoSorgu("pasif");
+      setVergiNoUnvan(null);
+      return;
+    }
+
+    const rakamlar = vergiNo.replace(/\D/g, "");
+    if (rakamlar.length !== 10 && rakamlar.length !== 11) {
+      setVergiNoSorgu("pasif");
+      setVergiNoUnvan(null);
+      return;
+    }
+
+    setVergiNoSorgu("yukleniyor");
+    let iptal = false;
+    const zamanlayici = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const res = await cekiciFetch(
+            `/api/cekici/odeme/vergi-no-sorgu?vergiNo=${encodeURIComponent(rakamlar)}`
+          );
+          if (iptal) return;
+          const data = (await res.json()) as {
+            mukellef?: boolean;
+            unvan?: string | null;
+            belgeTipi?: "e-fatura" | "e-arsiv";
+            hata?: string;
+          };
+          if (!res.ok) {
+            setVergiNoSorgu("hata");
+            setVergiNoUnvan(null);
+            return;
+          }
+          setVergiNoSorgu(data.mukellef ? "mukellef" : "degil");
+          setVergiNoUnvan(data.unvan ?? null);
+        } catch {
+          if (!iptal) {
+            setVergiNoSorgu("hata");
+            setVergiNoUnvan(null);
+          }
+        }
+      })();
+    }, 600);
+
+    return () => {
+      iptal = true;
+      window.clearTimeout(zamanlayici);
+    };
+  }, [kurumsal, vergiNo]);
 
   function sktAyDegistir(e: React.ChangeEvent<HTMLInputElement>) {
     const v = e.target.value.replace(/\D/g, "").slice(0, 2);
@@ -535,6 +590,30 @@ export default function OdemePage() {
                 inputMode="numeric"
                 disabled={loading}
               />
+              {vergiNoSorgu === "yukleniyor" && (
+                <p className="text-xs text-slate-500" role="status">
+                  Vergi numarası GİB kaydı kontrol ediliyor…
+                </p>
+              )}
+              {vergiNoSorgu === "mukellef" && (
+                <p className="text-xs text-emerald-700" role="status">
+                  E-fatura mükellefi
+                  {vergiNoUnvan ? ` — ${vergiNoUnvan}` : ""}. Kurumsal fatura{" "}
+                  <strong>e-fatura</strong> olarak kesilecek.
+                </p>
+              )}
+              {vergiNoSorgu === "degil" && (
+                <p className="text-xs text-amber-800" role="status">
+                  Bu vergi numarası e-fatura mükellefi değil. Fatura{" "}
+                  <strong>e-arşiv</strong> olarak kesilecek.
+                </p>
+              )}
+              {vergiNoSorgu === "hata" && (
+                <p className="text-xs text-red-700" role="status">
+                  Mükellef sorgusu şu an yapılamadı; ödeme sonrası e-arşiv ile
+                  devam edilebilir.
+                </p>
+              )}
             </div>
           )}
         </Card>

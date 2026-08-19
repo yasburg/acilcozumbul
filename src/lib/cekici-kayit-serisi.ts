@@ -1,4 +1,4 @@
-import { istanbulGunAnahtari } from "./musteri-otp";
+import { istanbulGunAnahtari } from "./istanbul-tarih";
 
 export type CekiciKayitGunNokta = {
   /** YYYY-MM-DD Europe/Istanbul */

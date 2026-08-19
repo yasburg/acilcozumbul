@@ -1,9 +1,7 @@
 import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
-import {
-  istanbulGunSonunaKalanSn,
-  telefonDogrulandiMi,
-} from "./musteri-otp";
+import { istanbulGunSonunaKalanSn } from "./istanbul-tarih";
+import { telefonDogrulandiMi } from "./musteri-otp";
 import { telefonNormalize } from "./telefon";
 
 export const MUSTERI_TEL_COOKIE = "musteri_tel_dogrulandi";

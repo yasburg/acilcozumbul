@@ -85,6 +85,7 @@ const demoHeaderBadge = <DemoHeaderBadge />;
 
 interface MemnuniyetState {
   degerlendirildi: boolean;
+  hizmetAlindi?: boolean;
   formAcik: boolean;
   beklemede: boolean;
   kalanMs: number;
@@ -744,6 +745,8 @@ function BekleIcerik() {
     const formAcik =
       anlasildi && memnuniyet?.formAcik && !memnuniyet.degerlendirildi;
     const degerlendirildi = anlasildi && memnuniyet?.degerlendirildi;
+    const hizmetAlindiOnay =
+      anlasildi && (memnuniyet?.hizmetAlindi ?? false);
     const whatsappKonumHref =
       cekiciTelefon && takipKonum
         ? whatsappUrl(
@@ -816,12 +819,18 @@ function BekleIcerik() {
               href={whatsappKonumHref}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() =>
+              onClick={(e) => {
+                e.preventDefault();
                 posthogOlayYakala(
                   "whatsapp_konum_paylas",
                   musteriFunnelProps({ hedef: "cekici" })
-                )
-              }
+                );
+                void fetch(`/api/talep/${id}/whatsapp`, { method: "POST" })
+                  .catch(() => {})
+                  .finally(() => {
+                    window.open(whatsappKonumHref, "_blank", "noopener,noreferrer");
+                  });
+              }}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1ebe57] touch-manipulation"
             >
               WhatsApp’tan konum at
@@ -886,6 +895,14 @@ function BekleIcerik() {
                 <Card className="bg-emerald-50 border-emerald-200 text-center py-4">
                   <p className="text-sm text-emerald-800 font-medium">
                     Değerlendirmeniz alındı, teşekkürler.
+                  </p>
+                </Card>
+              )}
+
+              {hizmetAlindiOnay && !degerlendirildi && (
+                <Card className="bg-slate-50 border-slate-200 text-center py-4">
+                  <p className="text-sm text-slate-700 font-medium">
+                    Hizmeti aldığınız kaydedildi.
                   </p>
                 </Card>
               )}

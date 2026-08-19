@@ -1,5 +1,5 @@
 import { orderIdTemizle } from "./garanti/payment";
-import { istanbulGunAnahtari } from "./musteri-otp";
+import { istanbulGunAnahtari } from "./istanbul-tarih";
 import type { AbonelikIslemTip } from "./types";
 
 export type PanelGelirKalem = {

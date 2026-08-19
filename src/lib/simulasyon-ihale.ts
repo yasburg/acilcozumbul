@@ -1,7 +1,7 @@
 import { noktaIlIlce } from "./cekici-fiyat-hesaplama";
 import { cekiciHizmetBolgeleri } from "./cekici-hizmet-bolge";
 import { ilceListesi } from "./il-ilce";
-import { istanbulGunAnahtari } from "./musteri-otp";
+import { istanbulGunAnahtari } from "./istanbul-tarih";
 import { sorunTipiBul, type SorunTipiId } from "./sorun-tipleri";
 import type { Cekici, Konum, Talep } from "./types";
 

@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { getTaleplerMemnuniyetBekleyen } from "./db";
+import { getTaleplerMemnuniyetBekleyen, updateTalep } from "./db";
 import { notifyMusteriMemnuniyet } from "./sms";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { isSimulasyonTalep } from "./simulasyon-ihale-db";
@@ -83,6 +83,7 @@ export async function topluMemnuniyetSmsGonder(baseUrl: string): Promise<number>
 
   for (const talep of talepler) {
     if (talep.durum !== "anlaşıldı" || talep.memnuniyetSmsGonderildi) continue;
+    if (talep.musteriHizmetAlindiAt) continue;
     if (await isSimulasyonTalep(talep.id)) {
       await memnuniyetSmsIsaretle(talep.id);
       continue;
@@ -205,6 +206,7 @@ export function gorunurTercihPuani(
 
 export interface MemnuniyetDurumu {
   degerlendirildi: boolean;
+  hizmetAlindi: boolean;
   puan?: number;
   puanGenel?: number;
   puanFiyat?: number;
@@ -225,6 +227,7 @@ export function memnuniyetDurumuHesapla(
   if (mevcut) {
     return {
       degerlendirildi: true,
+      hizmetAlindi: false,
       puan: mevcut.puan,
       puanGenel: mevcut.puanGenel,
       puanFiyat: mevcut.puanFiyat,
@@ -237,9 +240,21 @@ export function memnuniyetDurumuHesapla(
     };
   }
 
+  if (talep.musteriHizmetAlindiAt) {
+    return {
+      degerlendirildi: false,
+      hizmetAlindi: true,
+      formAcik: false,
+      beklemede: false,
+      kalanMs: 0,
+      anlasildiAt,
+    };
+  }
+
   if (talep.durum !== "anlaşıldı" || !anlasildiAt) {
     return {
       degerlendirildi: false,
+      hizmetAlindi: false,
       formAcik: false,
       beklemede: false,
       kalanMs: 0,
@@ -255,6 +270,7 @@ export function memnuniyetDurumuHesapla(
   if (simdi < acilis) {
     return {
       degerlendirildi: false,
+      hizmetAlindi: false,
       formAcik: false,
       beklemede: true,
       kalanMs,
@@ -264,6 +280,7 @@ export function memnuniyetDurumuHesapla(
 
   return {
     degerlendirildi: false,
+    hizmetAlindi: false,
     formAcik: true,
     beklemede: false,
     kalanMs: 0,
@@ -338,4 +355,34 @@ export async function kaydetMusteriDegerlendirme(
     // API/UI için boyut ortalamasını koru (4.7 gibi)
     puan: ort,
   });
+}
+
+/** Yıldız vermeden «hizmeti aldım» — formu kapatır, çekici puanına etki etmez */
+export async function kaydetMusteriHizmetAlindi(talep: Talep): Promise<string> {
+  if (talep.durum !== "anlaşıldı" || !talep.kazananCekiciId) {
+    throw new Error("Bu talep için onay yapılamaz.");
+  }
+  if (talep.musteriHizmetAlindiAt) {
+    return talep.musteriHizmetAlindiAt;
+  }
+
+  const mevcut = await getDegerlendirmeByTalepId(talep.id);
+  if (mevcut) {
+    throw new Error("Bu talep zaten değerlendirilmiş.");
+  }
+
+  const durum = memnuniyetDurumuHesapla(talep, null);
+  if (!durum.formAcik) {
+    if (durum.beklemede) {
+      throw new Error(
+        "Onay formu henüz açılmadı. Lütfen biraz sonra tekrar deneyin."
+      );
+    }
+    throw new Error("Onay süresi geçerli değil.");
+  }
+
+  const at = new Date().toISOString();
+  talep.musteriHizmetAlindiAt = at;
+  await updateTalep(talep);
+  return at;
 }

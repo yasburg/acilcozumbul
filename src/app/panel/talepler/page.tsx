@@ -374,6 +374,7 @@ export default function PanelTaleplerPage() {
                 ) ?? null;
               const teklifSecildi = Boolean(t.kazananCekiciId);
               const arandi = Boolean(t.musteriArandiAt);
+              const whatsappAtti = Boolean(t.musteriWhatsappAt);
               const iptalSure = panelTalepIptalSureEtiketi(
                 t.olusturulma,
                 t.iptalAt
@@ -454,6 +455,20 @@ export default function PanelTaleplerPage() {
                     ) : (
                       <span className="rounded-lg bg-orange-50 px-2 py-1 font-medium text-orange-800">
                         Çekici henüz aramadı
+                      </span>
+                    )
+                  ) : null}
+                  {teklifSecildi ? (
+                    whatsappAtti ? (
+                      <span className="rounded-lg bg-emerald-50 px-2 py-1 font-medium text-emerald-800">
+                        Müşteri WhatsApp attı
+                        {t.musteriWhatsappAt
+                          ? ` · ${new Date(t.musteriWhatsappAt).toLocaleString("tr-TR")}`
+                          : ""}
+                      </span>
+                    ) : (
+                      <span className="rounded-lg bg-slate-100 px-2 py-1 font-medium text-slate-600">
+                        Müşteri henüz WhatsApp atmadı
                       </span>
                     )
                   ) : null}

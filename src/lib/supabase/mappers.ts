@@ -94,6 +94,8 @@ export type TalepRow = {
   anlasma_durumu: string | null;
   anlasildi_at: string | null;
   musteri_arandi_at?: string | null;
+  musteri_whatsapp_at?: string | null;
+  musteri_hizmet_alindi_at?: string | null;
   memnuniyet_sms_gonderildi: boolean;
   /** @deprecated normalize: talep_haric — migration öncesi fallback */
   haric_tutulan_cekici_ids?: string[] | null;
@@ -266,6 +268,8 @@ export function talepFromRow(r: TalepRow): Talep {
     anlasmaDurumu: (r.anlasma_durumu as Talep["anlasmaDurumu"]) ?? undefined,
     anlasildiAt: r.anlasildi_at ?? undefined,
     musteriArandiAt: r.musteri_arandi_at ?? undefined,
+    musteriWhatsappAt: r.musteri_whatsapp_at ?? undefined,
+    musteriHizmetAlindiAt: r.musteri_hizmet_alindi_at ?? undefined,
     memnuniyetSmsGonderildi: r.memnuniyet_sms_gonderildi ?? false,
     haricTutulanCekiciIds: r.haric_tutulan_cekici_ids ?? [],
     teklifler: r.teklifler ?? [],
@@ -305,6 +309,12 @@ export function talepToRow(t: Talep): Record<string, unknown> {
     ...(t.iptalAt ? { iptal_at: t.iptalAt } : {}),
     ...(t.musteriArandiAt
       ? { musteri_arandi_at: t.musteriArandiAt }
+      : {}),
+    ...(t.musteriWhatsappAt
+      ? { musteri_whatsapp_at: t.musteriWhatsappAt }
+      : {}),
+    ...(t.musteriHizmetAlindiAt
+      ? { musteri_hizmet_alindi_at: t.musteriHizmetAlindiAt }
       : {}),
   };
 }

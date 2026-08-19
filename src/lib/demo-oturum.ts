@@ -449,6 +449,24 @@ export async function demoMusteriAra(
   return t;
 }
 
+/** Müşteri WhatsApp konum paylaşım butonuna tıkladı */
+export async function demoMusteriWhatsapp(
+  oturum: AktifDemoOturum,
+  talepId: string
+): Promise<Talep> {
+  const mevcut = demoTalepBul(oturum, talepId);
+  if (mevcut?.musteriWhatsappAt) return mevcut;
+  const yeni = await oturumGuncelle(oturum, (d) =>
+    talepGuncelle(d, talepId, (t) => ({
+      ...t,
+      musteriWhatsappAt: t.musteriWhatsappAt ?? new Date().toISOString(),
+    }))
+  );
+  const t = demoTalepBul(yeni, talepId);
+  if (!t) throw new Error("Talep bulunamadı.");
+  return t;
+}
+
 export async function demoSimuleOlay(
   oturumId: string,
   olay: DemoSimuleOlay

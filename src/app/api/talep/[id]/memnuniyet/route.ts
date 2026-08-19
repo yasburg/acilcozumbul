@@ -3,6 +3,7 @@ import { getTalepById } from "@/lib/db";
 import {
   getDegerlendirmeByTalepId,
   kaydetMusteriDegerlendirme,
+  kaydetMusteriHizmetAlindi,
   memnuniyetDurumuHesapla,
   memnuniyetSmsGonderGerekirse,
 } from "@/lib/memnuniyet";
@@ -51,6 +52,29 @@ export async function POST(
   }
 
   const body = await request.json();
+  if (body.hizmetAlindi === true) {
+    try {
+      const at = await kaydetMusteriHizmetAlindi(talep);
+      return NextResponse.json({
+        ok: true,
+        hizmetAlindi: true,
+        musteriHizmetAlindiAt: at,
+        mesaj: "Hizmet alımınız kaydedildi.",
+      });
+    } catch (e) {
+      const msg =
+        e instanceof Error
+          ? e.message
+          : e &&
+              typeof e === "object" &&
+              "message" in e &&
+              typeof (e as { message: unknown }).message === "string"
+            ? (e as { message: string }).message
+            : "Kayıt başarısız.";
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+  }
+
   const puanGenel = Number(body.puanGenel ?? body.puan);
   const puanFiyat = Number(body.puanFiyat ?? body.puan);
   const puanSure = Number(body.puanSure ?? body.puan);

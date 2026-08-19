@@ -24,8 +24,10 @@ export function MemnuniyetFormu({
   const [puanSure, setPuanSure] = useState(0);
   const [yorum, setYorum] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hizmetAlindiLoading, setHizmetAlindiLoading] = useState(false);
   const [hata, setHata] = useState("");
   const [tesekkur, setTesekkur] = useState(false);
+  const [hizmetAlindi, setHizmetAlindi] = useState(false);
 
   async function gonder() {
     if (puanGenel < 1 || puanFiyat < 1 || puanSure < 1) {
@@ -61,6 +63,46 @@ export function MemnuniyetFormu({
     } finally {
       setLoading(false);
     }
+  }
+
+  async function hizmetAldim() {
+    setHizmetAlindiLoading(true);
+    setHata("");
+    try {
+      const res = await fetch(`/api/talep/${talepId}/memnuniyet`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hizmetAlindi: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setHizmetAlindi(true);
+      posthogOlayYakala("memnuniyet_hizmet_aldim", {
+        talep_id: talepId,
+        ...(sorunTipi ? { sorun_tipi: sorunTipi } : {}),
+      });
+      onTamamlandi?.();
+    } catch (e) {
+      setHata(e instanceof Error ? e.message : "Kaydedilemedi.");
+    } finally {
+      setHizmetAlindiLoading(false);
+    }
+  }
+
+  if (hizmetAlindi) {
+    return (
+      <Card className="!bg-slate-50 !border-slate-200 text-center py-8">
+        <AcbIcons.check
+          className="mx-auto mb-2 size-10 text-[var(--acb-green)]"
+          strokeWidth={ACB_ICON_STROKE}
+          aria-hidden
+        />
+        <p className="font-semibold text-[var(--acb-dark)]">Kaydedildi</p>
+        <p className="text-sm text-[var(--acb-muted)] mt-1">
+          Hizmeti aldığınızı not ettik. İyi yolculuklar.
+        </p>
+      </Card>
+    );
   }
 
   if (tesekkur) {
@@ -122,9 +164,18 @@ export function MemnuniyetFormu({
         onChange={(e) => setYorum(e.target.value)}
       />
 
-      <Btn onClick={() => void gonder()} disabled={loading}>
+      <Btn onClick={() => void gonder()} disabled={loading || hizmetAlindiLoading}>
         {loading ? "Gönderiliyor…" : "Değerlendirmeyi Gönder"}
       </Btn>
+
+      <button
+        type="button"
+        onClick={() => void hizmetAldim()}
+        disabled={loading || hizmetAlindiLoading}
+        className="w-full py-3 text-sm font-medium text-slate-600 underline-offset-2 hover:text-slate-800 hover:underline touch-manipulation disabled:opacity-50"
+      >
+        {hizmetAlindiLoading ? "Kaydediliyor…" : "Hizmeti aldım"}
+      </button>
     </div>
   );
 }

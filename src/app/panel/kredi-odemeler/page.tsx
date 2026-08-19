@@ -114,6 +114,7 @@ function GrupBaslik({
 
 export default function PanelSatinAlmalarPage() {
   const [filtre, setFiltre] = useState<SatinAlmaFiltre>("hepsi");
+  const [demoGizle, setDemoGizle] = useState(true);
   const [liste, setListe] = useState<Ozet[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -126,11 +127,16 @@ export default function PanelSatinAlmalarPage() {
       .finally(() => setLoading(false));
   }, [filtre]);
 
-  const { bekleyen, yuklu } = useMemo(
-    () => satinAlmaFaturaGruplari(liste),
-    [liste]
+  const gorunenListe = useMemo(
+    () => (demoGizle ? liste.filter((k) => !k.demoOdeme) : liste),
+    [liste, demoGizle]
   );
-  const toplamTutar = liste.reduce((s, k) => s + k.tutar, 0);
+  const { bekleyen, yuklu } = useMemo(
+    () => satinAlmaFaturaGruplari(gorunenListe),
+    [gorunenListe]
+  );
+  const toplamTutar = gorunenListe.reduce((s, k) => s + k.tutar, 0);
+  const demoAdet = liste.filter((k) => k.demoOdeme).length;
 
   return (
     <div className="space-y-4">
@@ -156,12 +162,30 @@ export default function PanelSatinAlmalarPage() {
             {f.label}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setDemoGizle((v) => !v)}
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+            demoGizle
+              ? "bg-slate-800 text-white"
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          }`}
+        >
+          {demoGizle ? "Demo gizli" : "Demo dahil"}
+        </button>
       </div>
 
-      {!loading && liste.length > 0 && (
+      {!loading && demoGizle && demoAdet > 0 && (
+        <p className="text-xs text-slate-500">
+          {demoAdet} demo alım gizlendi (test POS). Görmek için «Demo dahil»e
+          tıklayın.
+        </p>
+      )}
+
+      {!loading && gorunenListe.length > 0 && (
         <Card className="bg-slate-50">
           <p className="text-sm text-slate-600">
-            Toplam <strong>{liste.length}</strong> işlem ·{" "}
+            Toplam <strong>{gorunenListe.length}</strong> işlem ·{" "}
             <strong>{bekleyen.length}</strong> fatura bekliyor ·{" "}
             <strong>{toplamTutar.toLocaleString("tr-TR")} ₺</strong> tahsilat
           </p>
@@ -170,10 +194,12 @@ export default function PanelSatinAlmalarPage() {
 
       {loading && <p className="text-sm text-slate-500">Yükleniyor…</p>}
 
-      {!loading && liste.length === 0 && (
+      {!loading && gorunenListe.length === 0 && (
         <Card>
           <p className="text-sm text-slate-600">
-            Bu filtrede tamamlanan satın alma yok.
+            {liste.length > 0 && demoGizle
+              ? "Görünen canlı alım yok (demo gizli olabilir)."
+              : "Bu filtrede tamamlanan satın alma yok."}
           </p>
         </Card>
       )}

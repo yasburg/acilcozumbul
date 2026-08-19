@@ -198,8 +198,9 @@ export function cekiciFiyatTahmini(girdi: CekiciFiyatGirdi): CekiciFiyatSonuc {
     durumCarpan(girdi.durum);
 
   const otoyol = girdi.otoyolGecis ? (metro ? 180 : 120) : 0;
-  // Tek yön mesafe hesaplanır; çekici boş dönüş yaptığı için band x2
-  const orta = yuvarla50((ham + otoyol) * 2);
+  // Tek yön mesafe hesaplanır; çekici boş dönüş yaptığı için band x2.
+  // Pazar fiyatı gerçeğe yaklaşsın diye %10 piyasa primi.
+  const orta = yuvarla50((ham + otoyol) * 2 * 1.1);
   const dusuk = yuvarla50(orta * 0.78);
   const yuksek = yuvarla50(orta * 1.32);
   const kmBasiOrtalama = Math.round(orta / (km * 2));

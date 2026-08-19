@@ -136,6 +136,13 @@ export function garantiYapilandirildi(): boolean {
   );
 }
 
+/** Test POS / yapılandırma yok — gerçek tahsilat ve canlı fatura sayılmaz */
+export function odemeDemoMu(): boolean {
+  if (!garantiYapilandirildi()) return true;
+  const cfg = garantiConfigOku();
+  return cfg.profil === "test" || cfg.mode === "TEST";
+}
+
 export function garantiYapilandirmaOzeti(): {
   profil: GarantiProfil;
   mod: GarantiMode;

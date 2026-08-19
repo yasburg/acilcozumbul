@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { addCekici, addTalep, getCekiciById, getCekiciler, getTalepById, updateTalep } from "./db";
 import { getAcikIller } from "./cekici-sehir-acilis-db";
-import { istanbulGunAnahtari } from "./musteri-otp";
+import { istanbulGunAnahtari } from "./istanbul-tarih";
 import { notifyCekiciler } from "./sms";
 import { getSupabaseAdmin, supabaseDbAktif } from "./supabase/admin";
 import { insertTeklif, setKaybedenTeklifler, updateTeklifDurum } from "./teklif-db";
