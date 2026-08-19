@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getTalepById, updateTalep } from "@/lib/db";
 import {
   demoMusteriWhatsapp,
@@ -9,7 +9,7 @@ import { ensureSeedData } from "@/lib/seed";
 
 /** Müşteri «WhatsApp'tan konum at» tıkladı */
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensureSeedData();
