@@ -87,6 +87,7 @@ export async function efaturaMukellefiSorgula(
       headers: {
         Accept: "application/json",
         "x-access-token": accessToken,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
 

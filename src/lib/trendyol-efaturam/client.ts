@@ -9,6 +9,7 @@ export async function efaturamApiFetch(
   const accessToken = await trendyolEfaturamAccessTokenAl();
   const headers = new Headers(init.headers);
   headers.set("x-access-token", accessToken);
+  headers.set("Authorization", `Bearer ${accessToken}`);
   if (!headers.has("Accept")) {
     headers.set("Accept", "application/json");
   }
@@ -29,7 +30,7 @@ export async function efaturamApiJson<T>(
     const auth401 = res.status === 401;
     throw new Error(
       auth401
-        ? `Trendyol E-Faturam ${path} (401): Giriş başarılı olsa bile fatura API'leri IP whitelist ister (Trendyol hata metnini yanıltıcı gösterir). Local: çıkış IP'nizi panele ekleyin; prod: Railway static IP'ler (208.77.244.240–242). Stage/prod için gateway, şifre ve companyId/userId aynı ortama ait olmalı. Yanıt: ${text.slice(0, 200)}`
+        ? `Trendyol E-Faturam ${path} (401): Oturum reddedildi. Bearer token ve IP whitelist kontrol edin; stage/prod gateway, şifre ve companyId/userId aynı ortamda olmalı. Yanıt: ${text.slice(0, 200)}`
         : `Trendyol E-Faturam ${path} (${res.status})${text ? `: ${text.slice(0, 300)}` : ""}`
     );
   }
