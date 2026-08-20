@@ -2,6 +2,7 @@ import type { KrediOdeme } from "../types";
 import { kurumsalFaturaPayloadOlustur } from "./belge-payload";
 import {
   efaturamBelgeDurumuBekle,
+  efaturamBelgeLocalRefIleBul,
   efaturamPdfIndir,
   type EfaturamBelgeTuru,
 } from "./belge-indir";
@@ -69,28 +70,42 @@ export async function trendyolOdemeFaturaOlustur(
     }
 
     const oturum = await efaturamOturumAl();
-    const payload = kurumsalFaturaPayloadOlustur({
-      odeme,
-      companyId: oturum.companyId,
-      userId: oturum.userId,
+
+    // Önceki timeout sonrası Trendyol'da kalan faturayı tekrar kesmeden çek
+    const mevcut = await efaturamBelgeLocalRefIleBul({
       belgeTipi,
-      targetAlias,
+      companyId: oturum.companyId,
+      localReferenceId: odeme.id,
     });
 
-    const yol =
-      belgeTipi === "e-fatura"
-        ? "/api/invoice/documents/outgoing-einvoice"
-        : "/api/invoice/documents/earchive";
+    let invoiceUuid = mevcut?.invoiceUuid;
+    let invoiceId = mevcut?.invoiceId;
 
-    const olustur = await efaturamApiJson<OlusturmaYanit>(yol, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const invoiceUuid = olustur.invoiceUuid;
     if (!invoiceUuid) {
-      return { ok: false, hata: "Trendyol fatura yanıtında invoiceUuid yok." };
+      const payload = kurumsalFaturaPayloadOlustur({
+        odeme,
+        companyId: oturum.companyId,
+        userId: oturum.userId,
+        belgeTipi,
+        targetAlias,
+      });
+
+      const yol =
+        belgeTipi === "e-fatura"
+          ? "/api/invoice/documents/outgoing-einvoice"
+          : "/api/invoice/documents/earchive";
+
+      const olustur = await efaturamApiJson<OlusturmaYanit>(yol, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      invoiceUuid = olustur.invoiceUuid;
+      invoiceId = olustur.invoiceId;
+      if (!invoiceUuid) {
+        return { ok: false, hata: "Trendyol fatura yanıtında invoiceUuid yok." };
+      }
     }
 
     const durum = await efaturamBelgeDurumuBekle({ belgeTipi, invoiceUuid });
@@ -107,7 +122,7 @@ export async function trendyolOdemeFaturaOlustur(
       ok: true,
       belgeTipi,
       invoiceUuid,
-      invoiceId: olustur.invoiceId ?? durum.invoiceId,
+      invoiceId: invoiceId ?? durum.invoiceId,
       pdf,
     };
   } catch (e) {

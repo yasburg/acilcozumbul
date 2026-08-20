@@ -93,6 +93,56 @@ export async function efaturamBelgeDurumuBekle(opts: {
   );
 }
 
+export type EfaturamBelgeOzet = {
+  invoiceUuid: string;
+  invoiceId?: string;
+  gibStatus?: string;
+  status?: number | string;
+};
+
+/** Önceki (yarım kalan) kesimi localReferenceId ile bul — duplicate önler */
+export async function efaturamBelgeLocalRefIleBul(opts: {
+  belgeTipi: "e-fatura" | "e-arsiv";
+  companyId: number;
+  localReferenceId: string;
+}): Promise<EfaturamBelgeOzet | null> {
+  const yol =
+    opts.belgeTipi === "e-fatura"
+      ? "/api/invoice/documents/outgoing-einvoice/search"
+      : "/api/invoice/documents/earchive/search";
+
+  try {
+    const yanit = await efaturamApiJson<{
+      content?: Array<{
+        invoiceUuid?: string;
+        invoiceId?: string;
+        gibStatus?: string;
+        status?: number | string;
+      }>;
+    }>(yol, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        companyId: opts.companyId,
+        localReferenceId: opts.localReferenceId.slice(0, 127),
+        page: 0,
+        size: 5,
+      }),
+    });
+
+    const ilk = yanit.content?.find((k) => k.invoiceUuid);
+    if (!ilk?.invoiceUuid) return null;
+    return {
+      invoiceUuid: ilk.invoiceUuid,
+      invoiceId: ilk.invoiceId,
+      gibStatus: ilk.gibStatus,
+      status: ilk.status,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function efaturamPdfIndir(opts: {
   documentType: EfaturamBelgeTuru;
   documentUuid: string;
