@@ -29,21 +29,22 @@ export function bireyselEarsivTckn(odeme: KrediOdeme): string {
   return BIREYSEL_EARSIV_VARSAYILAN_TCKN;
 }
 
-/** UBL cac:Person — TCKN alıcıda FirstName + FamilyName zorunlu */
+/** UBL cac:Person — TCKN alıcıda name (ad) + surname (soyad) zorunlu */
 export function kisiAdiniAyir(tamAd: string): {
-  firstName: string;
-  familyName: string;
+  name: string;
+  surname: string;
 } {
   const parcalar = tamAd.trim().split(/\s+/).filter(Boolean);
   if (parcalar.length === 0) {
-    return { firstName: "Musteri", familyName: "Musteri" };
+    return { name: "Musteri", surname: "Musteri" };
   }
   if (parcalar.length === 1) {
-    return { firstName: parcalar[0]!, familyName: parcalar[0]! };
+    const tek = parcalar[0]!.slice(0, 127);
+    return { name: tek, surname: tek };
   }
   return {
-    firstName: parcalar.slice(0, -1).join(" ").slice(0, 127),
-    familyName: parcalar[parcalar.length - 1]!.slice(0, 127),
+    name: parcalar.slice(0, -1).join(" ").slice(0, 127),
+    surname: parcalar[parcalar.length - 1]!.slice(0, 255),
   };
 }
 
@@ -122,13 +123,9 @@ export function kurumsalFaturaPayloadOlustur(
       address: konum.address,
       email: odeme.faturaEposta || undefined,
       phone: odeme.cekiciTelefon.replace(/\D/g, "").slice(-15) || undefined,
-      name: unvan.slice(0, 127),
-      ...(kisi
-        ? {
-            firstName: kisi.firstName,
-            familyName: kisi.familyName,
-          }
-        : {}),
+      // Bireysel (TCKN): name=ad, surname=soyad (UBL Person). Kurumsal: name=ünvan.
+      name: (kisi?.name ?? unvan).slice(0, 127),
+      ...(kisi ? { surname: kisi.surname } : {}),
     },
     currencyInfo: { currency: "TRY" },
     invoiceInfo: {

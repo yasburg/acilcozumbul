@@ -37,15 +37,15 @@ describe("kurumsalOdemeAciklama", () => {
 describe("kisiAdiniAyir", () => {
   it("ad soyadı ayırır", () => {
     expect(kisiAdiniAyir("Ahmet Yılmaz")).toEqual({
-      firstName: "Ahmet",
-      familyName: "Yılmaz",
+      name: "Ahmet",
+      surname: "Yılmaz",
     });
   });
 
   it("tek kelimede ad ve soyadı aynı tutar", () => {
     expect(kisiAdiniAyir("Ahmet")).toEqual({
-      firstName: "Ahmet",
-      familyName: "Ahmet",
+      name: "Ahmet",
+      surname: "Ahmet",
     });
   });
 });
@@ -81,7 +81,7 @@ describe("kurumsalFaturaPayloadOlustur", () => {
       (payload.invoiceTotal as { payableAmount: number }).payableAmount
     ).toBe(99900);
     expect(
-      (payload.recipientInfo as { firstName?: string }).firstName
+      (payload.recipientInfo as { surname?: string }).surname
     ).toBeUndefined();
   });
 
@@ -98,7 +98,7 @@ describe("kurumsalFaturaPayloadOlustur", () => {
     expect(payload.targetAlias).toBeUndefined();
   });
 
-  it("bireysel e-arşivde FirstName/FamilyName ekler", () => {
+  it("bireysel e-arşivde name+surname ekler", () => {
     const payload = kurumsalFaturaPayloadOlustur({
       odeme: {
         ...ornekOdeme,
@@ -113,12 +113,12 @@ describe("kurumsalFaturaPayloadOlustur", () => {
       belgeTipi: "e-arsiv",
     });
     const alici = payload.recipientInfo as {
-      firstName: string;
-      familyName: string;
+      name: string;
+      surname: string;
       taxId: string;
     };
-    expect(alici.firstName).toBe("Mehmet Ali");
-    expect(alici.familyName).toBe("Demir");
+    expect(alici.name).toBe("Mehmet Ali");
+    expect(alici.surname).toBe("Demir");
     expect(alici.taxId).toBe("10000000146");
   });
 });
