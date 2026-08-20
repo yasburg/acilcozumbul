@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { randomUUID } from "crypto";
 import { getCurrentCekici } from "@/lib/auth";
 import { getTalepById, updateTalep } from "@/lib/db";
@@ -19,7 +19,15 @@ import { notifyMusteri } from "@/lib/sms";
 import { smsBaseUrl } from "@/lib/sms-base-url";
 import { talepBolge, talepSorunOzet } from "@/lib/talep-utils";
 import type { Teklif } from "@/lib/types";
-import { demoTalepGetir, demoTeklifEkle, isDemoTalepId } from "@/lib/demo-oturum";
+import {
+  demoOtomatikKabulIsleIfDue,
+  demoTalepGetir,
+  demoTeklifEkle,
+  demoTeklifKabulGecikmeSn,
+  demoTeklifOtomatikKabulPlanla,
+  getAktifDemoOturum,
+  isDemoTalepId,
+} from "@/lib/demo-oturum";
 import { demoTeklifMesaji } from "@/lib/demo-responses";
 import {
   sehirBeklemeMesaji,
@@ -87,11 +95,33 @@ export async function POST(
         cekici,
         { fiyat, tahminiSureDk, mesaj }
       );
-      const guncelTalep =
-        yeniOturum.durum.talepler.find((t) => t.id === id) ?? talep;
-      return NextResponse.json(
-        demoTeklifMesaji(cekici, guncelTalep, teklif.id)
+      const planli = await demoTeklifOtomatikKabulPlanla(
+        yeniOturum,
+        id,
+        teklif.id
       );
+      const gecikmeSn = demoTeklifKabulGecikmeSn();
+      const baseUrl = smsBaseUrl(
+        `${request.nextUrl.protocol}//${request.nextUrl.host}`
+      );
+      const oturumId = planli.id;
+      after(() => {
+        void (async () => {
+          await new Promise((r) => setTimeout(r, gecikmeSn * 1000));
+          const guncel = await getAktifDemoOturum(oturumId);
+          if (guncel) {
+            await demoOtomatikKabulIsleIfDue(guncel, baseUrl);
+          }
+        })().catch((e) => console.error("[demo] otomatik kabul after", e));
+      });
+
+      const guncelTalep =
+        planli.durum.talepler.find((t) => t.id === id) ?? talep;
+      return NextResponse.json({
+        ...demoTeklifMesaji(cekici, guncelTalep, teklif.id),
+        otomatikKabulSn: gecikmeSn,
+        mesaj: `Teklifiniz alındı. Müşteri yaklaşık ${gecikmeSn} sn içinde seçecek (demo).`,
+      });
     } catch (e) {
       return NextResponse.json(
         { error: e instanceof Error ? e.message : "Teklif verilemedi." },

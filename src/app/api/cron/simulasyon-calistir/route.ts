@@ -36,5 +36,6 @@ export async function POST(request: NextRequest) {
     memnuniyet: sonuc.memnuniyet,
     ihale: sonuc.ihale,
     topluSms: sonuc.topluSms,
+    demoTakip: sonuc.demoTakip,
   });
 }

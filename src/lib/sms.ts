@@ -95,7 +95,7 @@ export async function notifyCekiciler(
   talep: Talep,
   baseUrl: string,
   haricTutulan: string[] = [],
-  options?: { yenidenArama?: boolean }
+  options?: { yenidenArama?: boolean; yalnizCekiciIds?: string[] }
 ): Promise<string[]> {
   if (!(await talepSehriAcikMi(talep))) {
     return [];
@@ -105,10 +105,16 @@ export async function notifyCekiciler(
   const haric = new Set(haricTutulan);
   const yeniden = options?.yenidenArama ?? false;
   const yalnizTester = smsYalnizTesterCekicilerMi();
+  const yalnizIds = options?.yalnizCekiciIds?.length
+    ? new Set(options.yalnizCekiciIds)
+    : talep.yalnizCekiciId
+      ? new Set([talep.yalnizCekiciId])
+      : null;
 
   const adaylar = tumCekiciler.filter(
     (c) =>
       !haric.has(c.id) &&
+      (!yalnizIds || yalnizIds.has(c.id)) &&
       cekiciTalepSmsAdayiMi(talep, c) &&
       (!yalnizTester || Boolean(c.testerHesap))
   );

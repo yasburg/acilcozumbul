@@ -231,6 +231,8 @@ export interface Talep {
   memnuniyetSmsGonderildi?: boolean;
   teklifler: Teklif[];
   haricTutulanCekiciIds?: string[];
+  /** Varsa yalnızca bu çekici görür / bildirilir (demo takip) */
+  yalnizCekiciId?: string;
 }
 
 export interface MusteriDegerlendirme {

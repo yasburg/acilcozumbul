@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockSim = vi.fn();
+const mockDemoTakip = vi.fn();
 const mockMemnuniyet = vi.fn();
 const mockIhale = vi.fn();
 const mockTopluVar = vi.fn();
@@ -12,6 +13,10 @@ vi.mock("./sms-base-url", () => ({
 
 vi.mock("./simulasyon-ihale-db", () => ({
   simulasyonCalistir: (...args: unknown[]) => mockSim(...args),
+}));
+
+vi.mock("./demo-takip", () => ({
+  demoTakipPlanlariCalistir: (...args: unknown[]) => mockDemoTakip(...args),
 }));
 
 vi.mock("./memnuniyet", () => ({
@@ -35,11 +40,13 @@ import { cronPeriyodikCalistir } from "./cron-periyodik";
 describe("cronPeriyodikCalistir", () => {
   beforeEach(() => {
     mockSim.mockReset();
+    mockDemoTakip.mockReset();
     mockMemnuniyet.mockReset();
     mockIhale.mockReset();
     mockTopluVar.mockReset();
     mockToplu.mockReset();
     mockSim.mockResolvedValue({ acilan: 1, kapanan: 0, hatalar: [] });
+    mockDemoTakip.mockResolvedValue({ acilan: 0, hatalar: [] });
     mockMemnuniyet.mockResolvedValue(2);
     mockIhale.mockResolvedValue({
       talepIncelenen: 1,
@@ -57,6 +64,7 @@ describe("cronPeriyodikCalistir", () => {
       baseUrl: "https://www.acilcozumbul.com",
     });
     expect(sonuc.sim.acilan).toBe(1);
+    expect(sonuc.demoTakip.acilan).toBe(0);
     expect(sonuc.memnuniyet).toBe(2);
     expect(sonuc.ihale?.musteriGonderilen).toBe(1);
     expect(sonuc.topluSms).toEqual({ islenen: 0 });

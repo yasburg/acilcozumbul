@@ -106,6 +106,9 @@ export function cekiciAcikTalepUygunMu(
   cekici: Cekici,
   now?: Date
 ): boolean {
+  if (talep.yalnizCekiciId && talep.yalnizCekiciId !== cekici.id) {
+    return false;
+  }
   return (
     ihaleAcikMi(talep) &&
     !cekiciHaricMi(talep, cekici.id) &&

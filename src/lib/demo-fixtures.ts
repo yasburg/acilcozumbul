@@ -18,7 +18,23 @@ export type DemoOturumDurum = {
   talepler: Talep[];
   sms: DemoSmsKaydi[];
   anaTalepId: string;
+  /** Demo çekici teklif verdikten sonra otomatik müşteri seçimi */
+  otomatikKabul?: {
+    talepId: string;
+    teklifId: string;
+    at: string;
+  } | null;
 };
+
+/** Demo teklif → müşteri seçimi gecikmesi (sn) */
+export function demoTeklifKabulGecikmeSn(): number {
+  const ham = process.env.DEMO_TEKLIF_KABUL_SN?.trim();
+  if (ham && /^\d+$/.test(ham)) {
+    const n = Number(ham);
+    if (n >= 5 && n <= 120) return n;
+  }
+  return 20;
+}
 
 export function isDemoTalepId(id: string): boolean {
   return id.startsWith(DEMO_TALEP_PREFIX);

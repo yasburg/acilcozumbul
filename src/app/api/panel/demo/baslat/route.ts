@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       musteriLink: `/bekle/${oturum.durum.anaTalepId}?demo=${oturum.id}`,
       cekiciPanelLink: `/cekici/panel`,
       mesaj:
-        "Demo başlatıldı. Seçili çekici hesabıyla telefonda /cekici/panel açın — demo otomatik görünür.",
+        "Demo başlatıldı. Seçili çekici hesabıyla telefonda /cekici/panel açın — demo otomatik görünür. ~1 dk sonra yalnızca bu çekiciye SMS + sesli mesajlı gerçek talep açılır.",
     });
 
     res.cookies.set(DEMO_COOKIE, oturum.id, {

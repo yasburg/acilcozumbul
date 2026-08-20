@@ -109,6 +109,7 @@ export type TalepRow = {
   memnuniyet_sms_gonderildi: boolean;
   /** @deprecated normalize: talep_haric — migration öncesi fallback */
   haric_tutulan_cekici_ids?: string[] | null;
+  yalniz_cekici_id?: string | null;
   /** @deprecated normalize: teklifler tablosu — migration öncesi fallback */
   teklifler?: Teklif[] | null;
 };
@@ -282,6 +283,7 @@ export function talepFromRow(r: TalepRow): Talep {
     musteriHizmetAlindiAt: r.musteri_hizmet_alindi_at ?? undefined,
     memnuniyetSmsGonderildi: r.memnuniyet_sms_gonderildi ?? false,
     haricTutulanCekiciIds: r.haric_tutulan_cekici_ids ?? [],
+    yalnizCekiciId: r.yalniz_cekici_id ?? undefined,
     teklifler: r.teklifler ?? [],
   };
 }
@@ -316,6 +318,7 @@ export function talepToRow(t: Talep): Record<string, unknown> {
     anlasma_durumu: t.anlasmaDurumu ?? null,
     anlasildi_at: t.anlasildiAt ?? null,
     memnuniyet_sms_gonderildi: t.memnuniyetSmsGonderildi ?? false,
+    yalniz_cekici_id: t.yalnizCekiciId ?? null,
     ...(t.iptalAt ? { iptal_at: t.iptalAt } : {}),
     ...(t.musteriArandiAt
       ? { musteri_arandi_at: t.musteriArandiAt }

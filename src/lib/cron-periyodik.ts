@@ -1,10 +1,9 @@
 import { smsBaseUrl } from "./sms-base-url";
 import { simulasyonCalistir } from "./simulasyon-ihale-db";
+import { demoTakipPlanlariCalistir } from "./demo-takip";
 import { topluMemnuniyetSmsGonder } from "./memnuniyet";
 import { isleIhaleHatirlatmalari } from "./ihale-hatirlatma-db";
-import {
-  tetikleTopluSmsKuyruk,
-} from "./toplu-sms-is-db";
+import { tetikleTopluSmsKuyruk } from "./toplu-sms-is-db";
 import { topluSmsIsTablolariVar } from "./supabase/toplu-sms-schema";
 
 function hataMetni(e: unknown): string {
@@ -23,6 +22,7 @@ export async function cronPeriyodikCalistir(opts: {
   baseUrl: string;
 }): Promise<{
   sim: Awaited<ReturnType<typeof simulasyonCalistir>>;
+  demoTakip: Awaited<ReturnType<typeof demoTakipPlanlariCalistir>>;
   memnuniyet: number;
   ihale: Awaited<ReturnType<typeof isleIhaleHatirlatmalari>> | null;
   topluSms: Awaited<ReturnType<typeof tetikleTopluSmsKuyruk>> | null;
@@ -40,6 +40,17 @@ export async function cronPeriyodikCalistir(opts: {
     sim = await simulasyonCalistir({ baseUrl });
   } catch (e) {
     hatalar.push(`sim:${hataMetni(e)}`);
+  }
+
+  let demoTakip: Awaited<ReturnType<typeof demoTakipPlanlariCalistir>> = {
+    acilan: 0,
+    hatalar: [],
+  };
+  try {
+    demoTakip = await demoTakipPlanlariCalistir({ baseUrl });
+    hatalar.push(...demoTakip.hatalar.map((h) => `demo-takip:${h}`));
+  } catch (e) {
+    hatalar.push(`demo-takip:${hataMetni(e)}`);
   }
 
   let memnuniyet = 0;
@@ -65,5 +76,5 @@ export async function cronPeriyodikCalistir(opts: {
     hatalar.push(`toplu-sms:${hataMetni(e)}`);
   }
 
-  return { sim, memnuniyet, ihale, topluSms, hatalar };
+  return { sim, demoTakip, memnuniyet, ihale, topluSms, hatalar };
 }

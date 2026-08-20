@@ -8,6 +8,7 @@ import {
   demoBaslangicDurumu,
   demoRakipAd,
   demoRakipCekiciId,
+  demoTeklifKabulGecikmeSn,
   isDemoTalepId,
   type DemoOturumDurum,
   type DemoSmsKaydi,
@@ -21,8 +22,12 @@ import {
   ihaleAcikMi,
 } from "./ihale";
 import { teklifFiyatDegistiMi } from "./cekici-puan";
+import { notifyCekiciSecildi } from "./sms";
+import { smsBaseUrl } from "./sms-base-url";
 import { talepBolge, talepSorunOzet } from "./talep-utils";
 import type { ListeDurumu, TalepOzet } from "./types";
+
+export { isDemoTalepId, demoTeklifKabulGecikmeSn } from "./demo-fixtures";
 
 export const DEMO_COOKIE = "acil_demo";
 
@@ -60,10 +65,19 @@ function normalizeDurum(raw: unknown): DemoOturumDurum {
     return { talepler: [], sms: [], anaTalepId: "" };
   }
   const d = raw as DemoOturumDurum;
+  const ok =
+    d.otomatikKabul &&
+    typeof d.otomatikKabul === "object" &&
+    typeof d.otomatikKabul.talepId === "string" &&
+    typeof d.otomatikKabul.teklifId === "string" &&
+    typeof d.otomatikKabul.at === "string"
+      ? d.otomatikKabul
+      : null;
   return {
     talepler: Array.isArray(d.talepler) ? d.talepler : [],
     sms: Array.isArray(d.sms) ? d.sms : [],
     anaTalepId: typeof d.anaTalepId === "string" ? d.anaTalepId : "",
+    otomatikKabul: ok,
   };
 }
 
@@ -181,7 +195,7 @@ export async function getAktifDemoOturum(
     return null;
   }
 
-  return {
+  let oturum: AktifDemoOturum = {
     id: row.id,
     cekiciId: row.cekici_id,
     bitis: row.bitis,
@@ -189,6 +203,11 @@ export async function getAktifDemoOturum(
     durum: row.durum,
     olusturan: row.olusturan,
   };
+
+  if (oturum.durum.otomatikKabul) {
+    oturum = await demoOtomatikKabulIsleIfDue(oturum);
+  }
+  return oturum;
 }
 
 export async function getAktifDemoOturumRequest(
@@ -211,24 +230,31 @@ export async function demoOturumCekiciIcin(
   const fromCookie = request
     ? await getAktifDemoOturumRequest(request)
     : await getAktifDemoOturum();
-  if (fromCookie?.cekiciId === cekiciId) return fromCookie;
+  let oturum: AktifDemoOturum | null =
+    fromCookie?.cekiciId === cekiciId ? fromCookie : null;
 
-  const row = await oturumGetByCekiciId(cekiciId);
-  if (!row) return null;
-  const sn = kalanSn(row.bitis);
-  if (sn <= 0) {
-    await oturumSil(row.id);
-    return null;
+  if (!oturum) {
+    const row = await oturumGetByCekiciId(cekiciId);
+    if (!row) return null;
+    const sn = kalanSn(row.bitis);
+    if (sn <= 0) {
+      await oturumSil(row.id);
+      return null;
+    }
+    oturum = {
+      id: row.id,
+      cekiciId: row.cekici_id,
+      bitis: row.bitis,
+      kalanSn: sn,
+      durum: row.durum,
+      olusturan: row.olusturan,
+    };
   }
 
-  return {
-    id: row.id,
-    cekiciId: row.cekici_id,
-    bitis: row.bitis,
-    kalanSn: sn,
-    durum: row.durum,
-    olusturan: row.olusturan,
-  };
+  if (oturum.durum.otomatikKabul) {
+    oturum = await demoOtomatikKabulIsleIfDue(oturum);
+  }
+  return oturum;
 }
 
 /** API yanıtına demo çerezini yaz (telefonda sonraki istekler için) */
@@ -272,6 +298,13 @@ export async function baslatDemoOturum(opts: {
     durum,
     olusturan: opts.olusturan ?? null,
   });
+
+  // 1 dk sonra yalnızca bu çekiciye SMS+sesli gerçek talep
+  void import("./demo-takip")
+    .then(({ demoTakipPlanla }) =>
+      demoTakipPlanla({ cekiciId: cekici.id, demoOturumId: id })
+    )
+    .catch((e) => console.error("[demo] takip planla", e));
 
   return {
     id,
@@ -566,13 +599,26 @@ export async function demoSimuleOlay(
         tarih: new Date().toISOString(),
         durum: "aktif",
       };
-      return oturumGuncelle(oturum, (d) =>
-        talepGuncelle(d, anaId, (t) => ({
+      const kabulAt = new Date(
+        Date.now() + demoTeklifKabulGecikmeSn() * 1000
+      ).toISOString();
+      return oturumGuncelle(oturum, (d) => {
+        let next = talepGuncelle(d, anaId, (t) => ({
           ...t,
-          bildirilenCekiciIds: [...new Set([...(t.bildirilenCekiciIds ?? []), cekici.id])],
+          bildirilenCekiciIds: [
+            ...new Set([...(t.bildirilenCekiciIds ?? []), cekici.id]),
+          ],
           teklifler: [...(t.teklifler ?? []), teklif],
-        }))
-      );
+        }));
+        return {
+          ...next,
+          otomatikKabul: {
+            talepId: anaId,
+            teklifId: teklif.id,
+            at: kabulAt,
+          },
+        };
+      });
     }
     case "musteri_secti": {
       const benimTeklif = ana!.teklifler?.find(
@@ -652,6 +698,86 @@ export async function demoTeklifEkle(
   );
 
   return { oturum: yeni, teklif };
+}
+
+/** Teklif sonrası: N sn içinde müşteri demo teklifi seçsin diye planla */
+export async function demoTeklifOtomatikKabulPlanla(
+  oturum: AktifDemoOturum,
+  talepId: string,
+  teklifId: string,
+  opts?: { gecikmeSn?: number }
+): Promise<AktifDemoOturum> {
+  const sn = opts?.gecikmeSn ?? demoTeklifKabulGecikmeSn();
+  const at = new Date(Date.now() + sn * 1000).toISOString();
+  return oturumGuncelle(oturum, (d) => ({
+    ...d,
+    otomatikKabul: { talepId, teklifId, at },
+  }));
+}
+
+/**
+ * Vadesi geldiyse demo teklifi kabul et + gerçek SMS + sesli (ihale kazandı).
+ * Idempotent — panel poll / after() yedekleri için.
+ */
+export async function demoOtomatikKabulIsleIfDue(
+  oturum: AktifDemoOturum,
+  baseUrl?: string
+): Promise<AktifDemoOturum> {
+  const plan = oturum.durum.otomatikKabul;
+  if (!plan) return oturum;
+  if (Date.parse(plan.at) > Date.now()) return oturum;
+
+  const talep = demoTalepBul(oturum, plan.talepId);
+  if (!talep || talep.kazananCekiciId) {
+    return oturumGuncelle(oturum, (d) => ({ ...d, otomatikKabul: null }));
+  }
+
+  const teklif = talep.teklifler?.find(
+    (t) => t.id === plan.teklifId && t.durum === "aktif"
+  );
+  if (!teklif || teklif.cekiciId !== oturum.cekiciId) {
+    return oturumGuncelle(oturum, (d) => ({ ...d, otomatikKabul: null }));
+  }
+
+  try {
+    const secili = demoTeklifSecDurumu(talep, plan.teklifId);
+    const cekici = await getCekiciById(oturum.cekiciId);
+    const yeni = await oturumGuncelle(oturum, (d) => {
+      let next = talepGuncelle(d, plan.talepId, () => secili);
+      next = {
+        ...next,
+        otomatikKabul: null,
+      };
+      if (cekici) {
+        next = smsEkle(next, {
+          aliciTipi: "cekici",
+          telefon: cekici.telefon,
+          mesaj: `Musteri sizi secti (${teklif.fiyat} TL) — demo`,
+          link: `/cekici/talep/${plan.talepId}`,
+        });
+      }
+      return next;
+    });
+
+    if (cekici) {
+      const url = smsBaseUrl(baseUrl);
+      await notifyCekiciSecildi(cekici, secili, url).catch((e) =>
+        console.error("[demo] ihale-kazandi bildirim", e)
+      );
+    }
+
+    return yeni;
+  } catch (e) {
+    console.error("[demo] otomatik kabul", e);
+    try {
+      return await oturumGuncelle(oturum, (d) => ({
+        ...d,
+        otomatikKabul: null,
+      }));
+    } catch {
+      return oturum;
+    }
+  }
 }
 
 /** Müşteri bekle ekranından teklif seçimi (DB yazmaz) */
@@ -783,5 +909,3 @@ export function demoPanelVerisi(
 
 /** Plan adı — `demoPanelVerisi` ile aynı */
 export const mergeCekiciPanelData = demoPanelVerisi;
-
-export { isDemoTalepId };
