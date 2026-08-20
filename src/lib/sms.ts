@@ -1,6 +1,7 @@
 import { getCekicilerBildirimAdaylari, getCekiciById, updateCekici } from "./db";
 import { talepSehriAcikMi } from "./cekici-sehir-acilis-db";
 import {
+  cekiciAcikTalepUygunMu,
   cekiciBildirimHizliSmsMi,
   cekiciBildirimKrediTutari,
   cekiciBildirimSesliMi,
@@ -97,7 +98,14 @@ export async function notifyCekiciler(
   haricTutulan: string[] = [],
   options?: { yenidenArama?: boolean; yalnizCekiciIds?: string[] }
 ): Promise<string[]> {
-  if (!(await talepSehriAcikMi(talep))) {
+  const yalnizIds = options?.yalnizCekiciIds?.length
+    ? new Set(options.yalnizCekiciIds)
+    : talep.yalnizCekiciId
+      ? new Set([talep.yalnizCekiciId])
+      : null;
+
+  // Açık hedef (demo takip): şehir kapalı olsa da bildir
+  if (!yalnizIds && !(await talepSehriAcikMi(talep))) {
     return [];
   }
 
@@ -105,25 +113,34 @@ export async function notifyCekiciler(
   const haric = new Set(haricTutulan);
   const yeniden = options?.yenidenArama ?? false;
   const yalnizTester = smsYalnizTesterCekicilerMi();
-  const yalnizIds = options?.yalnizCekiciIds?.length
-    ? new Set(options.yalnizCekiciIds)
-    : talep.yalnizCekiciId
-      ? new Set([talep.yalnizCekiciId])
-      : null;
 
-  const adaylar = tumCekiciler.filter(
-    (c) =>
-      !haric.has(c.id) &&
-      (!yalnizIds || yalnizIds.has(c.id)) &&
+  // Demo takip vb.: hedef id kredi listesinde yoksa doğrudan yükle
+  if (yalnizIds) {
+    for (const id of yalnizIds) {
+      if (tumCekiciler.some((c) => c.id === id)) continue;
+      const c = await getCekiciById(id);
+      if (c) tumCekiciler.push(c);
+    }
+  }
+
+  const adaylar = tumCekiciler.filter((c) => {
+    if (haric.has(c.id)) return false;
+    if (yalnizIds && !yalnizIds.has(c.id)) return false;
+    if (yalnizIds) {
+      // Açık hedef: tester filtresi yok; kredi yetersiz olsa da SMS/sesli gitsin
+      return c.aktif && cekiciAcikTalepUygunMu(talep, c);
+    }
+    return (
       cekiciTalepSmsAdayiMi(talep, c) &&
       (!yalnizTester || Boolean(c.testerHesap))
-  );
+    );
+  });
 
-  if (yalnizTester && adaylar.length === 0) {
+  if (!yalnizIds && yalnizTester && adaylar.length === 0) {
     console.info(
       "[sms] development: tester çekici adayı yok — gerçek çekicilere SMS gönderilmedi"
     );
-  } else if (yalnizTester) {
+  } else if (!yalnizIds && yalnizTester) {
     console.info(
       `[sms] development: yalnızca ${adaylar.length} tester çekiciye SMS`
     );

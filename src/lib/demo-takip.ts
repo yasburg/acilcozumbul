@@ -14,6 +14,7 @@ import {
   type SimulasyonSorunTipi,
 } from "./simulasyon-ihale";
 import { getSupabaseAdmin, supabaseDbAktif } from "./supabase/admin";
+import { smsBaseUrl } from "./sms-base-url";
 import type { Cekici, Talep } from "./types";
 
 export type DemoTakipPlanDurum = "planli" | "acildi" | "iptal" | "hata";
@@ -223,6 +224,8 @@ export async function demoTakipPlanAc(
 export async function demoTakipPlanlariCalistir(opts: {
   baseUrl: string;
   simdi?: Date;
+  /** Varsa yalnızca bu çekicinin planları */
+  cekiciId?: string;
 }): Promise<{ acilan: number; hatalar: string[] }> {
   if (!supabaseDbAktif()) return { acilan: 0, hatalar: [] };
 
@@ -231,13 +234,18 @@ export async function demoTakipPlanlariCalistir(opts: {
   const hatalar: string[] = [];
 
   try {
-    const { data, error } = await getSupabaseAdmin()
+    let q = getSupabaseAdmin()
       .from("demo_takip_plan")
       .select("*")
       .eq("durum", "planli")
       .lte("planlanan_acilis_at", simdi.toISOString())
       .order("planlanan_acilis_at", { ascending: true })
       .limit(20);
+    if (opts.cekiciId) {
+      q = q.eq("cekici_id", opts.cekiciId);
+    }
+
+    const { data, error } = await q;
 
     if (error) {
       if (error.code === "42P01" || error.message?.includes("demo_takip_plan")) {
@@ -265,4 +273,22 @@ export async function demoTakipPlanlariCalistir(opts: {
   }
 
   return { acilan, hatalar };
+}
+
+/**
+ * Demo oturum poll / after(): vadesi gelmiş planı aç (cron beklemeden).
+ * Idempotent.
+ */
+export async function demoTakipIsleIfDue(opts: {
+  cekiciId: string;
+  baseUrl?: string;
+}): Promise<{ acilan: number }> {
+  const sonuc = await demoTakipPlanlariCalistir({
+    baseUrl: smsBaseUrl(opts.baseUrl),
+    cekiciId: opts.cekiciId,
+  });
+  if (sonuc.hatalar.length) {
+    console.error("[demo-takip] isleIfDue", sonuc.hatalar);
+  }
+  return { acilan: sonuc.acilan };
 }

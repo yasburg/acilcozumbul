@@ -406,6 +406,32 @@ describe("D — Çekici bildirim (mock)", () => {
     expect(sendSms.mock.calls[0][0]).toBe("05322222222");
     vi.unstubAllEnvs();
   });
+
+  it("D-demo: yalnizCekiciIds development’ta tester olmayanı da bildirir", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("SMS_TESTER_ONLY", "");
+    const normal = cekiciFixture({
+      id: "c1",
+      telefon: "05321111111",
+      kredi: 0,
+      testerHesap: false,
+    });
+    getCekicilerBildirimAdaylari.mockResolvedValue([]);
+    getCekiciById.mockResolvedValue(normal);
+    const ids = await notifyCekiciler(
+      talepFixture({
+        konumIl: "İstanbul",
+        konumIlce: "Kadıköy",
+        yalnizCekiciId: "c1",
+      }),
+      "http://localhost:3000",
+      [],
+      { yalnizCekiciIds: ["c1"] }
+    );
+    expect(ids).toEqual(["c1"]);
+    expect(sendSms).toHaveBeenCalledTimes(1);
+    vi.unstubAllEnvs();
+  });
 });
 
 describe("E — Müşteri SMS (mock)", () => {

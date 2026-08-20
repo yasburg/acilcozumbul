@@ -207,6 +207,14 @@ export async function getAktifDemoOturum(
   if (oturum.durum.otomatikKabul) {
     oturum = await demoOtomatikKabulIsleIfDue(oturum);
   }
+
+  // Cron olmadan: vadesi gelen demo takip talebini aç + SMS/sesli
+  await import("./demo-takip")
+    .then(({ demoTakipIsleIfDue }) =>
+      demoTakipIsleIfDue({ cekiciId: oturum.cekiciId })
+    )
+    .catch((e) => console.error("[demo] takip isleIfDue", e));
+
   return oturum;
 }
 
@@ -254,6 +262,15 @@ export async function demoOturumCekiciIcin(
   if (oturum.durum.otomatikKabul) {
     oturum = await demoOtomatikKabulIsleIfDue(oturum);
   }
+
+  if (!fromCookie || fromCookie.cekiciId !== cekiciId) {
+    await import("./demo-takip")
+      .then(({ demoTakipIsleIfDue }) =>
+        demoTakipIsleIfDue({ cekiciId })
+      )
+      .catch((e) => console.error("[demo] takip isleIfDue cekici", e));
+  }
+
   return oturum;
 }
 
@@ -299,12 +316,13 @@ export async function baslatDemoOturum(opts: {
     olusturan: opts.olusturan ?? null,
   });
 
-  // 1 dk sonra yalnızca bu çekiciye SMS+sesli gerçek talep
-  void import("./demo-takip")
-    .then(({ demoTakipPlanla }) =>
-      demoTakipPlanla({ cekiciId: cekici.id, demoOturumId: id })
-    )
-    .catch((e) => console.error("[demo] takip planla", e));
+  // 1 dk sonra yalnızca bu çekiciye SMS+sesli gerçek talep (cron’a güvenme)
+  try {
+    const { demoTakipPlanla } = await import("./demo-takip");
+    await demoTakipPlanla({ cekiciId: cekici.id, demoOturumId: id });
+  } catch (e) {
+    console.error("[demo] takip planla", e);
+  }
 
   return {
     id,
