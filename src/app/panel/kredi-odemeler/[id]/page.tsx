@@ -198,13 +198,21 @@ export default function PanelSatinAlmaDetayPage() {
           Fatura PDF
         </h3>
         {kayit.fatura ? (
-          <p className="text-sm text-slate-700">
-            Yüklü: <strong>{kayit.fatura.belgeNo}</strong>
-            <span className="text-slate-500">
-              {" "}
-              · {new Date(kayit.fatura.createdAt).toLocaleString("tr-TR")}
-            </span>
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-slate-700">
+              Yüklü: <strong>{kayit.fatura.belgeNo}</strong>
+              <span className="text-slate-500">
+                {" "}
+                · {new Date(kayit.fatura.createdAt).toLocaleString("tr-TR")}
+              </span>
+            </p>
+            <a
+              href={`/api/panel/faturalar/${kayit.fatura.id}/pdf`}
+              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium min-h-0 py-2.5 px-4"
+            >
+              İndir
+            </a>
+          </div>
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-slate-600">
