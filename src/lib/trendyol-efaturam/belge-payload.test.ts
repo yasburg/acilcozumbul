@@ -3,6 +3,7 @@ import type { KrediOdeme } from "../types";
 import {
   bireyselEarsivTckn,
   BIREYSEL_EARSIV_VARSAYILAN_TCKN,
+  kisiAdiniAyir,
   kurumsalFaturaPayloadOlustur,
   kurumsalOdemeAciklama,
 } from "./belge-payload";
@@ -30,6 +31,22 @@ const ornekOdeme: KrediOdeme = {
 describe("kurumsalOdemeAciklama", () => {
   it("kredi paketi açıklaması üretir", () => {
     expect(kurumsalOdemeAciklama(ornekOdeme)).toContain("750 kredi");
+  });
+});
+
+describe("kisiAdiniAyir", () => {
+  it("ad soyadı ayırır", () => {
+    expect(kisiAdiniAyir("Ahmet Yılmaz")).toEqual({
+      firstName: "Ahmet",
+      familyName: "Yılmaz",
+    });
+  });
+
+  it("tek kelimede ad ve soyadı aynı tutar", () => {
+    expect(kisiAdiniAyir("Ahmet")).toEqual({
+      firstName: "Ahmet",
+      familyName: "Ahmet",
+    });
   });
 });
 
@@ -63,6 +80,9 @@ describe("kurumsalFaturaPayloadOlustur", () => {
     expect(
       (payload.invoiceTotal as { payableAmount: number }).payableAmount
     ).toBe(99900);
+    expect(
+      (payload.recipientInfo as { firstName?: string }).firstName
+    ).toBeUndefined();
   });
 
   it("e-arşiv için EARSIVFATURA kullanır", () => {
@@ -76,5 +96,29 @@ describe("kurumsalFaturaPayloadOlustur", () => {
       "EARSIVFATURA"
     );
     expect(payload.targetAlias).toBeUndefined();
+  });
+
+  it("bireysel e-arşivde FirstName/FamilyName ekler", () => {
+    const payload = kurumsalFaturaPayloadOlustur({
+      odeme: {
+        ...ornekOdeme,
+        kurumsal: false,
+        cekiciAd: "Mehmet Ali Demir",
+        sirketUnvan: undefined,
+        vergiNo: undefined,
+        faturaTcKimlik: "10000000146",
+      },
+      companyId: 1,
+      userId: 2,
+      belgeTipi: "e-arsiv",
+    });
+    const alici = payload.recipientInfo as {
+      firstName: string;
+      familyName: string;
+      taxId: string;
+    };
+    expect(alici.firstName).toBe("Mehmet Ali");
+    expect(alici.familyName).toBe("Demir");
+    expect(alici.taxId).toBe("10000000146");
   });
 });

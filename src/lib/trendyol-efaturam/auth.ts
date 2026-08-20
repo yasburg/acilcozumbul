@@ -48,7 +48,7 @@ export async function trendyolEfaturamAccessTokenAl(): Promise<string> {
       res.status === 403 && metin.trimStart().startsWith("<!DOCTYPE");
     throw new Error(
       cloudflare403
-        ? "Trendyol E-Faturam gateway erişimi engellendi (403). TRENDYOL_EFATURAM_API_BASE_URL=https://apigateway.trendyolecozum.com kullanın; stage gateway localden çalışmıyor."
+        ? `Trendyol E-Faturam gateway erişimi engellendi (403). Stage gateway (${apiBaseUrl}) canlı sunucudan veya whitelist dışı IP'den Cloudflare ile kesilir — production'da TRENDYOL_EFATURAM_API_BASE_URL=https://apigateway.trendyolecozum.com ve prod şifre kullanın.`
         : `Trendyol E-Faturam girişi başarısız (${res.status})${metin ? `: ${metin.slice(0, 200)}` : ""}`
     );
   }
