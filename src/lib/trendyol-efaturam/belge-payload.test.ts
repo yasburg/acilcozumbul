@@ -3,7 +3,9 @@ import type { KrediOdeme } from "../types";
 import {
   bireyselEarsivTckn,
   BIREYSEL_EARSIV_VARSAYILAN_TCKN,
+  faturaGunTr,
   faturaKesimTarihi,
+  faturaLocalReferenceId,
   kisiAdiniAyir,
   kurumsalFaturaPayloadOlustur,
   kurumsalOdemeAciklama,
@@ -50,6 +52,27 @@ describe("faturaKesimTarihi", () => {
   });
 });
 
+describe("faturaGunTr", () => {
+  it("İstanbul takvim gününü verir", () => {
+    // UTC 22:00 → TR 01:00 ertesi gün
+    expect(faturaGunTr(new Date("2026-08-01T22:30:00.000Z"))).toBe(
+      "2026-08-02"
+    );
+  });
+});
+
+describe("faturaLocalReferenceId", () => {
+  it("banka referansını tercih eder", () => {
+    expect(faturaLocalReferenceId(ornekOdeme)).toBe("REF-1");
+  });
+
+  it("referans yoksa ödeme id kullanır", () => {
+    expect(
+      faturaLocalReferenceId({ ...ornekOdeme, odemeReferans: undefined })
+    ).toBe(ornekOdeme.id);
+  });
+});
+
 describe("kisiAdiniAyir", () => {
   it("ad soyadı ayırır", () => {
     expect(kisiAdiniAyir("Ahmet Yılmaz")).toEqual({
@@ -69,7 +92,11 @@ describe("kisiAdiniAyir", () => {
 describe("bireyselEarsivTckn", () => {
   it("TC yoksa varsayılan TCKN kullanır", () => {
     expect(
-      bireyselEarsivTckn({ ...ornekOdeme, kurumsal: false, faturaTcKimlik: undefined })
+      bireyselEarsivTckn({
+        ...ornekOdeme,
+        kurumsal: false,
+        faturaTcKimlik: undefined,
+      })
     ).toBe(BIREYSEL_EARSIV_VARSAYILAN_TCKN);
   });
 });
@@ -90,9 +117,9 @@ describe("kurumsalFaturaPayloadOlustur", () => {
     expect((payload.invoiceInfo as { invoiceType: string }).invoiceType).toBe(
       "TEMELFATURA"
     );
-    expect(
-      (payload.recipientInfo as { taxId: string }).taxId
-    ).toBe("1234567890");
+    expect((payload.recipientInfo as { taxId: string }).taxId).toBe(
+      "1234567890"
+    );
     expect(
       (payload.invoiceTotal as { payableAmount: number }).payableAmount
     ).toBe(99900);
@@ -128,6 +155,22 @@ describe("kurumsalFaturaPayloadOlustur", () => {
     expect((payload.paymentInfo as { paymentDate: string }).paymentDate).toBe(
       "2026-08-04T10:55:13.000Z"
     );
+  });
+
+  it("localReferenceId ve notlarda banka referansı kullanır", () => {
+    const payload = kurumsalFaturaPayloadOlustur({
+      odeme: ornekOdeme,
+      companyId: 1,
+      userId: 2,
+      belgeTipi: "e-arsiv",
+    });
+    expect(payload.localReferenceId).toBe("REF-1");
+    expect((payload.orderInfo as { orderId: string }).orderId).toBe("REF-1");
+    expect(payload.notes).toEqual([
+      expect.stringContaining("750 kredi"),
+      "Ödeme tarihi: 2026-08-04",
+      "Banka ref: REF-1",
+    ]);
   });
 
   it("bireysel e-arşivde name+surname ekler", () => {

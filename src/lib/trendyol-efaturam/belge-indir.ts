@@ -40,10 +40,29 @@ export function efaturamBelgeHazirMi(durum: {
   return kod === 10 || kod === 205;
 }
 
+/** Trendyol panel: Statü = İptal Edildi (status 305) */
+export function efaturamBelgeIptalMi(durum: {
+  gibStatus?: string;
+  status?: number | string;
+}): boolean {
+  const gib = (durum.gibStatus ?? "").toUpperCase();
+  if (
+    gib.includes("CANCEL") ||
+    gib === "IPTAL" ||
+    gib === "CANCELLED" ||
+    gib === "CANCELED"
+  ) {
+    return true;
+  }
+  // 305: İptal Edildi (earchive listesinde görülen kod)
+  return durumKodu(durum.status) === 305;
+}
+
 export function efaturamBelgeHataliMi(durum: {
   gibStatus?: string;
   status?: number | string;
 }): boolean {
+  if (efaturamBelgeIptalMi(durum)) return true;
   const gib = (durum.gibStatus ?? "").toUpperCase();
   if (HATA_GIB_DURUMLARI.has(gib)) return true;
   const kod = durumKodu(durum.status);
@@ -98,6 +117,7 @@ export type EfaturamBelgeOzet = {
   invoiceId?: string;
   gibStatus?: string;
   status?: number | string;
+  localReferenceId?: string;
 };
 
 /** Önceki (yarım kalan) kesimi localReferenceId ile bul — duplicate önler */
@@ -105,11 +125,15 @@ export async function efaturamBelgeLocalRefIleBul(opts: {
   belgeTipi: "e-fatura" | "e-arsiv";
   companyId: number;
   localReferenceId: string;
+  /** true: iptal edilmiş belgeleri yok say (yeniden kesim için) */
+  iptalleriAtla?: boolean;
 }): Promise<EfaturamBelgeOzet | null> {
   const yol =
     opts.belgeTipi === "e-fatura"
       ? "/api/invoice/documents/outgoing-einvoice/search"
       : "/api/invoice/documents/earchive/search";
+
+  const hedefRef = opts.localReferenceId.slice(0, 127);
 
   try {
     const yanit = await efaturamApiJson<{
@@ -118,26 +142,59 @@ export async function efaturamBelgeLocalRefIleBul(opts: {
         invoiceId?: string;
         gibStatus?: string;
         status?: number | string;
+        localReferenceId?: string;
       }>;
     }>(yol, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         companyId: opts.companyId,
-        localReferenceId: opts.localReferenceId.slice(0, 127),
+        localReferenceId: hedefRef,
         page: 0,
-        size: 5,
+        size: 20,
       }),
     });
 
-    const ilk = yanit.content?.find((k) => k.invoiceUuid);
-    if (!ilk?.invoiceUuid) return null;
+    // API bazen filtreyi gevşek uygular — exact match zorunlu
+    const adaylar = (yanit.content ?? []).filter(
+      (k) =>
+        k.invoiceUuid &&
+        (k.localReferenceId ?? "").slice(0, 127) === hedefRef
+    );
+
+    const sec =
+      (opts.iptalleriAtla
+        ? adaylar.find((k) => !efaturamBelgeIptalMi(k))
+        : adaylar[0]) ?? null;
+
+    if (!sec?.invoiceUuid) return null;
     return {
-      invoiceUuid: ilk.invoiceUuid,
-      invoiceId: ilk.invoiceId,
-      gibStatus: ilk.gibStatus,
-      status: ilk.status,
+      invoiceUuid: sec.invoiceUuid,
+      invoiceId: sec.invoiceId,
+      gibStatus: sec.gibStatus,
+      status: sec.status,
+      localReferenceId: sec.localReferenceId,
     };
+  } catch {
+    return null;
+  }
+}
+
+/** UUID ile durum (iptal / hazır) — panel göstergesi */
+export async function efaturamBelgeDurumuGetir(opts: {
+  belgeTipi: "e-fatura" | "e-arsiv";
+  invoiceUuid: string;
+}): Promise<{ status?: number | string; gibStatus?: string; invoiceId?: string } | null> {
+  const yol =
+    opts.belgeTipi === "e-fatura"
+      ? `/api/invoice/documents/outgoing-einvoice/status/${encodeURIComponent(opts.invoiceUuid)}`
+      : `/api/invoice/documents/earchive/status/${encodeURIComponent(opts.invoiceUuid)}`;
+  try {
+    return await efaturamApiJson<{
+      status?: number | string;
+      gibStatus?: string;
+      invoiceId?: string;
+    }>(yol, { method: "GET" });
   } catch {
     return null;
   }

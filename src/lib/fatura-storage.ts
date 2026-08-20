@@ -28,3 +28,7 @@ export async function faturaPdfIndir(
   if (!buf) return null;
   return new Uint8Array(buf);
 }
+
+export async function faturaPdfSil(storagePath: string): Promise<void> {
+  await deleteFile(FATURA_STORAGE_BUCKET, storagePath);
+}

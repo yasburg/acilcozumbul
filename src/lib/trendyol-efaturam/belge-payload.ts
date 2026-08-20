@@ -72,6 +72,26 @@ export function faturaKesimTarihi(odeme: KrediOdeme, simdi = new Date()): Date {
   return d;
 }
 
+/** GİB / Trendyol takvim günü — Europe/Istanbul (UTC slice gece yarısı kaydırır) */
+export function faturaGunTr(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
+/**
+ * Trendyol localReferenceId / orderId — her satın alma benzersiz olmalı.
+ * Banka (Garanti) referansı varsa onu kullan; yoksa ödeme UUID.
+ */
+export function faturaLocalReferenceId(odeme: KrediOdeme): string {
+  const banka = (odeme.odemeReferans ?? "").trim();
+  if (banka) return banka.slice(0, 127);
+  return odeme.id.slice(0, 127);
+}
+
 /** Trendyol createEArchive / createOutgoingEInvoice gövdesi */
 export function kurumsalFaturaPayloadOlustur(
   girdi: KurumsalFaturaPayloadGirdi
@@ -94,7 +114,15 @@ export function kurumsalFaturaPayloadOlustur(
   const kisi = bireysel ? kisiAdiniAyir(unvan) : null;
   const kesim = faturaKesimTarihi(odeme);
   const kesimIso = kesim.toISOString();
-  const kesimGun = kesimIso.slice(0, 10);
+  const kesimGun = faturaGunTr(kesim);
+  const localRef = faturaLocalReferenceId(odeme);
+  const notlar = [
+    aciklama,
+    `Ödeme tarihi: ${kesimGun}`,
+    odeme.odemeReferans?.trim()
+      ? `Banka ref: ${odeme.odemeReferans.trim()}`
+      : `Ödeme ID: ${odeme.id}`,
+  ];
 
   const invoiceLine = {
     unitCode: "C62",
@@ -125,9 +153,9 @@ export function kurumsalFaturaPayloadOlustur(
     autoInvoiceId: true,
     companyId,
     userId,
-    localReferenceId: odeme.id.slice(0, 127),
+    localReferenceId: localRef,
     source: "WEB",
-    notes: [aciklama],
+    notes: notlar,
     recipientInfo: {
       taxId: vergiNo,
       countryCode: "TR",
@@ -155,7 +183,7 @@ export function kurumsalFaturaPayloadOlustur(
       allowanceTotalAmount: 0,
     },
     orderInfo: {
-      orderId: odeme.id.slice(0, 127),
+      orderId: localRef,
       orderDate: kesimGun,
     },
     issuedAt: kesimIso,

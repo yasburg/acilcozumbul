@@ -49,6 +49,7 @@ export async function panelFaturaYukleVeSms(opts: {
   krediOdemeId?: string | null;
   /** Varsa öncelikli bildirim e-postası (ödeme fatura e-postası) */
   bildirimEposta?: string | null;
+  trendyolInvoiceUuid?: string | null;
 }): Promise<FaturaYukleSonuc> {
   if (!supabaseDbAktif()) {
     return { ok: false, hata: "Veritabanı yok" };
@@ -77,6 +78,7 @@ export async function panelFaturaYukleVeSms(opts: {
       krediOdemeId: opts.krediOdemeId ?? null,
       storagePath,
       belgeNo,
+      trendyolInvoiceUuid: opts.trendyolInvoiceUuid ?? null,
     });
 
     const bildirim = await faturaBildirimGonder({

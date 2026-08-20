@@ -1,5 +1,5 @@
 import type { KrediOdeme } from "../types";
-import { kurumsalFaturaPayloadOlustur } from "./belge-payload";
+import { faturaLocalReferenceId, kurumsalFaturaPayloadOlustur } from "./belge-payload";
 import {
   efaturamBelgeDurumuBekle,
   efaturamBelgeLocalRefIleBul,
@@ -32,7 +32,8 @@ type OlusturmaYanit = {
 
 /** Ödeme için Trendyol E-Faturam üzerinden e-fatura veya e-arşiv oluşturur ve PDF indirir. */
 export async function trendyolOdemeFaturaOlustur(
-  odeme: KrediOdeme
+  odeme: KrediOdeme,
+  opts?: { forceYeni?: boolean }
 ): Promise<TrendyolFaturaOlusturSonuc> {
   if (!trendyolEfaturamYapilandirildi()) {
     return {
@@ -72,14 +73,30 @@ export async function trendyolOdemeFaturaOlustur(
     const oturum = await efaturamOturumAl();
 
     // Önceki timeout sonrası Trendyol'da kalan faturayı tekrar kesmeden çek
-    const mevcut = await efaturamBelgeLocalRefIleBul({
-      belgeTipi,
-      companyId: oturum.companyId,
-      localReferenceId: odeme.id,
-    });
+    // İptal edilmişleri atla; yeniden oluşturmada hiç recovery yapma
+    let invoiceUuid: string | undefined;
+    let invoiceId: string | undefined;
 
-    let invoiceUuid = mevcut?.invoiceUuid;
-    let invoiceId = mevcut?.invoiceId;
+    if (!opts?.forceYeni) {
+      const localRefs = [
+        faturaLocalReferenceId(odeme),
+        odeme.id.slice(0, 127),
+      ].filter((v, i, a) => a.indexOf(v) === i);
+
+      for (const localReferenceId of localRefs) {
+        const mevcut = await efaturamBelgeLocalRefIleBul({
+          belgeTipi,
+          companyId: oturum.companyId,
+          localReferenceId,
+          iptalleriAtla: true,
+        });
+        if (mevcut?.invoiceUuid) {
+          invoiceUuid = mevcut.invoiceUuid;
+          invoiceId = mevcut.invoiceId;
+          break;
+        }
+      }
+    }
 
     if (!invoiceUuid) {
       const payload = kurumsalFaturaPayloadOlustur({

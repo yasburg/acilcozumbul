@@ -6,7 +6,7 @@ import { ensureSeedData } from "@/lib/seed";
 
 /** Panel: Trendyol E-Faturam ile fatura oluştur */
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensureSeedData();
@@ -24,7 +24,18 @@ export async function POST(
     return NextResponse.json({ error: "Kayıt bulunamadı." }, { status: 404 });
   }
 
-  const sonuc = await odemeSonrasiTrendyolFatura(kayit, { manuel: true });
+  let yeniden = false;
+  try {
+    const body = (await request.json()) as { yeniden?: boolean };
+    yeniden = Boolean(body?.yeniden);
+  } catch {
+    yeniden = false;
+  }
+
+  const sonuc = await odemeSonrasiTrendyolFatura(kayit, {
+    manuel: true,
+    yeniden,
+  });
   if (!sonuc.ok) {
     return NextResponse.json({ error: sonuc.hata }, { status: 502 });
   }

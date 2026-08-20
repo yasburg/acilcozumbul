@@ -16,6 +16,7 @@ export type FaturaLink = {
   expiresAt: string;
   createdAt: string;
   sonErisimAt: string | null;
+  trendyolInvoiceUuid: string | null;
 };
 
 type FaturaLinkRow = {
@@ -28,6 +29,7 @@ type FaturaLinkRow = {
   expires_at: string;
   created_at: string;
   son_erisim_at: string | null;
+  trendyol_invoice_uuid?: string | null;
 };
 
 function fromRow(r: FaturaLinkRow): FaturaLink {
@@ -41,6 +43,7 @@ function fromRow(r: FaturaLinkRow): FaturaLink {
     expiresAt: r.expires_at,
     createdAt: r.created_at,
     sonErisimAt: r.son_erisim_at,
+    trendyolInvoiceUuid: r.trendyol_invoice_uuid ?? null,
   };
 }
 
@@ -116,8 +119,9 @@ export async function olusturFaturaLink(opts: {
   storagePath: string;
   belgeNo?: string;
   expiresAt?: Date;
+  trendyolInvoiceUuid?: string | null;
 }): Promise<FaturaLink> {
-  const kayit: FaturaLinkRow = {
+  const kayit: Record<string, unknown> = {
     id: opts.id ?? randomUUID(),
     token: faturaTokenUret(),
     cekici_id: opts.cekiciId,
@@ -128,6 +132,9 @@ export async function olusturFaturaLink(opts: {
     created_at: new Date().toISOString(),
     son_erisim_at: null,
   };
+  if (opts.trendyolInvoiceUuid) {
+    kayit.trendyol_invoice_uuid = opts.trendyolInvoiceUuid;
+  }
 
   const { data, error } = await getSupabaseAdmin()
     .from("fatura_link")
@@ -136,6 +143,14 @@ export async function olusturFaturaLink(opts: {
     .single();
   if (error) throw error;
   return fromRow(data as FaturaLinkRow);
+}
+
+export async function silFaturaLink(id: string): Promise<void> {
+  const { error } = await getSupabaseAdmin()
+    .from("fatura_link")
+    .delete()
+    .eq("id", id);
+  if (error) throw error;
 }
 
 export async function isaretleFaturaSonErisim(id: string): Promise<void> {

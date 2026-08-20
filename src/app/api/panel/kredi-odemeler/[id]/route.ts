@@ -3,6 +3,7 @@ import { getAbonelikIslemById } from "@/lib/abonelik-db";
 import { getCekiciById } from "@/lib/db";
 import { orderIdTemizle } from "@/lib/garanti/payment";
 import { getFaturaLinkByKrediOdemeId } from "@/lib/fatura-link-db";
+import { trendyolOdemeFaturaPanelDurumu } from "@/lib/fatura-trendyol";
 import { getKrediOdemeById } from "@/lib/kredi-odeme";
 import {
   abonelikIslemIdFromDetay,
@@ -70,6 +71,7 @@ export async function GET(
       olusturulma: islem.createdAt,
       fatura: null,
       krediOdemeId: null,
+      trendyolFatura: null,
     });
   }
 
@@ -82,6 +84,11 @@ export async function GET(
   const { ad, soyad } = adSoyadAyir(kayit.cekiciAd);
   const fatura = await getFaturaLinkByKrediOdemeId(kayit.id);
   const cekici = await getCekiciById(kayit.cekiciId);
+
+  const trendyolFatura =
+    fatura != null
+      ? await trendyolOdemeFaturaPanelDurumu({ odeme: kayit, fatura })
+      : null;
 
   return NextResponse.json({
     ...kayit,
@@ -100,5 +107,6 @@ export async function GET(
         }
       : null,
     krediOdemeId: kayit.id,
+    trendyolFatura,
   });
 }

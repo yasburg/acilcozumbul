@@ -40,6 +40,11 @@ type Detay = {
   demoOdeme: boolean;
   olusturulma: string;
   fatura: { id: string; belgeNo: string; createdAt: string } | null;
+  trendyolFatura: {
+    durum: "iptal" | "aktif" | "yok";
+    invoiceUuid?: string;
+    invoiceId?: string;
+  } | null;
 };
 
 export default function PanelSatinAlmaDetayPage() {
@@ -98,14 +103,19 @@ export default function PanelSatinAlmaDetayPage() {
     }
   }
 
-  async function trendyolFaturaOlustur() {
+  async function trendyolFaturaOlustur(yeniden = false) {
     setHata("");
     setMesaj("");
     setTrendyolOlusturuyor(true);
     try {
       const res = await fetch(
         `/api/panel/kredi-odemeler/${id}/fatura/olustur`,
-        { method: "POST", credentials: "include" }
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ yeniden }),
+        }
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -119,7 +129,9 @@ export default function PanelSatinAlmaDetayPage() {
         setMesaj(data.mesaj ?? "İşlem atlandı.");
       } else {
         setMesaj(
-          `Trendyol ${data.belgeTipi === "e-fatura" ? "e-fatura" : "e-arşiv"} oluşturuldu.`
+          yeniden
+            ? `Trendyol ${data.belgeTipi === "e-fatura" ? "e-fatura" : "e-arşiv"} yeniden oluşturuldu.`
+            : `Trendyol ${data.belgeTipi === "e-fatura" ? "e-fatura" : "e-arşiv"} oluşturuldu.`
         );
       }
       await yukle();
@@ -235,13 +247,44 @@ export default function PanelSatinAlmaDetayPage() {
                 · {new Date(kayit.fatura.createdAt).toLocaleString("tr-TR")}
               </span>
             </p>
-            <Btn
-              type="button"
-              className="!w-auto min-h-0 py-2.5 px-4 text-sm !bg-emerald-600 hover:!bg-emerald-700"
-              onClick={() => void faturaIndir()}
-            >
-              İndir
-            </Btn>
+            {kayit.trendyolFatura?.durum === "iptal" ? (
+              <>
+                <p className="text-sm text-slate-700">
+                  <span className="inline-block rounded-md bg-slate-200 px-2 py-0.5 font-medium text-slate-700">
+                    Trendyol’da iptal edildi
+                  </span>
+                  {kayit.trendyolFatura.invoiceId ? (
+                    <span className="ml-2 text-slate-500">
+                      {kayit.trendyolFatura.invoiceId}
+                    </span>
+                  ) : null}
+                </p>
+                <p className="text-sm text-slate-600">
+                  Bu PDF geçersiz. Yeni e-arşiv/e-fatura kesmek için tekrar
+                  oluşturun.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Btn
+                    type="button"
+                    className="!w-auto min-h-0 py-2.5 px-4 text-sm !bg-amber-600 hover:!bg-amber-700"
+                    disabled={trendyolOlusturuyor}
+                    onClick={() => void trendyolFaturaOlustur(true)}
+                  >
+                    {trendyolOlusturuyor
+                      ? "Oluşturuluyor…"
+                      : "Tekrar oluştur"}
+                  </Btn>
+                </div>
+              </>
+            ) : (
+              <Btn
+                type="button"
+                className="!w-auto min-h-0 py-2.5 px-4 text-sm !bg-emerald-600 hover:!bg-emerald-700"
+                onClick={() => void faturaIndir()}
+              >
+                İndir
+              </Btn>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
