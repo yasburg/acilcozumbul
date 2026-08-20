@@ -130,6 +130,35 @@ export default function PanelSatinAlmaDetayPage() {
     }
   }
 
+  async function faturaIndir() {
+    if (!kayit?.fatura) return;
+    setHata("");
+    setMesaj("");
+    try {
+      const res = await fetch(
+        `/api/panel/faturalar/${kayit.fatura.id}/pdf`,
+        { credentials: "include" }
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(
+          typeof data.error === "string" ? data.error : "PDF indirilemedi."
+        );
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${kayit.fatura.belgeNo}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setHata(err instanceof Error ? err.message : "PDF indirilemedi.");
+    }
+  }
+
   if (loading) {
     return <p className="text-sm text-slate-500">Yükleniyor…</p>;
   }
@@ -206,12 +235,13 @@ export default function PanelSatinAlmaDetayPage() {
                 · {new Date(kayit.fatura.createdAt).toLocaleString("tr-TR")}
               </span>
             </p>
-            <a
-              href={`/api/panel/faturalar/${kayit.fatura.id}/pdf`}
-              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium min-h-0 py-2.5 px-4"
+            <Btn
+              type="button"
+              className="!w-auto min-h-0 py-2.5 px-4 text-sm !bg-emerald-600 hover:!bg-emerald-700"
+              onClick={() => void faturaIndir()}
             >
               İndir
-            </a>
+            </Btn>
           </div>
         ) : (
           <div className="space-y-3">
