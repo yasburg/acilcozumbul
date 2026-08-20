@@ -93,7 +93,7 @@ export async function trendyolOdemeFaturaOlustur(
       return { ok: false, hata: "Trendyol fatura yanıtında invoiceUuid yok." };
     }
 
-    await efaturamBelgeDurumuBekle({ belgeTipi, invoiceUuid });
+    const durum = await efaturamBelgeDurumuBekle({ belgeTipi, invoiceUuid });
 
     const documentType: EfaturamBelgeTuru =
       belgeTipi === "e-fatura" ? "EINVOICE" : "EARCHIVE";
@@ -107,7 +107,7 @@ export async function trendyolOdemeFaturaOlustur(
       ok: true,
       belgeTipi,
       invoiceUuid,
-      invoiceId: olustur.invoiceId,
+      invoiceId: olustur.invoiceId ?? durum.invoiceId,
       pdf,
     };
   } catch (e) {

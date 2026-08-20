@@ -2,8 +2,52 @@ import { efaturamApiFetch, efaturamApiJson } from "./client";
 
 export type EfaturamBelgeTuru = "EARCHIVE" | "EINVOICE";
 
+/** GİB’e raporlanmaya hazır veya raporlanmış — PDF indirilebilir */
+const HAZIR_GIB_DURUMLARI = new Set([
+  "REPORTED",
+  "READY_TO_BE_REPORTED",
+  "SUCCEED",
+  "SUCCESS",
+]);
+
+const HATA_GIB_DURUMLARI = new Set([
+  "FAILED",
+  "FAIL",
+  "REJECTED",
+  "ERROR",
+  "CANCELLED",
+  "CANCELED",
+]);
+
 function bekle(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+function durumKodu(deger: unknown): number | null {
+  if (typeof deger === "number" && Number.isFinite(deger)) return deger;
+  if (typeof deger === "string" && /^\d+$/.test(deger)) return Number(deger);
+  return null;
+}
+
+export function efaturamBelgeHazirMi(durum: {
+  status?: number | string;
+  gibStatus?: string;
+}): boolean {
+  const gib = (durum.gibStatus ?? "").toUpperCase();
+  if (HAZIR_GIB_DURUMLARI.has(gib)) return true;
+  const kod = durumKodu(durum.status);
+  // 10: tamamlandı (doküman örneği), 205: READY_TO_BE_REPORTED
+  return kod === 10 || kod === 205;
+}
+
+export function efaturamBelgeHataliMi(durum: {
+  gibStatus?: string;
+  status?: number | string;
+}): boolean {
+  const gib = (durum.gibStatus ?? "").toUpperCase();
+  if (HATA_GIB_DURUMLARI.has(gib)) return true;
+  const kod = durumKodu(durum.status);
+  return kod === 40 || kod === 50;
 }
 
 export async function efaturamBelgeDurumuBekle(opts: {
@@ -11,29 +55,41 @@ export async function efaturamBelgeDurumuBekle(opts: {
   invoiceUuid: string;
   maxDeneme?: number;
   aralikMs?: number;
-}): Promise<void> {
-  const max = opts.maxDeneme ?? 20;
+}): Promise<{ status?: number | string; gibStatus?: string; invoiceId?: string }> {
+  const max = opts.maxDeneme ?? 30;
   const aralik = opts.aralikMs ?? 2000;
   const yol =
     opts.belgeTipi === "e-fatura"
       ? `/api/invoice/documents/outgoing-einvoice/status/${encodeURIComponent(opts.invoiceUuid)}`
       : `/api/invoice/documents/earchive/status/${encodeURIComponent(opts.invoiceUuid)}`;
 
+  let sonDurum: {
+    status?: number | string;
+    gibStatus?: string;
+    invoiceId?: string;
+  } = {};
+
   for (let i = 0; i < max; i++) {
-    const durum = await efaturamApiJson<{
-      status?: number;
+    sonDurum = await efaturamApiJson<{
+      status?: number | string;
       gibStatus?: string;
       invoiceUuid?: string;
+      invoiceId?: string;
     }>(yol, { method: "GET" });
 
-    if (durum.gibStatus === "REPORTED" || durum.status === 10) {
-      return;
+    if (efaturamBelgeHataliMi(sonDurum)) {
+      throw new Error(
+        `Trendyol fatura başarısız (${opts.invoiceUuid}): gibStatus=${sonDurum.gibStatus ?? "—"} status=${String(sonDurum.status ?? "—")}`
+      );
+    }
+    if (efaturamBelgeHazirMi(sonDurum)) {
+      return sonDurum;
     }
     await bekle(aralik);
   }
 
   throw new Error(
-    `Trendyol fatura durumu zaman aşımı (${opts.invoiceUuid}). Son deneme yapıldı.`
+    `Trendyol fatura durumu zaman aşımı (${opts.invoiceUuid}). Son: gibStatus=${sonDurum.gibStatus ?? "—"} status=${String(sonDurum.status ?? "—")}`
   );
 }
 
