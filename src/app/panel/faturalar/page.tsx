@@ -17,6 +17,10 @@ type FaturaOzet = {
   cekiciId: string;
   cekiciAd: string;
   cekiciTelefon: string;
+  krediOdemeId?: string | null;
+  odemeReferans?: string | null;
+  odemeTarihi?: string | null;
+  trendyolDurum?: "iptal" | "aktif" | null;
 };
 
 export default function PanelFaturalarPage() {
@@ -257,22 +261,63 @@ export default function PanelFaturalarPage() {
             {faturalar.map((f) => (
               <li key={f.id}>
                 <Card className="py-3">
-                  <div className="flex flex-wrap justify-between gap-2 text-sm">
-                    <div>
-                      <Link
-                        href={`/panel/cekiciler/${f.cekiciId}`}
-                        className="font-semibold text-amber-700 hover:underline"
-                      >
-                        {f.cekiciAd}
-                      </Link>
+                  <div className="flex flex-wrap items-start justify-between gap-2 text-sm">
+                    <a
+                      href={`/api/panel/faturalar/${f.id}/pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-w-0 flex-1 rounded-lg outline-none ring-amber-400 focus-visible:ring-2"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-amber-700 hover:underline">
+                          {f.cekiciAd}
+                        </span>
+                        {f.trendyolDurum === "iptal" ? (
+                          <span className="rounded-md bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700">
+                            İptal
+                          </span>
+                        ) : null}
+                      </div>
                       <p className="text-slate-500">{f.cekiciTelefon}</p>
                       <p className="text-xs text-slate-400 font-mono mt-0.5">
                         {f.belgeNo}
                       </p>
+                      {(f.odemeReferans || f.odemeTarihi) && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          {f.odemeReferans
+                            ? `Ref: ${f.odemeReferans}`
+                            : null}
+                          {f.odemeReferans && f.odemeTarihi ? " · " : null}
+                          {f.odemeTarihi
+                            ? new Date(f.odemeTarihi).toLocaleDateString("tr-TR")
+                            : null}
+                        </p>
+                      )}
+                      <p className="text-xs text-amber-700/80 mt-1">
+                        PDF aç →
+                      </p>
+                    </a>
+                    <div className="text-right shrink-0 space-y-1">
+                      <p className="text-slate-500">
+                        {new Date(f.createdAt).toLocaleString("tr-TR")}
+                      </p>
+                      {f.krediOdemeId ? (
+                        <Link
+                          href={`/panel/kredi-odemeler/${f.krediOdemeId}`}
+                          className="text-xs text-slate-500 hover:text-amber-700 underline underline-offset-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Ödeme detayı
+                        </Link>
+                      ) : null}
+                      <Link
+                        href={`/panel/cekiciler/${f.cekiciId}`}
+                        className="block text-xs text-slate-500 hover:text-amber-700 underline underline-offset-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Çekici
+                      </Link>
                     </div>
-                    <p className="text-slate-500">
-                      {new Date(f.createdAt).toLocaleString("tr-TR")}
-                    </p>
                   </div>
                 </Card>
               </li>

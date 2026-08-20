@@ -32,7 +32,7 @@ export async function GET(
       headers: {
         "Content-Type": "application/pdf",
         "Content-Length": String(bytes.length),
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Disposition": `inline; filename="${filename}"`,
         "Cache-Control": "private, no-store",
         "X-Robots-Tag": "noindex, nofollow",
       },

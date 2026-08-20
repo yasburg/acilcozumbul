@@ -33,6 +33,39 @@ export type TrendyolFaturaPanelDurum = {
   invoiceId?: string;
 };
 
+/** Sadece ETTN ile hızlı iptal/aktif kontrolü (liste için) */
+export async function trendyolFaturaUuidDurumu(
+  invoiceUuid: string,
+  opts?: { kurumsal?: boolean }
+): Promise<TrendyolFaturaPanelDurum | null> {
+  if (!trendyolEfaturamYapilandirildi()) return null;
+  const uuid = invoiceUuid.trim();
+  if (!uuid) return null;
+
+  const tipler: Array<"e-arsiv" | "e-fatura"> = opts?.kurumsal
+    ? ["e-fatura", "e-arsiv"]
+    : ["e-arsiv", "e-fatura"];
+
+  try {
+    for (const tip of tipler) {
+      const durum = await efaturamBelgeDurumuGetir({
+        belgeTipi: tip,
+        invoiceUuid: uuid,
+      });
+      if (!durum) continue;
+      return {
+        durum: efaturamBelgeIptalMi(durum) ? "iptal" : "aktif",
+        invoiceUuid: uuid,
+        invoiceId: durum.invoiceId,
+      };
+    }
+    return { durum: "yok", invoiceUuid: uuid };
+  } catch (e) {
+    console.error("[trendyol-fatura] uuid durum", e);
+    return null;
+  }
+}
+
 /** Panel: Trendyol’da bu ödemeye ait faturanın iptal/aktif durumu */
 export async function trendyolOdemeFaturaPanelDurumu(opts: {
   odeme: KrediOdeme;
@@ -48,18 +81,10 @@ export async function trendyolOdemeFaturaPanelDurumu(opts: {
 
     const uuid = opts.fatura?.trendyolInvoiceUuid?.trim();
     if (uuid) {
-      for (const tip of tipler) {
-        const durum = await efaturamBelgeDurumuGetir({
-          belgeTipi: tip,
-          invoiceUuid: uuid,
-        });
-        if (!durum) continue;
-        return {
-          durum: efaturamBelgeIptalMi(durum) ? "iptal" : "aktif",
-          invoiceUuid: uuid,
-          invoiceId: durum.invoiceId,
-        };
-      }
+      const uuidDurum = await trendyolFaturaUuidDurumu(uuid, {
+        kurumsal: opts.odeme.kurumsal,
+      });
+      if (uuidDurum && uuidDurum.durum !== "yok") return uuidDurum;
     }
 
     const oturum = await efaturamOturumAl();

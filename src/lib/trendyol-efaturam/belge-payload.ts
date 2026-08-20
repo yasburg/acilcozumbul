@@ -122,6 +122,7 @@ export function kurumsalFaturaPayloadOlustur(
     odeme.odemeReferans?.trim()
       ? `Banka ref: ${odeme.odemeReferans.trim()}`
       : `Ödeme ID: ${odeme.id}`,
+    "Web Adresi: www.acilcozumbul.com",
   ];
 
   const invoiceLine = {
@@ -187,20 +188,8 @@ export function kurumsalFaturaPayloadOlustur(
       orderDate: kesimGun,
     },
     issuedAt: kesimIso,
-    paymentInfo: {
-      purchaseUrl: `${YASAL_SIRKET.web}/cekici/faturalar`,
-      paymentMeans: "CREDIT_CARD",
-      paymentDate: kesimIso,
-      paymentType: "KREDI_KARTI",
-      instructionNote: odeme.odemeReferans
-        ? `Ödeme ref: ${odeme.odemeReferans}`
-        : undefined,
-    },
-    deliveryInfo: {
-      carrierTaxId: YASAL_SIRKET.vergiNo,
-      carrierName: YASAL_SIRKET.kisaUnvan,
-      sentAt: kesimGun,
-    },
+    // paymentInfo / deliveryInfo gönderme — Trendyol PDF’de
+    // "İnternet Satış Bilgisi" bloğunu basıyor (web, kart, taşıyıcı VKN vb.)
   };
 
   if (cfg.prefix) payload.prefix = cfg.prefix;

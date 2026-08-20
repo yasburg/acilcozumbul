@@ -3,14 +3,40 @@ import { getCekiciById } from "@/lib/db";
 import { listeleFaturaLinkSon } from "@/lib/fatura-link-db";
 import { panelFaturaYukleVeSms } from "@/lib/fatura-servis";
 import { FATURA_PDF_MAX_BYTES } from "@/lib/fatura-storage";
+import { trendyolFaturaUuidDurumu } from "@/lib/fatura-trendyol";
+import { getKrediOdemeById } from "@/lib/kredi-odeme";
 import { ensureSeedData } from "@/lib/seed";
 
 export async function GET() {
   await ensureSeedData();
   const linkler = await listeleFaturaLinkSon(80);
+
+  // Aynı ETTN birden fazla satırda olabilir — status bir kez sor
+  const uuidDurum = new Map<string, "iptal" | "aktif" | null>();
+  const uniqueUuids = [
+    ...new Set(
+      linkler
+        .map((f) => f.trendyolInvoiceUuid?.trim())
+        .filter((u): u is string => Boolean(u))
+    ),
+  ];
+  await Promise.all(
+    uniqueUuids.map(async (uuid) => {
+      const d = await trendyolFaturaUuidDurumu(uuid);
+      uuidDurum.set(
+        uuid,
+        d?.durum === "iptal" || d?.durum === "aktif" ? d.durum : null
+      );
+    })
+  );
+
   const faturalar = await Promise.all(
     linkler.map(async (f) => {
       const cekici = await getCekiciById(f.cekiciId);
+      const odeme = f.krediOdemeId
+        ? await getKrediOdemeById(f.krediOdemeId)
+        : undefined;
+      const uuid = f.trendyolInvoiceUuid?.trim();
       return {
         id: f.id,
         belgeNo: f.belgeNo,
@@ -19,6 +45,9 @@ export async function GET() {
         cekiciAd: cekici?.ad ?? "—",
         cekiciTelefon: cekici?.telefon ?? "—",
         krediOdemeId: f.krediOdemeId,
+        odemeReferans: odeme?.odemeReferans ?? null,
+        odemeTarihi: odeme?.olusturulma ?? null,
+        trendyolDurum: uuid ? (uuidDurum.get(uuid) ?? null) : null,
       };
     })
   );

@@ -152,9 +152,8 @@ describe("kurumsalFaturaPayloadOlustur", () => {
     expect((payload.orderInfo as { orderDate: string }).orderDate).toBe(
       "2026-08-04"
     );
-    expect((payload.paymentInfo as { paymentDate: string }).paymentDate).toBe(
-      "2026-08-04T10:55:13.000Z"
-    );
+    expect(payload.paymentInfo).toBeUndefined();
+    expect(payload.deliveryInfo).toBeUndefined();
   });
 
   it("localReferenceId ve notlarda banka referansı kullanır", () => {
@@ -170,6 +169,7 @@ describe("kurumsalFaturaPayloadOlustur", () => {
       expect.stringContaining("750 kredi"),
       "Ödeme tarihi: 2026-08-04",
       "Banka ref: REF-1",
+      "Web Adresi: www.acilcozumbul.com",
     ]);
   });
 
