@@ -13,6 +13,7 @@ interface BolgeApiData {
   menzilKm: number;
   konumGuncel?: boolean;
   konumGuncelleme?: string | null;
+  sehir?: string | null;
   tumIller: readonly string[];
   istanbul: {
     il: string;
@@ -38,7 +39,11 @@ export function BolgeAyarlari({
   const [menzilKm, setMenzilKm] = useState(baslangic.menzilKm);
   const [aktifIl, setAktifIl] = useState<string>(() => {
     const keys = Object.keys(baslangic.bolgeler);
-    return keys[0] ?? baslangic.tumIller[0] ?? "İstanbul";
+    if (keys[0]) return keys[0];
+    if (baslangic.sehir && baslangic.tumIller.includes(baslangic.sehir)) {
+      return baslangic.sehir;
+    }
+    return baslangic.tumIller[0] ?? "İstanbul";
   });
   const [tumIlceler, setTumIlceler] = useState<string[]>([]);
   const [ilcelerYukleniyor, setIlcelerYukleniyor] = useState(false);

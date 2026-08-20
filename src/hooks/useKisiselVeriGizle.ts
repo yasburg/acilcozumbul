@@ -10,7 +10,7 @@ import {
 } from "@/lib/kisisel-veri-gizle";
 
 /**
- * @param demo Demo oturumu aktifse otomatik yarı maske (sosyal medya videosu).
+ * @param demo Eski: demo yarı maske. Artık kullanılmıyor (demo'da müşteri aranabilsin).
  * Ayarlar anahtarı yalnızca `hesapSeviye` ile Hesabım’da tam gizler; talepler/panel etkilenmez.
  */
 export function useKisiselVeriGizle(demo = false) {

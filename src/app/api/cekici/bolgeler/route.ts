@@ -49,6 +49,7 @@ export async function GET() {
       konumLng: cekici.konumLng ?? null,
       konumGuncelleme: cekici.konumGuncelleme ?? null,
       konumGuncel: cekiciKonumGuncelMi(cekici, 10),
+      sehir: cekici.sehir ?? null,
       tumIller: DESTEKLENEN_ILLER,
       istanbul: {
         il: ISTANBUL_IL,

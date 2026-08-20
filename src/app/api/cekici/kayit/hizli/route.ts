@@ -29,6 +29,7 @@ import { kayitFunnelMi } from "@/lib/kayit-funnel";
 import { kaydetKayitFunnelOlay } from "@/lib/kayit-funnel-olay";
 import { sms50TokenGecerliMi } from "@/lib/sms50-kampanya";
 import { ilGecerliMi, ilceListesi } from "@/lib/il-ilce";
+import { kayitVarsayilanHizmetBolgeleri } from "@/lib/cekici-hizmet-bolge";
 import { gecerliSorunTipi } from "@/lib/sorun-tipleri";
 import { ISTANBUL_IL } from "@/lib/istanbul-ilceler";
 import { kayitCarkOdulTalepEt } from "@/lib/kayit-cark-db";
@@ -52,14 +53,21 @@ export async function POST(request: NextRequest) {
     typeof body.sehir === "string" ? body.sehir.trim() : ISTANBUL_IL;
   const sehir = ilGecerliMi(sehirHam) ? sehirHam : ISTANBUL_IL;
   const gecerliIlceler = new Set(ilceListesi(sehir));
-  const hizmetIlceleri = Array.isArray(body.hizmetIlceleri)
+  const hizmetIlceleriHam = Array.isArray(body.hizmetIlceleri)
     ? (body.hizmetIlceleri as unknown[])
         .filter((x): x is string => typeof x === "string")
         .map((x) => x.trim())
         .filter((x) => gecerliIlceler.has(x))
     : [];
+  const varsayilan = kayitVarsayilanHizmetBolgeleri(sehir);
+  const hizmetIlceleri =
+    hizmetIlceleriHam.length > 0
+      ? hizmetIlceleriHam
+      : (varsayilan[sehir] ?? []);
   const hizmetBolgeleri: HizmetBolgeleri =
-    hizmetIlceleri.length > 0 ? { [sehir]: hizmetIlceleri } : {};
+    hizmetIlceleri.length > 0
+      ? { [sehir]: hizmetIlceleri }
+      : varsayilan;
   const hizmetSorunTipleri = Array.isArray(body.hizmetSorunTipleri)
     ? (body.hizmetSorunTipleri as unknown[])
         .filter((x): x is string => typeof x === "string")

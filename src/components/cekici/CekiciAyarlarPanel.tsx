@@ -18,6 +18,7 @@ interface BolgeApiData {
   menzilKm: number;
   konumGuncel?: boolean;
   konumGuncelleme?: string | null;
+  sehir?: string | null;
   tumIller: readonly string[];
   istanbul: {
     il: string;

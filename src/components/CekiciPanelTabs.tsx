@@ -245,9 +245,8 @@ export default function CekiciPanelTabs() {
   const [hesapSilGelistirmeKodu, setHesapSilGelistirmeKodu] = useState("");
   const [hesapSilYenidenSn, setHesapSilYenidenSn] = useState(0);
   const [hesapSilKodGonderiliyor, setHesapSilKodGonderiliyor] = useState(false);
-  const { seviye: gizlilik, hesapSeviye } = useKisiselVeriGizle(
-    demoAktif || Boolean(data?.demoModu)
-  );
+  // Demo'da müşteri telefonu görünsün / aransın — otomatik yarı maske kapalı
+  const { seviye: gizlilik, hesapSeviye } = useKisiselVeriGizle(false);
 
   const oturumuKapat = useCallback(async () => {
     setCikisYukleniyor(true);

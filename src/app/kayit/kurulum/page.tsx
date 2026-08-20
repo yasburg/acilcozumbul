@@ -92,6 +92,8 @@ export default function KayitKurulumPage() {
       }
 
       const bolgeler = d.hizmetBolgeleri as Record<string, string[]> | undefined;
+      const sehirKayit =
+        typeof d.sehir === "string" && d.sehir ? d.sehir : ISTANBUL_IL;
       const adVar =
         (typeof d.isim === "string" && d.isim.trim()) ||
         (typeof d.ad === "string" && d.ad.trim());
@@ -105,11 +107,13 @@ export default function KayitKurulumPage() {
           : Object.values(bolgeler).flat();
         if (flat.length) {
           setIlceler(flat);
-        } else if (adVar) {
-          setAdim(2);
+        } else {
+          setIlceler(ilceListesi(sehirKayit));
+          if (adVar) setAdim(2);
         }
-      } else if (adVar) {
-        setAdim(2);
+      } else {
+        setIlceler(ilceListesi(sehirKayit));
+        if (adVar) setAdim(2);
       }
       setLoading(false);
     })();
@@ -231,8 +235,9 @@ export default function KayitKurulumPage() {
               label="Şehir"
               value={sehir}
               onChange={(e) => {
-                setSehir(e.target.value);
-                setIlceler([]);
+                const yeni = e.target.value;
+                setSehir(yeni);
+                setIlceler(ilceListesi(yeni));
               }}
               className="min-h-[52px] text-base"
             >

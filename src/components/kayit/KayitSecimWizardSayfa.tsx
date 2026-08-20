@@ -437,7 +437,7 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   }, [hizmet, istanbulMu, yaka, sehir]);
 
   function ilceleriHesapla(): string[] {
-    if (!istanbulMu) return [];
+    if (!istanbulMu) return [...sehirIlceler];
     if (yaka === "belirli") return ilceler;
     if (yaka) return yakaIlceleri(yaka);
     return [];
@@ -631,7 +631,7 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
           externalId: cekiciId || null,
         })
       );
-      setAdim("basarili");
+      router.replace("/cekici/kredi");
     } catch (e) {
       sonOtpDeneme.current = "";
       setError(e instanceof Error ? e.message : "Kayıt başarısız.");
@@ -1176,11 +1176,10 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
               Kaydınız oluşturuldu ✓
             </h1>
             <p className="text-[17px] text-slate-700 leading-relaxed">
-              İş bildirimlerini doğru gönderebilmemiz için son ayarlarınızı
-              tamamlayın.
+              Talepleri almaya başlamak için abonelik paketini seçin.
             </p>
-            <Btn onClick={() => router.push("/kayit/kurulum")}>
-              Hesabımı hazırlamaya başla
+            <Btn onClick={() => router.push("/cekici/kredi")}>
+              Abonelik paketini seç
             </Btn>
           </Card>
         )}

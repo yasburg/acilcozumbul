@@ -172,7 +172,8 @@ export default function CekiciTalepClient() {
   const [sure, setSure] = useState("30");
   const [mesaj, setMesaj] = useState("");
   const demoTalep = id.startsWith("demo-");
-  const { seviye: gizlilik } = useKisiselVeriGizle(demoAktif || demoTalep);
+  // Demo'da örnek müşteri aranabilsin — otomatik yarı maske yok
+  const { seviye: gizlilik } = useKisiselVeriGizle(false);
 
   const yukle = useCallback(async () => {
     setError("");
