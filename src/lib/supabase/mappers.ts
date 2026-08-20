@@ -14,6 +14,16 @@ import {
   normalizeHizmetBolgeleri,
 } from "../cekici-hizmet-bolge";
 
+/** pg timestamptz bazen Date döner — API/payload için ISO string */
+function pgTimestampIso(v: string | Date | null | undefined): string {
+  if (v == null) return new Date().toISOString();
+  if (v instanceof Date) return v.toISOString();
+  const s = String(v).trim();
+  if (!s) return new Date().toISOString();
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? s : d.toISOString();
+}
+
 export type CekiciRow = {
   id: string;
   ad: string;
@@ -477,7 +487,7 @@ export function krediOdemeFromRow(r: KrediOdemeRow): KrediOdeme {
     odemeReferans: r.odeme_referans ?? undefined,
     garantiRespCode: r.garanti_resp_code ?? undefined,
     demoOdeme: r.demo_odeme,
-    olusturulma: r.olusturulma,
+    olusturulma: pgTimestampIso(r.olusturulma),
   };
 }
 

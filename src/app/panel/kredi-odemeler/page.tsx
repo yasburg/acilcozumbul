@@ -24,6 +24,7 @@ type Ozet = {
   odemeReferans?: string;
   olusturulma: string;
   faturaYuklu: boolean;
+  faturaIptal?: boolean;
 };
 
 const FILTRELER: { id: SatinAlmaFiltre; label: string }[] = [
@@ -59,10 +60,16 @@ function SatinAlmaKart({ k }: { k: Ozet }) {
                 className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                   k.faturaYuklu
                     ? "bg-green-100 text-green-800"
-                    : "bg-orange-100 text-orange-800"
+                    : k.faturaIptal
+                      ? "bg-slate-200 text-slate-700"
+                      : "bg-orange-100 text-orange-800"
                 }`}
               >
-                {k.faturaYuklu ? "Fatura yüklü" : "Fatura yok"}
+                {k.faturaYuklu
+                  ? "Fatura yüklü"
+                  : k.faturaIptal
+                    ? "Fatura iptal"
+                    : "Fatura yok"}
               </span>
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${tipRozetSinif(k.tip)}`}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { listeleAbonelikIslemleriTahsilat } from "@/lib/abonelik-db";
 import { getCekiciById } from "@/lib/db";
 import { listeleFaturaLinkSon } from "@/lib/fatura-link-db";
+import { trendyolFaturaUuidDurumu } from "@/lib/fatura-trendyol";
 import { orderIdTemizle } from "@/lib/garanti/payment";
 import { listeleKrediOdemeler } from "@/lib/kredi-odeme";
 import {
@@ -32,7 +33,10 @@ export type SatinAlmaOzetDto = {
   odemeReferans?: string;
   demoOdeme: boolean;
   olusturulma: string;
+  /** Geçerli (iptal olmayan) PDF var */
   faturaYuklu: boolean;
+  /** PDF var ama Trendyol’da iptal */
+  faturaIptal: boolean;
 };
 
 export async function GET(request: NextRequest) {
@@ -51,11 +55,44 @@ export async function GET(request: NextRequest) {
       .filter((i) => i.tip === "created" && i.garantiOrderId)
       .map((i) => i.garantiOrderId as string)
   );
-  const faturaOdemeIds = new Set(
-    faturaLinkleri
-      .map((f) => f.krediOdemeId)
-      .filter((x): x is string => Boolean(x))
+
+  const faturaByOdeme = new Map<
+    string,
+    (typeof faturaLinkleri)[number]
+  >();
+  for (const f of faturaLinkleri) {
+    if (f.krediOdemeId) faturaByOdeme.set(f.krediOdemeId, f);
+  }
+
+  const uuidDurum = new Map<string, "iptal" | "aktif" | null>();
+  const uniqueUuids = [
+    ...new Set(
+      faturaLinkleri
+        .map((f) => f.trendyolInvoiceUuid?.trim())
+        .filter((u): u is string => Boolean(u))
+    ),
+  ];
+  await Promise.all(
+    uniqueUuids.map(async (uuid) => {
+      const d = await trendyolFaturaUuidDurumu(uuid);
+      uuidDurum.set(
+        uuid,
+        d?.durum === "iptal" || d?.durum === "aktif" ? d.durum : null
+      );
+    })
   );
+
+  function faturaDurumu(odemeId: string): {
+    yuklu: boolean;
+    iptal: boolean;
+  } {
+    const f = faturaByOdeme.get(odemeId);
+    if (!f) return { yuklu: false, iptal: false };
+    const uuid = f.trendyolInvoiceUuid?.trim();
+    if (!uuid) return { yuklu: true, iptal: false };
+    if (uuidDurum.get(uuid) === "iptal") return { yuklu: false, iptal: true };
+    return { yuklu: true, iptal: false };
+  }
 
   const cekiciCache = new Map<
     string,
@@ -77,6 +114,7 @@ export async function GET(request: NextRequest) {
     if (!satinAlmaTipFiltreyeUyar(tip, filtre)) continue;
 
     const cekici = await cekiciAl(k.cekiciId);
+    const { yuklu, iptal } = faturaDurumu(k.id);
     ozet.push({
       id: k.id,
       kaynak: "kredi_odeme",
@@ -95,7 +133,8 @@ export async function GET(request: NextRequest) {
       odemeReferans: k.odemeReferans,
       demoOdeme: k.demoOdeme,
       olusturulma: k.olusturulma,
-      faturaYuklu: faturaOdemeIds.has(k.id),
+      faturaYuklu: yuklu,
+      faturaIptal: iptal,
     });
   }
 
@@ -131,6 +170,7 @@ export async function GET(request: NextRequest) {
       demoOdeme: false,
       olusturulma: i.createdAt,
       faturaYuklu: false,
+      faturaIptal: false,
     });
   }
 

@@ -63,9 +63,14 @@ function aliciKonum(adres?: string) {
 
 /** Fatura tarihi = ödeme zamanı (geçmiş alımlar için bugünü değil ödemeyi kullan) */
 export function faturaKesimTarihi(odeme: KrediOdeme, simdi = new Date()): Date {
-  const ham = odeme.olusturulma?.trim();
-  if (!ham) return simdi;
-  const d = new Date(ham);
+  const ham = odeme.olusturulma as string | Date | null | undefined;
+  if (ham == null) return simdi;
+  const d =
+    ham instanceof Date
+      ? ham
+      : typeof ham === "string"
+        ? new Date(ham.trim())
+        : new Date(String(ham));
   if (Number.isNaN(d.getTime())) return simdi;
   // Gelecek tarih GİB’de sorun çıkarır
   if (d.getTime() > simdi.getTime()) return simdi;

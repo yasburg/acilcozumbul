@@ -43,6 +43,17 @@ describe("faturaKesimTarihi", () => {
     expect(d.toISOString()).toBe("2026-08-04T10:55:13.000Z");
   });
 
+  it("Date olarak gelen olusturulma değerini kabul eder", () => {
+    const d = faturaKesimTarihi(
+      {
+        ...ornekOdeme,
+        olusturulma: new Date("2026-08-04T10:55:13.000Z") as unknown as string,
+      },
+      new Date("2026-08-20T12:00:00.000Z")
+    );
+    expect(d.toISOString()).toBe("2026-08-04T10:55:13.000Z");
+  });
+
   it("gelecek ödemeyi bugüne çeker", () => {
     const d = faturaKesimTarihi(
       { ...ornekOdeme, olusturulma: "2099-01-01T00:00:00.000Z" },
