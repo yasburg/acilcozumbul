@@ -3,6 +3,7 @@ import type { KrediOdeme } from "../types";
 import {
   bireyselEarsivTckn,
   BIREYSEL_EARSIV_VARSAYILAN_TCKN,
+  faturaKesimTarihi,
   kisiAdiniAyir,
   kurumsalFaturaPayloadOlustur,
   kurumsalOdemeAciklama,
@@ -25,12 +26,27 @@ const ornekOdeme: KrediOdeme = {
   vergiNo: "1234567890",
   odemeReferans: "REF-1",
   demoOdeme: false,
-  olusturulma: "2026-08-19T12:00:00.000Z",
+  olusturulma: "2026-08-04T10:55:13.000Z",
 };
 
 describe("kurumsalOdemeAciklama", () => {
   it("kredi paketi açıklaması üretir", () => {
     expect(kurumsalOdemeAciklama(ornekOdeme)).toContain("750 kredi");
+  });
+});
+
+describe("faturaKesimTarihi", () => {
+  it("ödeme tarihini kullanır", () => {
+    const d = faturaKesimTarihi(ornekOdeme, new Date("2026-08-20T12:00:00.000Z"));
+    expect(d.toISOString()).toBe("2026-08-04T10:55:13.000Z");
+  });
+
+  it("gelecek ödemeyi bugüne çeker", () => {
+    const d = faturaKesimTarihi(
+      { ...ornekOdeme, olusturulma: "2099-01-01T00:00:00.000Z" },
+      new Date("2026-08-20T12:00:00.000Z")
+    );
+    expect(d.toISOString()).toBe("2026-08-20T12:00:00.000Z");
   });
 });
 
@@ -96,6 +112,22 @@ describe("kurumsalFaturaPayloadOlustur", () => {
       "EARSIVFATURA"
     );
     expect(payload.targetAlias).toBeUndefined();
+  });
+
+  it("issuedAt ödeme tarihini kullanır", () => {
+    const payload = kurumsalFaturaPayloadOlustur({
+      odeme: ornekOdeme,
+      companyId: 1,
+      userId: 2,
+      belgeTipi: "e-arsiv",
+    });
+    expect(payload.issuedAt).toBe("2026-08-04T10:55:13.000Z");
+    expect((payload.orderInfo as { orderDate: string }).orderDate).toBe(
+      "2026-08-04"
+    );
+    expect((payload.paymentInfo as { paymentDate: string }).paymentDate).toBe(
+      "2026-08-04T10:55:13.000Z"
+    );
   });
 
   it("bireysel e-arşivde name+surname ekler", () => {

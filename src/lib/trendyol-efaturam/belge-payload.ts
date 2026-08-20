@@ -61,6 +61,17 @@ function aliciKonum(adres?: string) {
   };
 }
 
+/** Fatura tarihi = ödeme zamanı (geçmiş alımlar için bugünü değil ödemeyi kullan) */
+export function faturaKesimTarihi(odeme: KrediOdeme, simdi = new Date()): Date {
+  const ham = odeme.olusturulma?.trim();
+  if (!ham) return simdi;
+  const d = new Date(ham);
+  if (Number.isNaN(d.getTime())) return simdi;
+  // Gelecek tarih GİB’de sorun çıkarır
+  if (d.getTime() > simdi.getTime()) return simdi;
+  return d;
+}
+
 /** Trendyol createEArchive / createOutgoingEInvoice gövdesi */
 export function kurumsalFaturaPayloadOlustur(
   girdi: KurumsalFaturaPayloadGirdi
@@ -81,7 +92,9 @@ export function kurumsalFaturaPayloadOlustur(
     : odeme.cekiciAd.trim();
   const bireysel = !odeme.kurumsal || vergiNo.length === 11;
   const kisi = bireysel ? kisiAdiniAyir(unvan) : null;
-  const simdi = new Date().toISOString();
+  const kesim = faturaKesimTarihi(odeme);
+  const kesimIso = kesim.toISOString();
+  const kesimGun = kesimIso.slice(0, 10);
 
   const invoiceLine = {
     unitCode: "C62",
@@ -143,13 +156,13 @@ export function kurumsalFaturaPayloadOlustur(
     },
     orderInfo: {
       orderId: odeme.id.slice(0, 127),
-      orderDate: simdi.slice(0, 10),
+      orderDate: kesimGun,
     },
-    issuedAt: simdi,
+    issuedAt: kesimIso,
     paymentInfo: {
       purchaseUrl: `${YASAL_SIRKET.web}/cekici/faturalar`,
       paymentMeans: "CREDIT_CARD",
-      paymentDate: simdi,
+      paymentDate: kesimIso,
       paymentType: "KREDI_KARTI",
       instructionNote: odeme.odemeReferans
         ? `Ödeme ref: ${odeme.odemeReferans}`
@@ -158,7 +171,7 @@ export function kurumsalFaturaPayloadOlustur(
     deliveryInfo: {
       carrierTaxId: YASAL_SIRKET.vergiNo,
       carrierName: YASAL_SIRKET.kisaUnvan,
-      sentAt: simdi.slice(0, 10),
+      sentAt: kesimGun,
     },
   };
 
