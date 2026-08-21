@@ -24,12 +24,19 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-  /** Telefondan yerel IP ile test (npm run dev:lan) */
+  /** Telefondan yerel IP / ngrok ile test (npm run dev:lan) */
   allowedDevOrigins: [
-    "10.55.33.167",
-    "10.55.33.167:3000",
     "localhost",
     "127.0.0.1",
+    "192.168.2.104",
+    "192.168.2.104:3001",
+    "192.168.2.104:3000",
+    "10.55.33.167",
+    "10.55.33.167:3000",
+    "10.55.33.167:3001",
+    "*.ngrok-free.dev",
+    "*.ngrok-free.app",
+    "*.ngrok.io",
   ],
   skipTrailingSlashRedirect: true,
   async headers() {
@@ -68,6 +75,7 @@ const nextConfig: NextConfig = {
       { source: "/talep-olustur", headers: [noindex] },
       { source: "/bekle/:path*", headers: [noindex] },
       { source: "/demo/:path*", headers: [noindex] },
+      { source: "/cagrimerkezi", headers: [noindex] },
       { source: "/sms50/:path*", headers: [noindex] },
       { source: "/t/:path*", headers: [noindex] },
       { source: "/panel/:path*", headers: [noindex] },

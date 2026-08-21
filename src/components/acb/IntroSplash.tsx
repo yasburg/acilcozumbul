@@ -5,9 +5,20 @@ import { useEffect, useRef, useState } from "react";
 const SVG_SRC = "/brand/acb/Single-Animation.svg";
 /** Fallback if Web Animations API unavailable (matches current SVG) */
 const ANIM_FALLBACK_MS = 1807;
+/** Safari/iOS: animation.finished often never resolves — hard cap */
+const ANIM_MAX_WAIT_MS = 2200;
 const HOLD_MS = 80;
 const EXIT_MS = 520;
 const SESSION_KEY = "acb_intro_splash_seen";
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | void> {
+  return Promise.race([
+    p,
+    new Promise<void>((resolve) => {
+      window.setTimeout(resolve, ms);
+    }),
+  ]);
+}
 
 /**
  * Bake SVG CSS animations into inline styles and remove <style> so the
@@ -56,13 +67,15 @@ function waitForSvgAnimations(root: HTMLElement): Promise<void> {
     });
   }
 
-  return Promise.all(
+  const finished = Promise.all(
     anims.map((a) =>
       a.finished.catch(() => {
         /* cancelled / finished */
       })
     )
   ).then(() => undefined);
+
+  return withTimeout(finished, ANIM_MAX_WAIT_MS).then(() => undefined);
 }
 
 /**
@@ -95,6 +108,22 @@ export function IntroSplash() {
 
     startedRef.current = true;
     let cancelled = false;
+
+    const finishSplash = async () => {
+      if (cancelled || !shellRef.current) return;
+      try {
+        sessionStorage.setItem(SESSION_KEY, "1");
+      } catch {
+        /* ignore */
+      }
+      shellRef.current.classList.add("acb-intro-splash--exit");
+      await new Promise<void>((r) => {
+        window.setTimeout(r, EXIT_MS);
+      });
+      if (cancelled) return;
+      document.body.style.overflow = "";
+      setPhase("done");
+    };
 
     void (async () => {
       let html: string;
@@ -129,24 +158,7 @@ export function IntroSplash() {
       await new Promise<void>((r) => {
         window.setTimeout(r, HOLD_MS);
       });
-      if (cancelled || !shellRef.current) return;
-
-      try {
-        sessionStorage.setItem(SESSION_KEY, "1");
-      } catch {
-        /* ignore */
-      }
-
-      /* Fade via DOM class — no React state change, SVG stays frozen */
-      shellRef.current.classList.add("acb-intro-splash--exit");
-
-      await new Promise<void>((r) => {
-        window.setTimeout(r, EXIT_MS);
-      });
-      if (cancelled) return;
-
-      document.body.style.overflow = "";
-      setPhase("done");
+      await finishSplash();
     })();
 
     return () => {

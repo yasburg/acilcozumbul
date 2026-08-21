@@ -26,6 +26,7 @@ describe("robots", () => {
     expect(disallow).toContain("/talep-olustur");
     expect(disallow).toContain("/sms50");
     expect(disallow).toContain("/demo/");
+    expect(disallow).toContain("/cagrimerkezi");
     expect(disallow).toContain("/cekici/giris");
     expect(disallow).toContain("/cekici/kayit");
   });

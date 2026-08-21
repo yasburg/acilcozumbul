@@ -11,6 +11,7 @@ const DISALLOW = [
   "/talep-olustur",
   "/bekle/",
   "/demo/",
+  "/cagrimerkezi",
   "/sms50",
   "/t/",
   "/fatura",

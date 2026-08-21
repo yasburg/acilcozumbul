@@ -39,7 +39,8 @@ export function EmergencyHero({
     setStage("typing");
     onHeroReady?.(false);
     setTypedIndex(0);
-  }, [onHeroReady]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca mount; parent callback her render’da yeni olmasın
+  }, []);
 
   useEffect(() => {
     if (stage !== "short_intro") return;
