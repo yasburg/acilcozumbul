@@ -206,17 +206,12 @@ function SehirMultiSelect({
                 type="button"
                 className="text-xs font-medium text-slate-700 hover:text-slate-900 underline disabled:no-underline disabled:opacity-40"
                 disabled={
-                  sehirler.length === 0 ||
-                  (filtrelenmis.length > 0 &&
-                    filtrelenmis.every((s) => secili.has(s)) &&
-                    (!arama.trim()
-                      ? secili.size === sehirler.length
-                      : true))
+                  filtrelenmis.length === 0 ||
+                  filtrelenmis.every((s) => secili.has(s))
                 }
                 onClick={() => {
-                  const hedef = arama.trim() ? filtrelenmis : sehirler;
                   const n = new Set(secili);
-                  for (const s of hedef) n.add(s);
+                  for (const s of filtrelenmis) n.add(s);
                   onChange(n);
                 }}
               >
