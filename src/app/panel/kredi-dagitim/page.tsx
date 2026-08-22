@@ -193,14 +193,36 @@ function SehirMultiSelect({
             })}
           </ul>
           <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-3 py-2">
-            <button
-              type="button"
-              className="text-xs text-slate-500 hover:text-slate-700 underline disabled:no-underline disabled:opacity-40"
-              disabled={secili.size === 0}
-              onClick={() => onChange(new Set())}
-            >
-              Temizle
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                className="text-xs text-slate-500 hover:text-slate-700 underline disabled:no-underline disabled:opacity-40"
+                disabled={secili.size === 0}
+                onClick={() => onChange(new Set())}
+              >
+                Temizle
+              </button>
+              <button
+                type="button"
+                className="text-xs font-medium text-slate-700 hover:text-slate-900 underline disabled:no-underline disabled:opacity-40"
+                disabled={
+                  sehirler.length === 0 ||
+                  (filtrelenmis.length > 0 &&
+                    filtrelenmis.every((s) => secili.has(s)) &&
+                    (!arama.trim()
+                      ? secili.size === sehirler.length
+                      : true))
+                }
+                onClick={() => {
+                  const hedef = arama.trim() ? filtrelenmis : sehirler;
+                  const n = new Set(secili);
+                  for (const s of hedef) n.add(s);
+                  onChange(n);
+                }}
+              >
+                Tümü
+              </button>
+            </div>
             <button
               type="button"
               className="text-xs font-medium text-amber-700 hover:text-amber-800"
