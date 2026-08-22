@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BrandLogoYazili } from "@/components/BrandLogo";
+import { EpostaGonderCta } from "@/components/EpostaGonderCta";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import { organizationJsonLd, sayfaMetadata, webSiteJsonLd } from "@/lib/seo";
@@ -78,7 +79,7 @@ export default function IsBirligiPage() {
                   kurumsal çözümleriniz veya bölgesel ortaklık önerileriniz varsa{" "}
                   <a
                     href={`mailto:${eposta}`}
-                    className="font-semibold text-amber-700 underline-offset-2 hover:underline"
+                    className="font-semibold text-[var(--acb-primary,#089b2d)] underline-offset-2 hover:underline"
                   >
                     {eposta}
                   </a>{" "}
@@ -86,30 +87,25 @@ export default function IsBirligiPage() {
                 </p>
                 <ul className="space-y-2 text-sm text-slate-600">
                   <li className="flex gap-2">
-                    <span className="text-amber-500" aria-hidden>
+                    <span className="text-[var(--acb-primary,#089b2d)]" aria-hidden>
                       —
                     </span>
                     Filo / kurumsal yol yardım entegrasyonu
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-amber-500" aria-hidden>
+                    <span className="text-[var(--acb-primary,#089b2d)]" aria-hidden>
                       —
                     </span>
                     Medya, içerik ve marka ortaklıkları
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-amber-500" aria-hidden>
+                    <span className="text-[var(--acb-primary,#089b2d)]" aria-hidden>
                       —
                     </span>
                     Teknoloji ve servis sağlayıcı iş birlikleri
                   </li>
                 </ul>
-                <a
-                  href={`mailto:${eposta}?subject=${encodeURIComponent("İş birliği teklifi — Acil Çözüm Bul")}`}
-                  className="inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-white shadow-sm shadow-amber-500/25 transition hover:bg-amber-600 sm:w-auto"
-                >
-                  E-posta gönder
-                </a>
+                <EpostaGonderCta eposta={eposta} />
               </div>
             </div>
           </div>
