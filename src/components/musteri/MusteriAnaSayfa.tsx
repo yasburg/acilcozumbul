@@ -287,7 +287,7 @@ function AcilYardimStickyCta({
   disabled,
   yukleniyor,
   label = ACB_CTA.konumOtomatikAl,
-  devamGlow = false,
+  devamGlow = true,
   progress,
 }: {
   onClick: () => void;
@@ -378,7 +378,7 @@ const KONUM_SELECT_GLOW =
 function AdimAltNav({
   devamMetin,
   devamDisabled = false,
-  devamGlow = false,
+  devamGlow = true,
   geriMetin = "Geri",
   onGeri,
   onDevam,
@@ -461,7 +461,7 @@ function HedefAltNav({
   onGeri,
   onDevam,
   devamDisabled = false,
-  devamGlow = false,
+  devamGlow = true,
   devamIcerik,
   progress,
 }: {
@@ -2308,19 +2308,16 @@ function MusteriAnaSayfaIcerik({
           const hedef = progressSteps[i];
           if (hedef) adimGit(hedef);
         }}
-        className="mb-5"
+        className="mb-2"
       />
     );
 
   const adimUstBilgi =
     step === "giris" ? null : (
-      <div className="mx-auto w-full max-w-[14rem]">
-        <HizmetVerenSayimAlani
-          sorunTipi={form.sorunTipi || null}
-          sehirAd={seciliSehir || null}
-          compact
-        />
-      </div>
+      <HizmetVerenSayimAlani
+        sorunTipi={form.sorunTipi || null}
+        compact
+      />
     );
 
   const seoIcerik = seoIcerikProp ?? anaSayfaSeoIcerik();
@@ -2399,7 +2396,7 @@ function MusteriAnaSayfaIcerik({
         type="button"
         onClick={konumuDegistir}
         title={`Konumu değiştir: ${konumTamMetin}`}
-        className="group inline-flex max-w-[6rem] xs:max-w-[7.5rem] sm:max-w-[9.5rem] items-center gap-1.5 rounded-full border border-[#9ee3b2] bg-[#eaf8ee] px-2.5 py-1 text-[10px] sm:text-[11px] font-bold text-[#0b4e1e] shadow-[0_2px_8px_rgba(8,155,45,0.14)] transition-all duration-200 hover:border-[#089b2d] hover:bg-[#d5f3dc] hover:shadow-[0_4px_12px_rgba(8,155,45,0.22)] active:scale-95 touch-manipulation"
+        className="group inline-flex max-w-[10rem] sm:max-w-[14rem] items-center gap-1.5 rounded-full border border-[#9ee3b2] bg-[#eaf8ee] px-2.5 py-1 text-[10px] sm:text-[11px] font-bold text-[#0b4e1e] shadow-[0_2px_8px_rgba(8,155,45,0.14)] transition-all duration-200 hover:border-[#089b2d] hover:bg-[#d5f3dc] hover:shadow-[0_4px_12px_rgba(8,155,45,0.22)] active:scale-95 touch-manipulation shrink-0"
       >
         <MapPin className="size-3 shrink-0 text-[#089b2d] transition-transform group-hover:scale-110" strokeWidth={2.5} />
         <span className="truncate tracking-tight">{konumGosterimMetni}</span>

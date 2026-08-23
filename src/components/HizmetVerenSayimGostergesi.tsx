@@ -107,7 +107,7 @@ export function HizmetVerenSayimGostergesi({
   return (
     <div
       className={[
-        "flex items-center justify-center gap-1.5 text-slate-700",
+        "flex items-center justify-start gap-1.5 text-slate-700",
         compact
           ? "py-0"
           : "rounded-md bg-emerald-50/70 border border-emerald-100/70 px-2 py-0.5",
@@ -118,8 +118,8 @@ export function HizmetVerenSayimGostergesi({
       <CevrimiciNokta />
       <p
         className={[
-          "leading-snug text-center",
-          compact ? "text-[11px]" : "text-xs",
+          "leading-snug text-left",
+          compact ? "text-[11px] truncate" : "text-xs",
         ].join(" ")}
       >
         {sehirOnEk}

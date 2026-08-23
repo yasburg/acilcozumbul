@@ -665,15 +665,15 @@ select {
   0%,
   100% {
     box-shadow:
-      0 10px 28px rgba(15, 23, 42, 0.12),
-      0 0 0 1px rgba(255, 255, 255, 0.55),
-      0 0 18px 2px rgba(52, 211, 153, 0.28);
+      0 12px 32px rgba(15, 23, 42, 0.12),
+      0 0 0 1px rgba(255, 255, 255, 0.7),
+      0 0 18px 2px rgba(52, 211, 153, 0.25);
   }
   50% {
     box-shadow:
-      0 14px 36px rgba(15, 23, 42, 0.14),
-      0 0 0 1px rgba(255, 255, 255, 0.7),
-      0 0 28px 6px rgba(16, 185, 129, 0.42);
+      0 16px 42px rgba(15, 23, 42, 0.15),
+      0 0 0 1px rgba(255, 255, 255, 0.9),
+      0 0 28px 6px rgba(16, 185, 129, 0.4);
   }
 }
 
@@ -889,4 +889,113 @@ select {
 
 html.brand-acb .animate-konum-ring-emerald {
   background: rgb(var(--brand-green-rgb) / 0.25);
+}
+
+/* Kayıt şehir haritası — seçilen şehre yakınlaşma ve talep noktaları */
+@keyframes acb-harita-vurgu-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.acb-harita-vurgu-in {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: acb-harita-vurgu-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes acb-harita-pin-drop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-6px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.15) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.acb-harita-pin-drop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: acb-harita-pin-drop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes acb-harita-pin-ping {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.acb-harita-pin-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: acb-harita-pin-ping 2.6s cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
+}
+
+@keyframes acb-harita-talep-belir {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  100% {
+    opacity: 0.92;
+    transform: scale(1);
+  }
+}
+
+.acb-harita-talep-belir {
+  opacity: 0.92;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: acb-harita-talep-belir 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes acb-harita-talep-nabiz {
+  0%,
+  100% {
+    filter: none;
+  }
+  50% {
+    filter: drop-shadow(0 0 2.5px rgba(8, 155, 45, 0.55));
+  }
+}
+
+.acb-harita-talep-nabiz {
+  animation:
+    acb-harita-talep-belir 340ms cubic-bezier(0.22, 1, 0.36, 1) both,
+    acb-harita-talep-nabiz 2.4s ease-in-out 340ms infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acb-harita-vurgu-in,
+  .acb-harita-pin-drop,
+  .acb-harita-talep-belir,
+  .acb-harita-talep-nabiz {
+    animation: none;
+    opacity: 0.92;
+    transform: none;
+  }
+  .acb-harita-pin-ping {
+    animation: none;
+    opacity: 0;
+  }
 }

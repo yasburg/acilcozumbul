@@ -403,7 +403,14 @@ export function MusteriFormIletisimOtp({
                   {adim === "iletisim" ? (
                     <Btn
                       type="button"
-                      className="flex-[2]"
+                      className={[
+                        "flex-[2]",
+                        !mesgul && telefon.trim().replace(/\D/g, "").length >= 10
+                          ? "animate-devam-glow"
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
                       disabled={mesgul}
                       onClick={() => void kodGonder()}
                     >
@@ -419,7 +426,14 @@ export function MusteriFormIletisimOtp({
                   ) : (
                     <Btn
                       type="button"
-                      className="flex-[2]"
+                      className={[
+                        "flex-[2]",
+                        !mesgul && (!kodGonderildi || otpKod.length === 6)
+                          ? "animate-devam-glow"
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
                       disabled={
                         mesgul || (kodGonderildi && otpKod.length !== 6)
                       }

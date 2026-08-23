@@ -1,5 +1,18 @@
 let pool: any = null;
 
+const memStore: Record<string, any[]> = {};
+
+function getMemStore(tableName: string): any[] {
+  if (!memStore[tableName]) {
+    memStore[tableName] = [];
+  }
+  return memStore[tableName];
+}
+
+export function isDbConfigured(): boolean {
+  return Boolean(process.env.DATABASE_URL?.trim() || process.env.POSTGRES_URL?.trim());
+}
+
 function databaseUrl(): string {
   const dbUrl = process.env.DATABASE_URL?.trim() || process.env.POSTGRES_URL?.trim();
   if (!dbUrl) {
@@ -43,8 +56,47 @@ export async function pgQuery<T = any>(
   if (typeof window !== "undefined") {
     return { rows: [] };
   }
+  if (!isDbConfigured()) {
+    return { rows: [] };
+  }
   const p = await getPgPool();
   return p.query(text, params);
+}
+
+type Filter = {
+  col: string;
+  op: "eq" | "neq" | "gt" | "gte" | "lt" | "lte" | "in" | "is" | "not_is" | "like" | "ilike";
+  val: any;
+};
+
+function matchesFilters(row: any, filters: Filter[]): boolean {
+  for (const f of filters) {
+    const val = row[f.col];
+    if (f.op === "eq") {
+      if (String(val ?? "") !== String(f.val ?? "")) return false;
+    } else if (f.op === "neq") {
+      if (String(val ?? "") === String(f.val ?? "")) return false;
+    } else if (f.op === "gt") {
+      if (!(val > f.val)) return false;
+    } else if (f.op === "gte") {
+      if (!(val >= f.val)) return false;
+    } else if (f.op === "lt") {
+      if (!(val < f.val)) return false;
+    } else if (f.op === "lte") {
+      if (!(val <= f.val)) return false;
+    } else if (f.op === "in") {
+      if (!Array.isArray(f.val) || !f.val.map(String).includes(String(val ?? ""))) return false;
+    } else if (f.op === "is") {
+      if (val !== f.val) return false;
+    } else if (f.op === "not_is") {
+      if (val === f.val) return false;
+    } else if (f.op === "like" || f.op === "ilike") {
+      const escaped = String(f.val ?? "").replace(/[%_]/g, (m) => (m === "%" ? ".*" : "."));
+      const reg = new RegExp(`^${escaped}$`, f.op === "ilike" ? "i" : "");
+      if (!reg.test(String(val ?? ""))) return false;
+    }
+  }
+  return true;
 }
 
 export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; error: any; count?: number | null }> {
@@ -55,6 +107,9 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
   private countMode?: "exact";
   private whereClause: string[] = [];
   private params: any[] = [];
+  private filters: Filter[] = [];
+  private orderCol?: string;
+  private orderAsc: boolean = true;
   private orderClause?: string;
   private limitNum?: number;
   private offsetNum?: number;
@@ -106,42 +161,49 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
   eq(column: string, value: any) {
     this.params.push(value);
     this.whereClause.push(`"${column}" = $${this.params.length}`);
+    this.filters.push({ col: column, op: "eq", val: value });
     return this;
   }
 
   neq(column: string, value: any) {
     this.params.push(value);
     this.whereClause.push(`"${column}" != $${this.params.length}`);
+    this.filters.push({ col: column, op: "neq", val: value });
     return this;
   }
 
   gt(column: string, value: any) {
     this.params.push(value);
     this.whereClause.push(`"${column}" > $${this.params.length}`);
+    this.filters.push({ col: column, op: "gt", val: value });
     return this;
   }
 
   gte(column: string, value: any) {
     this.params.push(value);
     this.whereClause.push(`"${column}" >= $${this.params.length}`);
+    this.filters.push({ col: column, op: "gte", val: value });
     return this;
   }
 
   lt(column: string, value: any) {
     this.params.push(value);
     this.whereClause.push(`"${column}" < $${this.params.length}`);
+    this.filters.push({ col: column, op: "lt", val: value });
     return this;
   }
 
   lte(column: string, value: any) {
     this.params.push(value);
     this.whereClause.push(`"${column}" <= $${this.params.length}`);
+    this.filters.push({ col: column, op: "lte", val: value });
     return this;
   }
 
   in(column: string, values: any[]) {
     if (!values || values.length === 0) {
       this.whereClause.push(`1 = 0`);
+      this.filters.push({ col: column, op: "in", val: [] });
       return this;
     }
     const placeholders = values
@@ -151,6 +213,7 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
       })
       .join(", ");
     this.whereClause.push(`"${column}" IN (${placeholders})`);
+    this.filters.push({ col: column, op: "in", val: values });
     return this;
   }
 
@@ -175,15 +238,18 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
       this.params.push(value);
       this.whereClause.push(`"${column}" IS $${this.params.length}`);
     }
+    this.filters.push({ col: column, op: "is", val: value });
     return this;
   }
 
   not(column: string, operator: string, value: any) {
     if (operator === "is" && value === null) {
       this.whereClause.push(`"${column}" IS NOT NULL`);
+      this.filters.push({ col: column, op: "not_is", val: null });
     } else {
       this.params.push(value);
       this.whereClause.push(`NOT ("${column}" = $${this.params.length})`);
+      this.filters.push({ col: column, op: "neq", val: value });
     }
     return this;
   }
@@ -191,12 +257,14 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
   ilike(column: string, pattern: string) {
     this.params.push(pattern);
     this.whereClause.push(`"${column}" ILIKE $${this.params.length}`);
+    this.filters.push({ col: column, op: "ilike", val: pattern });
     return this;
   }
 
   like(column: string, pattern: string) {
     this.params.push(pattern);
     this.whereClause.push(`"${column}" LIKE $${this.params.length}`);
+    this.filters.push({ col: column, op: "like", val: pattern });
     return this;
   }
 
@@ -222,6 +290,8 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
 
   order(column: string, opts?: { ascending?: boolean }) {
     const dir = opts?.ascending === false ? "DESC" : "ASC";
+    this.orderCol = column;
+    this.orderAsc = opts?.ascending !== false;
     this.orderClause = `ORDER BY "${column}" ${dir}`;
     return this;
   }
@@ -259,6 +329,114 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
     if (typeof window !== "undefined") {
       return { data: null, error: null };
     }
+
+    if (!isDbConfigured()) {
+      const table = getMemStore(this.tableName);
+
+      if (this.operation === "SELECT") {
+        let rows = table.filter((r) => matchesFilters(r, this.filters));
+        const totalCount = rows.length;
+
+        if (this.orderCol) {
+          const col = this.orderCol;
+          const asc = this.orderAsc;
+          rows = [...rows].sort((a, b) => {
+            const valA = a[col];
+            const valB = b[col];
+            if (valA === valB) return 0;
+            if (asc) return valA > valB ? 1 : -1;
+            return valA < valB ? 1 : -1;
+          });
+        }
+
+        if (this.offsetNum !== undefined) {
+          rows = rows.slice(this.offsetNum);
+        }
+        if (this.limitNum !== undefined) {
+          rows = rows.slice(0, this.limitNum);
+        }
+
+        if (this.isHead) {
+          return { data: null, error: null, count: totalCount };
+        }
+
+        if (this.isSingle) {
+          if (rows.length === 0) {
+            return { data: null, error: { message: "Row not found", code: "PGRST116" }, count: totalCount };
+          }
+          return { data: rows[0], error: null, count: totalCount };
+        }
+
+        if (this.isMaybeSingle) {
+          return { data: rows[0] ?? null, error: null, count: totalCount };
+        }
+
+        return { data: rows, error: null, count: this.countMode === "exact" ? totalCount : null };
+      }
+
+      if (this.operation === "INSERT" || this.operation === "UPSERT") {
+        const inputRows = Array.isArray(this.insertData) ? this.insertData : [this.insertData];
+        const conflictCol =
+          this.onConflictCols ||
+          (this.tableName.endsWith("_otp")
+            ? "telefon"
+            : this.tableName === "sehir_acilis"
+            ? "il"
+            : "id");
+
+        const resultRows: any[] = [];
+        for (const r of inputRows) {
+          const existingIdx =
+            this.operation === "UPSERT"
+              ? table.findIndex((x) => String(x[conflictCol]) === String(r[conflictCol]))
+              : -1;
+
+          if (existingIdx >= 0) {
+            table[existingIdx] = { ...table[existingIdx], ...r };
+            resultRows.push(table[existingIdx]);
+          } else {
+            const newRow = { ...r };
+            table.push(newRow);
+            resultRows.push(newRow);
+          }
+        }
+
+        const data = this.isSingle
+          ? resultRows[0] ?? null
+          : this.isMaybeSingle
+          ? resultRows[0] ?? null
+          : Array.isArray(this.insertData)
+          ? resultRows
+          : resultRows[0] ?? null;
+
+        return { data, error: null };
+      }
+
+      if (this.operation === "UPDATE") {
+        const updated: any[] = [];
+        for (let i = 0; i < table.length; i++) {
+          if (matchesFilters(table[i], this.filters)) {
+            table[i] = { ...table[i], ...this.updateData };
+            updated.push(table[i]);
+          }
+        }
+        const data = this.isSingle || this.isMaybeSingle ? updated[0] ?? null : updated;
+        return { data, error: null };
+      }
+
+      if (this.operation === "DELETE") {
+        const deleted: any[] = [];
+        for (let i = table.length - 1; i >= 0; i--) {
+          if (matchesFilters(table[i], this.filters)) {
+            deleted.push(table.splice(i, 1)[0]);
+          }
+        }
+        return { data: deleted, error: null };
+      }
+
+      return { data: null, error: null };
+    }
+
     try {
       if (this.operation === "SELECT") {
         let countVal: number | null = null;

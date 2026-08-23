@@ -14,6 +14,7 @@ export function OpeningLogo({
   leading,
   center,
   trailing,
+  offsetY = 0,
 }: {
   forceDocked?: boolean;
   scrollDock?: boolean;
@@ -23,6 +24,7 @@ export function OpeningLogo({
   leading?: ReactNode;
   center?: ReactNode;
   trailing?: ReactNode;
+  offsetY?: number;
 }) {
   const [docked, setDocked] = useState(false);
 
@@ -56,20 +58,23 @@ export function OpeningLogo({
       />
 
       <div
-        className={`pointer-events-none fixed inset-x-3 top-[max(0.5rem,env(safe-area-inset-top))] z-50 flex justify-center transition-opacity duration-300 ease-out ${
+        className={`pointer-events-none fixed inset-x-3 top-[max(0.5rem,env(safe-area-inset-top))] z-50 flex justify-center transition-all duration-300 ease-out ${
           chromeDocked ? "opacity-100" : "opacity-0"
         }`}
+        style={{
+          transform: offsetY ? `translateY(${offsetY}px)` : undefined,
+          transition: "transform 0.32s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease-out",
+        }}
       >
         <div
-          className={`acb-chrome-bar pointer-events-auto grid w-full ${ACB_SHELL_MAX_W} items-center gap-2 rounded-[var(--acb-radius)] px-3 py-2.5`}
-          style={{ gridTemplateColumns: "1fr auto 1fr" }}
+          className={`acb-chrome-bar pointer-events-auto flex w-full ${ACB_SHELL_MAX_W} items-center justify-between gap-2.5 rounded-[var(--acb-radius)] px-3 py-2.5`}
         >
-          <div className="flex min-w-0 items-center justify-start">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
             <button
               type="button"
               onClick={onClick}
               aria-label="Acil Çözüm Bul — ana sayfa"
-              className="flex items-center gap-2 touch-manipulation cursor-pointer"
+              className="flex shrink-0 items-center gap-2 touch-manipulation cursor-pointer"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -81,11 +86,13 @@ export function OpeningLogo({
                 className="size-9 object-contain"
               />
             </button>
+            {chromeDocked && center ? (
+              <div className="min-w-0 flex items-center">
+                {center}
+              </div>
+            ) : null}
           </div>
-          <div className="flex min-w-0 items-center justify-center text-center">
-            {chromeDocked ? center : null}
-          </div>
-          <div className="flex min-w-0 min-h-9 items-center justify-end gap-1.5">
+          <div className="flex shrink-0 min-h-9 items-center justify-end gap-1.5">
             {trailing}
           </div>
         </div>

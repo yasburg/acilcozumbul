@@ -3,8 +3,11 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { createPortal } from "react-dom";
 import { MobileShell } from "@/components/MobileShell";
-import { Btn, Field, Card } from "@/components/ui";
+import { OpeningLogo } from "@/components/acb/OpeningLogo";
+import { FlowProgress } from "@/components/acb/FlowProgress";
+import { Btn, Field, Card, Spinner } from "@/components/ui";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
 import { IlceSecimi } from "@/components/IlceSecimi";
 import type { KayitFunnelTanim, KayitHizmetOnsecim } from "@/lib/kayit-funnel";
@@ -17,29 +20,27 @@ import {
   kayitFunnelAlanDoldu,
 } from "@/lib/kayit-funnel-client";
 import { TELEFON_ORNEK_GIRISLERI } from "@/lib/telefon";
-import { DESTEKLENEN_ILLER, ilGecerliMi, ilceListesi } from "@/lib/il-ilce";
+import { DESTEKLENEN_ILLER, ilceListesi } from "@/lib/il-ilce";
 import {
   ISTANBUL_ASYA_ILCELER,
   ISTANBUL_AVRUPA_ILCELER,
   ISTANBUL_IL,
 } from "@/lib/istanbul-ilceler";
-import {
-  KULLANIMA_ACIK_ILLER,
-  sehirKullanimAcikMi,
-} from "@/lib/cekici-sehir-acilis";
+import { KULLANIMA_ACIK_ILLER } from "@/lib/cekici-sehir-acilis";
 import { idleSonra } from "@/lib/idle-sonra";
 import { gecerliSorunTipi } from "@/lib/sorun-tipleri";
 import { KayitCarkKampanya } from "@/components/kayit/KayitCarkKampanya";
+import { KayitSehirHarita } from "@/components/kayit/KayitSehirHarita";
 import { carkOdulOku, carkOdulTemizle } from "@/lib/kayit-cark-client";
+import { cihazPlatformu } from "@/lib/konum-client";
+import { SorunIkon } from "@/lib/acb-icons";
+import { ACB_SHELL_MAX_W } from "@/lib/design-tokens";
 import {
-  konumAlEsnek,
-  konumGuvenliMi,
-  konumHataMesaji,
-  reverseGeocode,
-  cihazPlatformu,
-} from "@/lib/konum-client";
-import { parseIlIlce } from "@/lib/konum-parse";
-import { sehirYolYardimTalepParcalari } from "@/lib/turkiye-il-nufus";
+  stickyCtaGercekYukseklik,
+  stickyCtaOffsetAyarla,
+  stickyCtaOffsetTemizle,
+} from "@/lib/sticky-cta-offset";
+import { MapPin, Search } from "lucide-react";
 
 type Adim =
   | "is"
@@ -55,84 +56,83 @@ type YakaSecim = "avrupa" | "anadolu" | "her_iki" | "belirli";
 
 const HIZMET_KARTLARI: {
   id: Exclude<KayitHizmetOnsecim, null>;
-  ikon: string;
+  sorunId: string;
   baslik: string;
   alt?: string;
 }[] = [
-  { id: "cekici", ikon: "🚛", baslik: "Çekici / oto kurtarma" },
-  { id: "lastik", ikon: "🛞", baslik: "Mobil lastikçi" },
-  { id: "anahtar", ikon: "🔑", baslik: "Oto anahtarcı" },
+  {
+    id: "cekici",
+    sorunId: "cekici",
+    baslik: "Çekici / oto kurtarma",
+    alt: "Arıza, kaza ve nakliye talepleri",
+  },
+  {
+    id: "lastik",
+    sorunId: "lastik",
+    baslik: "Mobil lastikçi",
+    alt: "Yerinde lastik tamiri ve değişimi",
+  },
+  {
+    id: "anahtar",
+    sorunId: "kilit",
+    baslik: "Oto anahtarcı",
+    alt: "Kilit açma ve anahtar desteği",
+  },
   {
     id: "birden_fazla",
-    ikon: "🔧",
+    sorunId: "ariza",
     baslik: "Birden fazla hizmet veriyorum",
-    alt: "çekici + lastik + anahtar",
+    alt: "Çekici + lastik + anahtar + akü",
   },
 ];
 
-const COKLU_HIZMETLER: { id: string; label: string }[] = [
-  { id: "cekici", label: "Araç çekme" },
-  { id: "arac-tasima", label: "Araç nakliye" },
-  { id: "lastik", label: "Lastik yardımı" },
-  { id: "aku", label: "Akü takviyesi" },
-  { id: "yakit", label: "Yakıt desteği" },
-  { id: "kilit", label: "Araç anahtarı" },
+const COKLU_HIZMETLER: { id: string; label: string; sorunId: string }[] = [
+  { id: "cekici", label: "Araç çekme / kurtarma", sorunId: "cekici" },
+  { id: "arac-tasima", label: "Araç nakliye / taşıma", sorunId: "arac-tasima" },
+  { id: "lastik", label: "Mobil lastik yardımı", sorunId: "lastik" },
+  { id: "aku", label: "Akü takviyesi & değişim", sorunId: "aku" },
+  { id: "yakit", label: "Yakıt & şarj desteği", sorunId: "yakit" },
+  { id: "kilit", label: "Oto anahtar & çilingir", sorunId: "kilit" },
 ];
 
-/** Ana akış 3 adım — şehir + bölge/ilçe aynı adımda (2) */
-function ilerlemeBilgi(
-  adim: Adim
-): { no: number; etiket: string } | null {
+const POPULER_SEHIRLER = [
+  "İstanbul",
+  "Ankara",
+  "İzmir",
+  "Bursa",
+  "Antalya",
+  "Kocaeli",
+  "Adana",
+  "Konya",
+  "Muğla",
+  "Gaziantep",
+];
+
+function adimIlerlemeIndex(adim: Adim): number {
   switch (adim) {
     case "is":
     case "is_coklu":
-      return { no: 1, etiket: "Hizmet seçimi" };
+      return 1;
     case "sehir":
     case "bolge":
     case "ilce":
-      return { no: 2, etiket: "Şehir ve bölge" };
+      return 2;
     case "telefon":
     case "otp":
-      return { no: 3, etiket: "Telefon doğrulama" };
+    case "basarili":
+      return 3;
     default:
-      return null;
+      return 1;
   }
 }
 
-function KayitHeaderGiris() {
-  return (
-    <p className="text-xs text-slate-600 text-right leading-tight">
-      Hesabınız var mı?{" "}
-      <Link
-        href="/cekici/giris"
-        className="font-semibold text-amber-800 underline-offset-2 hover:underline touch-manipulation"
-      >
-        Giriş yap
-      </Link>
-    </p>
-  );
-}
-
-function IlerlemeCubugu({ adim }: { adim: Adim }) {
-  const bil = ilerlemeBilgi(adim);
-  if (!bil) return null;
-  return (
-    <div className="space-y-1.5" aria-label={`Adım ${bil.no} / 3`}>
-      <p className="text-xs font-medium text-slate-500">
-        {bil.no} / 3 — {bil.etiket}
-      </p>
-      <div className="flex gap-1.5" aria-hidden>
-        {[1, 2, 3].map((n) => (
-          <div
-            key={n}
-            className={`h-1 flex-1 rounded-full ${
-              n <= bil.no ? "bg-amber-500" : "bg-slate-200"
-            }`}
-          />
-        ))}
-      </div>
-    </div>
-  );
+function yakaIlceleri(y: YakaSecim): string[] {
+  if (y === "avrupa") return [...ISTANBUL_AVRUPA_ILCELER];
+  if (y === "anadolu") return [...ISTANBUL_ASYA_ILCELER];
+  if (y === "her_iki") {
+    return [...ISTANBUL_AVRUPA_ILCELER, ...ISTANBUL_ASYA_ILCELER];
+  }
+  return [];
 }
 
 function hizmetEtiket(h: KayitHizmetOnsecim): string {
@@ -150,66 +150,92 @@ function hizmetEtiket(h: KayitHizmetOnsecim): string {
   }
 }
 
-function yakaIlceleri(y: YakaSecim): string[] {
-  if (y === "avrupa") return [...ISTANBUL_AVRUPA_ILCELER];
-  if (y === "anadolu") return [...ISTANBUL_ASYA_ILCELER];
-  if (y === "her_iki") {
-    return [...ISTANBUL_AVRUPA_ILCELER, ...ISTANBUL_ASYA_ILCELER];
-  }
-  return [];
-}
-
-function SecimKart({
-  ikon,
-  baslik,
-  alt,
-  aktif,
-  onClick,
+/** Sticky alt navigasyon barı (FlowProgress + Geri + Devam) */
+function KayitStickyNav({
+  onGeri,
+  onDevam,
+  devamDisabled = false,
+  devamMetin = "Devam et",
+  loading = false,
+  progress,
+  geriGizle = false,
 }: {
-  ikon?: string;
-  baslik: string;
-  alt?: string;
-  aktif?: boolean;
-  onClick: () => void;
+  onGeri?: () => void;
+  onDevam: () => void;
+  devamDisabled?: boolean;
+  devamMetin?: React.ReactNode;
+  loading?: boolean;
+  progress?: React.ReactNode;
+  geriGizle?: boolean;
 }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-full text-left rounded-2xl border px-4 py-3.5 min-h-[64px] flex items-center gap-3 touch-manipulation transition active:scale-[0.98] active:bg-slate-50 ${
-        aktif
-          ? "border-amber-400 bg-amber-50 shadow-sm ring-1 ring-amber-300/60"
-          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80"
-      }`}
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const el = rootRef.current;
+    if (!el) return;
+    const guncelle = () => stickyCtaOffsetAyarla(stickyCtaGercekYukseklik(el));
+    guncelle();
+    const ro = new ResizeObserver(guncelle);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      stickyCtaOffsetTemizle();
+    };
+  }, [mounted, devamDisabled, loading]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      ref={rootRef}
+      className="fixed inset-x-0 bottom-0 z-20 pointer-events-none px-4 pt-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
-      {ikon ? (
-        <span className="text-2xl shrink-0" aria-hidden>
-          {ikon}
-        </span>
-      ) : null}
-      <span className="flex-1 min-w-0">
-        <span className="block font-semibold text-slate-900 text-[17px] leading-snug">
-          {baslik}
-        </span>
-        {alt ? (
-          <span className="block text-xs text-slate-500 mt-0.5 leading-snug">
-            {alt}
-          </span>
+      <div className={`mx-auto ${ACB_SHELL_MAX_W} pointer-events-auto`}>
+        {progress ? (
+          <div className="-mt-8 mb-2 flex justify-center">{progress}</div>
         ) : null}
-      </span>
-      {aktif ? (
-        <span
-          className="shrink-0 size-6 rounded-full bg-amber-500 text-white text-sm font-bold flex items-center justify-center"
-          aria-hidden
-        >
-          ✓
-        </span>
-      ) : (
-        <span className="shrink-0 text-slate-300 text-xl font-light leading-none" aria-hidden>
-          ›
-        </span>
-      )}
-    </button>
+        <div className="flex gap-3">
+          {!geriGizle && onGeri ? (
+            <Btn
+              type="button"
+              variant="geri"
+              className="shrink-0 min-w-[4.25rem] max-w-[5.5rem] !px-3 text-xs xs:text-sm"
+              onClick={onGeri}
+              disabled={loading}
+            >
+              Geri
+            </Btn>
+          ) : null}
+          <Btn
+            type="button"
+            className={[
+              "flex-1 !font-bold !tracking-wide",
+              !devamDisabled && !loading ? "animate-devam-glow" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            onClick={onDevam}
+            disabled={devamDisabled || loading}
+          >
+            {loading ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <Spinner className="size-4 border-white/40 border-t-white" />
+                İşlem yapılıyor…
+              </span>
+            ) : (
+              devamMetin
+            )}
+          </Btn>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -223,9 +249,6 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   const [cokluSorunlar, setCokluSorunlar] = useState<string[]>([]);
   const [sehir, setSehir] = useState(ISTANBUL_IL);
   const [sehirAra, setSehirAra] = useState("");
-  const [sehirAramaAcik, setSehirAramaAcik] = useState(false);
-  const [konumYukleniyor, setKonumYukleniyor] = useState(false);
-  const [konumHata, setKonumHata] = useState("");
   const [acikIller, setAcikIller] = useState<readonly string[]>([
     ...KULLANIMA_ACIK_ILLER,
   ]);
@@ -235,6 +258,11 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   const [telefonHata, setTelefonHata] = useState(false);
   const [ornekSmsAcik, setOrnekSmsAcik] = useState(false);
   const [ornekSmsCikis, setOrnekSmsCikis] = useState(false);
+  const [dragOffsetY, setDragOffsetY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const touchStartY = useRef(0);
+  const touchCurrentY = useRef(0);
+  const isSwiping = useRef(false);
   const [smsIpucu, setSmsIpucu] = useState(false);
   const [telefonParlama, setTelefonParlama] = useState(false);
   const [platform, setPlatform] = useState<"ios" | "android" | "other">(
@@ -308,12 +336,14 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     if (adim !== "telefon") {
       setOrnekSmsAcik(false);
       setOrnekSmsCikis(false);
+      setDragOffsetY(0);
       setSmsIpucu(false);
       setTelefonParlama(false);
       return;
     }
     const t = setTimeout(() => {
       setOrnekSmsCikis(false);
+      setDragOffsetY(0);
       setOrnekSmsAcik(true);
       try {
         if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -341,6 +371,45 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     return () => window.clearInterval(id);
   }, [ornekSmsAcik, ornekSmsCikis]);
 
+  function banneriKapat() {
+    setOrnekSmsCikis(true);
+    window.setTimeout(() => {
+      setOrnekSmsAcik(false);
+      setOrnekSmsCikis(false);
+      setDragOffsetY(0);
+    }, 320);
+  }
+
+  function handleTouchStart(e: React.TouchEvent | React.MouseEvent) {
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    touchStartY.current = clientY;
+    touchCurrentY.current = clientY;
+    isSwiping.current = false;
+    setIsDragging(true);
+  }
+
+  function handleTouchMove(e: React.TouchEvent | React.MouseEvent) {
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    touchCurrentY.current = clientY;
+    const deltaY = clientY - touchStartY.current;
+    if (deltaY < -4) {
+      isSwiping.current = true;
+    }
+    const offset = deltaY < 0 ? deltaY : deltaY * 0.15;
+    setDragOffsetY(offset);
+  }
+
+  function handleTouchEnd() {
+    setIsDragging(false);
+    const deltaY = touchCurrentY.current - touchStartY.current;
+    if (deltaY <= -30 || (isSwiping.current && deltaY < -15)) {
+      banneriKapat();
+    } else {
+      setDragOffsetY(0);
+      isSwiping.current = false;
+    }
+  }
+
   function ornekSmsTikla() {
     if (ornekSmsCikis) return;
     setOrnekSmsCikis(true);
@@ -352,8 +421,14 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     window.setTimeout(() => {
       setOrnekSmsAcik(false);
       setOrnekSmsCikis(false);
+      setDragOffsetY(0);
     }, 360);
     window.setTimeout(() => setTelefonParlama(false), 2200);
+  }
+
+  function handleBannerClick() {
+    if (isSwiping.current || Math.abs(dragOffsetY) > 8) return;
+    ornekSmsTikla();
   }
 
   const sorunTipleri = useMemo(() => {
@@ -365,7 +440,6 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
 
   const sehirIlceler = useMemo(() => ilceListesi(sehir), [sehir]);
   const istanbulMu = sehir === ISTANBUL_IL;
-  const sehirAcik = sehirKullanimAcikMi(sehir, acikIller);
 
   const sehirAramaSonuclari = useMemo(() => {
     const q = sehirAra.trim().toLocaleLowerCase("tr-TR");
@@ -375,48 +449,9 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     ).slice(0, 8);
   }, [sehirAra]);
 
-  const sehirTalep = useMemo(
-    () => (sehir ? sehirYolYardimTalepParcalari(sehir) : null),
-    [sehir]
-  );
-
   function sehirSec(il: string) {
     setSehir(il);
     setSehirAra("");
-    setSehirAramaAcik(false);
-    setKonumHata("");
-  }
-
-  async function konumdanSehirAl() {
-    setKonumHata("");
-    setKonumYukleniyor(true);
-    try {
-      if (!konumGuvenliMi()) {
-        setKonumHata(
-          "Konum için https:// gerekli. Şehrinizi arayarak seçebilirsiniz."
-        );
-        return;
-      }
-      const pos = await konumAlEsnek();
-      const { latitude, longitude } = pos.coords;
-      const adres = await reverseGeocode(latitude, longitude);
-      const { il } = parseIlIlce(adres);
-      if (!il || !ilGecerliMi(il)) {
-        setKonumHata(
-          "Şehriniz tespit edilemedi. Aşağıdan arayarak seçin."
-        );
-        return;
-      }
-      sehirSec(il);
-    } catch (e) {
-      const code =
-        e && typeof e === "object" && "code" in e
-          ? (e as GeolocationPositionError).code
-          : undefined;
-      setKonumHata(konumHataMesaji(code));
-    } finally {
-      setKonumYukleniyor(false);
-    }
   }
 
   const telefonBaslik = useMemo(() => {
@@ -462,11 +497,13 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     }
   }
 
-  /** İleri adım — huni olaylarını bir kez yazar (geri gitmede setAdim kullan) */
   function adimaIlerle(yeni: Adim) {
     setAdim(yeni);
     const olay = wizardAdimOlay(yeni);
     if (olay) kayitFunnelOlayBirKez(funnel.id, olay);
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
   }
 
   function hizmetSec(id: Exclude<KayitHizmetOnsecim, null>) {
@@ -475,6 +512,9 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
       meta: { hizmet: id },
     });
     kayitFunnelOlayBirKez(funnel.id, "form_adim_1");
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
     if (id === "birden_fazla") {
       setAdim("is_coklu");
       return;
@@ -484,6 +524,9 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
 
   function geri() {
     setError("");
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
     if (adim === "is_coklu") setAdim("is");
     else if (adim === "sehir") setAdim(hizmet === "birden_fazla" ? "is_coklu" : "is");
     else if (adim === "bolge") setAdim("sehir");
@@ -643,30 +686,69 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   useEffect(() => {
     if (adim !== "otp" || otp.length !== 6 || loading) return;
     void hesapOlustur(otp);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca 6 hanede tetikle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp, adim]);
 
-  const geriGoster =
-    adim !== "is" && adim !== "basarili" && adim !== "otp";
+  const flowProgressBar = (
+    <FlowProgress
+      current={adimIlerlemeIndex(adim)}
+      total={3}
+      onStepClick={(i) => {
+        if (i === 0 && adim !== "is") setAdim("is");
+        else if (i === 1 && (adim === "telefon" || adim === "otp")) {
+          setAdim(istanbulMu ? (yaka === "belirli" ? "ilce" : "bolge") : "sehir");
+        }
+      }}
+      className="mb-2"
+    />
+  );
+
+  const smsBannerGosterimde =
+    adim === "telefon" && ornekSmsAcik && !ornekSmsCikis;
+  const contentShiftY = smsBannerGosterimde
+    ? Math.max(0, 130 + dragOffsetY)
+    : 0;
 
   return (
-    <MobileShell
-      headerEnd={adim === "is" ? <KayitHeaderGiris /> : undefined}
-      headerCompact={adim === "is"}
-      onBack={geriGoster ? geri : undefined}
-      backLabel={geriGoster ? "Geri" : undefined}
-    >
+    <MobileShell hideHeader lockViewport={true}>
+      <OpeningLogo
+        forceDocked={true}
+        offsetY={contentShiftY}
+        center={
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80">
+            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Ücretsiz Firma Kaydı
+          </span>
+        }
+        trailing={
+          <Link
+            href="/cekici/giris"
+            className="group inline-flex items-center gap-1 rounded-full border border-[#9ee3b2] bg-[#eaf8ee] px-3 py-1 text-[11px] font-bold text-[#0b4e1e] shadow-[0_2px_8px_rgba(8,155,45,0.14)] transition-all duration-200 hover:border-[#089b2d] hover:bg-[#d5f3dc] hover:shadow-[0_4px_12px_rgba(8,155,45,0.22)] active:scale-95 touch-manipulation"
+          >
+            Giriş yap →
+          </Link>
+        }
+        onClick={() => setAdim("is")}
+      />
+
       <KayitCarkKampanya funnelId={funnel.id} aktif={adim === "is"} />
 
       {adim === "telefon" && ornekSmsAcik && (
         <div
           className={`fixed z-[60] pointer-events-none ${
             platform === "android"
-              ? "left-3 right-3 top-[max(0.5rem,env(safe-area-inset-top))]"
-              : "left-3 right-3 top-[max(0.65rem,env(safe-area-inset-top))]"
+              ? "left-3.5 right-3.5 top-[max(0.5rem,env(safe-area-inset-top))]"
+              : "left-3.5 right-3.5 top-[max(0.65rem,env(safe-area-inset-top))]"
           } ${
             ornekSmsCikis ? "animate-sms-banner-out" : "animate-sms-banner-in"
           }`}
+          style={{
+            transform: `translateY(${dragOffsetY}px) scale(${Math.max(0.92, 1 + dragOffsetY / 600)})`,
+            opacity: Math.max(0.15, 1 + dragOffsetY / 110),
+            transition: isDragging
+              ? "none"
+              : "transform 0.28s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.28s ease-out",
+          }}
         >
           <div
             className={`absolute pointer-events-none animate-sms-banner-sis blur-2xl ${
@@ -690,13 +772,20 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
             <div className="relative animate-sms-banner-titre">
               <button
                 type="button"
-                onClick={ornekSmsTikla}
-                className="relative pointer-events-auto w-full animate-sms-banner-glow touch-manipulation text-left rounded-xl border border-slate-200/80 bg-[#f3f4f6] shadow-md px-3.5 py-3 active:scale-[0.99]"
-                aria-label="Örnek SMS bildirimi"
+                onClick={handleBannerClick}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchEnd}
+                onMouseDown={handleTouchStart}
+                onMouseMove={handleTouchMove}
+                onMouseUp={handleTouchEnd}
+                className="relative pointer-events-auto w-full animate-sms-banner-glow touch-manipulation select-none text-left rounded-2xl border border-white/80 bg-white/94 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_14px_36px_rgba(0,0,0,0.15)] px-4 py-3.5 active:scale-[0.99] cursor-grab active:cursor-grabbing"
+                aria-label="Örnek SMS bildirimi (Kapatmak için yukarı kaydırın)"
               >
                 <div className="flex items-center gap-2 mb-1.5">
                   <span
-                    className="size-5 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center"
+                    className="size-5 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center shadow-sm"
                     aria-hidden
                   >
                     ✉
@@ -705,8 +794,8 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                     Mesajlar · şimdi
                   </span>
                 </div>
-                <p className="text-[14px] font-semibold text-slate-900 leading-snug">
-                  acilcozumbul
+                <p className="text-[14px] font-bold text-slate-900 leading-snug">
+                  AcilÇözümBul
                 </p>
                 <p className="text-[13px] text-slate-700 leading-snug mt-0.5 line-clamp-2">
                   Bölgenizde yeni bir {hizmetEtiket(hizmet)} talebi var. Teklif
@@ -718,13 +807,20 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
             <div className="relative animate-sms-banner-titre">
               <button
                 type="button"
-                onClick={ornekSmsTikla}
-                className="relative pointer-events-auto w-full animate-sms-banner-glow touch-manipulation text-left rounded-[22px] border border-white/55 bg-white/85 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] px-3.5 py-3 active:scale-[0.99]"
-                aria-label="Örnek SMS bildirimi"
+                onClick={handleBannerClick}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchEnd}
+                onMouseDown={handleTouchStart}
+                onMouseMove={handleTouchMove}
+                onMouseUp={handleTouchEnd}
+                className="relative pointer-events-auto w-full animate-sms-banner-glow touch-manipulation select-none text-left rounded-[22px] border border-white/80 bg-white/92 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_16px_40px_rgba(0,0,0,0.16),0_4px_12px_rgba(0,0,0,0.06)] px-4 py-3.5 active:scale-[0.99] cursor-grab active:cursor-grabbing"
+                aria-label="Örnek SMS bildirimi (Kapatmak için yukarı kaydırın)"
               >
                 <div className="flex items-start gap-3">
                   <span
-                    className="size-10 shrink-0 rounded-[11px] bg-emerald-500 text-white flex items-center justify-center text-lg shadow-sm"
+                    className="size-10 shrink-0 rounded-[12px] bg-[#089b2d] text-white flex items-center justify-center text-lg shadow-sm"
                     aria-hidden
                   >
                     💬
@@ -736,10 +832,10 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                       </span>
                       <span className="text-[11px] text-slate-500">şimdi</span>
                     </span>
-                    <span className="block text-[13px] font-semibold text-slate-900 mt-0.5">
-                      acilcozumbul
+                    <span className="block text-[13px] font-bold text-slate-900 mt-0.5">
+                      AcilÇözümBul
                     </span>
-                    <span className="block text-[13px] text-slate-600 leading-snug mt-0.5 line-clamp-2">
+                    <span className="block text-[13px] text-slate-700 leading-snug mt-0.5 line-clamp-2">
                       Bölgenizde yeni bir {hizmetEtiket(hizmet)} talebi var.
                       Teklif vermek için dokunun.
                     </span>
@@ -751,217 +847,341 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
         </div>
       )}
 
-      <div className="space-y-5 pb-8">
-        {adim !== "basarili" && <IlerlemeCubugu adim={adim} />}
-
+      <div
+        className="space-y-5 pb-8"
+        style={{
+          transform: `translateY(${contentShiftY}px)`,
+          transition: isDragging
+            ? "none"
+            : "transform 0.32s cubic-bezier(0.25, 1, 0.5, 1)",
+        }}
+      >
         {adim === "is" && (
-          <section className="space-y-3.5">
-            <h1 className="text-[1.35rem] font-bold text-slate-900 leading-snug">
-              Bölgenizde yeni işler açıldığında telefonunuza gelsin.
-            </h1>
-            <p className="text-sm text-slate-600 leading-snug">
-              Hizmetinizi seçin, çalışma bölgenizi belirleyin, müşteri talep
-              açınca fiyatınızı ve varış sürenizi yazın.
-            </p>
-            <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
-              <li>
-                <span className="text-emerald-700 font-bold" aria-hidden>
-                  ✓
-                </span>{" "}
-                <span className="font-bold text-emerald-800">
+          <div key="is" className="space-y-5 animate-fade-in">
+            <section className="space-y-3.5">
+              <div>
+                <h1 className="text-[1.35rem] font-bold text-slate-900 leading-snug">
+                  Bölgenizde yeni işler açıldığında telefonunuza gelsin.
+                </h1>
+                <p className="text-sm text-slate-600 leading-snug mt-1.5">
+                  Hizmetinizi seçin, çalışma bölgenizi belirleyin, müşteri talep
+                  açınca anında haberdar olun.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-x-3.5 gap-y-1.5 text-xs py-1">
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-800">
+                  <span className="size-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]">
+                    ✓
+                  </span>
                   Kayıt ücretsiz
                 </span>
-              </li>
-              <li>
-                <span className="text-emerald-700 font-bold" aria-hidden>
-                  ✓
-                </span>{" "}
-                <span className="font-bold text-emerald-800">
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-800">
+                  <span className="size-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]">
+                    ✓
+                  </span>
                   Teklif vermek ücretsiz
                 </span>
-              </li>
-              <li>
-                <span className="text-emerald-700 font-bold" aria-hidden>
-                  ✓
-                </span>{" "}
-                <span className="font-bold text-emerald-800">Komisyon yok</span>
-              </li>
-            </ul>
-            <h2 className="text-lg font-bold text-slate-900 pt-1">
-              Hangi hizmetleri veriyorsunuz?
-            </h2>
-            <p className="text-xs text-slate-500 -mt-1">
-              Yalnızca seçtiğiniz işlerle ilgili talepleri göndeririz.
-            </p>
-            <div className="space-y-2.5">
-              {HIZMET_KARTLARI.map((k) => (
-                <SecimKart
-                  key={k.id}
-                  ikon={k.ikon}
-                  baslik={k.baslik}
-                  alt={k.alt}
-                  aktif={hizmet === k.id}
-                  onClick={() => hizmetSec(k.id)}
-                />
-              ))}
-            </div>
-          </section>
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-800">
+                  <span className="size-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]">
+                    ✓
+                  </span>
+                  Komisyon yok
+                </span>
+              </div>
+
+              <div className="pt-1">
+                <h2 className="text-lg font-bold text-slate-900">
+                  Hangi hizmetleri veriyorsunuz?
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Yalnızca seçtiğiniz işlerle ilgili talepleri göndeririz.
+                </p>
+              </div>
+
+              <div className="space-y-2.5">
+                {HIZMET_KARTLARI.map((k) => {
+                  const aktif = hizmet === k.id;
+                  return (
+                    <button
+                      key={k.id}
+                      type="button"
+                      onClick={() => hizmetSec(k.id)}
+                      className={`group w-full text-left rounded-[var(--acb-radius)] border p-4 flex items-center gap-3.5 touch-manipulation transition-all duration-200 active:scale-[0.98] ${
+                        aktif
+                          ? "border-[var(--acb-green)] bg-[#eaf8ee] shadow-[0_2px_12px_rgba(8,155,45,0.15)] ring-1 ring-[var(--acb-green)]"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80 shadow-[var(--acb-shadow)]"
+                      }`}
+                    >
+                      <div
+                        className={`size-11 shrink-0 rounded-xl flex items-center justify-center transition-colors ${
+                          aktif
+                            ? "bg-white text-[var(--acb-green)] shadow-sm"
+                            : "bg-slate-50 text-slate-700 border border-slate-100 group-hover:bg-white"
+                        }`}
+                      >
+                        <SorunIkon id={k.sorunId} className="size-6" active={aktif} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span
+                          className={`block font-semibold text-[16px] leading-snug ${
+                            aktif ? "text-[var(--acb-dark)]" : "text-slate-900"
+                          }`}
+                        >
+                          {k.baslik}
+                        </span>
+                        {k.alt ? (
+                          <span className="block text-xs text-slate-500 mt-0.5 leading-snug">
+                            {k.alt}
+                          </span>
+                        ) : null}
+                      </div>
+                      {aktif ? (
+                        <span
+                          className="shrink-0 size-6 rounded-full bg-[var(--acb-green)] text-white text-xs font-bold flex items-center justify-center shadow-sm"
+                          aria-hidden
+                        >
+                          ✓
+                        </span>
+                      ) : (
+                        <span
+                          className="shrink-0 text-slate-300 text-xl font-light leading-none group-hover:text-slate-400 group-hover:translate-x-0.5 transition-transform"
+                          aria-hidden
+                        >
+                          ›
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <KayitStickyNav
+              progress={flowProgressBar}
+              devamDisabled={!hizmet}
+              devamMetin={hizmet ? "Devam et" : "Önce hizmet seç"}
+              geriGizle={true}
+              onDevam={() => {
+                if (!hizmet) return;
+                if (hizmet === "birden_fazla") setAdim("is_coklu");
+                else adimaIlerle("sehir");
+              }}
+            />
+          </div>
         )}
 
         {adim === "is_coklu" && (
-          <section className="space-y-4">
-            <h1 className="text-xl font-bold text-slate-900">
-              Hangi hizmetleri veriyorsunuz?
-            </h1>
-            <p className="text-sm text-slate-600">
-              Birden fazla seçebilirsiniz.
-            </p>
-            <div className="space-y-2">
-              {COKLU_HIZMETLER.map((h) => {
-                const on = cokluSorunlar.includes(h.id);
-                return (
-                  <button
-                    key={h.id}
-                    type="button"
-                    onClick={() =>
-                      setCokluSorunlar((prev) =>
-                        on ? prev.filter((x) => x !== h.id) : [...prev, h.id]
-                      )
-                    }
-                    className={`w-full text-left rounded-xl border px-4 py-3 font-medium ${
-                      on
-                        ? "border-amber-400 bg-amber-50 text-slate-900"
-                        : "border-slate-200 bg-white text-slate-800"
-                    }`}
-                  >
-                    {on ? "✓ " : ""}
-                    {h.label}
-                  </button>
-                );
-              })}
-            </div>
-            <Btn
-              disabled={cokluSorunlar.length === 0}
-              onClick={() => adimaIlerle("sehir")}
-            >
-              Devam et
-            </Btn>
-          </section>
+          <div key="is_coklu" className="space-y-5 animate-fade-in">
+            <section className="space-y-4">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">
+                  Hangi hizmetleri veriyorsunuz?
+                </h1>
+                <p className="text-sm text-slate-600 mt-1">
+                  Birden fazla seçebilirsiniz.
+                </p>
+              </div>
+
+              <div className="space-y-2.5">
+                {COKLU_HIZMETLER.map((h) => {
+                  const on = cokluSorunlar.includes(h.id);
+                  return (
+                    <button
+                      key={h.id}
+                      type="button"
+                      onClick={() =>
+                        setCokluSorunlar((prev) =>
+                          on ? prev.filter((x) => x !== h.id) : [...prev, h.id]
+                        )
+                      }
+                      className={`group w-full text-left rounded-[var(--acb-radius)] border p-3.5 flex items-center gap-3.5 touch-manipulation transition-all duration-200 active:scale-[0.98] ${
+                        on
+                          ? "border-[var(--acb-green)] bg-[#eaf8ee] shadow-[0_2px_10px_rgba(8,155,45,0.12)] ring-1 ring-[var(--acb-green)]"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80 shadow-[var(--acb-shadow)]"
+                      }`}
+                    >
+                      <div
+                        className={`size-10 shrink-0 rounded-lg flex items-center justify-center transition-colors ${
+                          on
+                            ? "bg-white text-[var(--acb-green)] shadow-sm"
+                            : "bg-slate-50 text-slate-700 border border-slate-100 group-hover:bg-white"
+                        }`}
+                      >
+                        <SorunIkon id={h.sorunId} className="size-5" active={on} />
+                      </div>
+                      <span
+                        className={`flex-1 font-semibold text-[15px] ${
+                          on ? "text-[var(--acb-dark)]" : "text-slate-800"
+                        }`}
+                      >
+                        {h.label}
+                      </span>
+                      <span
+                        className={`shrink-0 size-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                          on
+                            ? "bg-[var(--acb-green)] text-white shadow-sm"
+                            : "border border-slate-300 bg-slate-50 text-transparent"
+                        }`}
+                        aria-hidden
+                      >
+                        ✓
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <KayitStickyNav
+              progress={flowProgressBar}
+              devamDisabled={cokluSorunlar.length === 0}
+              devamMetin={
+                cokluSorunlar.length > 0
+                  ? `Devam et (${cokluSorunlar.length} seçildi)`
+                  : "En az bir hizmet seçin"
+              }
+              onGeri={geri}
+              onDevam={() => adimaIlerle("sehir")}
+            />
+          </div>
         )}
 
         {adim === "sehir" && (
-          <section className="space-y-4">
-            {sehirTalep && (
-              <p className="text-sm text-slate-700 leading-snug bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-3">
-                <span className="font-bold text-amber-600">
-                  {sehirTalep.sehirde}
-                </span>{" "}
-                günde yaklaşık{" "}
-                <span className="font-bold text-amber-600">
-                  {sehirTalep.adetYazi}
-                </span>{" "}
-                yol yardım talebi oluyor.
-              </p>
-            )}
-            <h1 className="text-xl font-bold text-slate-900">
-              Hangi şehirde hizmet veriyorsunuz?
-            </h1>
+          <div key="sehir" className="space-y-5 animate-fade-in">
+            <section className="space-y-4">
+              <div>
+                <h1 className="text-[1.35rem] font-bold text-slate-900 leading-snug">
+                  Hangi şehirde hizmet veriyorsunuz?
+                </h1>
+                <p className="text-sm text-slate-600 mt-1">
+                  Müşteri taleplerini almak istediğiniz şehri belirleyin.
+                </p>
+              </div>
 
-            {sehirAramaAcik ? (
-              <div className="rounded-2xl border border-amber-400 bg-amber-50/40 p-3 space-y-2 ring-1 ring-amber-300/60">
+              <KayitSehirHarita sehir={sehir} onSehirSec={sehirSec} />
+
+              {/* Arama Çubuğu */}
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
                 <input
                   type="search"
-                  autoFocus
-                  autoComplete="address-level1"
-                  placeholder="Şehir ara… (Ankara, İzmir)"
+                  autoComplete="off"
+                  placeholder="Şehir ara… (örn. İzmir, Ankara, Antalya)"
                   value={sehirAra}
                   onChange={(e) => setSehirAra(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-base min-h-[48px] outline-none focus:border-amber-400"
+                  className="w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-9 py-3 text-[15px] font-medium text-slate-900 placeholder:text-slate-400 outline-none transition-all shadow-[var(--acb-shadow)] focus:border-[var(--acb-green)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--acb-green)_25%,transparent)]"
                 />
-                {sehirAramaSonuclari.length > 0 && (
-                  <ul className="rounded-xl border border-slate-200 bg-white overflow-hidden divide-y divide-slate-100 max-h-56 overflow-y-auto">
-                    {sehirAramaSonuclari.map((il) => (
-                      <li key={il}>
-                        <button
-                          type="button"
-                          className={`w-full text-left px-4 py-3 text-[15px] touch-manipulation ${
-                            sehir === il
-                              ? "bg-amber-50 font-semibold text-slate-900"
-                              : "text-slate-800 hover:bg-slate-50"
-                          }`}
-                          onClick={() => sehirSec(il)}
-                        >
-                          {il}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                {sehirAra.trim().length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSehirAra("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 size-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs hover:bg-slate-300"
+                    aria-label="Aramayı temizle"
+                  >
+                    ✕
+                  </button>
                 )}
-                {sehirAra.trim().length > 0 &&
-                  sehirAramaSonuclari.length === 0 && (
-                    <p className="text-sm text-slate-500 px-1">
-                      Şehir bulunamadı.
-                    </p>
-                  )}
-                <button
-                  type="button"
-                  className="text-sm font-medium text-slate-600 px-1"
-                  onClick={() => {
-                    setSehirAramaAcik(false);
-                    setSehirAra("");
-                  }}
-                >
-                  Vazgeç
-                </button>
               </div>
-            ) : (
-              <div className="w-full rounded-2xl border border-amber-400 bg-amber-50 shadow-sm ring-1 ring-amber-300/60 px-4 py-3.5 min-h-[64px] flex items-center gap-3">
-                <span className="text-2xl shrink-0" aria-hidden>
-                  📍
-                </span>
-                <span className="flex-1 min-w-0 font-semibold text-slate-900 text-[17px] leading-snug">
-                  {sehir}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSehirAramaAcik(true);
-                    setSehirAra("");
-                  }}
-                  className="shrink-0 text-sm font-semibold text-amber-800 underline-offset-2 hover:underline touch-manipulation px-1 py-1"
-                >
-                  Değiştir
-                </button>
-              </div>
-            )}
 
-            <button
-              type="button"
-              disabled={konumYukleniyor || sehirAramaAcik}
-              onClick={() => void konumdanSehirAl()}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 min-h-[52px] flex items-center justify-center gap-2 text-[15px] font-semibold text-slate-800 touch-manipulation hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50"
-            >
-              {konumYukleniyor ? "Konum alınıyor…" : "veya konumdan otomatik al"}
-            </button>
-            {konumHata && (
-              <p className="text-sm text-red-600" role="alert">
-                {konumHata}
-              </p>
-            )}
-            {sehir !== ISTANBUL_IL && sehir && !sehirAcik && !sehirAramaAcik && (
-              <Card className="border-amber-200 bg-amber-50 space-y-1">
-                <p className="text-sm font-semibold text-amber-950">
-                  Şehriniz henüz aktif değil.
-                </p>
-                <p className="text-sm text-amber-900 leading-snug">
-                  Kaydınızı tamamlayın, bölgeniz açıldığında öncelikli olarak
-                  bilgilendirelim.
-                </p>
-              </Card>
-            )}
-            <Btn
-              disabled={!sehir || sehirAramaAcik}
-              onClick={() => {
+              {/* Arama Sonuçları (Yazılıyorsa) */}
+              {sehirAra.trim().length > 0 ? (
+                <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-md divide-y divide-slate-100 max-h-60 overflow-y-auto">
+                  {sehirAramaSonuclari.map((il) => {
+                    const secili = sehir === il;
+                    return (
+                      <button
+                        key={il}
+                        type="button"
+                        onClick={() => sehirSec(il)}
+                        className={`w-full text-left px-4 py-3 text-[15px] font-medium flex items-center justify-between transition touch-manipulation ${
+                          secili
+                            ? "bg-[#eaf8ee] text-[#0b4e1e] font-semibold"
+                            : "text-slate-800 hover:bg-slate-50"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <MapPin
+                            className={`size-4 ${
+                              secili
+                                ? "text-[var(--acb-green)]"
+                                : "text-slate-400"
+                            }`}
+                          />
+                          {il}
+                        </span>
+                        {secili ? (
+                          <span className="size-5 rounded-full bg-[var(--acb-green)] text-white text-xs flex items-center justify-center font-bold">
+                            ✓
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                  {sehirAramaSonuclari.length === 0 && (
+                    <div className="p-4 text-center text-sm text-slate-500">
+                      "{sehirAra}" ile eşleşen şehir bulunamadı.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Popüler Şehirler Hızlı Seçim */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Popüler Şehirler
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {POPULER_SEHIRLER.map((il) => {
+                        const secili = sehir === il;
+                        return (
+                          <button
+                            key={il}
+                            type="button"
+                            onClick={() => sehirSec(il)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all touch-manipulation active:scale-95 ${
+                              secili
+                                ? "bg-[#eaf8ee] text-[#0b4e1e] border border-[#9ee3b2] shadow-sm ring-1 ring-[#9ee3b2]"
+                                : "bg-white text-slate-700 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 shadow-sm"
+                            }`}
+                          >
+                            {secili ? (
+                              <span className="size-1.5 rounded-full bg-[var(--acb-green)]" />
+                            ) : null}
+                            {il}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Seçili Şehir Kartı */}
+                  <div className="rounded-[var(--acb-radius)] border border-[#9ee3b2] bg-[#eaf8ee] p-4 flex items-center gap-3.5 shadow-[0_2px_10px_rgba(8,155,45,0.12)]">
+                    <div className="size-11 rounded-xl bg-white text-[var(--acb-green)] flex items-center justify-center shadow-sm shrink-0">
+                      <MapPin className="size-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="block text-xs font-semibold text-emerald-800 uppercase tracking-wide">
+                        Seçili Hizmet Şehri
+                      </span>
+                      <span className="block font-bold text-slate-900 text-lg leading-tight mt-0.5">
+                        {sehir}
+                      </span>
+                    </div>
+                    <span className="shrink-0 size-6 rounded-full bg-[var(--acb-green)] text-white text-xs font-bold flex items-center justify-center shadow-sm">
+                      ✓
+                    </span>
+                  </div>
+                </>
+              )}
+            </section>
+
+            <KayitStickyNav
+              progress={flowProgressBar}
+              devamDisabled={!sehir}
+              devamMetin={sehir === ISTANBUL_IL ? "Bölgemi seç" : "Devam et"}
+              onGeri={geri}
+              onDevam={() => {
                 if (sehir === ISTANBUL_IL) adimaIlerle("bolge");
                 else {
                   setYaka(null);
@@ -969,219 +1189,315 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                   adimaIlerle("telefon");
                 }
               }}
-            >
-              {sehir === ISTANBUL_IL ? "Bölgemi seç" : "Devam et"}
-            </Btn>
-          </section>
+            />
+          </div>
         )}
 
         {adim === "bolge" && (
-          <section className="space-y-4">
-            <h1 className="text-xl font-bold text-slate-900">
-              İstanbul’da hangi bölgelerde çalışıyorsunuz?
-            </h1>
-            <p className="text-sm text-slate-600">
-              Size yalnızca çalışabileceğiniz bölgelerdeki talepleri göndeririz.
-            </p>
-            {(
-              [
-                ["avrupa", "Avrupa Yakası"],
-                ["anadolu", "Anadolu Yakası"],
-                ["her_iki", "Her iki yakada"],
-                ["belirli", "Belirli ilçeleri seçmek istiyorum"],
-              ] as const
-            ).map(([id, label]) => (
-              <SecimKart
-                key={id}
-                baslik={label}
-                aktif={yaka === id}
-                onClick={() => {
-                  setYaka(id);
-                  if (id === "belirli") {
-                    setIlceler([]);
-                    adimaIlerle("ilce");
-                  } else {
-                    setIlceler(yakaIlceleri(id));
-                    adimaIlerle("telefon");
-                  }
-                }}
-              />
-            ))}
-          </section>
+          <div key="bolge" className="space-y-5 animate-fade-in">
+            <section className="space-y-4">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">
+                  İstanbul’da hangi bölgelerde çalışıyorsunuz?
+                </h1>
+                <p className="text-sm text-slate-600 mt-1">
+                  Size yalnızca çalışabileceğiniz bölgelerdeki talepleri göndeririz.
+                </p>
+              </div>
+
+              <div className="space-y-2.5">
+                {(
+                  [
+                    ["avrupa", "Avrupa Yakası", "Tüm Avrupa yakası ilçeleri"],
+                    ["anadolu", "Anadolu Yakası", "Tüm Anadolu yakası ilçeleri"],
+                    ["her_iki", "Her iki yakada", "İstanbul geneli tüm ilçeler"],
+                    ["belirli", "Belirli ilçeleri seçmek istiyorum", "Özel ilçe listesi seçimi"],
+                  ] as const
+                ).map(([id, label, sub]) => {
+                  const aktif = yaka === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => {
+                        setYaka(id);
+                        if (id === "belirli") {
+                          setIlceler([]);
+                          adimaIlerle("ilce");
+                        } else {
+                          setIlceler(yakaIlceleri(id));
+                          adimaIlerle("telefon");
+                        }
+                      }}
+                      className={`group w-full text-left rounded-[var(--acb-radius)] border p-4 flex items-center gap-3.5 touch-manipulation transition-all duration-200 active:scale-[0.98] ${
+                        aktif
+                          ? "border-[var(--acb-green)] bg-[#eaf8ee] shadow-[0_2px_12px_rgba(8,155,45,0.15)] ring-1 ring-[var(--acb-green)]"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80 shadow-[var(--acb-shadow)]"
+                      }`}
+                    >
+                      <div
+                        className={`size-10 shrink-0 rounded-xl flex items-center justify-center transition-colors ${
+                          aktif
+                            ? "bg-white text-[var(--acb-green)] shadow-sm"
+                            : "bg-slate-50 text-slate-700 border border-slate-100 group-hover:bg-white"
+                        }`}
+                      >
+                        <MapPin className="size-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span
+                          className={`block font-semibold text-[16px] leading-snug ${
+                            aktif ? "text-[var(--acb-dark)]" : "text-slate-900"
+                          }`}
+                        >
+                          {label}
+                        </span>
+                        <span className="block text-xs text-slate-500 mt-0.5 leading-snug">
+                          {sub}
+                        </span>
+                      </div>
+                      {aktif ? (
+                        <span
+                          className="shrink-0 size-6 rounded-full bg-[var(--acb-green)] text-white text-xs font-bold flex items-center justify-center shadow-sm"
+                          aria-hidden
+                        >
+                          ✓
+                        </span>
+                      ) : (
+                        <span
+                          className="shrink-0 text-slate-300 text-xl font-light leading-none group-hover:text-slate-400 group-hover:translate-x-0.5 transition-transform"
+                          aria-hidden
+                        >
+                          ›
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <KayitStickyNav
+              progress={flowProgressBar}
+              devamDisabled={!yaka}
+              devamMetin={yaka ? "Devam et" : "Bölge seçin"}
+              onGeri={geri}
+              onDevam={() => {
+                if (!yaka) return;
+                if (yaka === "belirli") adimaIlerle("ilce");
+                else {
+                  setIlceler(yakaIlceleri(yaka));
+                  adimaIlerle("telefon");
+                }
+              }}
+            />
+          </div>
         )}
 
         {adim === "ilce" && (
-          <section className="space-y-4">
-            <h1 className="text-xl font-bold text-slate-900">
-              Hangi ilçelerde çalışıyorsunuz?
-            </h1>
-            <IlceSecimi
-              il={ISTANBUL_IL}
-              tumIlceler={sehirIlceler}
-              seciliIlceler={ilceler}
-              onToggle={(ilce) =>
-                setIlceler((prev) =>
-                  prev.includes(ilce)
-                    ? prev.filter((x) => x !== ilce)
-                    : [...prev, ilce]
-                )
+          <div key="ilce" className="space-y-5 animate-fade-in">
+            <section className="space-y-4">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">
+                  Hangi ilçelerde çalışıyorsunuz?
+                </h1>
+                <p className="text-sm text-slate-600 mt-1">
+                  Hizmet vermek istediğiniz ilçeleri işaretleyin.
+                </p>
+              </div>
+
+              <IlceSecimi
+                il={ISTANBUL_IL}
+                tumIlceler={sehirIlceler}
+                seciliIlceler={ilceler}
+                onToggle={(ilce) =>
+                  setIlceler((prev) =>
+                    prev.includes(ilce)
+                      ? prev.filter((x) => x !== ilce)
+                      : [...prev, ilce]
+                  )
+                }
+                onTumunuSec={() => setIlceler([...sehirIlceler])}
+                onTemizle={() => setIlceler([])}
+              />
+            </section>
+
+            <KayitStickyNav
+              progress={flowProgressBar}
+              devamDisabled={ilceler.length === 0}
+              devamMetin={
+                ilceler.length > 0
+                  ? `Devam et (${ilceler.length} ilçe)`
+                  : "En az bir ilçe seçin"
               }
-              onTumunuSec={() => setIlceler([...sehirIlceler])}
-              onTemizle={() => setIlceler([])}
+              onGeri={geri}
+              onDevam={() => adimaIlerle("telefon")}
             />
-            <Btn
-              disabled={ilceler.length === 0}
-              onClick={() => adimaIlerle("telefon")}
-            >
-              Devam et
-            </Btn>
-          </section>
+          </div>
         )}
 
         {adim === "telefon" && (
-          <section className="space-y-4">
-            <h1 className="text-[1.35rem] font-bold text-slate-900 leading-snug">
-              {telefonBaslik}
-            </h1>
-            <p className="text-sm text-slate-600 leading-snug">
-              Bölgenizde yeni bir {hizmetEtiket(hizmet)} işi açıldığında size SMS
-              gönderelim.
-            </p>
-            {smsIpucu && (
-              <p
-                className="text-sm font-medium text-amber-950 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-3 leading-snug animate-fade-in"
-                role="status"
-              >
-                Müşterileri size SMS olarak gönderebilmemiz için telefon
-                numaranızı girin.
-              </p>
-            )}
-            {!sehirAcik && (
-              <Card className="border-amber-200 bg-amber-50">
-                <p className="text-sm text-amber-900 leading-snug">
-                  {sehir} henüz aktif değil — kaydınızı alın, açıldığında öncelikli
-                  bilgilendirilirsiniz.
+          <div key="telefon" className="space-y-5 animate-fade-in">
+            <section className="space-y-4">
+              <div>
+                <h1 className="text-[1.35rem] font-bold text-slate-900 leading-snug">
+                  {telefonBaslik}
+                </h1>
+                <p className="text-sm text-slate-600 leading-snug mt-1">
+                  Bölgenizde yeni bir {hizmetEtiket(hizmet)} işi açıldığında size SMS
+                  ile anında bildirelim.
                 </p>
-              </Card>
-            )}
-            <Field
-              ref={telefonRef}
-              label="Telefon numaranız"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder={TELEFON_ORNEK_GIRISLERI[0] ?? "05XX XXX XX XX"}
-              value={telefon}
-              invalid={telefonHata}
-              onChange={(e) => {
-                setTelefon(e.target.value);
-                if (telefonHata) setTelefonHata(false);
-                kayitFunnelAlanDoldu(funnel.id, "telefon", e.target.value);
-              }}
-              onFocus={() => {
-                void kayitFunnelOlayGonder(funnel.id, "telefon_focus");
-                kayitFunnelAlanFocus(funnel.id, "telefon");
-              }}
-              className={`text-base min-h-[48px] ${
-                telefonParlama ? "animate-hedef-secim-parla" : ""
-              }`}
+              </div>
+
+              {smsIpucu && (
+                <div
+                  className="text-sm font-medium text-emerald-950 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 leading-snug animate-fade-in"
+                  role="status"
+                >
+                  Müşterileri size SMS olarak gönderebilmemiz için telefon
+                  numaranızı girin.
+                </div>
+              )}
+
+              <Field
+                ref={telefonRef}
+                label="Telefon numaranız"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder={TELEFON_ORNEK_GIRISLERI[0] ?? "05XX XXX XX XX"}
+                value={telefon}
+                invalid={telefonHata}
+                onChange={(e) => {
+                  setTelefon(e.target.value);
+                  if (telefonHata) setTelefonHata(false);
+                  kayitFunnelAlanDoldu(funnel.id, "telefon", e.target.value);
+                }}
+                onFocus={() => {
+                  void kayitFunnelOlayGonder(funnel.id, "telefon_focus");
+                  kayitFunnelAlanFocus(funnel.id, "telefon");
+                }}
+                className={`text-base min-h-[48px] ${
+                  telefonParlama ? "animate-hedef-secim-parla" : ""
+                }`}
+              />
+              {telefonHata && (
+                <p className="text-sm text-red-600" role="alert">
+                  Telefon numarası geçersiz
+                </p>
+              )}
+
+              <YasalOnayKutusu
+                checked={yasalOnay}
+                onChange={(v) => {
+                  setYasalOnay(v);
+                  if (v) {
+                    setYasalHata(false);
+                    setError("");
+                    kayitFunnelOlayBirKez(funnel.id, "yasal_onay_tik");
+                  }
+                }}
+                invalid={yasalHata}
+                rol="hizmet-veren"
+                kucukMetin
+              />
+              {error && <p className="text-sm text-red-600">{error}</p>}
+            </section>
+
+            <KayitStickyNav
+              progress={flowProgressBar}
+              devamDisabled={loading || telefon.replace(/\D/g, "").length < 10 || !yasalOnay}
+              devamMetin="Telefonuma kod gönder"
+              loading={loading}
+              onGeri={geri}
+              onDevam={() => void kodGonder()}
             />
-            {telefonHata && (
-              <p className="text-sm text-red-600" role="alert">
-                Telefon numarası geçersiz
-              </p>
-            )}
-            <YasalOnayKutusu
-              checked={yasalOnay}
-              onChange={(v) => {
-                setYasalOnay(v);
-                if (v) {
-                  setYasalHata(false);
-                  setError("");
-                  kayitFunnelOlayBirKez(funnel.id, "yasal_onay_tik");
-                }
-              }}
-              invalid={yasalHata}
-              rol="hizmet-veren"
-              kucukMetin
-            />
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <Btn disabled={loading} onClick={() => void kodGonder()}>
-              {loading ? "Gönderiliyor…" : "Telefonuma kod gönder"}
-            </Btn>
-            <p className="text-center text-xs text-slate-500">
-              Kayıt ücretsiz · Kart gerekmez · Teklif vermek ücretsiz
-            </p>
-          </section>
+          </div>
         )}
 
         {adim === "otp" && (
-          <section className="space-y-4">
-            <h1 className="text-xl font-bold text-slate-900">
-              Telefonunuzu doğrulayın
-            </h1>
-            <p className="text-sm text-slate-600">
-              {telefon} numarasına 6 haneli kod gönderdik.
-            </p>
-            {mesaj && <p className="text-sm text-emerald-700">{mesaj}</p>}
-            <Field
-              label="SMS kodu"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="[0-9]*"
-              maxLength={6}
-              placeholder="6 haneli kod"
-              value={otp}
-              onFocus={() => kayitFunnelAlanFocus(funnel.id, "otp")}
-              onChange={(e) => {
-                const v = e.target.value.replace(/\D/g, "").slice(0, 6);
-                setOtp(v);
-                kayitFunnelAlanDoldu(funnel.id, "otp", v);
-              }}
-              className="text-lg tracking-widest min-h-[52px]"
-            />
-            {loading && (
-              <p className="text-sm text-slate-500">Doğrulanıyor…</p>
-            )}
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <div className="flex flex-wrap gap-3 text-sm">
-              <button
-                type="button"
-                className="text-amber-800 font-medium disabled:opacity-40"
-                disabled={yenidenSn > 0 || loading}
-                onClick={() => void kodGonder()}
-              >
-                {yenidenSn > 0
-                  ? `Tekrar kod gönder (${yenidenSn})`
-                  : "Tekrar kod gönder"}
-              </button>
-              <button
-                type="button"
-                className="text-slate-600 font-medium"
-                onClick={() => {
-                  setAdim("telefon");
-                  setOtp("");
-                  setError("");
-                  sonOtpDeneme.current = "";
+          <div key="otp" className="space-y-5 animate-fade-in">
+            <section className="space-y-4">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">
+                  Telefonunuzu doğrulayın
+                </h1>
+                <p className="text-sm text-slate-600 mt-1">
+                  <span className="font-semibold text-slate-900">{telefon}</span> numarasına 6 haneli kod gönderdik.
+                </p>
+              </div>
+
+              {mesaj && <p className="text-sm text-emerald-700 font-medium">{mesaj}</p>}
+
+              <Field
+                label="SMS kodu"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={6}
+                placeholder="6 haneli kod"
+                value={otp}
+                onFocus={() => kayitFunnelAlanFocus(funnel.id, "otp")}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                  setOtp(v);
+                  kayitFunnelAlanDoldu(funnel.id, "otp", v);
                 }}
-              >
-                Numarayı değiştir
-              </button>
-            </div>
-          </section>
+                className="text-lg tracking-widest min-h-[52px] text-center font-bold"
+              />
+
+              {error && <p className="text-sm text-red-600">{error}</p>}
+
+              <div className="flex flex-wrap gap-4 text-sm pt-1">
+                <button
+                  type="button"
+                  className="text-emerald-800 font-semibold disabled:opacity-40 hover:underline"
+                  disabled={yenidenSn > 0 || loading}
+                  onClick={() => void kodGonder()}
+                >
+                  {yenidenSn > 0
+                    ? `Tekrar kod gönder (${yenidenSn})`
+                    : "Tekrar kod gönder"}
+                </button>
+                <button
+                  type="button"
+                  className="text-slate-600 font-medium hover:text-slate-900 hover:underline"
+                  onClick={() => {
+                    setAdim("telefon");
+                    setOtp("");
+                    setError("");
+                    sonOtpDeneme.current = "";
+                  }}
+                >
+                  Numarayı değiştir
+                </button>
+              </div>
+            </section>
+
+            <KayitStickyNav
+              progress={flowProgressBar}
+              devamDisabled={loading || otp.length !== 6}
+              devamMetin="Onayla ve kaydol"
+              loading={loading}
+              onGeri={geri}
+              onDevam={() => void hesapOlustur(otp)}
+            />
+          </div>
         )}
 
         {adim === "basarili" && (
-          <Card className="space-y-4 border-emerald-200 bg-emerald-50">
-            <h1 className="text-xl font-bold text-slate-900">
-              Kaydınız oluşturuldu ✓
-            </h1>
-            <p className="text-[17px] text-slate-700 leading-relaxed">
-              Talepleri almaya başlamak için abonelik paketini seçin.
-            </p>
-            <Btn onClick={() => router.push("/cekici/kredi")}>
-              Abonelik paketini seç
-            </Btn>
-          </Card>
+          <div key="basarili" className="animate-fade-in">
+            <Card className="space-y-4 border-emerald-200 bg-emerald-50">
+              <h1 className="text-xl font-bold text-slate-900">
+                Kaydınız oluşturuldu ✓
+              </h1>
+              <p className="text-[17px] text-slate-700 leading-relaxed">
+                Talepleri almaya başlamak için abonelik paketini seçin.
+              </p>
+              <Btn onClick={() => router.push("/cekici/kredi")}>
+                Abonelik paketini seç
+              </Btn>
+            </Card>
+          </div>
         )}
       </div>
     </MobileShell>
@@ -1196,7 +1512,8 @@ export function KayitSecimWizardSayfa({
   return (
     <Suspense
       fallback={
-        <MobileShell headerEnd={<KayitHeaderGiris />}>
+        <MobileShell hideHeader>
+          <OpeningLogo forceDocked={true} />
           <p className="text-center text-slate-500 py-12">Yükleniyor…</p>
         </MobileShell>
       }
@@ -1205,3 +1522,4 @@ export function KayitSecimWizardSayfa({
     </Suspense>
   );
 }
+
