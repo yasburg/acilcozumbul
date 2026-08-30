@@ -285,7 +285,7 @@ export function CekiciAyarlarPanel() {
                         key={t.id}
                         className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-50 text-emerald-900 px-2.5 py-0.5 rounded-full border border-emerald-200"
                       >
-                        ✓ {t.ad}
+                        ✓ {t.label}
                       </span>
                     ))}
                 </div>
