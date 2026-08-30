@@ -34,6 +34,7 @@ import {
 } from "@/lib/cekici-sehir-acilis";
 import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 import { sehirKullanimAcikMiDb } from "@/lib/cekici-sehir-acilis-db";
+import { dakikaYasi, marketplaceOlayKaydet } from "@/lib/marketplace-events";
 
 export async function POST(
   request: NextRequest,
@@ -224,6 +225,11 @@ export async function POST(
 
   talep.teklifler = [...(talep.teklifler ?? []), teklif];
   await updateTalep(talep);
+  await marketplaceOlayKaydet({
+    eventType: "driver_bid_submitted", talepId: talep.id, cekiciId: cekici.id,
+    eventKey: `bid-submitted:${talep.id}:${cekici.id}`,
+    properties: { bid_amount: fiyat, bid_count: talep.teklifler.length, response_time_min: dakikaYasi(talep.olusturulma) },
+  });
   await refreshCekiciPuanOzet(cekici.id).catch(() => {});
 
   const baseUrl = smsBaseUrl(

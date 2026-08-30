@@ -8,6 +8,7 @@ import {
 } from "@/lib/sms-talep-kisa-link";
 import { getCekiciByToken } from "@/lib/db";
 import { CEKICI_COOKIE, cekiciOturumCookieAyarlari } from "@/lib/auth";
+import { marketplaceOlayKaydet } from "@/lib/marketplace-events";
 
 /**
  * /t/{token} — çekici talep SMS kısa linki → ihale sayfası
@@ -35,6 +36,13 @@ export async function GET(
 
   try {
     await kaydetSmsTalepKisaLinkTiklama(token);
+    await marketplaceOlayKaydet({
+      eventType: "driver_notification_opened",
+      talepId: kayit.talepId,
+      cekiciId: cekici.id,
+      eventKey: `notification-opened:${kayit.talepId}:${cekici.id}`,
+      properties: { channel: "sms" },
+    });
   } catch (e) {
     console.error("[sms-talep-kisa] tıklama", e);
   }

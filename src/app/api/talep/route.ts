@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { addTalep } from "@/lib/db";
+import { addTalep, getTalepById } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import { notifyKrediHatirlatma } from "@/lib/kredi-hatirlatma-db";
-import { notifyCekiciler, notifyMusteri } from "@/lib/sms";
+import { notifyMusteri } from "@/lib/sms";
 import { funnelOlayKaydet } from "@/lib/funnel";
 import {
   guvenlikOlayiKaydet,
@@ -34,6 +34,8 @@ import { aracDurumuGecerliMi } from "@/lib/arac-durumu";
 import { talepFotografYukle } from "@/lib/talep-fotograf";
 import { smsBaseUrl } from "@/lib/sms-base-url";
 import { telefonGecerliMi, telefonNormalize } from "@/lib/telefon";
+import { ilkTalepDispatchCalistir } from "@/lib/talep-dispatch";
+import { marketplaceOlayKaydet } from "@/lib/marketplace-events";
 import type { KonumKaynak, Talep } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
@@ -290,16 +292,22 @@ export async function POST(request: NextRequest) {
     `${request.nextUrl.protocol}//${request.nextUrl.host}`
   );
 
-  const bildirilenIds = await notifyCekiciler(talep, baseUrl);
-  talep.bildirilenCekiciIds = bildirilenIds;
-
+  // Önce kalıcı talep: SMS/kısa link veya HTTP kesintisi request'i yetim bırakamaz.
   await addTalep(talep);
+  await marketplaceOlayKaydet({
+    eventType: "customer_request_created",
+    talepId: talep.id,
+    eventKey: `request-created:${talep.id}`,
+    properties: { city: talep.konumIl ?? null, district: talep.konumIlce ?? null, problem_type: talep.sorunTipi ?? "diger", has_destination: Boolean(talep.hedefKonum), has_photo: Boolean(talep.fotografUrls?.length) },
+  });
+  const bildirilenSayisi = await ilkTalepDispatchCalistir(talep, baseUrl);
   if (telefonGecerliMi(talep.telefon)) {
     await notifyMusteri(talep, "talep_alindi", baseUrl);
   }
 
   try {
-    await notifyKrediHatirlatma(talep, baseUrl, bildirilenIds);
+    const guncelTalep = await getTalepById(talep.id);
+    await notifyKrediHatirlatma(guncelTalep ?? talep, baseUrl, guncelTalep?.bildirilenCekiciIds ?? []);
   } catch (e) {
     console.error("[kredi-hatirlatma] otomatik", e);
   }
@@ -319,6 +327,6 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     id: talep.id,
-    bildirilenSayisi: bildirilenIds.length,
+    bildirilenSayisi,
   });
 }

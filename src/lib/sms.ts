@@ -23,6 +23,7 @@ import {
 } from "./sms-talep-kisa-link";
 import type { Cekici, Talep } from "./types";
 import { telefonGecerliMi } from "./telefon";
+import { bildirimCopyVaryanti, talepYasiDakika } from "./marketplace-p2";
 
 /**
  * Yerel `next dev` / açıkça açılan modda gerçek çekicilere SMS gitmez;
@@ -50,7 +51,7 @@ export function cekiciTalepSmsMetni(
   cekici: Cekici,
   baseUrl: string,
   yenidenArama = false,
-  opts?: { link?: string }
+  opts?: { link?: string; varyant?: "control" | "urgency_context" }
 ): { mesaj: string; link: string } {
   const link =
     opts?.link?.trim() ||
@@ -60,7 +61,9 @@ export function cekiciTalepSmsMetni(
     ? "Yeni yol yardim talebi (tekrar)"
     : "Yeni yol yardim talebi";
   const onek = yer ? `${baslik}: ${yer}` : baslik;
-  const mesaj = `${onek}\n${link}`;
+  const mesaj = opts?.varyant === "urgency_context"
+    ? `${onek} · ${talepYasiDakika(talep)} dk önce\nTalebi görüntüle: ${link}`
+    : `${onek}\n${link}`;
   return { mesaj, link };
 }
 
@@ -82,7 +85,10 @@ export async function cekiciTalepSmsHazirla(
   } catch (e) {
     console.error("[sms] kısa link üretilemedi, uzun URL kullanılıyor", e);
   }
-  return cekiciTalepSmsMetni(talep, cekici, baseUrl, yenidenArama, { link });
+  return cekiciTalepSmsMetni(talep, cekici, baseUrl, yenidenArama, {
+    link,
+    varyant: bildirimCopyVaryanti(talep, cekici),
+  });
 }
 
 /**

@@ -12,6 +12,7 @@ import {
   ihaleAcikMi,
 } from "@/lib/ihale";
 import { koordinatGecerli } from "@/lib/koordinat";
+import { mesafeKmHaversine } from "@/lib/geo";
 import { cekiciTalepOnizleme } from "@/lib/talep-utils";
 import type { Talep } from "@/lib/types";
 import { talepLastikDurumuEtiket } from "@/lib/lastik-durumu";
@@ -22,6 +23,9 @@ import {
   sehirBeklemeMesaji,
 } from "@/lib/cekici-sehir-acilis";
 import { sehirKullanimAcikMiDb } from "@/lib/cekici-sehir-acilis-db";
+import { dakikaYasi, marketplaceOlayKaydet } from "@/lib/marketplace-events";
+import { suggestedPriceDeneyiAcikMi } from "@/lib/marketplace-p2";
+import { benzerTalepFiyatRehberi } from "@/lib/teklif-fiyat-rehberi";
 
 /** Süre hesabı için koordinat (tam adres gönderilmez) */
 function rotaKoordinatlari(talep: Talep) {
@@ -33,6 +37,18 @@ function rotaKoordinatlari(talep: Talep) {
       talep.hedefKonum && koordinatGecerli(talep.hedefKonum)
         ? { lat: talep.hedefKonum.lat, lng: talep.hedefKonum.lng }
         : undefined,
+  };
+}
+
+/** Tam adres vermeden, gerçek veriden türetilmiş fırsat sinyalleri. */
+function firsatOzeti(talep: Talep, cekici: { konumLat?: number; konumLng?: number }) {
+  const mesafeKm = cekici.konumLat != null && cekici.konumLng != null && koordinatGecerli(talep.konum)
+    ? mesafeKmHaversine(cekici.konumLat, cekici.konumLng, talep.konum.lat, talep.konum.lng)
+    : null;
+  return {
+    requestAgeMin: Math.max(0, Math.floor((Date.now() - new Date(talep.olusturulma).getTime()) / 60_000)),
+    activeBidCount: talep.teklifler.filter((t) => t.durum === "aktif").length,
+    pickupDistanceKm: mesafeKm != null ? Math.round(mesafeKm * 10) / 10 : null,
   };
 }
 
@@ -143,6 +159,7 @@ export async function GET(
   }
 
   if (teklifVerdim && benimTeklifim) {
+    await marketplaceOlayKaydet({ eventType: "driver_request_viewed", talepId: talep.id, cekiciId: cekici.id, eventKey: `request-viewed:${talep.id}:${cekici.id}`, properties: { request_age_min: dakikaYasi(talep.olusturulma), bid_count: talep.teklifler.length } });
     return NextResponse.json({
       id: talep.id,
       durum: talep.durum,
@@ -156,6 +173,7 @@ export async function GET(
       ...rotaKoordinatlari(talep),
       kredi: cekiciToplamKredi(cekici),
       onayliCekici: Boolean(cekici.rozetAktif),
+      firsat: firsatOzeti(talep, cekici),
     });
   }
 
@@ -181,6 +199,12 @@ export async function GET(
     });
   }
 
+  await marketplaceOlayKaydet({ eventType: "driver_request_viewed", talepId: talep.id, cekiciId: cekici.id, eventKey: `request-viewed:${talep.id}:${cekici.id}`, properties: { request_age_min: dakikaYasi(talep.olusturulma), bid_count: talep.teklifler.length } });
+
+  const fiyatRehberi = suggestedPriceDeneyiAcikMi()
+    ? await benzerTalepFiyatRehberi(talep).catch(() => null)
+    : null;
+
   return NextResponse.json({
     id: talep.id,
     durum: talep.durum,
@@ -193,5 +217,7 @@ export async function GET(
     ...rotaKoordinatlari(talep),
     kredi: cekiciToplamKredi(cekici),
     onayliCekici: Boolean(cekici.rozetAktif),
+    firsat: firsatOzeti(talep, cekici),
+    fiyatRehberi,
   });
 }

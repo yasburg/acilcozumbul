@@ -12,6 +12,7 @@ import {
 } from "@/lib/sorun-tipleri";
 import { koordinatGecerli } from "@/lib/koordinat";
 import { surusSuresiDk } from "@/lib/google-maps";
+import { dakikaYasi, marketplaceOlayKaydet } from "@/lib/marketplace-events";
 
 export async function GET(
   request: NextRequest,
@@ -128,6 +129,13 @@ export async function GET(
   );
 
   const teklifler = teklifleriSirala(tekliflerHam);
+  if (teklifler.length > 0) {
+    await marketplaceOlayKaydet({
+      eventType: "customer_bid_viewed", talepId: talep.id,
+      eventKey: `customer-bids-viewed:${talep.id}`,
+      properties: { bid_count: teklifler.length, request_age_min: dakikaYasi(talep.olusturulma) },
+    });
+  }
 
   return NextResponse.json({
     teklifler,

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BolgeAyarlari } from "@/components/BolgeAyarlari";
 import { MusaitlikAyarlari } from "@/components/cekici/MusaitlikAyarlari";
+import { AnlikMusaitlik } from "@/components/cekici/AnlikMusaitlik";
 import { PremiumSmsAyarlari } from "@/components/cekici/PremiumSmsAyarlari";
 import { KisiselVeriGizlemeAyarlari } from "@/components/cekici/KisiselVeriGizlemeAyarlari";
 import { SorunTipiSecimi } from "@/components/SorunTipiSecimi";
@@ -336,6 +337,7 @@ export function CekiciAyarlarPanel() {
                 Çalışma Saatleri & Müsaitlik
               </h2>
             </div>
+            <AnlikMusaitlik />
             <MusaitlikAyarlari />
           </section>
         </div>

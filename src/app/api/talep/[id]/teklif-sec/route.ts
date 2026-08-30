@@ -14,6 +14,7 @@ import { telefonMaskele, telefonNormalize } from "@/lib/telefon";
 import { talepIletisimTamMi } from "@/lib/talep-iletisim";
 import { notifyCekiciSecildi } from "@/lib/sms";
 import { smsBaseUrl } from "@/lib/sms-base-url";
+import { dakikaYasi, marketplaceOlayKaydet } from "@/lib/marketplace-events";
 
 export async function POST(
   request: NextRequest,
@@ -140,6 +141,11 @@ export async function POST(
   talep.anlasmaDurumu = "bekliyor";
 
   await kaybedenTeklifleriIsaretle(talep, teklif.id);
+  await marketplaceOlayKaydet({
+    eventType: "customer_bid_selected", talepId: talep.id, cekiciId: teklif.cekiciId,
+    eventKey: `bid-selected:${talep.id}`,
+    properties: { bid_count: talep.teklifler.length, bid_amount: teklif.fiyat, response_time_min: dakikaYasi(talep.olusturulma) },
+  });
 
   const cekici = await getCekiciById(teklif.cekiciId);
   if (cekici) {

@@ -73,6 +73,7 @@ interface PanelData {
   bugunTumu: TalepOzet[];
   kredi?: number;
   krediYok?: boolean;
+  bildirimKredi?: number;
   demoModu?: boolean;
   satinAlinanlar?: TalepOzet[];
   baskasiAldi?: TalepOzet[];
@@ -158,17 +159,19 @@ function TalepKarti({
 function GizliTalepKarti({
   talep,
   kredi,
+  bildirimKredi = 1,
   yukleniyor,
   demoModu,
   onKatil,
 }: {
   talep: TalepOzet;
   kredi: number;
+  bildirimKredi?: number;
   yukleniyor: boolean;
   demoModu?: boolean;
   onKatil: (talepId: string) => void;
 }) {
-  const katilabilir = demoModu || kredi >= 1;
+  const katilabilir = demoModu || kredi >= bildirimKredi;
 
   return (
     <button
@@ -189,13 +192,13 @@ function GizliTalepKarti({
           </span>
           <p className="text-sm font-semibold text-amber-900 text-center leading-snug">
             {katilabilir
-              ? "1 kredi ile ihaleye katıl"
+              ? `${bildirimKredi} kredi ile ihaleye katıl`
               : "Kredi yükleyin, ihaleye katılın"}
           </p>
           <p className="text-xs text-slate-500 text-center mt-1">
             {katilabilir
               ? "Dokunun — müşteri bilgisi ve teklif açılır"
-              : "1 kredi = 1 talep (teklif ücretsiz)"}
+              : `${bildirimKredi} kredi gerekir (teklif ücretsiz)`}
           </p>
         </div>
       </Card>
@@ -368,7 +371,8 @@ export default function CekiciPanelTabs() {
   const ihaleyeKatil = useCallback(
     async (talepId: string) => {
       const mevcutKredi = data?.kredi ?? cekici?.kredi ?? 0;
-      if (!data?.demoModu && mevcutKredi < 1) {
+      const gerekenKredi = data?.bildirimKredi ?? 1;
+      if (!data?.demoModu && mevcutKredi < gerekenKredi) {
         router.push("/cekici/kredi");
         return;
       }
@@ -406,7 +410,7 @@ export default function CekiciPanelTabs() {
         setKatilYukleniyor(null);
       }
     },
-    [cekici, data?.demoModu, data?.kredi, router]
+    [cekici, data?.bildirimKredi, data?.demoModu, data?.kredi, router]
   );
 
   const yukle = useCallback(async () => {
@@ -763,7 +767,7 @@ export default function CekiciPanelTabs() {
             <Card className="border-amber-200 bg-amber-50">
               <p className="text-sm text-amber-900 leading-relaxed">
                 Bölgenizde kilitli talepler var.{" "}
-                <strong>1 kredi</strong> ile ihaleye katılabilir veya yeni talepler
+                <strong>{data.bildirimKredi ?? 1} kredi</strong> ile ihaleye katılabilir veya yeni talepler
                 için SMS alabilirsiniz (teklif ücretsiz).
               </p>
               <Link
@@ -799,6 +803,7 @@ export default function CekiciPanelTabs() {
                     key={t.id}
                     talep={t}
                     kredi={data.kredi ?? cekici.kredi}
+                    bildirimKredi={data.bildirimKredi}
                     yukleniyor={katilYukleniyor === t.id}
                     demoModu={data.demoModu}
                     onKatil={ihaleyeKatil}

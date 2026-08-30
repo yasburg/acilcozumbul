@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CekiciRotaPanel } from "@/components/CekiciRotaPanel";
 import { koordinatGecerli } from "@/lib/koordinat";
 import { useKazananKonumPaylas } from "@/hooks/useKazananKonumPaylas";
@@ -78,6 +78,8 @@ interface TalepDurum {
   aracModeli?: string;
   lastikDurumu?: string;
   fotografUrls?: string[];
+  firsat?: { requestAgeMin: number; activeBidCount: number; pickupDistanceKm: number | null };
+  fiyatRehberi?: { alt: number; ust: number; medyan: number; ornekSayisi: number } | null;
   onayliCekici?: boolean;
   musteriArandiAt?: string;
 }
@@ -169,6 +171,7 @@ export default function CekiciTalepClient() {
   const [demoAktif, setDemoAktif] = useState(false);
 
   const [fiyat, setFiyat] = useState("");
+  const [bidBaslatildi, setBidBaslatildi] = useState(false);
   const [sure, setSure] = useState("30");
   const [mesaj, setMesaj] = useState("");
   const demoTalep = id.startsWith("demo-");
@@ -257,9 +260,12 @@ export default function CekiciTalepClient() {
   }, [id, token]);
 
   useEffect(() => {
-    yukle();
+    const initial = setTimeout(() => void yukle(), 0);
     const interval = setInterval(yukle, 4000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(interval);
+    };
   }, [yukle]);
 
   async function musteriAraKaydet() {
@@ -352,6 +358,12 @@ export default function CekiciTalepClient() {
     }
   }
 
+  function bidBaslat() {
+    if (bidBaslatildi) return;
+    setBidBaslatildi(true);
+    void cekiciFetch(`/api/cekici/talep/${id}/bid-start`, { method: "POST" });
+  }
+
   const telefonHref =
     gizlilik === "yok" && talep?.telefon
       ? `tel:${talep.telefon.replace(/\s/g, "")}`
@@ -367,15 +379,15 @@ export default function CekiciTalepClient() {
     !talep.erisimYok &&
     talep.onizleme;
 
-  const musteriKoordinat = useMemo(() => {
+  const musteriKoordinat = (() => {
     if (!talep?.konum || !koordinatGecerli(talep.konum)) return null;
     return { lat: talep.konum.lat, lng: talep.konum.lng };
-  }, [talep?.konum?.lat, talep?.konum?.lng]);
+  })();
 
-  const hedefKoordinat = useMemo(() => {
+  const hedefKoordinat = (() => {
     if (!talep?.hedefKonum || !koordinatGecerli(talep.hedefKonum)) return null;
     return { lat: talep.hedefKonum.lat, lng: talep.hedefKonum.lng };
-  }, [talep?.hedefKonum?.lat, talep?.hedefKonum?.lng]);
+  })();
 
   const musteriKonumGpsMi = talep?.konum?.kaynak === "gps";
   const hizmetVerenAd = cekici?.ad?.trim() || "hizmet veren";
@@ -591,6 +603,13 @@ export default function CekiciTalepClient() {
                 <p className="font-medium mb-1 text-slate-900">
                   📍 {talep.onizleme!.bolge}
                 </p>
+                {talep.firsat && (
+                  <div className="mb-3 flex flex-wrap gap-2 text-xs">
+                    {talep.firsat.pickupDistanceKm != null && <span className="rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-800">Size ~{talep.firsat.pickupDistanceKm} km</span>}
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700">{talep.firsat.requestAgeMin} dk önce oluşturuldu</span>
+                    <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-900">{talep.firsat.activeBidCount} aktif teklif</span>
+                  </div>
+                )}
                 {talep.onizleme!.hedefBolge && (
                   <p className="text-sm text-amber-700 mb-2">
                     → {talep.onizleme!.hedefBolge}
@@ -644,18 +663,27 @@ export default function CekiciTalepClient() {
               <p className="text-sm text-[var(--acb-green)] text-center font-semibold">
                 Teklif vermek ücretsizdir.
               </p>
+              {talep.fiyatRehberi && (
+                <Card className="border-blue-200 bg-blue-50">
+                  <p className="text-sm font-semibold text-blue-950">Benzer işlerde seçilen teklif aralığı: {talep.fiyatRehberi.alt.toLocaleString("tr-TR")}–{talep.fiyatRehberi.ust.toLocaleString("tr-TR")} TL</p>
+                  <p className="mt-1 text-xs text-blue-800">Son 90 gündeki {talep.fiyatRehberi.ornekSayisi} benzer talebin seçilmiş tekliflerinden türetilir; bağlayıcı fiyat değildir.</p>
+                  <button type="button" onClick={() => { setFiyat(String(talep.fiyatRehberi?.medyan ?? "")); bidBaslat(); }} className="mt-2 rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-bold text-blue-900">{talep.fiyatRehberi.medyan.toLocaleString("tr-TR")} TL ile hızlı teklif</button>
+                </Card>
+              )}
               <Field
                 label="Fiyat (TL)"
                 type="number"
                 placeholder="1500"
                 value={fiyat}
                 onChange={(e) => setFiyat(e.target.value)}
+                onFocus={bidBaslat}
               />
               <Field
                 label="Tahmini süre (dk)"
                 type="number"
                 value={sure}
                 onChange={(e) => setSure(e.target.value)}
+                onFocus={bidBaslat}
               />
               <Field
                 label="Mesaj (isteğe bağlı)"

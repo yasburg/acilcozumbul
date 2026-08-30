@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentCekici } from "@/lib/auth";
-import { getTaleplerBugun } from "@/lib/db";
+import { getTaleplerAcikIhale, getTaleplerBugun } from "@/lib/db";
 import { ensureSeedData } from "@/lib/seed";
 import {
   cekiciAcikTalepUygunMu,
@@ -67,8 +67,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Giriş gerekli." }, { status: 401 });
   }
 
-  const talepler = await getTaleplerBugun();
-  const bugun = talepler.filter((t) => isBugun(t.olusturulma));
+  // Gün değişince devam eden 1 gün/hafta ihaleleri panelden kaybolmamalı.
+  const [bugunTalepleri, acikIhaleler] = await Promise.all([
+    getTaleplerBugun(),
+    getTaleplerAcikIhale(),
+  ]);
+  const bugun = [...new Map(
+    [...bugunTalepleri.filter((t) => isBugun(t.olusturulma)), ...acikIhaleler]
+      .map((t) => [t.id, t])
+  ).values()];
 
   const ilgili = bugun.filter((t) => {
     if (t.kazananCekiciId === cekici.id) return true;

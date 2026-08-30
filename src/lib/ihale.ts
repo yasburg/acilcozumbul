@@ -110,6 +110,8 @@ export function cekiciAcikTalepUygunMu(
     return false;
   }
   return (
+    cekici.availabilityStatus !== "offline" &&
+    cekici.availabilityStatus !== "busy" &&
     ihaleAcikMi(talep) &&
     !cekiciHaricMi(talep, cekici.id) &&
     cekiciTalepBolgesineUygunMu(cekici, talep) &&

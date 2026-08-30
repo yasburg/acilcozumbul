@@ -5,6 +5,7 @@ import {
   demoMusteriTalepIptal,
   isDemoTalepId,
 } from "@/lib/demo-oturum";
+import { dakikaYasi, marketplaceOlayKaydet } from "@/lib/marketplace-events";
 
 const IPTAL_EDILEBILIR: ReadonlySet<string> = new Set([
   "ihalede",
@@ -59,6 +60,7 @@ export async function POST(
   talep.durum = "iptal";
   talep.iptalAt = talep.iptalAt ?? new Date().toISOString();
   await updateTalep(talep);
+  await marketplaceOlayKaydet({ eventType: "request_cancelled", talepId: talep.id, eventKey: `request-cancelled:${talep.id}`, properties: { request_age_min: dakikaYasi(talep.olusturulma), bid_count: talep.teklifler.length } });
 
   return NextResponse.json({ ok: true, durum: "iptal", iptalAt: talep.iptalAt });
 }

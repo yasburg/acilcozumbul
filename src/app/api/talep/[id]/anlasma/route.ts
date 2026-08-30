@@ -4,6 +4,7 @@ import { notifyCekiciIptal } from "@/lib/sms";
 import { ensureSeedData } from "@/lib/seed";
 import { anlasamadiSonrasiIhaleyiSurdur } from "@/lib/ihale";
 import { refreshCekiciPuanOzet } from "@/lib/puan-ozet-db";
+import { dakikaYasi, marketplaceOlayKaydet } from "@/lib/marketplace-events";
 
 export async function POST(
   request: NextRequest,
@@ -34,6 +35,7 @@ export async function POST(
     talep.anlasmaDurumu = "anlaşıldı";
     talep.anlasildiAt = new Date().toISOString();
     await updateTalep(talep);
+    await marketplaceOlayKaydet({ eventType: "job_started", talepId: talep.id, cekiciId: talep.kazananCekiciId, eventKey: `job-started:${talep.id}`, properties: { response_time_min: dakikaYasi(talep.olusturulma) } });
     if (talep.kazananCekiciId) {
       await refreshCekiciPuanOzet(talep.kazananCekiciId).catch(() => {});
     }

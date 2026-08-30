@@ -44,6 +44,8 @@ export interface Teklif {
 }
 
 export type HizmetBolgeModu = "il_ilce" | "konum";
+/** Operatörün anlık iş alma tercihi. `auto`, mevcut saat/müsaitlik kurallarını kullanır. */
+export type CekiciMusaitlikDurumu = "auto" | "online" | "busy" | "offline";
 
 /** Ruhsat / çekici belgesi admin onay akışı */
 export type BelgeDurum = "yok" | "beklemede" | "onaylandi" | "reddedildi";
@@ -147,6 +149,8 @@ export interface Cekici {
   musaitlikBitis?: string;
   /** 1=Pzt … 7=Paz; boş = her gün */
   musaitlikGunler?: number[];
+  /** Canlı iş alma tercihi; offline/busy çekici otomatik dispatch'e alınmaz. */
+  availabilityStatus?: CekiciMusaitlikDurumu;
   /**
    * @deprecated `bildirimSeviye` kullanın. Geriye uyum: seviye>=2 → true.
    */

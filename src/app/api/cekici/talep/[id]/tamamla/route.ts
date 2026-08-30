@@ -8,6 +8,7 @@ import {
   demoTalepGetir,
   isDemoTalepId,
 } from "@/lib/demo-oturum";
+import { dakikaYasi, marketplaceOlayKaydet } from "@/lib/marketplace-events";
 
 /**
  * Kazanan çekici işi bitirdiğini işaretler → talep «anlaşıldı».
@@ -72,6 +73,7 @@ export async function POST(
     talep.anlasildiAt = new Date().toISOString();
     await updateTalep(talep);
     await refreshCekiciPuanOzet(cekici.id).catch(() => {});
+    await marketplaceOlayKaydet({ eventType: "job_completed", talepId: talep.id, cekiciId: cekici.id, eventKey: `job-completed:${talep.id}`, properties: { completion_time_min: dakikaYasi(talep.olusturulma) } });
   }
 
   return NextResponse.json({

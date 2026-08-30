@@ -63,6 +63,7 @@ export type CekiciRow = {
   musaitlik_baslangic?: string | null;
   musaitlik_bitis?: string | null;
   musaitlik_gunler?: number[] | null;
+  availability_status?: string | null;
   premium_sms_aktif?: boolean | null;
   bildirim_seviye?: number | null;
   davet_kodu?: string | null;
@@ -162,6 +163,12 @@ export function cekiciFromRow(r: CekiciRow): Cekici {
     musaitlikBaslangic: r.musaitlik_baslangic ?? undefined,
     musaitlikBitis: r.musaitlik_bitis ?? undefined,
     musaitlikGunler: r.musaitlik_gunler ?? undefined,
+    availabilityStatus:
+      r.availability_status === "online" ||
+      r.availability_status === "busy" ||
+      r.availability_status === "offline"
+        ? r.availability_status
+        : "auto",
     premiumSmsAktif: r.premium_sms_aktif !== false,
     bildirimSeviye: (() => {
       const s = r.bildirim_seviye;
@@ -225,6 +232,7 @@ export function cekiciToRow(
     musaitlik_baslangic: c.musaitlikBaslangic ?? null,
     musaitlik_bitis: c.musaitlikBitis ?? null,
     musaitlik_gunler: c.musaitlikGunler ?? null,
+    availability_status: c.availabilityStatus ?? "auto",
     bildirim_seviye: (() => {
       const s = c.bildirimSeviye;
       if (s === 1 || s === 2 || s === 3) return s;
