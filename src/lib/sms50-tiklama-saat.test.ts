@@ -2,15 +2,17 @@ import { describe, expect, it } from "vitest";
 import { SMS50_TEST_VARYANT } from "./sms50-kampanya";
 import {
   sms50BenzersizTiklamaSay,
+  sms50Oran,
+} from "./sms50-tiklama-db";
+import {
   sms50HaftaAralikEtiket,
   sms50HaftaSecenekleri,
   sms50IstanbulPazartesiYmd,
-  sms50Oran,
   sms50SatirlariHaftaFiltrele,
   sms50TiklamaGunSaat,
   sms50TiklamaSatirlarindanIzgara,
   SMS50_HAFTA_TUMU,
-} from "./sms50-tiklama-db";
+} from "./sms50-tiklama-shared";
 
 describe("sms50Oran", () => {
   it("payda 0 ise null", () => {

@@ -7,7 +7,7 @@ import {
   sms50SatirlariHaftaFiltrele,
   sms50TiklamaSatirlarindanIzgara,
   type Sms50TiklamaSatir,
-} from "@/lib/sms50-tiklama-db";
+} from "@/lib/sms50-tiklama-shared";
 
 type SaatIzgarasi = {
   grid: number[][];

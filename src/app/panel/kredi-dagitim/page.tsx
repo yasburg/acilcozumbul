@@ -14,7 +14,7 @@ import {
   KREDI_TANIM_SABLON_GOVDE,
   krediTanimSmsMesaji,
   type KrediDagitimUcDurum,
-} from "@/lib/panel-kredi-dagitim";
+} from "@/lib/panel-kredi-dagitim-shared";
 import { netgsmSmsMesajGecerliMi } from "@/lib/sms-karakter";
 
 type Satir = {
