@@ -23,6 +23,7 @@ import {
   Bell,
   Car,
   CircleCheck,
+  CircleHelp,
   ClipboardList,
   Clock,
   CreditCard,
@@ -38,6 +39,7 @@ import {
   Settings,
   Smartphone,
   Search,
+  Shield,
   ShieldCheck,
   Star,
   TriangleAlert,
@@ -113,8 +115,10 @@ export const AcbIcons = {
   car: Car,
   wrench: Wrench,
   location: MapPin,
+  mapPin: MapPin,
   navigation: Navigation,
   verified: ShieldCheck,
+  shield: Shield || ShieldCheck,
   check: CircleCheck,
   rating: Star,
   phone: Phone,
@@ -130,6 +134,9 @@ export const AcbIcons = {
   bell: Bell,
   mail: Mail,
   message: MessageCircle,
+  messageCircle: MessageCircle,
+  help: CircleHelp,
+  helpCircle: CircleHelp,
   send: Send,
   lock: Lock,
   wallet: Wallet,
@@ -170,15 +177,20 @@ export function SorunIkon({
   className?: string;
   active?: boolean;
 }) {
+  const hasCustomTextColor = /\btext-/.test(className);
+  const colorClass = hasCustomTextColor
+    ? ""
+    : active
+      ? "text-[var(--acb-green)]"
+      : "text-[var(--acb-dark)]";
+
   return (
     <HugeiconsIcon
       icon={sorunIkonu(id)}
       size={24}
       color="currentColor"
       strokeWidth={ACB_ICON_STROKE}
-      className={`${className} ${
-        active ? "text-[var(--acb-green)]" : "text-[var(--acb-dark)]"
-      }`}
+      className={`${className} ${colorClass}`.trim()}
       aria-hidden
     />
   );

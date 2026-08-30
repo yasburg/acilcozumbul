@@ -1,12 +1,48 @@
+import fs from "fs";
+import path from "path";
+
 let pool: any = null;
 
-const memStore: Record<string, any[]> = {};
+const DEV_DB_FILE = path.join(process.cwd(), "data", "local-dev-db.json");
+let testMemStore: Record<string, any[]> | null = null;
+
+function isTestEnv(): boolean {
+  return process.env.NODE_ENV === "test" || Boolean(process.env.VITEST);
+}
+
+function loadMemStore(): Record<string, any[]> {
+  if (isTestEnv()) {
+    if (!testMemStore) testMemStore = {};
+    return testMemStore;
+  }
+  try {
+    if (fs.existsSync(DEV_DB_FILE)) {
+      const raw = fs.readFileSync(DEV_DB_FILE, "utf-8");
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.warn("[pg-mem] failed to load local dev db:", e);
+  }
+  return {};
+}
+
+function saveMemStore(store: Record<string, any[]>): void {
+  if (typeof window !== "undefined" || isTestEnv()) return;
+  try {
+    const dir = path.dirname(DEV_DB_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(DEV_DB_FILE, JSON.stringify(store, null, 2), "utf-8");
+  } catch (e) {
+    console.warn("[pg-mem] failed to save local dev db:", e);
+  }
+}
 
 function getMemStore(tableName: string): any[] {
-  if (!memStore[tableName]) {
-    memStore[tableName] = [];
+  const store = loadMemStore();
+  if (!store[tableName]) {
+    store[tableName] = [];
   }
-  return memStore[tableName];
+  return store[tableName];
 }
 
 export function isDbConfigured(): boolean {
@@ -331,7 +367,11 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
     }
 
     if (!isDbConfigured()) {
-      const table = getMemStore(this.tableName);
+      const store = loadMemStore();
+      if (!store[this.tableName]) {
+        store[this.tableName] = [];
+      }
+      const table = store[this.tableName];
 
       if (this.operation === "SELECT") {
         let rows = table.filter((r) => matchesFilters(r, this.filters));
@@ -409,6 +449,7 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
           ? resultRows
           : resultRows[0] ?? null;
 
+        saveMemStore(store);
         return { data, error: null };
       }
 
@@ -421,6 +462,7 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
           }
         }
         const data = this.isSingle || this.isMaybeSingle ? updated[0] ?? null : updated;
+        saveMemStore(store);
         return { data, error: null };
       }
 
@@ -431,6 +473,7 @@ export class PgQueryBuilder<T = any> implements PromiseLike<{ data: T | null; er
             deleted.push(table.splice(i, 1)[0]);
           }
         }
+        saveMemStore(store);
         return { data: deleted, error: null };
       }
 

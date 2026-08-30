@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { IlceSecimi } from "@/components/IlceSecimi";
+import { BottomSheet } from "@/components/acb/BottomSheet";
 import { Btn, Card } from "@/components/ui";
 import { cekiciFetch, cekiciJson } from "@/lib/cekici-fetch";
 import { ISTANBUL_IL } from "@/lib/istanbul-ilceler";
 import type { HizmetBolgeModu, HizmetBolgeleri } from "@/lib/types";
+import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
 
 interface BolgeApiData {
   mod: HizmetBolgeModu;
@@ -49,8 +51,11 @@ export function BolgeAyarlari({
   const [ilcelerYukleniyor, setIlcelerYukleniyor] = useState(false);
   const [kaydediyor, setKaydediyor] = useState(false);
   const [yeniIl, setYeniIl] = useState("");
+  const [ilceSheetAcik, setIlceSheetAcik] = useState(false);
 
   const seciliIlceler = bolgeler[aktifIl] ?? [];
+  const MapPin = AcbIcons.mapPin;
+  const Navigation = AcbIcons.navigation;
 
   const ilceListesiYukle = useCallback(async (il: string) => {
     setIlcelerYukleniyor(true);
@@ -81,17 +86,67 @@ export function BolgeAyarlari({
     void ilceListesiYukle(aktifIl);
   }, [aktifIl, mod, ilceListesiYukle]);
 
+  const otoKaydet = useCallback(
+    async (
+      guncelMod: HizmetBolgeModu,
+      guncelBolgeler: HizmetBolgeleri,
+      guncelMenzil: number
+    ) => {
+      setKaydediyor(true);
+      try {
+        const res = await cekiciFetch("/api/cekici/bolgeler", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mod: guncelMod,
+            bolgeler: guncelMod === "il_ilce" ? guncelBolgeler : {},
+            menzilKm: guncelMenzil,
+          }),
+        });
+        const data = await cekiciJson<{
+          error?: string;
+          mesaj?: string;
+          mod?: HizmetBolgeModu;
+          bolgeler?: HizmetBolgeleri;
+          menzilKm?: number;
+        }>(res);
+        if (!res.ok) throw new Error(data.error ?? "Kayıt başarısız.");
+        onKaydedildi?.(data.mesaj ?? "Ayarlar kaydedildi.");
+      } catch (e) {
+        onHata?.(e instanceof Error ? e.message : "Kayıt başarısız.");
+      } finally {
+        setKaydediyor(false);
+      }
+    },
+    [onKaydedildi, onHata]
+  );
+
+  function modDegistir(yeniMod: HizmetBolgeModu) {
+    setMod(yeniMod);
+    void otoKaydet(yeniMod, bolgeler, menzilKm);
+  }
+
   function toggleIlce(ilce: string) {
-    setBolgeler((prev) => {
-      const mevcut = prev[aktifIl] ?? [];
-      const yeni = mevcut.includes(ilce)
-        ? mevcut.filter((i) => i !== ilce)
-        : [...mevcut, ilce];
-      const next = { ...prev };
-      if (yeni.length === 0) delete next[aktifIl];
-      else next[aktifIl] = yeni.sort((a, b) => a.localeCompare(b, "tr"));
-      return next;
-    });
+    const mevcut = bolgeler[aktifIl] ?? [];
+    const yeni = mevcut.includes(ilce)
+      ? mevcut.filter((i) => i !== ilce)
+      : [...mevcut, ilce];
+    const next = { ...bolgeler };
+    if (yeni.length === 0) delete next[aktifIl];
+    else next[aktifIl] = yeni.sort((a, b) => a.localeCompare(b, "tr"));
+    setBolgeler(next);
+    void otoKaydet(mod, next, menzilKm);
+  }
+
+  function ilSil(il: string) {
+    const next = { ...bolgeler };
+    delete next[il];
+    const kalanIller = Object.keys(next);
+    if (aktifIl === il && kalanIller.length > 0) {
+      setAktifIl(kalanIller[0]);
+    }
+    setBolgeler(next);
+    void otoKaydet(mod, next, menzilKm);
   }
 
   function istanbulKisayol(tip: "avrupa" | "asya") {
@@ -100,11 +155,13 @@ export function BolgeAyarlari({
         ? baslangic.istanbul.avrupa
         : baslangic.istanbul.asya;
     setAktifIl(ISTANBUL_IL);
-    setBolgeler((prev) => ({
-      ...prev,
+    const next = {
+      ...bolgeler,
       [ISTANBUL_IL]: [...liste],
-    }));
+    };
+    setBolgeler(next);
     void ilceListesiYukle(ISTANBUL_IL);
+    void otoKaydet(mod, next, menzilKm);
   }
 
   function ilEkle() {
@@ -113,40 +170,11 @@ export function BolgeAyarlari({
     setAktifIl(il);
     setYeniIl("");
     void ilceListesiYukle(il);
+    setIlceSheetAcik(true);
   }
 
-  async function kaydet() {
-    setKaydediyor(true);
-    try {
-      const res = await cekiciFetch("/api/cekici/bolgeler", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mod,
-          bolgeler: mod === "il_ilce" ? bolgeler : {},
-          menzilKm,
-        }),
-      });
-      const data = await cekiciJson<{
-        error?: string;
-        mesaj?: string;
-        mod?: HizmetBolgeModu;
-        bolgeler?: HizmetBolgeleri;
-        menzilKm?: number;
-      }>(res);
-      if (!res.ok) throw new Error(data.error ?? "Kayıt başarısız.");
-      setMod(data.mod ?? mod);
-      setBolgeler(data.bolgeler ?? {});
-      setMenzilKm(data.menzilKm ?? menzilKm);
-      onKaydedildi?.(data.mesaj ?? "Kaydedildi.");
-    } catch (e) {
-      onHata?.(e instanceof Error ? e.message : "Kayıt başarısız.");
-    } finally {
-      setKaydediyor(false);
-    }
-  }
-
-  const seciliIlSayisi = Object.keys(bolgeler).length;
+  const seciliIllerListesi = Object.keys(bolgeler);
+  const seciliIlSayisi = seciliIllerListesi.length;
   const seciliIlceToplam = Object.values(bolgeler).reduce(
     (n, arr) => n + arr.length,
     0
@@ -156,190 +184,290 @@ export function BolgeAyarlari({
     <div className="space-y-4">
       {baslangic.schemaUyari && (
         <Card className="border-amber-200 bg-amber-50">
-          <p className="text-sm text-amber-900 leading-relaxed">
+          <p className="text-xs text-amber-900 leading-relaxed">
             {baslangic.schemaUyari}
           </p>
         </Card>
       )}
 
-      <div className="grid grid-cols-2 gap-2">
+      {/* Mod Seçici — Modern Segmented Pill */}
+      <div className="p-1 rounded-2xl bg-slate-100 border border-slate-200/80 grid grid-cols-2 gap-1">
         <button
           type="button"
-          onClick={() => setMod("il_ilce")}
-          className={`rounded-xl border px-3 py-3 text-sm font-medium transition ${
+          onClick={() => modDegistir("il_ilce")}
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
             mod === "il_ilce"
-              ? "border-amber-400 bg-amber-50 text-amber-900"
-              : "border-slate-200 bg-white text-slate-600"
+              ? "bg-white text-emerald-950 shadow-sm border border-slate-200/50"
+              : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          İl / ilçe
+          <MapPin
+            className={`size-4 ${
+              mod === "il_ilce" ? "text-emerald-600" : "text-slate-400"
+            }`}
+            strokeWidth={ACB_ICON_STROKE}
+          />
+          İl / İlçe Bazlı
         </button>
         <button
           type="button"
-          onClick={() => setMod("konum")}
-          className={`rounded-xl border px-3 py-3 text-sm font-medium transition ${
+          onClick={() => modDegistir("konum")}
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
             mod === "konum"
-              ? "border-amber-400 bg-amber-50 text-amber-900"
-              : "border-slate-200 bg-white text-slate-600"
+              ? "bg-white text-emerald-950 shadow-sm border border-slate-200/50"
+              : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          Konum + menzil
+          <Navigation
+            className={`size-4 ${
+              mod === "konum" ? "text-emerald-600" : "text-slate-400"
+            }`}
+            strokeWidth={ACB_ICON_STROKE}
+          />
+          Konum + Menzil
         </button>
       </div>
 
       {mod === "il_ilce" ? (
-        <>
-          <Card>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Birden fazla il ve ilçe seçebilirsiniz. Yalnızca seçili
-              bölgelerdeki talepler için SMS ve açık ihale görünür.
-            </p>
-            {seciliIlceToplam > 0 && (
-              <p className="text-xs text-amber-800 mt-2 font-medium">
-                {seciliIlSayisi} il, {seciliIlceToplam} ilçe seçili
-              </p>
-            )}
-          </Card>
-
-          <div className="flex gap-2 flex-wrap">
-            {Object.keys(bolgeler).map((il) => (
-              <button
-                key={il}
-                type="button"
-                onClick={() => aktifIlDegistir(il)}
-                className={`text-xs px-3 py-1.5 rounded-full border ${
-                  aktifIl === il
-                    ? "border-amber-400 bg-amber-50 text-amber-900"
-                    : "border-slate-200 text-slate-600"
-                }`}
-              >
-                {il} ({bolgeler[il]?.length ?? 0})
-              </button>
-            ))}
-          </div>
-
-          <div className="flex gap-2">
-            <select
-              value={yeniIl}
-              onChange={(e) => setYeniIl(e.target.value)}
-              className="flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-sm"
-            >
-              <option value="">İl ekle…</option>
-              {baslangic.tumIller.map((il) => (
-                <option key={il} value={il}>
-                  {il}
-                </option>
-              ))}
-            </select>
-            <Btn type="button" variant="outline" onClick={ilEkle} disabled={!yeniIl}>
-              Ekle
-            </Btn>
-          </div>
-
-          <div className="flex gap-2">
-            <select
-              value={aktifIl}
-              onChange={(e) => aktifIlDegistir(e.target.value)}
-              className="flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium"
-            >
-              {baslangic.tumIller.map((il) => (
-                <option key={il} value={il}>
-                  {il}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {aktifIl === ISTANBUL_IL && (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => istanbulKisayol("avrupa")}
-                className="flex-1 text-sm py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 font-medium"
-              >
-                🌍 Avrupa (tümü)
-              </button>
-              <button
-                type="button"
-                onClick={() => istanbulKisayol("asya")}
-                className="flex-1 text-sm py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 font-medium"
-              >
-                🌏 Asya (tümü)
-              </button>
+        <div className="space-y-3.5">
+          {/* İl Kartları ve Şehir Yönetimi */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-4 space-y-4 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Hizmet İlleriniz
+              </span>
+              <span className="text-xs text-slate-500 font-semibold">
+                {seciliIlSayisi > 0 ? `${seciliIlSayisi} İl, ${seciliIlceToplam} İlçe` : "Henüz il eklenmedi"}
+              </span>
             </div>
-          )}
 
-          {ilcelerYukleniyor ? (
-            <p className="text-sm text-slate-500 text-center py-6">İlçeler yükleniyor…</p>
-          ) : (
-            <IlceSecimi
-              il={aktifIl}
-              tumIlceler={tumIlceler}
-              seciliIlceler={seciliIlceler}
-              onToggle={toggleIlce}
-              onTumunuSec={() =>
-                setBolgeler((prev) => ({
-                  ...prev,
-                  [aktifIl]: [...tumIlceler],
-                }))
-              }
-              onTemizle={() =>
-                setBolgeler((prev) => {
-                  const next = { ...prev };
-                  delete next[aktifIl];
-                  return next;
-                })
-              }
-            />
-          )}
-        </>
-      ) : (
-        <>
-          <Card>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Çekici panelinde konumunuz <strong>dakikada bir</strong>{" "}
-              güncellenir. Talep, bu noktaya olan mesafe menziliniz içindeyse
-              size düşer.
-            </p>
-            {baslangic.konumGuncel ? (
-              <p className="text-xs text-emerald-700 mt-2">
-                ✓ Son konum güncel
-                {baslangic.konumGuncelleme &&
-                  ` (${new Date(baslangic.konumGuncelleme).toLocaleTimeString("tr-TR")})`}
-              </p>
+            {/* Şehir Listesi */}
+            {seciliIllerListesi.length > 0 ? (
+              <div className="space-y-3">
+                {seciliIllerListesi.map((il) => {
+                  const ilceler = bolgeler[il] ?? [];
+                  const ilceCount = ilceler.length;
+                  const isIst = il === ISTANBUL_IL;
+
+                  return (
+                    <div
+                      key={il}
+                      className="p-3.5 rounded-2xl bg-slate-50/90 space-y-3 transition-colors hover:bg-slate-100/70"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-slate-900">{il}</span>
+                          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100/90 text-emerald-800 border border-emerald-200/60">
+                            {ilceCount > 0 ? `${ilceCount} İlçe Seçili` : "0 İlçe"}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => ilSil(il)}
+                          className="text-xs text-slate-400 hover:text-red-600 font-medium px-2 py-1 rounded-md hover:bg-red-50 transition cursor-pointer"
+                        >
+                          Kaldır
+                        </button>
+                      </div>
+
+                      {/* Seçili İlçelerin Kısa Özeti */}
+                      {ilceCount > 0 ? (
+                        <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                          {ilceler.slice(0, 6).join(", ")}
+                          {ilceCount > 6 ? ` ve +${ilceCount - 6} ilçe daha` : ""}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-amber-700 font-medium">
+                          ⚠️ Henüz ilçe seçmediniz. Lütfen ilçelerinizi belirleyin.
+                        </p>
+                      )}
+
+                      {/* İstanbul Kısayolları (Varsa) */}
+                      {isIst && (
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => istanbulKisayol("avrupa")}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-900 shadow-2xs transition cursor-pointer"
+                          >
+                            <span>🌍</span> Avrupa ({baslangic.istanbul.avrupa.length})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => istanbulKisayol("asya")}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-full bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-900 shadow-2xs transition cursor-pointer"
+                          >
+                            <span>🌏</span> Anadolu ({baslangic.istanbul.asya.length})
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Ana Aksiyon Butonu - Standart ACB Btn */}
+                      <Btn
+                        variant="primary"
+                        onClick={() => {
+                          aktifIlDegistir(il);
+                          setIlceSheetAcik(true);
+                        }}
+                        className="!min-h-[44px] !py-2.5 !text-xs !font-bold flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        <MapPin className="size-4 shrink-0" strokeWidth={ACB_ICON_STROKE} />
+                        <span>İlçeleri Düzenle ({ilceCount})</span>
+                      </Btn>
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
-              <p className="text-xs text-amber-700 mt-2">
-                Konum henüz yok — kaydettikten sonra panele girin ve konum
-                iznini verin.
-              </p>
+              <div className="p-4 rounded-xl bg-slate-50 text-center space-y-1">
+                <p className="text-xs text-slate-600">
+                  Henüz hizmet verdiğiniz bir şehir eklemediniz.
+                </p>
+              </div>
             )}
-          </Card>
 
-          <label className="block space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="font-medium text-slate-700">Menzil</span>
-              <span className="text-amber-700 font-semibold">{menzilKm} km</span>
+            {/* Yeni İl Ekleme Satırı */}
+            <div className="flex gap-2 pt-2 border-t border-slate-100">
+              <select
+                value={yeniIl}
+                onChange={(e) => setYeniIl(e.target.value)}
+                className="flex-1 rounded-xl bg-slate-100/90 border border-slate-200/80 px-3 py-2 text-xs sm:text-sm text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              >
+                <option value="">Farklı bir il ekle…</option>
+                {baslangic.tumIller
+                  .filter((il) => !bolgeler[il] || bolgeler[il].length === 0)
+                  .map((il) => (
+                    <option key={il} value={il}>
+                      {il}
+                    </option>
+                  ))}
+              </select>
+              <Btn
+                variant="secondary"
+                onClick={ilEkle}
+                disabled={!yeniIl}
+                className="!w-auto !min-h-[40px] !py-2 !px-4 !text-xs !font-bold shrink-0"
+              >
+                + İl Ekle
+              </Btn>
+            </div>
+          </div>
+
+          {/* İlçe Seçim Pop-up (Bottom Sheet Modal) */}
+          <BottomSheet
+            open={ilceSheetAcik}
+            onClose={() => setIlceSheetAcik(false)}
+            title={`${aktifIl} (${seciliIlceler.length} / ${tumIlceler.length} İlçe)`}
+          >
+            <div className="space-y-4 pb-2">
+              {/* İstanbul Kısayolları (Sheet İçi) */}
+              {aktifIl === ISTANBUL_IL && (
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => istanbulKisayol("avrupa")}
+                    className="flex items-center justify-center gap-1.5 text-xs py-2 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 font-semibold transition"
+                  >
+                    <span>🌍</span> Avrupa ({baslangic.istanbul.avrupa.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => istanbulKisayol("asya")}
+                    className="flex items-center justify-center gap-1.5 text-xs py-2 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 font-semibold transition"
+                  >
+                    <span>🌏</span> Anadolu ({baslangic.istanbul.asya.length})
+                  </button>
+                </div>
+              )}
+
+              {ilcelerYukleniyor ? (
+                <p className="text-xs text-slate-500 text-center py-8">İlçeler yükleniyor…</p>
+              ) : (
+                <IlceSecimi
+                  il={aktifIl}
+                  tumIlceler={tumIlceler}
+                  seciliIlceler={seciliIlceler}
+                  onToggle={toggleIlce}
+                  onTumunuSec={() => {
+                    const next = {
+                      ...bolgeler,
+                      [aktifIl]: [...tumIlceler],
+                    };
+                    setBolgeler(next);
+                    void otoKaydet(mod, next, menzilKm);
+                  }}
+                  onTemizle={() => {
+                    const next = { ...bolgeler };
+                    delete next[aktifIl];
+                    setBolgeler(next);
+                    void otoKaydet(mod, next, menzilKm);
+                  }}
+                />
+              )}
+
+              <div className="sticky bottom-0 z-20 pt-3 pb-1 bg-white border-t border-slate-100">
+                <Btn
+                  onClick={() => setIlceSheetAcik(false)}
+                  className="w-full justify-center shadow-lg shadow-emerald-700/20 py-3 text-sm font-bold"
+                >
+                  Tamamla ({seciliIlceler.length} İlçe) ✓
+                </Btn>
+              </div>
+            </div>
+          </BottomSheet>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-4 shadow-sm">
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+            <Navigation className="size-5 text-emerald-600 shrink-0 mt-0.5" strokeWidth={ACB_ICON_STROKE} />
+            <div className="text-xs text-slate-600 leading-relaxed">
+              Çekici paneliniz açıkken cihaz konumunuz <strong>dakikada bir</strong> güncellenir. Talepler seçtiğiniz menzil içindeyse size anında iletilir.
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl border border-slate-100">
+            {baslangic.konumGuncel ? (
+              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700">
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                Son konum güncel {baslangic.konumGuncelleme && `(${new Date(baslangic.konumGuncelleme).toLocaleTimeString("tr-TR")})`}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-xs font-medium text-amber-700">
+                <span className="size-2 rounded-full bg-amber-500" />
+                Henüz canlı konum alınmadı. Panele girip konum izni vermeniz yeterlidir.
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2 pt-2">
+            <div className="flex justify-between items-center text-xs">
+              <span className="font-semibold text-slate-700">Hizmet Menzili</span>
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold text-sm">
+                {menzilKm} km
+              </span>
             </div>
             <input
               type="range"
-              min={0}
+              min={5}
               max={100}
-              step={1}
+              step={5}
               value={menzilKm}
-              onChange={(e) => setMenzilKm(Number(e.target.value))}
-              className="w-full accent-amber-500"
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                setMenzilKm(val);
+                void otoKaydet(mod, bolgeler, val);
+              }}
+              className="w-full accent-emerald-600 cursor-pointer h-2 bg-slate-200 rounded-lg"
             />
-            <div className="flex justify-between text-xs text-slate-400">
-              <span>0 km</span>
+            <div className="flex justify-between text-[11px] text-slate-400 font-medium">
+              <span>5 km</span>
+              <span>50 km</span>
               <span>100 km</span>
             </div>
-          </label>
-        </>
+          </div>
+        </div>
       )}
-
-      <Btn onClick={() => void kaydet()} disabled={kaydediyor}>
-        {kaydediyor ? "Kaydediliyor…" : "Bölge ayarlarını kaydet"}
-      </Btn>
     </div>
   );
 }

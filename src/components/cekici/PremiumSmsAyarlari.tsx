@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Btn, Card, SifreAlani } from "@/components/ui";
+import { Btn, SifreAlani } from "@/components/ui";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import type { BildirimSeviye } from "@/lib/ihale";
+import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
 
 type Paket = {
   seviye: BildirimSeviye;
@@ -31,6 +32,8 @@ export function PremiumSmsAyarlari() {
   const [hata, setHata] = useState("");
   const sifreBolumRef = useRef<HTMLDivElement>(null);
   const sifreInputRef = useRef<HTMLInputElement>(null);
+  const Bell = AcbIcons.bell;
+  const Check = AcbIcons.check;
 
   async function yukle() {
     const res = await cekiciFetch("/api/cekici/premium-sms");
@@ -97,21 +100,38 @@ export function PremiumSmsAyarlari() {
   }
 
   if (yukleniyor || !durum) {
-    return <p className="text-sm text-slate-500">Bildirim paketi yükleniyor…</p>;
+    return <p className="text-xs text-slate-500 text-center py-6">Bildirim paketleri yükleniyor…</p>;
   }
 
   return (
-    <section>
-      <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">
-        Bildirim paketi
-      </h2>
-      <Card className="space-y-3">
+    <div className="space-y-4">
+      {hata && (
+        <div className="p-3 rounded-xl border border-red-200 bg-red-50 text-xs text-red-700 font-medium">
+          {hata}
+        </div>
+      )}
+      {mesaj && (
+        <div className="p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-xs text-emerald-800 font-medium">
+          {mesaj}
+        </div>
+      )}
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3.5 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Bell className="size-4 text-emerald-600 shrink-0" strokeWidth={ACB_ICON_STROKE} />
+            <span className="text-sm font-bold text-slate-900">Bildirim Paketi</span>
+          </div>
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            {durum.paketler.find((p) => p.seviye === durum.bildirimSeviye)?.kredi ?? 3} Kredi / Bildirim
+          </span>
+        </div>
+
         <p className="text-xs text-slate-600 leading-relaxed">
-          Yeni talepler için nasıl haberdar olmak istediğinizi seçin. Varsayılan
-          ve önerilen paket sesli arama + hızlı SMS’tir.
+          Yeni müşteri talepleri geldiğinde nasıl haberdar olmak istediğinizi belirleyin.
         </p>
 
-        <div className="space-y-2">
+        <div className="space-y-2.5 pt-1">
           {durum.paketler.map((p) => {
             const secili = durum.bildirimSeviye === p.seviye;
             const hedef = hedefSeviye === p.seviye;
@@ -121,77 +141,85 @@ export function PremiumSmsAyarlari() {
                 type="button"
                 onClick={() => secimBaslat(p.seviye)}
                 disabled={islem}
-                className={`w-full text-left rounded-xl border px-3 py-3 transition ${
+                className={`w-full text-left rounded-2xl border p-3.5 transition-all relative ${
                   secili
-                    ? "border-amber-500 bg-amber-50 ring-1 ring-amber-500/30"
+                    ? "border-emerald-500 bg-emerald-50/70 shadow-sm"
                     : hedef
-                      ? "border-amber-400 bg-amber-50/40"
-                      : "border-slate-200 bg-white hover:border-slate-300"
+                    ? "border-emerald-400 bg-emerald-50/30 ring-2 ring-emerald-500/20"
+                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60"
                 }`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      {p.baslik}
-                    </p>
-                    <p className="text-xs text-slate-600 mt-0.5">{p.aciklama}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-sm font-bold ${secili ? "text-emerald-950" : "text-slate-900"}`}>
+                        {p.baslik}
+                      </span>
+                      {p.onerilen && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-600 text-white">
+                          Önerilen
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">{p.aciklama}</p>
                   </div>
-                  {secili && (
-                    <span className="shrink-0 text-xs font-semibold text-amber-800">
-                      Aktif
+
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <span className="text-xs font-bold text-slate-900 px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200/60">
+                      {p.kredi} Kredi
                     </span>
-                  )}
+                    {secili ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700">
+                        <Check className="size-3.5" strokeWidth={ACB_ICON_STROKE * 1.3} /> Aktif
+                      </span>
+                    ) : (
+                      <span className="text-[11px] font-medium text-slate-400 hover:text-emerald-700">
+                        Seç
+                      </span>
+                    )}
+                  </div>
                 </div>
               </button>
             );
           })}
         </div>
 
-        {hata && (
-          <p className="text-sm text-red-600" role="alert">
-            {hata}
-          </p>
-        )}
-        {mesaj && (
-          <p className="text-sm text-emerald-800" role="status">
-            {mesaj}
-          </p>
-        )}
-
         {hedefSeviye != null && (
           <div
             ref={sifreBolumRef}
-            className="space-y-3 border-t border-slate-100 pt-3 scroll-mt-24"
+            className="space-y-3 border-t border-slate-100 pt-4 mt-2 animate-fade-in"
           >
-            <p className="text-xs text-slate-600">
-              Paketi değiştirmek için hesap şifrenizi girin.
-            </p>
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+              Bildirim paketini değiştirmek için hesap şifrenizi doğrulamanız gereklidir.
+            </div>
             <SifreAlani
               ref={sifreInputRef}
-              label="Hesap şifresi"
+              label="Hesap Şifreniz"
               value={sifre}
               onChange={(e) => setSifre(e.target.value)}
               autoComplete="current-password"
-              placeholder="Şifreniz"
-              className="!border-amber-400 !ring-4 !ring-amber-400/45 !shadow-[0_0_0_1px_rgba(245,158,11,0.35),0_0_20px_rgba(245,158,11,0.45)] focus:!ring-amber-400/55"
+              placeholder="Şifrenizi girin"
             />
-            <Btn
-              type="button"
-              onClick={() => void kaydet()}
-              disabled={islem || !sifre.trim()}
-            >
-              {islem ? "Kaydediliyor…" : "Şifreyi onayla ve kaydet"}
-            </Btn>
-            <button
-              type="button"
-              onClick={iptal}
-              className="w-full text-sm text-slate-500 underline"
-            >
-              Vazgeç
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={iptal}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
+              >
+                Vazgeç
+              </button>
+              <Btn
+                type="button"
+                onClick={() => void kaydet()}
+                disabled={islem || !sifre.trim()}
+                className="flex-1 justify-center"
+              >
+                {islem ? "Kaydediliyor…" : "Onayla ve Kaydet"}
+              </Btn>
+            </div>
           </div>
         )}
-      </Card>
-    </section>
+      </div>
+    </div>
   );
 }

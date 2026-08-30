@@ -205,8 +205,8 @@ export function ProfilFotoHesap() {
           />
           <Btn
             type="button"
-            variant="outline"
-            className="w-full !py-2.5 text-sm"
+            variant="secondary"
+            className="w-full !min-h-[44px] !py-2.5 text-xs sm:text-sm !font-bold !rounded-xl"
             onClick={() => inputRef.current?.click()}
             disabled={gonderiyor}
           >

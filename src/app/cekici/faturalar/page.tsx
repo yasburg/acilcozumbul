@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
-import { ACB_SHELL_MAX_W } from "@/lib/design-tokens";
+import { ACB_SHELL_MAX_W, ACB_ICON_STROKE } from "@/lib/design-tokens";
 import { cekiciFetch } from "@/lib/cekici-fetch";
+import { OpeningLogo } from "@/components/acb/OpeningLogo";
+import { ArrowLeft } from "lucide-react";
 
 type FaturaOzet = {
   id: string;
@@ -100,8 +102,25 @@ function FaturalarIcerik() {
   }
 
   return (
-    <MobileShell subtitle="Faturalarım">
-      <div className={`px-4 py-6 ${ACB_SHELL_MAX_W} mx-auto space-y-4`}>
+    <MobileShell hideHeader>
+      <OpeningLogo
+        forceDocked={true}
+        leading={
+          <Link
+            href="/cekici/panel?tab=hesabim"
+            className="flex shrink-0 items-center justify-center size-8 rounded-full bg-slate-100/90 text-slate-700 hover:bg-slate-200 transition active:scale-95 touch-manipulation cursor-pointer"
+            aria-label="Geri"
+          >
+            <ArrowLeft className="size-4" strokeWidth={ACB_ICON_STROKE} />
+          </Link>
+        }
+        center={
+          <span className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight truncate">
+            Faturalarım
+          </span>
+        }
+      />
+      <div className={`px-4 py-4 ${ACB_SHELL_MAX_W} mx-auto space-y-4`}>
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold text-slate-900">Faturalarım</h1>
@@ -109,12 +128,6 @@ function FaturalarIcerik() {
               Size gönderilen faturaları buradan indirebilirsiniz.
             </p>
           </div>
-          <Link
-            href="/cekici/panel?tab=hesabim"
-            className="text-sm font-medium text-slate-600 shrink-0 pt-1"
-          >
-            Hesabım
-          </Link>
         </div>
 
         {error && (

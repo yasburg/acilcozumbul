@@ -17,6 +17,9 @@ import { formatKredi } from "@/lib/talep-utils";
 import { cekiciFetch } from "@/lib/cekici-fetch";
 import { posthogOlayYakala } from "@/lib/posthog-client";
 import { gtagAdsKrediSepeteEklemeDonusumu } from "@/lib/gtag";
+import { OpeningLogo } from "@/components/acb/OpeningLogo";
+import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
+import { ArrowLeft } from "lucide-react";
 
 type AbonelikOzet = {
   id: string;
@@ -148,18 +151,33 @@ export default function KrediPage() {
   }
 
   return (
-    <MobileShell
-      backHref="/cekici/panel?tab=hesabim"
-      subtitle="Kredi / Abonelik"
-      headerEnd={
-        <p className="text-right leading-tight">
-          <span className="block text-[10px] text-slate-400">Kredi</span>
-          <span className="text-sm font-semibold tabular-nums text-amber-700">
-            {formatKredi(kredi)}
+    <MobileShell hideHeader>
+      <OpeningLogo
+        forceDocked={true}
+        leading={
+          <Link
+            href="/cekici/panel?tab=hesabim"
+            className="flex shrink-0 items-center justify-center size-8 rounded-full bg-slate-100/90 text-slate-700 hover:bg-slate-200 transition active:scale-95 touch-manipulation cursor-pointer"
+            aria-label="Geri"
+          >
+            <ArrowLeft className="size-4" strokeWidth={ACB_ICON_STROKE} />
+          </Link>
+        }
+        center={
+          <span className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight truncate">
+            Kredi / Abonelik
           </span>
-        </p>
-      }
-    >
+        }
+        trailing={
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/80 bg-emerald-50/90 px-2.5 py-1 text-xs font-bold text-emerald-800 shadow-sm">
+            <AcbIcons.wallet
+              className="size-3.5 text-emerald-600"
+              strokeWidth={ACB_ICON_STROKE}
+            />
+            <span>{formatKredi(kredi)} Kredi</span>
+          </div>
+        }
+      />
       {error && (
         <Card className="border-red-200 bg-red-50 mb-4">
           <p className="text-red-700 text-sm">{error}</p>
@@ -194,7 +212,7 @@ export default function KrediPage() {
       )}
 
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100">
+        <div className="p-1 rounded-2xl bg-slate-100 border border-slate-200/80 grid grid-cols-2 gap-1">
           {(
             [
               ["abonelik", "Abonelik"],
@@ -205,10 +223,10 @@ export default function KrediPage() {
               key={k}
               type="button"
               onClick={() => kaynakDegistir(k)}
-              className={`rounded-lg py-2.5 text-sm font-semibold transition-colors ${
+              className={`rounded-xl py-2.5 text-xs sm:text-sm font-bold transition-all ${
                 kaynak === k
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-white text-slate-900 shadow-sm border border-slate-200/50"
+                  : "text-slate-600 hover:text-slate-900 font-medium"
               }`}
             >
               {label}
@@ -216,17 +234,17 @@ export default function KrediPage() {
           ))}
         </div>
 
-        <p className="text-sm font-medium text-slate-700">Paket seçin</p>
+        <p className="text-sm font-bold text-slate-900">Paket seçin</p>
         <p className="text-xs text-slate-500 -mt-2">
           {kaynak === "abonelik"
             ? "Minimum 499 TL · İstediğiniz zaman iptal edene kadar her ay yenilenir"
             : "Minimum 499 TL · Tek seferlik yükleme · Teklif vermek ücretsiz"}
         </p>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 space-y-1">
-          <p className="text-sm text-slate-700 leading-snug">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 space-y-1 shadow-2xs">
+          <p className="text-xs sm:text-sm text-slate-700 leading-snug font-medium">
             1 kredi = yardım isteyen müşteriden 1 haber SMS’i
           </p>
-          <p className="text-sm text-slate-600 leading-snug">
+          <p className="text-xs text-slate-500 leading-snug">
             Krediniz yoksa işin detaylarını göremezsiniz. Teklif vermek
             ücretsizdir.
           </p>
@@ -243,27 +261,27 @@ export default function KrediPage() {
                 key={`${kaynak}-${p.tutarTL}`}
                 type="button"
                 onClick={() => setSeciliPaket(p.tutarTL)}
-                className={`rounded-xl border-2 p-4 text-left transition-colors relative ${
+                className={`rounded-2xl border-2 p-4 text-left transition-all relative ${
                   secili
-                    ? "border-amber-500 bg-amber-50"
-                    : "border-slate-200 bg-white hover:border-amber-300"
+                    ? "border-emerald-500 bg-emerald-50/70 shadow-sm ring-1 ring-emerald-500/30"
+                    : "border-slate-200 bg-white hover:border-emerald-300"
                 }`}
               >
                 {(onerilen || enAvantajli) && (
-                  <span className="absolute top-2 right-2 text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+                  <span className="absolute top-2.5 right-2.5 text-[10px] font-bold uppercase tracking-wide text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200/60">
                     {onerilen ? "Önerilen" : "En avantajlı"}
                   </span>
                 )}
                 <p className="text-lg font-bold text-slate-900">
                   {formatKredi(p.kredi)} kredi
                 </p>
-                <p className="text-sm text-slate-600 mt-1">{p.tutarTL} TL paket</p>
+                <p className="text-xs font-medium text-slate-600 mt-1">{p.tutarTL} TL paket</p>
                 {p.bonusKredi > 0 && (
-                  <p className="text-sm font-semibold text-emerald-700 mt-2">
+                  <p className="text-xs font-bold text-emerald-700 mt-2">
                     +{p.bonusKredi} bonus kredi
                   </p>
                 )}
-                <p className="text-sm font-semibold text-amber-700 mt-2">
+                <p className="text-sm font-bold text-emerald-800 mt-2">
                   {fiyat} ₺
                   {kaynak === "abonelik" ? " / ay" : ""}
                 </p>
@@ -274,11 +292,11 @@ export default function KrediPage() {
 
         {kaynak === "abonelik" && (
           <>
-            <p className="text-sm font-medium text-slate-700 text-center -mt-1">
+            <p className="text-xs sm:text-sm font-medium text-slate-700 text-center -mt-1">
               Aboneliği istediğiniz zaman iptal edebilirsiniz; iptal edene kadar
               her ay yenilenir.
             </p>
-            <p className="text-[11px] text-slate-400 leading-snug">
+            <p className="text-[11px] text-slate-400 leading-snug text-center">
               Kullanılmayan abonelik kredisi (bonus dahil) ay yenilenince veya
               iptal sonrası dönem bitince sıfırlanır. «Kredi satın al» ile
               aldığınız ekstra krediler kalır. Ödenmiş abonelik bedeli iade
@@ -290,19 +308,21 @@ export default function KrediPage() {
         <p className="text-[11px] text-slate-400 leading-snug text-center">
           {kaynak === "abonelik" ? "Abonelik" : "Kredi"} alımlarında iade
           yapılmaz.{" "}
-          <Link href="/iptal-ve-iade" className="text-amber-700 underline">
+          <Link href="/iptal-ve-iade" className="text-emerald-700 underline font-medium">
             İptal ve İade
           </Link>
         </p>
 
-        <Card className="bg-slate-50">
-          <div className="flex justify-between text-sm mt-2">
-            <span className="text-slate-700 font-medium">Ödenecek</span>
-            <span className="font-bold text-amber-600 text-lg">{odenecek} ₺</span>
+        <Card className="bg-slate-50 border-slate-200">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-slate-700 font-semibold">Ödenecek</span>
+            <span className="font-bold text-emerald-700 text-xl">{odenecek} ₺</span>
           </div>
         </Card>
 
         <Btn
+          variant="primary"
+          className="w-full !min-h-[48px] !rounded-xl font-bold"
           onClick={odemeyeGit}
           disabled={loading || (kaynak === "abonelik" && aktifAbonelikVar)}
         >

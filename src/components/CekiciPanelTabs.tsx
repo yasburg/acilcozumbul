@@ -28,6 +28,9 @@ import {
 } from "@/lib/kisisel-veri-gizle";
 import { posthogOlayBirKez, posthogOlayYakala } from "@/lib/posthog-client";
 import { StatusChip, panelDurumChip } from "@/components/acb/StatusChip";
+import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
+import { OpeningLogo } from "@/components/acb/OpeningLogo";
+import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 
 type Tab = "musteriler" | "hesabim" | "ayarlar";
 
@@ -515,39 +518,56 @@ export default function CekiciPanelTabs() {
     router.replace(`/cekici/panel?tab=${next}`, { scroll: false });
   }
 
+  const navTabs = [
+    { key: "musteriler" as Tab, label: "İhaleler", Icon: AcbIcons.towing },
+    { key: "hesabim" as Tab, label: "Hesabım", Icon: AcbIcons.user },
+    { key: "ayarlar" as Tab, label: "Ayarlar", Icon: AcbIcons.settings },
+  ] as const;
+
   const tabBar = (
-    <nav className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-200 bg-white safe-bottom">
-      <div className={`flex ${ACB_SHELL_MAX_W} mx-auto`}>
-        {(
-          [
-            { key: "musteriler" as Tab, label: "İhaleler", icon: "🚛" },
-            { key: "hesabim" as Tab, label: "Hesabım", icon: "👤" },
-            { key: "ayarlar" as Tab, label: "Ayarlar", icon: "⚙️" },
-          ] as const
-        ).map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => tabDegistir(t.key)}
-            className={`flex-1 min-h-[var(--acb-touch)] py-2.5 text-center text-sm font-semibold transition touch-manipulation ${
-              tab === t.key
-                ? "text-[var(--acb-green)] border-t-2 border-[var(--acb-green)] -mt-px"
-                : "text-[var(--acb-muted)]"
-            }`}
-          >
-            <span className="block text-lg leading-none" aria-hidden>
-              {t.icon}
-            </span>
-            {t.label}
-          </button>
-        ))}
-      </div>
-    </nav>
+    <div className="pointer-events-none fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 flex justify-center">
+      <nav
+        className={`acb-chrome-bar pointer-events-auto flex w-full ${ACB_SHELL_MAX_W} items-center justify-around gap-1.5 rounded-2xl p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-white/60`}
+      >
+        {navTabs.map((t) => {
+          const Icon = t.Icon;
+          const secili = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => tabDegistir(t.key)}
+              className={`flex-1 flex flex-col items-center justify-center py-2 px-2 rounded-xl text-xs transition-all touch-manipulation cursor-pointer ${
+                secili
+                  ? "bg-emerald-50/90 text-emerald-800 font-bold border border-emerald-200/80 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/40 font-medium"
+              }`}
+            >
+              <Icon
+                className={`size-5 mb-0.5 transition-transform ${
+                  secili ? "text-emerald-600 scale-105" : "text-slate-400"
+                }`}
+                strokeWidth={ACB_ICON_STROKE}
+              />
+              <span className="text-[11px] leading-tight">{t.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+    </div>
   );
 
   if (loading) {
     return (
-      <MobileShell subtitle="Çekici Paneli" footer={tabBar}>
+      <MobileShell hideHeader footer={tabBar}>
+        <OpeningLogo
+          forceDocked={true}
+          center={
+            <span className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight">
+              Çekici Paneli
+            </span>
+          }
+        />
         <p className="text-center text-slate-500 py-12">Yükleniyor…</p>
       </MobileShell>
     );
@@ -555,7 +575,15 @@ export default function CekiciPanelTabs() {
 
   if (!cekici && panelYetkili) {
     return (
-      <MobileShell subtitle="Hesabım" footer={tabBar}>
+      <MobileShell hideHeader footer={tabBar}>
+        <OpeningLogo
+          forceDocked={true}
+          center={
+            <span className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight">
+              Hesabım
+            </span>
+          }
+        />
         <div className="space-y-4 animate-fade-in">
           <Card className="bg-slate-50 border-slate-200">
             <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">
@@ -590,26 +618,59 @@ export default function CekiciPanelTabs() {
 
   if (!cekici) {
     return (
-      <MobileShell subtitle="Çekici Paneli">
+      <MobileShell hideHeader>
+        <OpeningLogo
+          forceDocked={true}
+          center={
+            <span className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight">
+              Çekici Paneli
+            </span>
+          }
+        />
         <p className="text-center text-slate-500 py-12">Yönlendiriliyor…</p>
       </MobileShell>
     );
   }
 
+  const tabBaslik =
+    tab === "ayarlar"
+      ? "Ayarlar"
+      : tab === "hesabim"
+        ? "Hesabım"
+        : "İhaleler";
+
   return (
-    <MobileShell
-      subtitle={
-        tab === "ayarlar"
-          ? "Ayarlar"
-          : tab === "hesabim"
-            ? "Hesabım"
-            : `Hoş geldin, ${adGoster(cekici.ad, gizlilik)}`
-      }
-      headerBadge={
-        demoAktif || data?.demoModu ? <DemoHeaderBadge /> : undefined
-      }
-      footer={tabBar}
-    >
+    <MobileShell hideHeader footer={tabBar} footerClassName="pb-28">
+      <OpeningLogo
+        forceDocked={true}
+        center={
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+              {tabBaslik}
+            </span>
+            {tab === "musteriler" && (
+              <span className="hidden sm:inline-block text-xs font-normal text-slate-500">
+                · {adGoster(cekici.ad, gizlilik)}
+              </span>
+            )}
+          </div>
+        }
+        trailing={
+          <div className="flex items-center gap-1.5">
+            <Link
+              href="/cekici/kredi"
+              className="group inline-flex items-center gap-1.5 rounded-full border border-emerald-300/80 bg-emerald-50/90 px-2.5 py-1 text-xs font-bold text-emerald-800 shadow-sm transition-all duration-200 hover:border-emerald-500 hover:bg-emerald-100 active:scale-95 touch-manipulation"
+            >
+              <AcbIcons.wallet
+                className="size-3.5 text-emerald-600 group-hover:scale-110 transition-transform"
+                strokeWidth={ACB_ICON_STROKE}
+              />
+              <span>{formatKredi(cekiciToplamKredi(cekici))} Kredi</span>
+            </Link>
+            {(demoAktif || data?.demoModu) && <DemoHeaderBadge />}
+          </div>
+        }
+      />
       {cekici.profilHazir === false && (
         <Card className="mb-4 border-amber-300 bg-amber-50 space-y-3">
           <p className="text-sm font-semibold text-amber-950">
@@ -872,8 +933,6 @@ export default function CekiciPanelTabs() {
 
       {tab === "hesabim" && (
         <div className="space-y-4 animate-fade-in">
-          <DavetKoduAyarlari />
-
           <Card>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs text-slate-500 uppercase tracking-wide">Krediniz</p>
@@ -884,7 +943,10 @@ export default function CekiciPanelTabs() {
                 {formatKredi(cekici.kredi)}
               </p>
               <Link href="/cekici/kredi" className="shrink-0">
-                <Btn className="w-auto min-h-0 py-2.5 px-4 text-sm whitespace-nowrap">
+                <Btn
+                  variant="primary"
+                  className="!w-auto !min-h-[42px] !py-2 !px-4 !text-xs sm:!text-sm !font-bold !rounded-xl flex items-center gap-1.5 shadow-sm"
+                >
                   💳 Kredi Satın Al
                 </Btn>
               </Link>
@@ -988,6 +1050,8 @@ export default function CekiciPanelTabs() {
               </div>
             </section>
           )}
+
+          <DavetKoduAyarlari />
 
           <div className="flex flex-col gap-3 pt-1">
             {panelYetkili && (

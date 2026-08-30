@@ -148,6 +148,15 @@
   transition: background 0.3s ease, backdrop-filter 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Hide scrollbar for Chrome, Safari, Opera, Firefox, IE & Edge */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Step-to-step content transition — fades + slides in the direction of travel,
    so advancing/going back reads as motion instead of an instant content swap. */
 .acb-step-transition {

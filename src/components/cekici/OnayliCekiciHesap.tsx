@@ -250,7 +250,7 @@ export function OnayliCekiciHesap() {
           <Btn
             type="button"
             variant="secondary"
-            className="!min-h-[44px] !py-3"
+            className="w-full !min-h-[44px] !py-2.5 text-xs sm:text-sm !font-bold !rounded-xl"
             onClick={basvuruAc}
           >
             {durum.belgeDurum === "reddedildi" ? "Yeniden başvur" : "Başvur"}

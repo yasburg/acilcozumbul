@@ -181,7 +181,7 @@ export function BottomSheet({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-end justify-center"
+      className="fixed inset-0 z-[60] flex items-end justify-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
@@ -190,7 +190,7 @@ export function BottomSheet({
       {onClose ? (
         <motion.button
           type="button"
-          className="absolute inset-0 bg-[var(--acb-dark)]/30 pointer-events-auto"
+          className="absolute inset-0 bg-slate-950/50 pointer-events-auto backdrop-blur-xs"
           aria-label="Kapat"
           style={{ opacity: scrimOpacity }}
           onClick={closeWithMotion}
@@ -200,14 +200,14 @@ export function BottomSheet({
       )}
       <motion.div
         ref={sheetRef}
-        className={`pointer-events-auto relative z-10 w-full max-w-lg max-h-[min(70dvh,560px)] overflow-y-auto rounded-t-[var(--acb-radius-xl)] border border-b-0 border-white/55 bg-white/92 shadow-[0_-12px_40px_rgb(27_45_42/0.16),inset_0_1px_0_rgba(255,255,255,0.55)] pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl backdrop-saturate-150 ${className}`}
+        className={`pointer-events-auto relative z-10 flex flex-col w-full max-w-lg max-h-[min(88dvh,720px)] rounded-t-[var(--acb-radius-xl)] border border-b-0 border-white/55 bg-white shadow-[0_-16px_48px_rgba(0,0,0,0.25)] pb-[max(0.75rem,env(safe-area-inset-bottom))] ${className}`}
         style={{ y, touchAction: onClose ? "none" : "pan-y" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <div className="sticky top-0 z-10 flex flex-col items-center bg-white/75 px-4 pt-2.5 pb-2 backdrop-blur-md backdrop-saturate-150">
+        <div className="shrink-0 flex flex-col items-center bg-white px-4 pt-2.5 pb-2 border-b border-slate-100">
           <div
             className="mb-2.5 h-1 w-10 rounded-full bg-[color-mix(in_srgb,var(--acb-dark)_18%,white)]"
             aria-hidden
@@ -215,13 +215,13 @@ export function BottomSheet({
           {title ? (
             <h2
               id={titleId}
-              className="w-full text-center text-[17px] font-semibold tracking-[-0.01em] text-[var(--acb-dark)]"
+              className="w-full text-center text-[16px] font-bold tracking-tight text-slate-900"
             >
               {title}
             </h2>
           ) : null}
         </div>
-        <div className="px-4 pb-3" data-no-drag>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 no-scrollbar" data-no-drag>
           {children}
         </div>
       </motion.div>
