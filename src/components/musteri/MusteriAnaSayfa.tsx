@@ -16,6 +16,11 @@ import { SorunSecimi } from "@/components/SorunSecimi";
 import { EmergencyHero } from "@/components/acb/EmergencyHero";
 import { FlowProgress } from "@/components/acb/FlowProgress";
 import { OpeningLogo } from "@/components/acb/OpeningLogo";
+import {
+  StepTestimonialCard,
+  CustomerTestimonialSection,
+  TeklifGeriSayimPill,
+} from "@/components/acb";
 import { AcbIcons, ACB_ICON_STROKE, SorunIkon } from "@/lib/acb-icons";
 import { AnaSayfaOzellikSeridi } from "@/components/AnaSayfaOzellikSeridi";
 import { AnaSayfaFiyatHesaplamaTeaser } from "@/components/AnaSayfaFiyatHesaplamaTeaser";
@@ -149,13 +154,6 @@ const ArizaFotografAlani = dynamic(
   }
 );
 
-const HizmetVerenSayimAlani = dynamic(
-  () =>
-    import("@/components/HizmetVerenSayimAlani").then((m) => ({
-      default: m.HizmetVerenSayimAlani,
-    })),
-  { ssr: false }
-);
 
 type Step =
   | "giris"
@@ -2314,9 +2312,10 @@ function MusteriAnaSayfaIcerik({
 
   const adimUstBilgi =
     step === "giris" ? null : (
-      <HizmetVerenSayimAlani
-        sorunTipi={form.sorunTipi || null}
-        compact
+      <TeklifGeriSayimPill
+        step={step}
+        progressCurrent={progressCurrent}
+        progressTotal={progressSteps.length}
       />
     );
 
@@ -2471,6 +2470,7 @@ function MusteriAnaSayfaIcerik({
             <div id="nasil-calisir" className="scroll-mt-[calc(4.75rem+env(safe-area-inset-top))]">
               <AnaSayfaOzellikSeridi />
             </div>
+            <CustomerTestimonialSection />
             <AnaSayfaFiyatHesaplamaTeaser />
             <AnaSayfaHizmetVerCta />
             {!varsayilanSehir ? <AnaSayfaHizliBaglantilar /> : null}
@@ -2588,6 +2588,7 @@ function MusteriAnaSayfaIcerik({
             onDetayChange={(v) => update("sorunDetay", v)}
             sadeceTipSecimi
           />
+          <StepTestimonialCard step="sorun" />
           <AdimAltNav
             progress={flowProgressBar}
             devamMetin={form.sorunTipi ? "Devam et" : "Önce hizmet seç"}
@@ -2678,6 +2679,7 @@ function MusteriAnaSayfaIcerik({
               Kilit durumunu seçin.
             </p>
           )}
+          <StepTestimonialCard step="kilit_durumu" />
           <AdimAltNav
             progress={flowProgressBar}
             devamMetin="Devam et"
@@ -2764,6 +2766,7 @@ function MusteriAnaSayfaIcerik({
               Yakıt tipini seçin.
             </p>
           )}
+          <StepTestimonialCard step="yakit_tipi" />
           <AdimAltNav
             progress={flowProgressBar}
             devamMetin="Devam et"
@@ -2858,6 +2861,7 @@ function MusteriAnaSayfaIcerik({
               Lastik durumunu seçin.
             </p>
           )}
+          <StepTestimonialCard step="lastik_durumu" />
           <AdimAltNav
             progress={flowProgressBar}
             devamMetin="Devam et"
@@ -2908,6 +2912,7 @@ function MusteriAnaSayfaIcerik({
               </p>
             )}
           </div>
+          <StepTestimonialCard step="fotograf" />
           <AdimAltNav
             progress={flowProgressBar}
             devamMetin={
@@ -2987,6 +2992,7 @@ function MusteriAnaSayfaIcerik({
               );
             })}
           </div>
+          <StepTestimonialCard step="arac_tipi" />
           <AdimAltNav
             progress={flowProgressBar}
             devamMetin="Devam et"
@@ -3048,6 +3054,7 @@ function MusteriAnaSayfaIcerik({
               invalid={aracModeliHatasi}
             />
           </div>
+          <StepTestimonialCard step="arac_modeli" />
           <AdimAltNav
             progress={flowProgressBar}
             devamMetin="Devam et"
@@ -3129,6 +3136,7 @@ function MusteriAnaSayfaIcerik({
               Araç durumunu seçin.
             </p>
           )}
+          <StepTestimonialCard step="arac_durumu" />
           <AdimAltNav
             progress={flowProgressBar}
             devamMetin="Devam et"
@@ -3205,6 +3213,7 @@ function MusteriAnaSayfaIcerik({
             </p>
           )}
 
+          <StepTestimonialCard step="ek_detay" />
           <AdimAltNav
             progress={flowProgressBar}
             devamMetin="Devam et"
@@ -3255,6 +3264,7 @@ function MusteriAnaSayfaIcerik({
             }}
           />
 
+          <StepTestimonialCard step="ihale" />
           <AdimAltNav
             progress={flowProgressBar}
             devamMetin="Devam Et"
@@ -3435,6 +3445,8 @@ function MusteriAnaSayfaIcerik({
               ) : null}
             </div>
           )}
+
+          <StepTestimonialCard step="konum" />
 
           {arizaKonumGpsAlindi && form.adres ? (
             <AdimAltNav
@@ -3663,6 +3675,8 @@ function MusteriAnaSayfaIcerik({
               </button>
             )}
           </div>
+
+          <StepTestimonialCard step="hedef" />
 
           {oneriYukleniyor && oneriler.length === 0 && (
             <div
@@ -4102,6 +4116,8 @@ function MusteriAnaSayfaIcerik({
               </p>
             </div>
           ) : null}
+
+          <StepTestimonialCard step="ozet" />
 
           <AdimAltNav
             progress={flowProgressBar}

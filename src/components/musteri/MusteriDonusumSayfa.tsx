@@ -23,6 +23,7 @@ import { GpsHttpsBanner } from "@/components/GpsHttpsBanner";
 import { ChromeAcSecenegi } from "@/components/ChromeAcSecenegi";
 import { YasalSiteFooter } from "@/components/yasal/YasalSiteFooter";
 import { MusteriFormIletisimOtp } from "@/components/musteri/MusteriFormIletisimOtp";
+import { StepTestimonialCard } from "@/components/acb";
 import { useMusteriAktifTalepYonlendir } from "@/components/musteri/useMusteriAktifTalepYonlendir";
 import { musteriAktifTalepKaydet } from "@/lib/musteri-aktif-talep";
 import { telefonDogrulamaHatasi } from "@/lib/telefon";
@@ -1887,6 +1888,7 @@ function MusteriDonusumSayfaIcerik({
             </details>
           ) : null}
 
+          <StepTestimonialCard step="sorun" />
           <NasilCalisirSerit aktifFormAdimi={step} />
         </div>
       )}
@@ -2263,6 +2265,7 @@ function MusteriDonusumSayfaIcerik({
               }}
             />
           </div>
+          <StepTestimonialCard step="hedef" />
         </div>
       )}
 
