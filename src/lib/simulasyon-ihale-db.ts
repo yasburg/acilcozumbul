@@ -697,6 +697,49 @@ export async function simulasyonCalistir(opts: {
   return { acilan, kapanan, hatalar };
 }
 
+/**
+ * Seçili günün tüm planlı taleplerini hemen aç (SMS + sesli).
+ * Zamanı beklemez.
+ */
+export async function simulasyonTumPlanlariSimdiAc(opts: {
+  baseUrl: string;
+  hedefGun: string;
+  simdi?: Date;
+}): Promise<{ acilan: number; hatalar: string[]; kalan: number }> {
+  const simdi = opts.simdi ?? new Date();
+  const hedefGun = pgDateAnahtari(opts.hedefGun);
+  const planlar = await listSimulasyonPlanlar({
+    hedefGun,
+    durumlar: ["planli"],
+  });
+  const hatalar: string[] = [];
+  let acilan = 0;
+
+  for (const plan of planlar) {
+    try {
+      await simulasyonPlanAc(plan, opts.baseUrl, { simdi });
+      acilan += 1;
+    } catch (e) {
+      const msg = dbHataMesaji(e);
+      hatalar.push(`${plan.id}:${msg}`);
+      plan.durum = "hata";
+      plan.hataMesaj = msg.slice(0, 500);
+      try {
+        await updateSimulasyonPlan(plan);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  const kalanSatir = await listSimulasyonPlanlar({
+    hedefGun,
+    durumlar: ["planli"],
+  });
+
+  return { acilan, hatalar, kalan: kalanSatir.length };
+}
+
 export function panelHedefGunler(simdi: Date = new Date()): {
   bugun: string;
   yarin: string;

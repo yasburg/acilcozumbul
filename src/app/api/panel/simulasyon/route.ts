@@ -12,6 +12,7 @@ import {
   simulasyonCalistir,
   simulasyonGunPlanla,
   simulasyonPlanlariTopluIptal,
+  simulasyonTumPlanlariSimdiAc,
   updateSimulasyonPlan,
 } from "@/lib/simulasyon-ihale-db";
 import {
@@ -286,6 +287,23 @@ async function postSimulasyon(request: NextRequest) {
     );
     const sonuc = await simulasyonCalistir({ baseUrl });
     return NextResponse.json({ ok: true, ...sonuc });
+  }
+
+  if (eylem === "tumunu_simdi_gonder") {
+    const ham =
+      typeof body.hedefGun === "string" ? body.hedefGun.trim() : "";
+    if (!ham) {
+      return NextResponse.json(
+        { error: "hedefGun gerekli." },
+        { status: 400 }
+      );
+    }
+    const hedefGun = pgDateAnahtari(ham);
+    const baseUrl = smsBaseUrl(
+      `${request.nextUrl.protocol}//${request.nextUrl.host}`
+    );
+    const sonuc = await simulasyonTumPlanlariSimdiAc({ baseUrl, hedefGun });
+    return NextResponse.json({ ok: true, hedefGun, ...sonuc });
   }
 
   if (eylem === "toplu_iptal") {

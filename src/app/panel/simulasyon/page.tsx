@@ -200,7 +200,15 @@ export default function PanelSimulasyonPage() {
                 ? ` · Hata: ${hatalar.slice(0, 2).join(" · ")}`
                 : ""
             }`
-          : body.eylem === "toplu_iptal"
+          : body.eylem === "tumunu_simdi_gonder"
+            ? `Şimdi gönderilen: ${j.acilan ?? 0}${
+                Number(j.kalan) > 0 ? ` · Kalan planlı: ${j.kalan}` : ""
+              }${
+                hatalar.length
+                  ? ` · Hata: ${hatalar.slice(0, 2).join(" · ")}`
+                  : ""
+              }`
+            : body.eylem === "toplu_iptal"
             ? `İptal edilen plan: ${j.iptal ?? 0}`
             : body.eylem === "ayar_kaydet"
               ? "Formül aralıkları kaydedildi."
@@ -447,6 +455,25 @@ export default function PanelSimulasyonPage() {
           title="Zamanı gelen planları açar / kapanacakları kapatır (tur başına ~15)"
         >
           Şimdi aç / kapat
+        </Btn>
+        <Btn
+          type="button"
+          variant="primary"
+          className="!w-auto !min-h-0 !py-2.5 !px-4 !text-sm"
+          disabled={busy || !hedefGun || ozetToplam.planli === 0}
+          onClick={() => {
+            if (
+              !window.confirm(
+                `Emin misin? Bu günün ${ozetToplam.planli} planlı talebi hemen SMS + sesli ile gönderilecek.`
+              )
+            ) {
+              return;
+            }
+            void eylem({ eylem: "tumunu_simdi_gonder", hedefGun });
+          }}
+          title="Seçili günün tüm planlı taleplerini zaman beklemeden açar"
+        >
+          Tüm talepleri şimdi gönder
         </Btn>
       </div>
 
