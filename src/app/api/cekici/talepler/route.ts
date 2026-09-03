@@ -18,6 +18,7 @@ import {
 import type { Cekici, ListeDurumu, Talep, TalepOzet } from "@/lib/types";
 import { demoCookieYanitaYaz, demoOturumCekiciIcin, demoPanelVerisi } from "@/lib/demo-oturum";
 import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
+import { teklifCashbackKampanyaAktifMi } from "@/lib/teklif-cashback-kampanya";
 
 function listeDurumuBelirle(talep: Talep, cekici: Cekici): ListeDurumu {
   const cekiciId = cekici.id;
@@ -102,6 +103,9 @@ export async function GET(request: NextRequest) {
       new Date(b.olusturulma).getTime() - new Date(a.olusturulma).getTime()
   );
 
+  const cashbackAktif = await teklifCashbackKampanyaAktifMi().catch(() => false);
+  const bildirimKredi = cekiciBildirimKrediTutari(cekici);
+
   const demoOturum = await demoOturumCekiciIcin(cekici.id, request);
   if (demoOturum) {
     const demo = demoPanelVerisi(demoOturum, cekici);
@@ -119,9 +123,10 @@ export async function GET(request: NextRequest) {
       kredi: cekiciToplamKredi(cekici),
       krediYok: !cekiciYeterliBildirimKredisi(
         cekiciToplamKredi(cekici),
-        cekiciBildirimKrediTutari(cekici)
+        bildirimKredi
       ),
-      bildirimKredi: cekiciBildirimKrediTutari(cekici),
+      bildirimKredi,
+      cashbackAktif,
       premiumSmsAktif: cekici.premiumSmsAktif !== false,
       satinAlinanlar: [...demo.kazandiklarim, ...kazandiklarim],
       baskasiAldi: [...demo.kaybettiklerim, ...kaybettiklerim],
@@ -142,9 +147,10 @@ export async function GET(request: NextRequest) {
     kredi: cekiciToplamKredi(cekici),
     krediYok: !cekiciYeterliBildirimKredisi(
       cekiciToplamKredi(cekici),
-      cekiciBildirimKrediTutari(cekici)
+      bildirimKredi
     ),
-    bildirimKredi: cekiciBildirimKrediTutari(cekici),
+    bildirimKredi,
+    cashbackAktif,
     premiumSmsAktif: cekici.premiumSmsAktif !== false,
     // Geriye uyumluluk
     satinAlinanlar: kazandiklarim,

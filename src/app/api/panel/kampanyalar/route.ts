@@ -17,6 +17,10 @@ import {
   MIGRATION_014_MESAJ,
 } from "@/lib/supabase/kampanya-schema";
 import { getKayitUcretsizKrediAyar } from "@/lib/kayit-ucretsiz-kredi";
+import {
+  getTeklifCashbackAyar,
+  teklifCashbackDurum,
+} from "@/lib/teklif-cashback-kampanya";
 
 /** datetime-local / ISO / boş → ISO veya null (temizle) */
 function tarihAlani(v: unknown): string | null | undefined {
@@ -41,14 +45,16 @@ export async function GET() {
     return NextResponse.json({ error: MIGRATION_014_MESAJ }, { status: 503 });
   }
 
-  const [kampanyalar, kullanimlar, ucretsizKrediAyar] = await Promise.all([
-    getKampanyalar(),
-    getKampanyaKullanimlari(),
-    getKayitUcretsizKrediAyar().catch(() => ({
-      aktif: true,
-      krediMiktar: 9,
-    })),
-  ]);
+  const [kampanyalar, kullanimlar, ucretsizKrediAyar, teklifCashbackAyar] =
+    await Promise.all([
+      getKampanyalar(),
+      getKampanyaKullanimlari(),
+      getKayitUcretsizKrediAyar().catch(() => ({
+        aktif: true,
+        krediMiktar: 9,
+      })),
+      getTeklifCashbackAyar().catch(() => ({ aktif: false })),
+    ]);
 
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.acilcozumbul.com";
@@ -60,6 +66,8 @@ export async function GET() {
     })),
     kullanimlar,
     ucretsizKrediAyar,
+    teklifCashbackAyar,
+    teklifCashbackDurum: teklifCashbackDurum(teklifCashbackAyar),
     ozet: {
       toplamKampanya: kampanyalar.length,
       aktifKampanya: kampanyalar.filter((k) => k.aktif).length,

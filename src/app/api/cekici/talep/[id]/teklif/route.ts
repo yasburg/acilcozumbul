@@ -35,6 +35,7 @@ import {
 import { cekiciToplamKredi } from "@/lib/kredi-bakiye";
 import { sehirKullanimAcikMiDb } from "@/lib/cekici-sehir-acilis-db";
 import { dakikaYasi, marketplaceOlayKaydet } from "@/lib/marketplace-events";
+import { teklifIadeEt } from "@/lib/talep-kredi-iade";
 
 export async function POST(
   request: NextRequest,
@@ -241,10 +242,27 @@ export async function POST(
     await notifyMusteri(talep, "yeni_teklif", baseUrl).catch(() => {});
   }
 
+  const iade = await teklifIadeEt(cekici, talep).catch((e) => {
+    console.error("[teklif-cashback] iade", e);
+    return {
+      iadeEdildi: false,
+      miktar: 0,
+      kredi: cekiciToplamKredi(cekici),
+      kampanyaKapali: true as const,
+    };
+  });
+
+  const yanitMesaj = iade.iadeEdildi
+    ? `Teklifiniz alındı. ${iade.miktar} kredi iade edildi — müşteri seçim yapana kadar bekleyin.`
+    : "Teklifiniz alındı. Ücretsiz — müşteri seçim yapana kadar bekleyin.";
+
   return NextResponse.json({
     teklifId: teklif.id,
-    kredi: cekiciToplamKredi(cekici),
-    mesaj: "Teklifiniz alındı. Ücretsiz — müşteri seçim yapana kadar bekleyin.",
+    kredi: iade.kredi,
+    cashbackAktif: iade.kampanyaKapali !== true,
+    iadeEdildi: iade.iadeEdildi,
+    iadeEdildiKredi: iade.iadeEdildi ? iade.miktar : 0,
+    mesaj: yanitMesaj,
     onizleme: {
       bolge: talepBolge(talep),
       sorunOzet: talepSorunOzet(talep.sorun),

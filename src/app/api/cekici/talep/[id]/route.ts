@@ -26,6 +26,8 @@ import { sehirKullanimAcikMiDb } from "@/lib/cekici-sehir-acilis-db";
 import { dakikaYasi, marketplaceOlayKaydet } from "@/lib/marketplace-events";
 import { suggestedPriceDeneyiAcikMi } from "@/lib/marketplace-p2";
 import { benzerTalepFiyatRehberi } from "@/lib/teklif-fiyat-rehberi";
+import { teklifCashbackKampanyaAktifMi } from "@/lib/teklif-cashback-kampanya";
+import { talepKrediIadeVarMi } from "@/lib/talep-kredi-iade";
 
 /** Süre hesabı için koordinat (tam adres gönderilmez) */
 function rotaKoordinatlari(talep: Talep) {
@@ -160,6 +162,10 @@ export async function GET(
 
   if (teklifVerdim && benimTeklifim) {
     await marketplaceOlayKaydet({ eventType: "driver_request_viewed", talepId: talep.id, cekiciId: cekici.id, eventKey: `request-viewed:${talep.id}:${cekici.id}`, properties: { request_age_min: dakikaYasi(talep.olusturulma), bid_count: talep.teklifler.length } });
+    const cashbackAktif = await teklifCashbackKampanyaAktifMi().catch(() => false);
+    const iadeEdildi = cashbackAktif
+      ? await talepKrediIadeVarMi(cekici.id, talep.id).catch(() => false)
+      : false;
     return NextResponse.json({
       id: talep.id,
       durum: talep.durum,
@@ -174,6 +180,8 @@ export async function GET(
       kredi: cekiciToplamKredi(cekici),
       onayliCekici: Boolean(cekici.rozetAktif),
       firsat: firsatOzeti(talep, cekici),
+      cashbackAktif,
+      iadeEdildiKredi: iadeEdildi ? cekiciBildirimKrediTutari(cekici) : 0,
     });
   }
 
@@ -205,6 +213,9 @@ export async function GET(
     ? await benzerTalepFiyatRehberi(talep).catch(() => null)
     : null;
 
+  const cashbackAktif = await teklifCashbackKampanyaAktifMi().catch(() => false);
+  const bildirimKredi = cekiciBildirimKrediTutari(cekici);
+
   return NextResponse.json({
     id: talep.id,
     durum: talep.durum,
@@ -219,5 +230,8 @@ export async function GET(
     onayliCekici: Boolean(cekici.rozetAktif),
     firsat: firsatOzeti(talep, cekici),
     fiyatRehberi,
+    cashbackAktif,
+    iadeBekleyenKredi: cashbackAktif ? bildirimKredi : 0,
+    bildirimKredi,
   });
 }

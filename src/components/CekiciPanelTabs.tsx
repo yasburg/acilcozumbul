@@ -74,6 +74,7 @@ interface PanelData {
   kredi?: number;
   krediYok?: boolean;
   bildirimKredi?: number;
+  cashbackAktif?: boolean;
   demoModu?: boolean;
   satinAlinanlar?: TalepOzet[];
   baskasiAldi?: TalepOzet[];
@@ -160,6 +161,7 @@ function GizliTalepKarti({
   talep,
   kredi,
   bildirimKredi = 1,
+  cashbackAktif = false,
   yukleniyor,
   demoModu,
   onKatil,
@@ -167,6 +169,7 @@ function GizliTalepKarti({
   talep: TalepOzet;
   kredi: number;
   bildirimKredi?: number;
+  cashbackAktif?: boolean;
   yukleniyor: boolean;
   demoModu?: boolean;
   onKatil: (talepId: string) => void;
@@ -197,8 +200,12 @@ function GizliTalepKarti({
           </p>
           <p className="text-xs text-slate-500 text-center mt-1">
             {katilabilir
-              ? "Dokunun — müşteri bilgisi ve teklif açılır"
-              : `${bildirimKredi} kredi gerekir (teklif ücretsiz)`}
+              ? cashbackAktif
+                ? `Dokunun — teklif verirseniz ${bildirimKredi} kredi iade`
+                : "Dokunun — müşteri bilgisi ve teklif açılır"
+              : cashbackAktif
+                ? `${bildirimKredi} kredi gerekir (teklifte iade)`
+                : `${bildirimKredi} kredi gerekir (teklif ücretsiz)`}
           </p>
         </div>
       </Card>
@@ -804,6 +811,7 @@ export default function CekiciPanelTabs() {
                     talep={t}
                     kredi={data.kredi ?? cekici.kredi}
                     bildirimKredi={data.bildirimKredi}
+                    cashbackAktif={Boolean(data.cashbackAktif)}
                     yukleniyor={katilYukleniyor === t.id}
                     demoModu={data.demoModu}
                     onKatil={ihaleyeKatil}

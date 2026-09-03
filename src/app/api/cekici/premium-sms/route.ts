@@ -13,6 +13,7 @@ import {
 import { cekiciGirisSifreKontrol } from "@/lib/cekici-auth";
 import { smsDurumu } from "@/lib/sms-provider";
 import { telefonMaskele } from "@/lib/telefon";
+import { teklifCashbackKampanyaAktifMi } from "@/lib/teklif-cashback-kampanya";
 
 export async function GET() {
   await ensureSeedData();
@@ -22,6 +23,7 @@ export async function GET() {
   }
 
   const seviye = cekiciBildirimSeviye(cekici);
+  const cashbackAktif = await teklifCashbackKampanyaAktifMi().catch(() => false);
   return NextResponse.json({
     bildirimSeviye: seviye,
     bildirimKredi: cekiciBildirimKrediTutari(cekici),
@@ -37,6 +39,7 @@ export async function GET() {
     premiumKredi: 2,
     telefon: telefonMaskele(cekici.telefon),
     smsGercek: smsDurumu().gercekGonderim,
+    cashbackAktif,
   });
 }
 

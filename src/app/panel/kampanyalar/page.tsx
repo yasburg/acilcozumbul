@@ -28,6 +28,14 @@ type UcretsizKrediAyar = {
   krediMiktar: number;
 };
 
+type TeklifCashbackAyar = {
+  aktif: boolean;
+  baslangic?: string;
+  bitis?: string;
+};
+
+type TeklifCashbackDurum = "kapali" | "sure_disi" | "aktif";
+
 type KampanyaTaslak = {
   maxKullanim: string;
   bitis: string;
@@ -71,6 +79,17 @@ export default function PanelKampanyalarPage() {
     krediMiktar: "9",
   });
   const [ucretsizKaydediyor, setUcretsizKaydediyor] = useState(false);
+  const [cashbackAyar, setCashbackAyar] = useState<TeklifCashbackAyar>({
+    aktif: false,
+  });
+  const [cashbackDurum, setCashbackDurum] =
+    useState<TeklifCashbackDurum>("kapali");
+  const [cashbackTaslak, setCashbackTaslak] = useState({
+    aktif: false,
+    baslangic: "",
+    bitis: "",
+  });
+  const [cashbackKaydediyor, setCashbackKaydediyor] = useState(false);
   const [form, setForm] = useState(BOS_FORM);
   const [taslaklar, setTaslaklar] = useState<Record<string, KampanyaTaslak>>(
     {}
@@ -103,6 +122,18 @@ export default function PanelKampanyalarPage() {
             aktif: Boolean(ua.aktif),
             krediMiktar: String(ua.krediMiktar ?? 9),
           });
+        }
+        const ca = d.teklifCashbackAyar as TeklifCashbackAyar | undefined;
+        if (ca) {
+          setCashbackAyar(ca);
+          setCashbackTaslak({
+            aktif: Boolean(ca.aktif),
+            baslangic: isoToYerelDatetime(ca.baslangic),
+            bitis: isoToYerelDatetime(ca.bitis),
+          });
+        }
+        if (d.teklifCashbackDurum) {
+          setCashbackDurum(d.teklifCashbackDurum as TeklifCashbackDurum);
         }
         setTaslaklar({});
         setHata("");
@@ -240,6 +271,53 @@ export default function PanelKampanyalarPage() {
     }
   }
 
+  function cashbackDurumMetni(
+    durum: TeklifCashbackDurum,
+    ayar: TeklifCashbackAyar
+  ): string {
+    if (durum === "kapali") return "kapalı";
+    if (durum === "sure_disi") return "aktif işaretli ama süre dışı";
+    const bitis = ayar.bitis
+      ? new Date(ayar.bitis).toLocaleString("tr-TR")
+      : "—";
+    return `aktif (bitiş: ${bitis})`;
+  }
+
+  async function cashbackKaydet(e: React.FormEvent) {
+    e.preventDefault();
+    setCashbackKaydediyor(true);
+    setHata("");
+    setMesaj("");
+    try {
+      const res = await fetch("/api/panel/kampanyalar/teklif-cashback", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          aktif: cashbackTaslak.aktif,
+          baslangic: cashbackTaslak.baslangic || null,
+          bitis: cashbackTaslak.bitis || null,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "Güncellenemedi.");
+      setMesaj(d.mesaj ?? "Teklif cashback güncellendi.");
+      if (d.ayar) {
+        setCashbackAyar(d.ayar);
+        setCashbackTaslak({
+          aktif: Boolean(d.ayar.aktif),
+          baslangic: isoToYerelDatetime(d.ayar.baslangic),
+          bitis: isoToYerelDatetime(d.ayar.bitis),
+        });
+      }
+      if (d.durum) setCashbackDurum(d.durum as TeklifCashbackDurum);
+    } catch (err) {
+      setHata(err instanceof Error ? err.message : "Güncellenemedi.");
+    } finally {
+      setCashbackKaydediyor(false);
+    }
+  }
+
   async function linkKopyala(link: string, kod: string) {
     try {
       await navigator.clipboard.writeText(link);
@@ -338,6 +416,62 @@ export default function PanelKampanyalarPage() {
             disabled={ucretsizKaydediyor}
           >
             {ucretsizKaydediyor ? "Kaydediliyor…" : "Kaydet"}
+          </Btn>
+        </form>
+      </Card>
+
+      <Card>
+        <h3 className="font-semibold text-slate-900 mb-1">Teklif cashback</h3>
+        <p className="text-sm text-slate-500 mb-4">
+          Çekici teklif verince bildirim paketindeki kredi (1 / 2 / 3) hesabına
+          iade edilir. Şu an: {cashbackDurumMetni(cashbackDurum, cashbackAyar)}.
+        </p>
+        <form
+          onSubmit={cashbackKaydet}
+          className="flex flex-wrap items-end gap-3"
+        >
+          <label className="flex items-center gap-2 text-sm text-slate-700 pb-2">
+            <input
+              type="checkbox"
+              checked={cashbackTaslak.aktif}
+              onChange={(e) =>
+                setCashbackTaslak((t) => ({ ...t, aktif: e.target.checked }))
+              }
+              className="rounded border-slate-300"
+            />
+            Aktif
+          </label>
+          <Field
+            label="Başlangıç"
+            type="datetime-local"
+            value={cashbackTaslak.baslangic}
+            onChange={(e) =>
+              setCashbackTaslak((t) => ({
+                ...t,
+                baslangic: e.target.value,
+              }))
+            }
+            className="!w-auto"
+          />
+          <Field
+            label="Bitiş"
+            type="datetime-local"
+            value={cashbackTaslak.bitis}
+            onChange={(e) =>
+              setCashbackTaslak((t) => ({
+                ...t,
+                bitis: e.target.value,
+              }))
+            }
+            className="!w-auto"
+          />
+          <Btn
+            type="submit"
+            variant="secondary"
+            className="!w-auto"
+            disabled={cashbackKaydediyor}
+          >
+            {cashbackKaydediyor ? "Kaydediliyor…" : "Kaydet"}
           </Btn>
         </form>
       </Card>

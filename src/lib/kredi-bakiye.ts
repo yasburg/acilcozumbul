@@ -26,6 +26,16 @@ export function cekiciKrediDus(c: KrediBakiyeli, tutar: number): void {
   }
 }
 
+/**
+ * Teklif cashback iadesi — satın alınan kovaya eklenir
+ * (abonelik dönem sonunda yanmasın).
+ */
+export function cekiciKrediIade(c: KrediBakiyeli, tutar: number): void {
+  const n = Math.max(0, Number(tutar) || 0);
+  if (n <= 0) return;
+  c.kredi = Number(c.kredi || 0) + n;
+}
+
 /** Abonelik yenileme: dönem hakkı paket(+bonus) miktarına eşitlenir; kullanılmayan abonelik/bonus yanar */
 export function abonelikKrediSifirlaVeYukle(
   c: KrediBakiyeli,

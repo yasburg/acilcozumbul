@@ -55,6 +55,10 @@ interface TalepDurum {
   teklifUcretsiz?: boolean;
   erisimYok?: boolean;
   kredi?: number;
+  cashbackAktif?: boolean;
+  iadeBekleyenKredi?: number;
+  iadeEdildiKredi?: number;
+  bildirimKredi?: number;
   benimTeklif?: {
     fiyat: number;
     ilkFiyat?: number;
@@ -168,6 +172,7 @@ export default function CekiciTalepClient() {
   const [islemBittiYukleniyor, setIslemBittiYukleniyor] = useState(false);
   const [error, setError] = useState("");
   const [teklifGonderildi, setTeklifGonderildi] = useState(false);
+  const [sonIadeKredi, setSonIadeKredi] = useState(0);
   const [demoAktif, setDemoAktif] = useState(false);
 
   const [fiyat, setFiyat] = useState("");
@@ -341,6 +346,11 @@ export default function CekiciTalepClient() {
         return;
       }
       if (cekici && data.kredi != null) setCekici({ ...cekici, kredi: data.kredi });
+      setSonIadeKredi(
+        typeof data.iadeEdildiKredi === "number" && data.iadeEdildi
+          ? data.iadeEdildiKredi
+          : 0
+      );
       setTeklifGonderildi(true);
       posthogOlayYakala("cekici_teklif_ver", {
         rol: "cekici",
@@ -475,7 +485,9 @@ export default function CekiciTalepClient() {
         <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">
           <p className="text-sm font-semibold text-emerald-800">✅ Teklifiniz alındı!</p>
           <p className="text-xs text-emerald-700 mt-1">
-            Teklif vermek ücretsiz — müşteri seçim yapana kadar bekleyin.
+            {sonIadeKredi > 0
+              ? `${sonIadeKredi} kredi iade edildi — müşteri seçim yapana kadar bekleyin.`
+              : "Teklif vermek ücretsiz — müşteri seçim yapana kadar bekleyin."}
           </p>
         </div>
       )}
@@ -661,7 +673,9 @@ export default function CekiciTalepClient() {
                 />
               )}
               <p className="text-sm text-[var(--acb-green)] text-center font-semibold">
-                Teklif vermek ücretsizdir.
+                {talep.cashbackAktif && (talep.iadeBekleyenKredi ?? 0) > 0
+                  ? `Teklif verirseniz ${talep.iadeBekleyenKredi} kredi iade edilir.`
+                  : "Teklif vermek ücretsizdir."}
               </p>
               {talep.fiyatRehberi && (
                 <Card className="border-blue-200 bg-blue-50">
@@ -697,7 +711,11 @@ export default function CekiciTalepClient() {
                 disabled={islem}
                 className="!text-base !tracking-wide"
               >
-                {islem ? "Gönderiliyor…" : "TEKLİF VER"}
+                {islem
+                  ? "Gönderiliyor…"
+                  : talep.cashbackAktif && (talep.iadeBekleyenKredi ?? 0) > 0
+                    ? `TEKLİF VER · ${talep.iadeBekleyenKredi} kredi iade`
+                    : "TEKLİF VER"}
               </Btn>
             </>
           )}

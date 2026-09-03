@@ -4,6 +4,7 @@ import {
   abonelikKrediYak,
   abonelikKrediYukle,
   cekiciKrediDus,
+  cekiciKrediIade,
   cekiciToplamKredi,
 } from "./kredi-bakiye";
 
@@ -45,5 +46,12 @@ describe("kredi-bakiye", () => {
     expect(abonelikKrediYak(c)).toBe(700);
     expect(c.abonelikKredi).toBe(0);
     expect(c.kredi).toBe(250);
+  });
+
+  it("iade satın alınan kovaya ekler", () => {
+    const c = { kredi: 4, abonelikKredi: 2 };
+    cekiciKrediIade(c, 3);
+    expect(c.kredi).toBe(7);
+    expect(c.abonelikKredi).toBe(2);
   });
 });

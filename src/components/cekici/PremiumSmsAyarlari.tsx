@@ -20,6 +20,7 @@ type Durum = {
   paketler: Paket[];
   telefon: string;
   smsGercek: boolean;
+  cashbackAktif?: boolean;
 };
 
 export function PremiumSmsAyarlari() {
@@ -129,6 +130,9 @@ export function PremiumSmsAyarlari() {
 
         <p className="text-xs text-slate-600 leading-relaxed">
           Yeni müşteri talepleri geldiğinde nasıl haberdar olmak istediğinizi belirleyin.
+          {durum.cashbackAktif
+            ? " Teklif verirseniz seçili paketin kredisi hesabınıza iade edilir."
+            : ""}
         </p>
 
         <div className="space-y-2.5 pt-1">
@@ -167,6 +171,7 @@ export function PremiumSmsAyarlari() {
                   <div className="flex flex-col items-end gap-1.5 shrink-0">
                     <span className="text-xs font-bold text-slate-900 px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200/60">
                       {p.kredi} Kredi
+                      {durum.cashbackAktif && secili ? " · teklifte iade" : ""}
                     </span>
                     {secili ? (
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700">
