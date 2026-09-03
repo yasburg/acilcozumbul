@@ -9,3 +9,11 @@ export type { StatusChipId } from "./StatusChip";
 export { FlowProgress } from "./FlowProgress";
 export { EmergencyHero } from "./EmergencyHero";
 export { OpeningLogo, OPENING_LOGO_SRC } from "./OpeningLogo";
+export {
+  StepTestimonialCard,
+  CustomerTestimonialSection,
+  MUSTERI_TESTIMONIALS,
+} from "./CustomerTestimonials";
+export type { TestimonialItem } from "./CustomerTestimonials";
+export { TeklifGeriSayimPill } from "./TeklifGeriSayimPill";
+

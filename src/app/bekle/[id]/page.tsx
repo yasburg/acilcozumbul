@@ -10,6 +10,7 @@ import { MemnuniyetFormu } from "@/components/MemnuniyetFormu";
 import { ProviderOfferCard } from "@/components/acb/ProviderOfferCard";
 import { MusteriKonumHarita } from "@/components/acb/MusteriKonumHarita";
 import { LiveRequestStatus } from "@/components/acb/LiveRequestStatus";
+import { StepTestimonialCard } from "@/components/acb";
 import { AcbIcons, ACB_ICON_STROKE } from "@/lib/acb-icons";
 import { teklifleriSirala } from "@/lib/teklif-siralama";
 import { IhaleBekleAnimasyon } from "@/components/IhaleBekleAnimasyon";
@@ -1036,6 +1037,8 @@ function BekleIcerik() {
               veya mevcut tekliflerden birini seçebilirsiniz.
             </p>
           </Card>
+
+          <StepTestimonialCard step="bekle" className="mt-2" />
 
           <button
             type="button"

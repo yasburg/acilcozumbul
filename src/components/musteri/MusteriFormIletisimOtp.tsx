@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Btn, Field, Spinner } from "@/components/ui";
 import { YasalOnayKutusu } from "@/components/yasal/YasalOnayKutusu";
+import { StepTestimonialCard } from "@/components/acb";
 import { gtagUserDataAyarla } from "@/lib/gtag";
 import { metaUserDataSakla } from "@/lib/meta-pixel";
 import {
@@ -377,6 +378,8 @@ export function MusteriFormIletisimOtp({
           {hata}
         </p>
       ) : null}
+
+      <StepTestimonialCard step="telefon" className="mt-4" />
 
       {mounted
         ? createPortal(
