@@ -37,6 +37,7 @@ export type KrediOdemeOzetSatir = {
   paketTl: number;
   demoOdeme: boolean;
   olusturulma: string;
+  odemeTipi?: string;
 };
 
 /** Europe/Istanbul takvim ayı (YYYY-MM) */
@@ -89,6 +90,7 @@ export function panelGelirOzetHesapla(
 
   const krediTahsilat = krediOdemeleri.filter((k) => {
     if (k.demoOdeme) return false;
+    if (k.odemeTipi === "rozet") return false;
     const t = Date.parse(k.olusturulma);
     if (!Number.isFinite(t) || t < ayBas) return false;
     const temiz = orderIdTemizle(k.id);

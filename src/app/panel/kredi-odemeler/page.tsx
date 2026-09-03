@@ -31,10 +31,12 @@ const FILTRELER: { id: SatinAlmaFiltre; label: string }[] = [
   { id: "hepsi", label: "Hepsi" },
   { id: "abonelik", label: "Abonelik ödemesi" },
   { id: "kredi", label: "Kredi alımı" },
+  { id: "rozet", label: "Doğrulanmış hesap rozeti" },
 ];
 
 function tipRozetSinif(tip: SatinAlmaTip): string {
   if (tip === "kredi") return "bg-amber-50 text-amber-800";
+  if (tip === "rozet") return "bg-violet-50 text-violet-800";
   if (tip === "abonelik_yenileme") return "bg-sky-50 text-sky-800";
   return "bg-emerald-50 text-emerald-800";
 }
@@ -90,7 +92,11 @@ function SatinAlmaKart({ k }: { k: Ozet }) {
           </div>
           <div className="text-right">
             <p className="text-lg font-bold text-amber-700">{k.tutar} ₺</p>
-            <p className="text-xs text-slate-500">{k.miktar} kredi</p>
+            <p className="text-xs text-slate-500">
+              {k.tip === "rozet"
+                ? "Doğrulanmış hesap rozeti"
+                : `${k.miktar} kredi`}
+            </p>
           </div>
         </div>
         <p className="text-xs text-slate-400 mt-2">
@@ -150,7 +156,7 @@ export default function PanelSatinAlmalarPage() {
       <div>
         <h2 className="text-2xl font-bold">Satın almalar</h2>
         <p className="text-sm text-slate-500">
-          Abonelik ve kredi alımları — fatura yükleme
+          Abonelik, kredi ve doğrulanmış hesap rozeti — fatura yükleme
         </p>
       </div>
 

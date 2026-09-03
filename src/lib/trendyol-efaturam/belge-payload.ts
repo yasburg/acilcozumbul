@@ -14,6 +14,9 @@ export type KurumsalFaturaPayloadGirdi = {
 };
 
 export function kurumsalOdemeAciklama(odeme: KrediOdeme): string {
+  if (odeme.odemeTipi === "rozet") {
+    return "Acil Çözüm Bul doğrulanmış hesap rozeti paketi";
+  }
   if (odeme.odemeTipi === "abonelik") {
     return `Acil Çözüm Bul abonelik — ${odeme.miktar} kredi (paket ${odeme.paketTl} TL)`;
   }

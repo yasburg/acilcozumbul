@@ -293,8 +293,8 @@ export interface KrediOdeme {
   tutar: number;
   listeFiyati?: number;
   paketTl: number;
-  /** İlk abonelik ödemesi veya tek seferlik kredi */
-  odemeTipi?: "kredi" | "abonelik";
+  /** İlk abonelik ödemesi, tek seferlik kredi veya onaylı çekici rozeti */
+  odemeTipi?: "kredi" | "abonelik" | "rozet";
   faturaEposta?: string;
   faturaAdres?: string;
   faturaTcKimlik?: string;

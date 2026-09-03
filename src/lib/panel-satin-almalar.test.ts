@@ -25,12 +25,16 @@ describe("satinAlma filtre", () => {
   it("etiket ve filtre", () => {
     expect(satinAlmaTipEtiket("abonelik")).toBe("Abonelik ödemesi");
     expect(satinAlmaTipEtiket("kredi")).toBe("Kredi alımı");
+    expect(satinAlmaTipEtiket("rozet")).toBe("Doğrulanmış hesap rozeti");
     expect(satinAlmaFiltreParse("abonelik")).toBe("abonelik");
+    expect(satinAlmaFiltreParse("rozet")).toBe("rozet");
     expect(satinAlmaFiltreParse(null)).toBe("hepsi");
     expect(satinAlmaTipFiltreyeUyar("abonelik_yenileme", "abonelik")).toBe(
       true
     );
     expect(satinAlmaTipFiltreyeUyar("kredi", "abonelik")).toBe(false);
+    expect(satinAlmaTipFiltreyeUyar("rozet", "rozet")).toBe(true);
+    expect(satinAlmaTipFiltreyeUyar("rozet", "kredi")).toBe(false);
   });
 });
 

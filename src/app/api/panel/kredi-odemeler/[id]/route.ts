@@ -16,6 +16,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 async function krediOdemeTipiCoz(
   kayit: { id: string; odemeTipi?: string }
 ): Promise<SatinAlmaTip> {
+  if (kayit.odemeTipi === "rozet") return "rozet";
   if (kayit.odemeTipi === "abonelik") return "abonelik";
   const temiz = orderIdTemizle(kayit.id);
   const { data } = await getSupabaseAdmin()

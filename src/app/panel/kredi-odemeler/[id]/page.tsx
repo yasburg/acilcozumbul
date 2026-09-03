@@ -332,7 +332,14 @@ export default function PanelSatinAlmaDetayPage() {
           Ödeme
         </h3>
         <Satir label="Tür" value={kayit.tipEtiket} />
-        <Satir label="Kredi" value={`${kayit.miktar}`} />
+        <Satir
+          label={kayit.tip === "rozet" ? "Paket" : "Kredi"}
+          value={
+            kayit.tip === "rozet"
+              ? "Doğrulanmış hesap rozeti paketi"
+              : `${kayit.miktar}`
+          }
+        />
         <Satir label="Paket (liste)" value={`${kayit.paketTl} ₺`} />
         <Satir label="Ödenen tutar" value={`${kayit.tutar} ₺`} />
         <Satir label="Banka referansı" value={kayit.odemeReferans} />

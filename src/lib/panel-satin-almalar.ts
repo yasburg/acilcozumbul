@@ -1,8 +1,12 @@
 import { orderIdTemizle } from "./garanti/payment";
 
-export type SatinAlmaTip = "abonelik" | "abonelik_yenileme" | "kredi";
+export type SatinAlmaTip =
+  | "abonelik"
+  | "abonelik_yenileme"
+  | "kredi"
+  | "rozet";
 
-export type SatinAlmaFiltre = "hepsi" | "abonelik" | "kredi";
+export type SatinAlmaFiltre = "hepsi" | "abonelik" | "kredi" | "rozet";
 
 export function adSoyadAyir(tamAd: string): { ad: string; soyad: string } {
   const parcalar = String(tamAd ?? "")
@@ -17,11 +21,12 @@ export function adSoyadAyir(tamAd: string): { ad: string; soyad: string } {
 export function satinAlmaTipEtiket(tip: SatinAlmaTip): string {
   if (tip === "abonelik") return "Abonelik ödemesi";
   if (tip === "abonelik_yenileme") return "Abonelik yenileme";
+  if (tip === "rozet") return "Doğrulanmış hesap rozeti";
   return "Kredi alımı";
 }
 
 export function satinAlmaFiltreParse(raw: string | null): SatinAlmaFiltre {
-  if (raw === "abonelik" || raw === "kredi") return raw;
+  if (raw === "abonelik" || raw === "kredi" || raw === "rozet") return raw;
   return "hepsi";
 }
 
@@ -33,6 +38,7 @@ export function satinAlmaTipFiltreyeUyar(
   if (filtre === "abonelik") {
     return tip === "abonelik" || tip === "abonelik_yenileme";
   }
+  if (filtre === "rozet") return tip === "rozet";
   return tip === "kredi";
 }
 

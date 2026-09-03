@@ -145,6 +145,40 @@ export async function POST(
     await updateCekici(guncelCekici);
     await tamamlaOdeme(id);
 
+    const krediOdemeKayit = {
+      id: bekleyen.id,
+      cekiciId: cekici.id,
+      cekiciAd: guncelCekici.ad,
+      cekiciTelefon: guncelCekici.telefon,
+      miktar: 0,
+      tutar: bekleyen.tutar,
+      listeFiyati: bekleyen.listeFiyati,
+      paketTl: bekleyen.paketTl ?? bekleyen.listeFiyati ?? bekleyen.tutar,
+      odemeTipi: "rozet" as const,
+      faturaEposta: faturaSonuc.data.faturaEposta ?? "",
+      faturaAdres: faturaSonuc.data.faturaAdres,
+      faturaTcKimlik: faturaSonuc.data.faturaTcKimlik,
+      kurumsal: faturaSonuc.data.kurumsal,
+      sirketUnvan: faturaSonuc.data.sirketUnvan,
+      vergiNo: faturaSonuc.data.vergiNo,
+      odemeReferans: referans,
+      garantiRespCode,
+      demoOdeme: demo,
+      olusturulma: new Date().toISOString(),
+    };
+
+    await kaydetKrediOdeme(krediOdemeKayit);
+
+    void kurumsalOdemeSonrasiTrendyolFatura(krediOdemeKayit).catch((e) =>
+      console.error("[trendyol-fatura] rozet tamamla", e)
+    );
+
+    void adminOdemeSmsGonder({
+      tip: "rozet",
+      tutarTl: bekleyen.tutar,
+      cekiciAd: guncelCekici.ad,
+    });
+
     return NextResponse.json({
       success: true,
       rozetAktif: true,

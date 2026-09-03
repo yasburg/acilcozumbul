@@ -108,9 +108,12 @@ export async function GET(request: NextRequest) {
   const ozet: SatinAlmaOzetDto[] = [];
 
   for (const k of krediListe) {
-    const tip: SatinAlmaTip = krediOdemeAbonelikMi(k, createdOrderIds)
-      ? "abonelik"
-      : "kredi";
+    const tip: SatinAlmaTip =
+      k.odemeTipi === "rozet"
+        ? "rozet"
+        : krediOdemeAbonelikMi(k, createdOrderIds)
+          ? "abonelik"
+          : "kredi";
     if (!satinAlmaTipFiltreyeUyar(tip, filtre)) continue;
 
     const cekici = await cekiciAl(k.cekiciId);

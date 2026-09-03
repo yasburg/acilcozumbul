@@ -4,7 +4,8 @@ import { TOPLU_SMS_ADMIN_TEST_TELEFON } from "./toplu-sms-admin-test";
 export type AdminOdemeSmsTip =
   | "abonelik"
   | "abonelik_yenileme"
-  | "kredi";
+  | "kredi"
+  | "rozet";
 
 export function adminOdemeSmsMetni(opts: {
   tip: AdminOdemeSmsTip;
@@ -17,7 +18,9 @@ export function adminOdemeSmsMetni(opts: {
       ? "Abonelik"
       : opts.tip === "abonelik_yenileme"
         ? "Abonelik yenileme"
-        : "Kredi satın alma";
+        : opts.tip === "rozet"
+          ? "Doğrulanmış hesap rozeti"
+          : "Kredi satın alma";
   const ad = (opts.cekiciAd ?? "").trim();
   const kim = ad ? ` — ${ad}` : "";
   return `${tipMetin}: ${tutar} TL${kim}`;

@@ -15,5 +15,8 @@ describe("adminOdemeSmsMetni", () => {
         tutarTl: 1999,
       })
     ).toBe("Abonelik yenileme: 1999 TL");
+    expect(
+      adminOdemeSmsMetni({ tip: "rozet", tutarTl: 999.9, cekiciAd: "Veli" })
+    ).toBe("Doğrulanmış hesap rozeti: 1000 TL — Veli");
   });
 });

@@ -35,6 +35,18 @@ describe("kurumsalOdemeAciklama", () => {
   it("kredi paketi açıklaması üretir", () => {
     expect(kurumsalOdemeAciklama(ornekOdeme)).toContain("750 kredi");
   });
+
+  it("rozet için doğrulanmış hesap metni", () => {
+    expect(
+      kurumsalOdemeAciklama({
+        ...ornekOdeme,
+        odemeTipi: "rozet",
+        miktar: 0,
+        tutar: 999.9,
+        paketTl: 999.9,
+      })
+    ).toBe("Acil Çözüm Bul doğrulanmış hesap rozeti paketi");
+  });
 });
 
 describe("faturaKesimTarihi", () => {
