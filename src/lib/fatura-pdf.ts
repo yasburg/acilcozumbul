@@ -34,11 +34,13 @@ export type FaturaPdfGirdi = {
   odeme: KrediOdeme;
   belgeNo: string;
   duzenlenmeTarihi?: Date;
+  /** Yoksa varsayılan kredi/abonelik metni */
+  kalemAciklama?: string;
 };
 
 /**
  * Ödeme makbuzu PDF’si üretir.
- * Yasal GİB e-Arşiv faturası değildir; arşiv / müşteri özeti amaçlıdır.
+ * Yasal GİB e-Arşiv faturası değildir; arşiv / müşteri özeti / panel önizleme amaçlıdır.
  */
 export async function faturaMakbuzPdfUret(
   girdi: FaturaPdfGirdi
@@ -46,6 +48,9 @@ export async function faturaMakbuzPdfUret(
   const { odeme, belgeNo } = girdi;
   const tarih = girdi.duzenlenmeTarihi ?? new Date(odeme.olusturulma);
   const kdv = faturaKdvAyir(odeme.tutar);
+  const hizmet =
+    girdi.kalemAciklama?.trim() ||
+    `Platform kredi paketi / abonelik — ${odeme.miktar} kredi (paket ${odeme.paketTl} TL)`;
 
   const doc = await PDFDocument.create();
   const page = doc.addPage([595.28, 841.89]); // A4
@@ -76,9 +81,9 @@ export async function faturaMakbuzPdfUret(
   });
   y -= 22;
 
-  line("ODEME MAKBUZU / OZET BELGE", { bold: true, size: 12 });
+  line("ORNEK ONIZLEME / ODEME OZETI", { bold: true, size: 12 });
   line(
-    "(Bu belge GIB e-Arsiv / e-Fatura degildir; odeme ozeti ve arsiv kaydidir.)",
+    "(Bu belge GIB e-Arsiv / e-Fatura degildir. Onaydan sonra Trendyol faturasi kesilir.)",
     { size: 8 }
   );
   y -= 8;
@@ -116,9 +121,7 @@ export async function faturaMakbuzPdfUret(
   y -= 10;
 
   line("HIZMET", { bold: true, size: 11 });
-  line(
-    `Platform kredi paketi / abonelik — ${odeme.miktar} kredi (paket ${odeme.paketTl} TL)`
-  );
+  line(hizmet, { size: 9 });
   if (odeme.odemeReferans) {
     line(`Odeme referansi: ${odeme.odemeReferans}`, { size: 9 });
   }

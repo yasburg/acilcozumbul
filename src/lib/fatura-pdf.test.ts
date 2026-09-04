@@ -35,4 +35,14 @@ describe("faturaMakbuzPdfUret", () => {
     const buf = Buffer.from(bytes);
     expect(faturaPdfBufferGecerliMi(buf)).toBe(true);
   });
+
+  it("özel kalem açıklamasını kabul eder", async () => {
+    const bytes = await faturaMakbuzPdfUret({
+      odeme: { ...ornekOdeme, odemeTipi: "rozet", miktar: 0 },
+      belgeNo: "ORNEK-TEST",
+      kalemAciklama: "Acil Cozum Bul dogrulanmis hesap rozeti paketi",
+      duzenlenmeTarihi: new Date("2026-08-30T12:00:00+03:00"),
+    });
+    expect(faturaPdfBufferGecerliMi(Buffer.from(bytes))).toBe(true);
+  });
 });

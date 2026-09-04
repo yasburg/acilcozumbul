@@ -4,9 +4,9 @@ import { abonelikIslemIdFromDetay } from "@/lib/panel-satin-almalar";
 import { ensureSeedData } from "@/lib/seed";
 import { trendyolOdemeFaturaOnizle } from "@/lib/trendyol-efaturam/fatura-onizle";
 
-/** Panel: Trendyol faturayı kesmeden önce özet önizleme */
+/** Panel: yerel örnek PDF + özet (Trendyol’a henüz gönderilmez) */
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensureSeedData();
@@ -24,7 +24,16 @@ export async function POST(
     return NextResponse.json({ error: "Kayıt bulunamadı." }, { status: 404 });
   }
 
-  const sonuc = await trendyolOdemeFaturaOnizle(kayit);
+  let faturaTarihi: string | undefined;
+  try {
+    const body = (await request.json()) as { faturaTarihi?: string };
+    faturaTarihi =
+      typeof body.faturaTarihi === "string" ? body.faturaTarihi : undefined;
+  } catch {
+    /* body yoksa varsayılan ödeme tarihi */
+  }
+
+  const sonuc = await trendyolOdemeFaturaOnizle(kayit, { faturaTarihi });
   if (!sonuc.ok) {
     return NextResponse.json({ error: sonuc.hata }, { status: 400 });
   }

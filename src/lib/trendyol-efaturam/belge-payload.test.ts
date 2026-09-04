@@ -6,6 +6,7 @@ import {
   faturaGunTr,
   faturaKesimTarihi,
   faturaLocalReferenceId,
+  faturaTarihiGunParse,
   kisiAdiniAyir,
   kurumsalFaturaPayloadOlustur,
   kurumsalOdemeAciklama,
@@ -72,6 +73,29 @@ describe("faturaKesimTarihi", () => {
       new Date("2026-08-20T12:00:00.000Z")
     );
     expect(d.toISOString()).toBe("2026-08-20T12:00:00.000Z");
+  });
+
+  it("panelden seçilen tarihi kullanır", () => {
+    const secilen = new Date("2026-08-10T12:00:00+03:00");
+    const d = faturaKesimTarihi(
+      ornekOdeme,
+      new Date("2026-08-20T12:00:00.000Z"),
+      { kesimTarihi: secilen }
+    );
+    expect(faturaGunTr(d)).toBe("2026-08-10");
+  });
+});
+
+describe("faturaTarihiGunParse", () => {
+  it("YYYY-MM-DD parse eder", () => {
+    const d = faturaTarihiGunParse("2026-08-30");
+    expect(d).not.toBeNull();
+    expect(faturaGunTr(d!)).toBe("2026-08-30");
+  });
+
+  it("geçersizde null", () => {
+    expect(faturaTarihiGunParse("30/08/2026")).toBeNull();
+    expect(faturaTarihiGunParse("")).toBeNull();
   });
 });
 

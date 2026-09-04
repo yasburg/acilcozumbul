@@ -120,7 +120,7 @@ export async function trendyolOdemeFaturaPanelDurumu(opts: {
 /** Ödeme sonrası: Trendyol fatura kes → PDF kaydet → müşteri + muhasebe bildirimi */
 export async function odemeSonrasiTrendyolFatura(
   odeme: KrediOdeme,
-  opts?: { manuel?: boolean; yeniden?: boolean }
+  opts?: { manuel?: boolean; yeniden?: boolean; kesimTarihi?: Date }
 ): Promise<KurumsalTrendyolFaturaSonuc> {
   if (odeme.demoOdeme) {
     return { ok: true, atlandi: true, neden: "demo" };
@@ -145,6 +145,7 @@ export async function odemeSonrasiTrendyolFatura(
 
   const olustur = await trendyolOdemeFaturaOlustur(odeme, {
     forceYeni: Boolean(opts?.yeniden),
+    kesimTarihi: opts?.kesimTarihi,
   });
   if (!olustur.ok) {
     console.error("[trendyol-fatura]", odeme.id, olustur.hata);

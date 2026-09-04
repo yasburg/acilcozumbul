@@ -60,7 +60,22 @@ type FaturaOnizleme = {
   aliciAdres?: string;
   aliciEposta?: string;
   kurumsal: boolean;
+  pdfBase64?: string;
+  ornekPdf?: boolean;
 };
+
+function gunTrInput(iso: string): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Istanbul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date(iso));
+  } catch {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
 
 export default function PanelSatinAlmaDetayPage() {
   const params = useParams();
@@ -74,13 +89,20 @@ export default function PanelSatinAlmaDetayPage() {
     null
   );
   const [onizlemeYeniden, setOnizlemeYeniden] = useState(false);
+  const [faturaTarihi, setFaturaTarihi] = useState("");
   const [mesaj, setMesaj] = useState("");
   const [hata, setHata] = useState("");
   const dosyaRef = useRef<HTMLInputElement>(null);
 
   async function yukle() {
     const r = await fetch(`/api/panel/kredi-odemeler/${id}`);
-    setKayit(r.ok ? await r.json() : null);
+    if (!r.ok) {
+      setKayit(null);
+      return;
+    }
+    const data = (await r.json()) as Detay;
+    setKayit(data);
+    setFaturaTarihi((onceki) => onceki || gunTrInput(data.olusturulma));
   }
 
   useEffect(() => {
@@ -126,6 +148,10 @@ export default function PanelSatinAlmaDetayPage() {
   async function trendyolFaturaOnizle(yeniden = false) {
     setHata("");
     setMesaj("");
+    if (!faturaTarihi) {
+      setHata("Fatura tarihini seçin.");
+      return;
+    }
     setTrendyolOnizleniyor(true);
     try {
       const res = await fetch(
@@ -134,6 +160,7 @@ export default function PanelSatinAlmaDetayPage() {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ faturaTarihi }),
         }
       );
       const data = await res.json().catch(() => ({}));
@@ -164,7 +191,7 @@ export default function PanelSatinAlmaDetayPage() {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ yeniden }),
+          body: JSON.stringify({ yeniden, faturaTarihi }),
         }
       );
       const data = await res.json().catch(() => ({}));
@@ -191,6 +218,10 @@ export default function PanelSatinAlmaDetayPage() {
     } finally {
       setTrendyolOlusturuyor(false);
     }
+  }
+
+  async function trendyolOnizlemeVazgec() {
+    setFaturaOnizleme(null);
   }
 
   async function faturaIndir() {
@@ -313,9 +344,20 @@ export default function PanelSatinAlmaDetayPage() {
                   ) : null}
                 </p>
                 <p className="text-sm text-slate-600">
-                  Bu PDF geçersiz. Yeni e-arşiv/e-fatura kesmek için tekrar
-                  oluşturun.
+                  Bu PDF geçersiz. Yeni e-arşiv/e-fatura kesmek için tarih
+                  seçip tekrar önizleyin.
                 </p>
+                <label className="block text-sm text-slate-700">
+                  <span className="font-medium">Fatura tarihi</span>
+                  <input
+                    type="date"
+                    className="mt-1 block w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    value={faturaTarihi}
+                    max={gunTrInput(new Date().toISOString())}
+                    disabled={trendyolOlusturuyor || trendyolOnizleniyor}
+                    onChange={(e) => setFaturaTarihi(e.target.value)}
+                  />
+                </label>
                 <div className="flex flex-wrap gap-2">
                   <Btn
                     type="button"
@@ -342,11 +384,22 @@ export default function PanelSatinAlmaDetayPage() {
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-slate-600">
-              PDF yükleyin veya Trendyol E-Faturam ile otomatik oluşturun.
-              Kurumsal alımlarda e-fatura/e-arşiv; bireyselde e-arşiv kesilir
-              (TC yoksa 11111111111 kullanılır).
-              E-posta varsa e-posta, yoksa SMS ile fatura linki gider.
+              Önce fatura tarihini seçin. Önizleme yerel örnek PDF gösterir
+              (Trendyol’a henüz gitmez). Onayda gerçek e-arşiv/e-fatura kesilir.
             </p>
+            <label className="block text-sm text-slate-700">
+              <span className="font-medium">Fatura tarihi</span>
+              <input
+                type="date"
+                className="mt-1 block w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                value={faturaTarihi}
+                max={gunTrInput(new Date().toISOString())}
+                disabled={
+                  yukleniyor || trendyolOlusturuyor || trendyolOnizleniyor
+                }
+                onChange={(e) => setFaturaTarihi(e.target.value)}
+              />
+            </label>
             <div className="flex flex-wrap gap-2">
               <Btn
                 type="button"
@@ -408,7 +461,7 @@ export default function PanelSatinAlmaDetayPage() {
           aria-modal="true"
           aria-labelledby="fatura-onizle-baslik"
         >
-          <Card className="max-w-lg w-full max-h-[90vh] overflow-y-auto space-y-3">
+          <Card className="max-w-3xl w-full max-h-[90vh] overflow-y-auto space-y-3">
             <h3
               id="fatura-onizle-baslik"
               className="text-lg font-bold text-slate-900"
@@ -416,7 +469,8 @@ export default function PanelSatinAlmaDetayPage() {
               Fatura önizleme
             </h3>
             <p className="text-sm text-slate-600">
-              Trendyol’a henüz gönderilmedi. Bilgileri kontrol edip onaylayın.
+              Bu örnek PDF’dir (GİB faturası değil). Bilgileri kontrol edip
+              onaylayın; onayda Trendyol’da gerçek fatura kesilir.
             </p>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-1 text-sm">
               <p>
@@ -426,6 +480,7 @@ export default function PanelSatinAlmaDetayPage() {
                     ? "e-Fatura"
                     : "e-Arşiv"}
                 </strong>
+                <span className="text-slate-500"> (onay sonrası)</span>
               </p>
               <p>
                 <span className="text-slate-500">Kalem: </span>
@@ -474,6 +529,18 @@ export default function PanelSatinAlmaDetayPage() {
                 </strong>
               </p>
             </div>
+            {faturaOnizleme.pdfBase64 ? (
+              <iframe
+                title="Örnek fatura PDF önizleme"
+                className="w-full h-[55vh] rounded-xl border border-slate-200 bg-white"
+                src={`data:application/pdf;base64,${faturaOnizleme.pdfBase64}`}
+              />
+            ) : (
+              <p className="text-sm text-amber-700">
+                Örnek PDF üretilemedi; özet bilgileri kontrol edip
+                onaylayabilirsiniz.
+              </p>
+            )}
             <div className="flex flex-wrap gap-2 pt-1">
               <Btn
                 type="button"
@@ -483,13 +550,13 @@ export default function PanelSatinAlmaDetayPage() {
               >
                 {trendyolOlusturuyor
                   ? "Oluşturuluyor…"
-                  : "Onayla ve oluştur"}
+                  : "Onayla ve Trendyol’da oluştur"}
               </Btn>
               <Btn
                 type="button"
                 className="!w-auto min-h-0 py-2.5 px-4 text-sm"
                 disabled={trendyolOlusturuyor}
-                onClick={() => setFaturaOnizleme(null)}
+                onClick={() => trendyolOnizlemeVazgec()}
               >
                 Vazgeç
               </Btn>

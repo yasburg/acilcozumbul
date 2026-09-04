@@ -11,6 +11,8 @@ export type KurumsalFaturaPayloadGirdi = {
   userId: number;
   belgeTipi: FaturaBelgeTipi;
   targetAlias?: string;
+  /** Panelden seçilen fatura günü (YYYY-MM-DD veya Date) */
+  kesimTarihi?: Date;
 };
 
 export function kurumsalOdemeAciklama(odeme: KrediOdeme): string {
@@ -64,8 +66,31 @@ function aliciKonum(adres?: string) {
   };
 }
 
+/**
+ * Panel tarih seçici — YYYY-MM-DD (Europe/Istanbul günü).
+ * Geçersizse null; gelecek günü reddetmek için simdi ile birlikte kullanın.
+ */
+export function faturaTarihiGunParse(
+  gun: string | null | undefined
+): Date | null {
+  const t = (gun ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return null;
+  // Öğlen TR — gece yarısı UTC kaymasını önler
+  const d = new Date(`${t}T12:00:00+03:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  return d;
+}
+
 /** Fatura tarihi = ödeme zamanı (geçmiş alımlar için bugünü değil ödemeyi kullan) */
-export function faturaKesimTarihi(odeme: KrediOdeme, simdi = new Date()): Date {
+export function faturaKesimTarihi(
+  odeme: KrediOdeme,
+  simdi = new Date(),
+  opts?: { kesimTarihi?: Date }
+): Date {
+  if (opts?.kesimTarihi && !Number.isNaN(opts.kesimTarihi.getTime())) {
+    if (opts.kesimTarihi.getTime() > simdi.getTime()) return simdi;
+    return opts.kesimTarihi;
+  }
   const ham = odeme.olusturulma as string | Date | null | undefined;
   if (ham == null) return simdi;
   const d =
@@ -104,7 +129,8 @@ export function faturaLocalReferenceId(odeme: KrediOdeme): string {
 export function kurumsalFaturaPayloadOlustur(
   girdi: KurumsalFaturaPayloadGirdi
 ): Record<string, unknown> {
-  const { odeme, companyId, userId, belgeTipi, targetAlias } = girdi;
+  const { odeme, companyId, userId, belgeTipi, targetAlias, kesimTarihi } =
+    girdi;
   const cfg = trendyolEfaturamConfigOku();
   const aciklama = kurumsalOdemeAciklama(odeme);
   const kdv = faturaKdvAyir(odeme.tutar);
@@ -120,7 +146,7 @@ export function kurumsalFaturaPayloadOlustur(
     : odeme.cekiciAd.trim();
   const bireysel = !odeme.kurumsal || vergiNo.length === 11;
   const kisi = bireysel ? kisiAdiniAyir(unvan) : null;
-  const kesim = faturaKesimTarihi(odeme);
+  const kesim = faturaKesimTarihi(odeme, new Date(), { kesimTarihi });
   const kesimIso = kesim.toISOString();
   const kesimGun = faturaGunTr(kesim);
   const localRef = faturaLocalReferenceId(odeme);

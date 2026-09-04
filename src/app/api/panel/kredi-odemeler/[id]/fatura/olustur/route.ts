@@ -3,6 +3,7 @@ import { getKrediOdemeById } from "@/lib/kredi-odeme";
 import { odemeSonrasiTrendyolFatura } from "@/lib/fatura-trendyol";
 import { abonelikIslemIdFromDetay } from "@/lib/panel-satin-almalar";
 import { ensureSeedData } from "@/lib/seed";
+import { faturaTarihiGunParse } from "@/lib/trendyol-efaturam/belge-payload";
 
 /** Panel: Trendyol E-Faturam ile fatura oluştur */
 export async function POST(
@@ -25,9 +26,14 @@ export async function POST(
   }
 
   let yeniden = false;
+  let kesimTarihi: Date | undefined;
   try {
-    const body = (await request.json()) as { yeniden?: boolean };
+    const body = (await request.json()) as {
+      yeniden?: boolean;
+      faturaTarihi?: string;
+    };
     yeniden = Boolean(body?.yeniden);
+    kesimTarihi = faturaTarihiGunParse(body?.faturaTarihi) ?? undefined;
   } catch {
     yeniden = false;
   }
@@ -35,6 +41,7 @@ export async function POST(
   const sonuc = await odemeSonrasiTrendyolFatura(kayit, {
     manuel: true,
     yeniden,
+    kesimTarihi,
   });
   if (!sonuc.ok) {
     return NextResponse.json({ error: sonuc.hata }, { status: 502 });

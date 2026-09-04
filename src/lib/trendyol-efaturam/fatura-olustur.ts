@@ -33,7 +33,10 @@ type OlusturmaYanit = {
 /** Ödeme için Trendyol E-Faturam üzerinden e-fatura veya e-arşiv oluşturur ve PDF indirir. */
 export async function trendyolOdemeFaturaOlustur(
   odeme: KrediOdeme,
-  opts?: { forceYeni?: boolean }
+  opts?: {
+    forceYeni?: boolean;
+    kesimTarihi?: Date;
+  }
 ): Promise<TrendyolFaturaOlusturSonuc> {
   if (!trendyolEfaturamYapilandirildi()) {
     return {
@@ -105,6 +108,7 @@ export async function trendyolOdemeFaturaOlustur(
         userId: oturum.userId,
         belgeTipi,
         targetAlias,
+        kesimTarihi: opts?.kesimTarihi,
       });
 
       const yol =

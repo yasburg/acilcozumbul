@@ -1,10 +1,12 @@
 import type { KrediOdeme } from "../types";
+import { faturaMakbuzPdfUret } from "../fatura-pdf";
 import { adSoyadAyir } from "../panel-satin-almalar";
 import { faturaKdvAyir } from "../fatura-link";
 import {
   bireyselEarsivTckn,
   faturaGunTr,
   faturaKesimTarihi,
+  faturaTarihiGunParse,
   kurumsalOdemeAciklama,
 } from "./belge-payload";
 import {
@@ -28,13 +30,18 @@ export type TrendyolFaturaOnizleme = {
   aliciEposta?: string;
   kurumsal: boolean;
   odemeTipi?: string;
+  /** Yerel örnek makbuz PDF (base64) — GİB / Trendyol belgesi değil */
+  pdfBase64?: string;
+  ornekPdf: true;
 };
 
 /**
- * Trendyol’a göndermeden fatura özetini üretir (panel onay adımı).
+ * Önizleme: Trendyol’a göndermeden özet + yerel örnek makbuz PDF.
+ * Onay sonrası gerçek e-arşiv/e-fatura kesilir.
  */
 export async function trendyolOdemeFaturaOnizle(
-  odeme: KrediOdeme
+  odeme: KrediOdeme,
+  opts?: { faturaTarihi?: string }
 ): Promise<
   | { ok: true; onizleme: TrendyolFaturaOnizleme }
   | { ok: false; hata: string }
@@ -52,6 +59,10 @@ export async function trendyolOdemeFaturaOnizle(
     }
   }
 
+  const kesimTarihi =
+    faturaTarihiGunParse(opts?.faturaTarihi) ?? undefined;
+  const kesim = faturaKesimTarihi(odeme, new Date(), { kesimTarihi });
+
   let belgeTipi: FaturaBelgeTipi = "e-arsiv";
   if (odeme.kurumsal) {
     const mukellefSonuc = await efaturaMukellefiSorgula(odeme.vergiNo!);
@@ -65,19 +76,26 @@ export async function trendyolOdemeFaturaOnizle(
   }
 
   const kdv = faturaKdvAyir(odeme.tutar);
-  const kesim = faturaKesimTarihi(odeme);
   const aliciUnvan = odeme.kurumsal
     ? (odeme.sirketUnvan ?? odeme.cekiciAd).trim()
     : odeme.cekiciAd.trim();
   const aliciVergiNo = odeme.kurumsal
     ? (odeme.vergiNo ?? "").replace(/\D/g, "")
     : bireyselEarsivTckn(odeme);
+  const kalemAciklama = kurumsalOdemeAciklama(odeme);
+
+  const ornekPdf = await faturaMakbuzPdfUret({
+    odeme,
+    belgeNo: `ORNEK-${odeme.id.slice(0, 8).toUpperCase()}`,
+    duzenlenmeTarihi: kesim,
+    kalemAciklama,
+  });
 
   return {
     ok: true,
     onizleme: {
       belgeTipi,
-      kalemAciklama: kurumsalOdemeAciklama(odeme),
+      kalemAciklama,
       tutarTl: kdv.toplam,
       matrahTl: kdv.matrah,
       kdvTl: kdv.kdv,
@@ -89,6 +107,8 @@ export async function trendyolOdemeFaturaOnizle(
       aliciEposta: odeme.faturaEposta,
       kurumsal: Boolean(odeme.kurumsal),
       odemeTipi: odeme.odemeTipi,
+      pdfBase64: Buffer.from(ornekPdf).toString("base64"),
+      ornekPdf: true,
     },
   };
 }
