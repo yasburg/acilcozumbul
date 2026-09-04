@@ -14,6 +14,7 @@ import {
   satinAlmaTipFiltreyeUyar,
   type SatinAlmaTip,
 } from "@/lib/panel-satin-almalar";
+import { senkronizeTamamlananRozetOdemeleri } from "@/lib/rozet-satin-alma-senkron";
 
 export type SatinAlmaOzetDto = {
   id: string;
@@ -42,6 +43,10 @@ export type SatinAlmaOzetDto = {
 export async function GET(request: NextRequest) {
   const filtre = satinAlmaFiltreParse(
     request.nextUrl.searchParams.get("tip")
+  );
+
+  await senkronizeTamamlananRozetOdemeleri().catch((e) =>
+    console.error("[panel/kredi-odemeler] rozet senkron", e)
   );
 
   const [krediListe, abonelikIslemleri, faturaLinkleri] = await Promise.all([

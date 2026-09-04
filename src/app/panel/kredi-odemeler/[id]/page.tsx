@@ -47,6 +47,21 @@ type Detay = {
   } | null;
 };
 
+type FaturaOnizleme = {
+  belgeTipi: "e-fatura" | "e-arsiv";
+  kalemAciklama: string;
+  tutarTl: number;
+  matrahTl: number;
+  kdvTl: number;
+  kdvOran: number;
+  faturaTarihi: string;
+  aliciUnvan: string;
+  aliciVergiNo: string;
+  aliciAdres?: string;
+  aliciEposta?: string;
+  kurumsal: boolean;
+};
+
 export default function PanelSatinAlmaDetayPage() {
   const params = useParams();
   const id = params.id as string;
@@ -54,6 +69,11 @@ export default function PanelSatinAlmaDetayPage() {
   const [loading, setLoading] = useState(true);
   const [yukleniyor, setYukleniyor] = useState(false);
   const [trendyolOlusturuyor, setTrendyolOlusturuyor] = useState(false);
+  const [trendyolOnizleniyor, setTrendyolOnizleniyor] = useState(false);
+  const [faturaOnizleme, setFaturaOnizleme] = useState<FaturaOnizleme | null>(
+    null
+  );
+  const [onizlemeYeniden, setOnizlemeYeniden] = useState(false);
   const [mesaj, setMesaj] = useState("");
   const [hata, setHata] = useState("");
   const dosyaRef = useRef<HTMLInputElement>(null);
@@ -103,6 +123,36 @@ export default function PanelSatinAlmaDetayPage() {
     }
   }
 
+  async function trendyolFaturaOnizle(yeniden = false) {
+    setHata("");
+    setMesaj("");
+    setTrendyolOnizleniyor(true);
+    try {
+      const res = await fetch(
+        `/api/panel/kredi-odemeler/${id}/fatura/onizle`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string"
+            ? data.error
+            : "Fatura önizlemesi alınamadı."
+        );
+      }
+      setOnizlemeYeniden(yeniden);
+      setFaturaOnizleme(data.onizleme as FaturaOnizleme);
+    } catch (err) {
+      setHata(err instanceof Error ? err.message : "Önizleme başarısız.");
+    } finally {
+      setTrendyolOnizleniyor(false);
+    }
+  }
+
   async function trendyolFaturaOlustur(yeniden = false) {
     setHata("");
     setMesaj("");
@@ -125,6 +175,7 @@ export default function PanelSatinAlmaDetayPage() {
             : "Trendyol fatura oluşturulamadı."
         );
       }
+      setFaturaOnizleme(null);
       if (data.atlandi) {
         setMesaj(data.mesaj ?? "İşlem atlandı.");
       } else {
@@ -189,9 +240,11 @@ export default function PanelSatinAlmaDetayPage() {
   const tipSinif =
     kayit.tip === "kredi"
       ? "bg-amber-50 text-amber-800"
-      : kayit.tip === "abonelik_yenileme"
-        ? "bg-sky-50 text-sky-800"
-        : "bg-emerald-50 text-emerald-800";
+      : kayit.tip === "rozet"
+        ? "bg-violet-50 text-violet-800"
+        : kayit.tip === "abonelik_yenileme"
+          ? "bg-sky-50 text-sky-800"
+          : "bg-emerald-50 text-emerald-800";
 
   return (
     <div className="space-y-4">
@@ -267,12 +320,12 @@ export default function PanelSatinAlmaDetayPage() {
                   <Btn
                     type="button"
                     className="!w-auto min-h-0 py-2.5 px-4 text-sm !bg-amber-600 hover:!bg-amber-700"
-                    disabled={trendyolOlusturuyor}
-                    onClick={() => void trendyolFaturaOlustur(true)}
+                    disabled={trendyolOlusturuyor || trendyolOnizleniyor}
+                    onClick={() => void trendyolFaturaOnizle(true)}
                   >
-                    {trendyolOlusturuyor
-                      ? "Oluşturuluyor…"
-                      : "Tekrar oluştur"}
+                    {trendyolOnizleniyor
+                      ? "Önizleniyor…"
+                      : "Faturayı önizle ve oluştur"}
                   </Btn>
                 </div>
               </>
@@ -298,12 +351,12 @@ export default function PanelSatinAlmaDetayPage() {
               <Btn
                 type="button"
                 className="!w-auto min-h-0 py-2.5 px-4 text-sm !bg-emerald-600 hover:!bg-emerald-700"
-                disabled={yukleniyor || trendyolOlusturuyor}
-                onClick={() => void trendyolFaturaOlustur()}
+                disabled={yukleniyor || trendyolOlusturuyor || trendyolOnizleniyor}
+                onClick={() => void trendyolFaturaOnizle()}
               >
-                {trendyolOlusturuyor
-                  ? "Oluşturuluyor…"
-                  : "Trendyol'dan fatura oluştur"}
+                {trendyolOnizleniyor
+                  ? "Önizleniyor…"
+                  : "Faturayı önizle ve oluştur"}
               </Btn>
               <input
                 ref={dosyaRef}
@@ -315,7 +368,7 @@ export default function PanelSatinAlmaDetayPage() {
               <Btn
                 type="button"
                 className="!w-auto min-h-0 py-2.5 px-4 text-sm"
-                disabled={yukleniyor || trendyolOlusturuyor}
+                disabled={yukleniyor || trendyolOlusturuyor || trendyolOnizleniyor}
                 onClick={() => dosyaRef.current?.click()}
               >
                 {yukleniyor ? "Yükleniyor…" : "Fatura yükle"}
@@ -347,6 +400,103 @@ export default function PanelSatinAlmaDetayPage() {
         <Satir label="Ortam" value={kayit.demoOdeme ? "Demo" : "Canlı"} />
         <Satir label="Çekici ID" value={kayit.cekiciId} />
       </Card>
+
+      {faturaOnizleme && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="fatura-onizle-baslik"
+        >
+          <Card className="max-w-lg w-full max-h-[90vh] overflow-y-auto space-y-3">
+            <h3
+              id="fatura-onizle-baslik"
+              className="text-lg font-bold text-slate-900"
+            >
+              Fatura önizleme
+            </h3>
+            <p className="text-sm text-slate-600">
+              Trendyol’a henüz gönderilmedi. Bilgileri kontrol edip onaylayın.
+            </p>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-1 text-sm">
+              <p>
+                <span className="text-slate-500">Belge tipi: </span>
+                <strong>
+                  {faturaOnizleme.belgeTipi === "e-fatura"
+                    ? "e-Fatura"
+                    : "e-Arşiv"}
+                </strong>
+              </p>
+              <p>
+                <span className="text-slate-500">Kalem: </span>
+                <strong>{faturaOnizleme.kalemAciklama}</strong>
+              </p>
+              <p>
+                <span className="text-slate-500">Alıcı: </span>
+                <strong>{faturaOnizleme.aliciUnvan}</strong>
+              </p>
+              <p>
+                <span className="text-slate-500">
+                  {faturaOnizleme.kurumsal ? "VKN" : "TCKN"}:{" "}
+                </span>
+                <strong>{faturaOnizleme.aliciVergiNo}</strong>
+              </p>
+              {faturaOnizleme.aliciAdres ? (
+                <p>
+                  <span className="text-slate-500">Adres: </span>
+                  {faturaOnizleme.aliciAdres}
+                </p>
+              ) : null}
+              {faturaOnizleme.aliciEposta ? (
+                <p>
+                  <span className="text-slate-500">E-posta: </span>
+                  {faturaOnizleme.aliciEposta}
+                </p>
+              ) : null}
+              <p>
+                <span className="text-slate-500">Fatura tarihi: </span>
+                {faturaOnizleme.faturaTarihi}
+              </p>
+              <p>
+                <span className="text-slate-500">Matrah: </span>
+                {faturaOnizleme.matrahTl.toLocaleString("tr-TR")} ₺
+              </p>
+              <p>
+                <span className="text-slate-500">
+                  KDV (%{Math.round(faturaOnizleme.kdvOran * 100)}):{" "}
+                </span>
+                {faturaOnizleme.kdvTl.toLocaleString("tr-TR")} ₺
+              </p>
+              <p>
+                <span className="text-slate-500">Toplam: </span>
+                <strong>
+                  {faturaOnizleme.tutarTl.toLocaleString("tr-TR")} ₺
+                </strong>
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Btn
+                type="button"
+                className="!w-auto min-h-0 py-2.5 px-4 text-sm !bg-emerald-600 hover:!bg-emerald-700"
+                disabled={trendyolOlusturuyor}
+                onClick={() => void trendyolFaturaOlustur(onizlemeYeniden)}
+              >
+                {trendyolOlusturuyor
+                  ? "Oluşturuluyor…"
+                  : "Onayla ve oluştur"}
+              </Btn>
+              <Btn
+                type="button"
+                className="!w-auto min-h-0 py-2.5 px-4 text-sm"
+                disabled={trendyolOlusturuyor}
+                onClick={() => setFaturaOnizleme(null)}
+              >
+                Vazgeç
+              </Btn>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
