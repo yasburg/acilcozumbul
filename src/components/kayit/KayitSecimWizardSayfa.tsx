@@ -676,7 +676,7 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
           externalId: cekiciId || null,
         })
       );
-      router.replace("/cekici/kredi");
+      router.replace("/kayit/kurulum");
     } catch (e) {
       sonOtpDeneme.current = "";
       setError(e instanceof Error ? e.message : "Kayıt başarısız.");
@@ -1493,10 +1493,10 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                 Kaydınız oluşturuldu ✓
               </h1>
               <p className="text-[17px] text-slate-700 leading-relaxed">
-                Talepleri almaya başlamak için abonelik paketini seçin.
+                Hesap kurulumunu tamamlayın; ardından paketleri seçebilirsiniz.
               </p>
-              <Btn onClick={() => router.push("/cekici/kredi")}>
-                Abonelik paketini seç
+              <Btn onClick={() => router.push("/kayit/kurulum")}>
+                Hesap kurulumuna geç
               </Btn>
             </Card>
           </div>

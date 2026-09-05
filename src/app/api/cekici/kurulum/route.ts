@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       sonraki: null,
-      yonlendir: "/cekici/kredi",
+      yonlendir: "/cekici/kredi?hosgeldin=1",
       cekiciId: guncel.id,
     });
   }

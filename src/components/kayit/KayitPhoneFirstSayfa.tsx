@@ -353,7 +353,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
           externalId: cekiciId || null,
         })
       );
-      router.replace("/cekici/kredi");
+      router.replace("/kayit/kurulum");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Kayıt başarısız.");
     } finally {
@@ -369,16 +369,16 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
             Kaydınız oluşturuldu
           </h1>
           <p className="text-[17px] text-slate-700 leading-relaxed">
-            Talepleri almaya başlamak için abonelik paketini seçin.
+            Hesap kurulumunu tamamlayın; ardından paketleri seçebilirsiniz.
           </p>
           <Btn
             className="w-full min-h-[52px] text-base"
             onClick={() => {
-              tiktokClick(`kayit_${funnel.id}_abonelik`, "abonelik_paketi_sec");
-              router.push("/cekici/kredi");
+              tiktokClick(`kayit_${funnel.id}_kurulum`, "hesap_kurulumuna_gec");
+              router.push("/kayit/kurulum");
             }}
           >
-            Abonelik paketini seç
+            Hesap kurulumuna geç
           </Btn>
         </Card>
       </MobileShell>

@@ -67,7 +67,7 @@ export default function KayitKurulumPage() {
       }
       const d = await res.json().catch(() => ({}));
       if (d.profilHazir) {
-        router.replace("/cekici/kredi");
+        router.replace("/cekici/kredi?hosgeldin=1");
         return;
       }
       if (typeof d.isim === "string" && d.isim.trim()) setIsim(d.isim);

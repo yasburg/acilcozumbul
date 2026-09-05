@@ -24,7 +24,7 @@ export function AnaSayfaHizmetVerCta() {
 
         <div className="flex shrink-0 flex-col items-start gap-3.5 sm:flex-row sm:items-center md:flex-col md:items-end">
           <Link
-            href={kayitFunnelYolu("b")}
+            href={kayitFunnelYolu("c")}
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#9ee3b2] bg-[#eaf8ee] px-6 py-3.5 text-sm sm:text-base font-bold text-[#0b4e1e] shadow-[0_2px_8px_rgba(8,155,45,0.08)] transition-all duration-200 hover:border-[#089b2d] hover:bg-[#d5f3dc] hover:shadow-[0_4px_12px_rgba(8,155,45,0.16)] active:scale-[0.98] touch-manipulation"
           >
             <span className="inline-flex size-5 items-center justify-center text-[#089b2d]" aria-hidden>

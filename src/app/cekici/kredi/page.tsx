@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Card } from "@/components/ui";
 import {
@@ -29,8 +29,10 @@ type AbonelikOzet = {
   retryCount: number;
 };
 
-export default function KrediPage() {
+function KrediPageIcerik() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const hosgeldin = searchParams.get("hosgeldin") === "1";
   const [kredi, setKredi] = useState(0);
   const [kaynak, setKaynak] = useState<KrediPaketKaynak>("abonelik");
   const [seciliPaket, setSeciliPaket] = useState<KrediPaketTl>(999);
@@ -165,7 +167,7 @@ export default function KrediPage() {
         }
         center={
           <span className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight truncate">
-            Kredi / Abonelik
+            {hosgeldin ? "Paketler" : "Kredi / Abonelik"}
           </span>
         }
         trailing={
@@ -182,6 +184,18 @@ export default function KrediPage() {
         <Card className="border-red-200 bg-red-50 mb-4">
           <p className="text-red-700 text-sm">{error}</p>
         </Card>
+      )}
+
+      {hosgeldin && (
+        <div className="mb-4 rounded-2xl border border-amber-300/80 bg-gradient-to-br from-amber-50 to-orange-50 px-4 py-3.5 shadow-sm">
+          <p className="text-sm sm:text-base font-extrabold text-amber-950 tracking-tight">
+            Kısa süreli indirimimizi kaçırmayın
+          </p>
+          <p className="mt-1 text-xs sm:text-sm text-amber-900/80 leading-snug">
+            Hesabınız hazır. Paketinizi seçin; bonus kredili aboneliklerle daha
+            fazla iş fırsatına ulaşın.
+          </p>
+        </div>
       )}
 
       {abonelik && aktifAbonelikVar && (
@@ -275,7 +289,9 @@ export default function KrediPage() {
                 <p className="text-lg font-bold text-slate-900">
                   {formatKredi(p.kredi)} kredi
                 </p>
-                <p className="text-xs font-medium text-slate-600 mt-1">{p.tutarTL} TL paket</p>
+                <p className="text-xs font-medium text-slate-600 mt-1">
+                  {p.tutarTL} TL paket
+                </p>
                 {p.bonusKredi > 0 && (
                   <p className="text-xs font-bold text-emerald-700 mt-2">
                     +{p.bonusKredi} bonus kredi
@@ -308,7 +324,10 @@ export default function KrediPage() {
         <p className="text-[11px] text-slate-400 leading-snug text-center">
           {kaynak === "abonelik" ? "Abonelik" : "Kredi"} alımlarında iade
           yapılmaz.{" "}
-          <Link href="/iptal-ve-iade" className="text-emerald-700 underline font-medium">
+          <Link
+            href="/iptal-ve-iade"
+            className="text-emerald-700 underline font-medium"
+          >
             İptal ve İade
           </Link>
         </p>
@@ -341,5 +360,20 @@ export default function KrediPage() {
         </button>
       </div>
     </MobileShell>
+  );
+}
+
+export default function KrediPage() {
+  return (
+    <Suspense
+      fallback={
+        <MobileShell hideHeader>
+          <OpeningLogo forceDocked={true} />
+          <p className="text-center text-slate-500 py-12">Yükleniyor…</p>
+        </MobileShell>
+      }
+    >
+      <KrediPageIcerik />
+    </Suspense>
   );
 }
