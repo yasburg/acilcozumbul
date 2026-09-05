@@ -353,7 +353,11 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
           externalId: cekiciId || null,
         })
       );
-      router.replace("/kayit/kurulum");
+      const hedef =
+        typeof d.yonlendir === "string" && d.yonlendir.startsWith("/")
+          ? d.yonlendir
+          : "/kayit/kurulum";
+      router.replace(hedef);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Kayıt başarısız.");
     } finally {
@@ -369,7 +373,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
             Kaydınız oluşturuldu
           </h1>
           <p className="text-[17px] text-slate-700 leading-relaxed">
-            Hesap kurulumunu tamamlayın; ardından paketleri seçebilirsiniz.
+            Hesap kurulumunu tamamla ve bonus kredi kazan.
           </p>
           <Btn
             className="w-full min-h-[52px] text-base"
@@ -378,7 +382,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
               router.push("/kayit/kurulum");
             }}
           >
-            Hesap kurulumuna geç
+            Hesap kurulumunu tamamla
           </Btn>
         </Card>
       </MobileShell>

@@ -66,7 +66,9 @@ export default function KayitKurulumPage() {
         return;
       }
       const d = await res.json().catch(() => ({}));
-      if (d.profilHazir) {
+      // Hızlı kayıtta kurulumTamam=false; profil alanları dolu olsa bile
+      // şifre/ad adımları bitmeden paketlere kaçırma.
+      if (d.kurulumTamam !== false && d.profilHazir) {
         router.replace("/cekici/kredi?hosgeldin=1");
         return;
       }
@@ -199,8 +201,18 @@ export default function KayitKurulumPage() {
   const yuzde = adim === 1 ? 40 : 75;
 
   return (
-    <MobileShell subtitle="Hesap kurulumu" backHref="/cekici/kredi">
+    <MobileShell subtitle="Hesap kurulumu" backHref="/cekici/panel">
       <div className="space-y-5 pb-8">
+        <div className="rounded-2xl border border-amber-300/80 bg-gradient-to-br from-amber-50 to-orange-50 px-4 py-3.5 shadow-sm">
+          <p className="text-sm sm:text-base font-extrabold text-amber-950 tracking-tight">
+            Hesap kurulumunu tamamla ve bonus kredi kazan
+          </p>
+          <p className="mt-1 text-xs sm:text-sm text-amber-900/80 leading-snug">
+            Profilinizi bitirin; ardından paket seçiminde kısa süreli
+            indirimden yararlanın.
+          </p>
+        </div>
+
         <div>
           <p className="text-sm text-slate-500">İlerleme %{yuzde}</p>
           <div className="mt-1.5 h-2 rounded-full bg-slate-100 overflow-hidden">

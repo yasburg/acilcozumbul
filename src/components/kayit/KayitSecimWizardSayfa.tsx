@@ -676,7 +676,12 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
           externalId: cekiciId || null,
         })
       );
-      router.replace("/kayit/kurulum");
+      // API yonlendir varsa onu kullan; yoksa hesap kurulumu
+      const hedef =
+        typeof d.yonlendir === "string" && d.yonlendir.startsWith("/")
+          ? d.yonlendir
+          : "/kayit/kurulum";
+      router.replace(hedef);
     } catch (e) {
       sonOtpDeneme.current = "";
       setError(e instanceof Error ? e.message : "Kayıt başarısız.");
@@ -1493,10 +1498,10 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                 Kaydınız oluşturuldu ✓
               </h1>
               <p className="text-[17px] text-slate-700 leading-relaxed">
-                Hesap kurulumunu tamamlayın; ardından paketleri seçebilirsiniz.
+                Hesap kurulumunu tamamla ve bonus kredi kazan.
               </p>
               <Btn onClick={() => router.push("/kayit/kurulum")}>
-                Hesap kurulumuna geç
+                Hesap kurulumunu tamamla
               </Btn>
             </Card>
           </div>

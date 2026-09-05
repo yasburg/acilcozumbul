@@ -243,6 +243,7 @@ export async function POST(request: NextRequest) {
     id: cekici.id,
     mesaj: "Kaydınız oluşturuldu.",
     kurulumGerekli: true,
+    yonlendir: "/kayit/kurulum",
     hediyeKredi: baslangicKredi + carkSms,
     carkSms: carkSms || undefined,
     kodUygulandi: kayitHazir.sonuc.uygulandi,
