@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MobileShell } from "@/components/MobileShell";
 import { Btn, Field, SelectField, SifreAlani, Card } from "@/components/ui";
@@ -46,9 +46,17 @@ export default function KayitKurulumPage() {
   const [sifreTekrar, setSifreTekrar] = useState("");
   /** Adım 1’de şifre kaydedildiyse adım 2’de tekrar isteme */
   const [sifreKaydedildi, setSifreKaydedildi] = useState(false);
+  const adSoyadRef = useRef<HTMLDivElement>(null);
 
   const sehirIlceler = useMemo(() => ilceListesi(sehir), [sehir]);
   const istanbulMu = sehir === ISTANBUL_IL;
+
+  function adim1EksikMesaj(): string | null {
+    if (isim.trim().length < 2) return "İsim en az 2 karakter olmalı.";
+    if (soyad.trim().length < 2) return "Soyisim en az 2 karakter olmalı.";
+    if (sorunTipleri.length === 0) return "En az bir hizmet tipi seçin.";
+    return sifreDogrula();
+  }
 
   useEffect(() => {
     tiktokPixelViewContent({
@@ -226,22 +234,33 @@ export default function KayitKurulumPage() {
         {adim === 1 && (
           <Card className="space-y-4">
             <h1 className="text-xl font-bold text-slate-900">Sizi tanıyalım</h1>
-            <div className="grid grid-cols-2 gap-3">
+            <div ref={adSoyadRef} className="grid grid-cols-2 gap-3">
               <Field
                 label="İsim"
                 value={isim}
-                onChange={(e) => setIsim(e.target.value)}
+                onChange={(e) => {
+                  setIsim(e.target.value);
+                  setError("");
+                }}
                 autoComplete="given-name"
+                invalid={isim.trim().length > 0 && isim.trim().length < 2}
                 className="text-lg min-h-[52px]"
               />
               <Field
                 label="Soyisim"
                 value={soyad}
-                onChange={(e) => setSoyad(e.target.value)}
+                onChange={(e) => {
+                  setSoyad(e.target.value);
+                  setError("");
+                }}
                 autoComplete="family-name"
+                invalid={soyad.trim().length > 0 && soyad.trim().length < 2}
                 className="text-lg min-h-[52px]"
               />
             </div>
+            <p className="text-xs text-slate-500 -mt-2">
+              İsim ve soyisim en az 2 karakter olmalı.
+            </p>
 
             <SelectField
               label="Şehir"
@@ -303,20 +322,25 @@ export default function KayitKurulumPage() {
               />
             </div>
 
+            {error ? (
+              <p className="text-sm font-medium text-red-600">{error}</p>
+            ) : null}
             <Btn
               className="w-full min-h-[52px]"
-              disabled={
-                saving ||
-                isim.trim().length < 2 ||
-                soyad.trim().length < 2 ||
-                sorunTipleri.length === 0 ||
-                sifre.length < MIN_SIFRE_UZUNLUK ||
-                sifre !== sifreTekrar
-              }
+              disabled={saving}
               onClick={() => {
-                const hata = sifreDogrula();
+                const hata = adim1EksikMesaj();
                 if (hata) {
                   setError(hata);
+                  if (
+                    isim.trim().length < 2 ||
+                    soyad.trim().length < 2
+                  ) {
+                    adSoyadRef.current?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "center",
+                    });
+                  }
                   return;
                 }
                 void kaydet({
