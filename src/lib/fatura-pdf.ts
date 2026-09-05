@@ -18,6 +18,11 @@ export function faturaPdfMetin(s: string): string {
     .replace(/Ö/g, "O")
     .replace(/ç/g, "c")
     .replace(/Ç/g, "C")
+    // Em/en dash vb. — aksi halde catch-all "?" olur
+    .replace(/[\u2010-\u2015\u2212]/g, "-")
+    .replace(/[\u2018\u2019\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u2033]/g, '"')
+    .replace(/\u2026/g, "...")
     .replace(/[^\x20-\x7E]/g, "?");
 }
 

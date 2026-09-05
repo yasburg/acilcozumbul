@@ -23,6 +23,12 @@ describe("faturaPdfMetin", () => {
   it("Türkçe karakterleri WinAnsi uyumlu hale getirir", () => {
     expect(faturaPdfMetin("ŞğİıÖöÜüÇç")).toBe("SgIiOoUuCc");
   });
+
+  it("em dash’i tire yapar (abonelik kalemi)", () => {
+    expect(
+      faturaPdfMetin("Acil Çözüm Bul abonelik — 500 kredi (paket 499 TL)")
+    ).toBe("Acil Cozum Bul abonelik - 500 kredi (paket 499 TL)");
+  });
 });
 
 describe("faturaMakbuzPdfUret", () => {
