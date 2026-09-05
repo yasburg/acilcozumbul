@@ -183,11 +183,13 @@ function KayitStickyNav({
     guncelle();
     const ro = new ResizeObserver(guncelle);
     ro.observe(el);
+    // Progress -mt-8 taşması kök kutusunu büyütmez; alt ağacı da izle.
+    for (const child of el.children) ro.observe(child);
     return () => {
       ro.disconnect();
       stickyCtaOffsetTemizle();
     };
-  }, [mounted, devamDisabled, loading]);
+  }, [mounted, devamDisabled, loading, progress]);
 
   if (!mounted) return null;
 

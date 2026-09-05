@@ -271,10 +271,12 @@ export function KayitCarkKampanya({ funnelId, aktif }: Props) {
   if (!aktif || !mounted) return null;
 
   const ikonGorunur = ikonHazir && !ikonGitti;
-  // Çerez banner z-[100]; ikon altında kalırsa sağdaki “Ayarlar” tıklamayı yer.
+  // Sticky CTA + çerez şeridinin üstünde dursun; aksi halde “Kabul et / Ayarla”ya biner.
+  const stickyTaban =
+    "var(--acil-sticky-cta-h, env(safe-area-inset-bottom, 0px))";
   const ikonBottom = cerezBannerAcik
-    ? "calc(5.75rem + env(safe-area-inset-bottom, 0px))"
-    : "calc(1.25rem + env(safe-area-inset-bottom, 0px))";
+    ? `calc(${stickyTaban} + 5.75rem)`
+    : `calc(${stickyTaban} + 0.75rem)`;
 
   const ui = (
     <>

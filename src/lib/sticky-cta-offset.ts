@@ -3,16 +3,18 @@ export const STICKY_CTA_H_VAR = "--acil-sticky-cta-h";
 
 /**
  * Gerçek görsel yükseklik — progress noktaları negatif margin (-mt-8) ile
- * üste taştığından `el.offsetHeight` bunu saymaz; sonuç sayfa içeriğinin
- * dar/kısa ekranlarda dokunun altında kalmasına yol açar (bkz. özet ekranı).
- * İlk çocuğun taşan üst kenarını da hesaba katar.
+ * üste taştığından `el.offsetHeight` / yalnızca ilk çocuğun kutusu bunu
+ * saymaz; sonuç çerez şeridinin noktaların ve CTA'nın üstüne binmesine
+ * yol açar (kayıt sihirbazı mobil).
+ * Kök + tüm torunların üst kenarını birleştirerek ölçer.
  */
 export function stickyCtaGercekYukseklik(el: HTMLElement): number {
   const kutu = el.getBoundingClientRect();
-  const ilkCocuk = el.firstElementChild as HTMLElement | null;
-  const enUst = ilkCocuk
-    ? Math.min(kutu.top, ilkCocuk.getBoundingClientRect().top)
-    : kutu.top;
+  let enUst = kutu.top;
+  for (const node of el.querySelectorAll("*")) {
+    const t = (node as HTMLElement).getBoundingClientRect().top;
+    if (Number.isFinite(t)) enUst = Math.min(enUst, t);
+  }
   return Math.max(0, kutu.bottom - enUst);
 }
 

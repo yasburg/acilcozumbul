@@ -241,27 +241,27 @@ export function CerezOnayBanner() {
       {/* Alt şerit — yalnızca özet */}
       {gorunum === "ozet" ? (
         <div
-          className="pointer-events-none fixed inset-x-0 z-[100] bottom-[var(--acil-sticky-cta-h,env(safe-area-inset-bottom,0px))]"
+          className="pointer-events-none fixed inset-x-0 z-[100] bottom-[calc(var(--acil-sticky-cta-h,env(safe-area-inset-bottom,0px))+0.5rem)]"
           role="dialog"
           aria-labelledby="cerez-banner-baslik"
           aria-describedby="cerez-banner-aciklama"
         >
-          <div className="pointer-events-auto mx-auto max-w-lg border-t border-white/60 bg-white/90 px-3 py-2 shadow-[0_-10px_30px_-8px_rgba(27,45,42,0.14),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-xl backdrop-saturate-150">
-            <h2
-              id="cerez-banner-baslik"
-              className="mb-1.5 text-center text-[0.75rem] font-medium text-slate-500"
-            >
-              Çerezleri kullanıyoruz
-            </h2>
+          <div className="pointer-events-auto mx-auto max-w-lg border-t border-white/60 bg-white/90 px-3 py-1.5 shadow-[0_-10px_30px_-8px_rgba(27,45,42,0.14),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-xl backdrop-saturate-150">
             <p id="cerez-banner-aciklama" className="sr-only">
               Zorunlu çerezler site için gereklidir. İsteğe bağlı analitik
               çerezlerini kabul edebilir veya ayarlardan yönetebilirsiniz.
             </p>
             <div className="flex items-center gap-2">
+              <h2
+                id="cerez-banner-baslik"
+                className="min-w-0 flex-1 truncate text-[0.7rem] font-medium text-slate-500"
+              >
+                Çerezleri kullanıyoruz
+              </h2>
               <button
                 type="button"
                 onClick={() => tercihKaydet("tumu", kapat)}
-                className="min-h-8 flex-1 rounded-[var(--acb-radius-sm)] border border-slate-300 bg-white px-3 py-1.5 text-[0.75rem] font-medium text-slate-700 shadow-[var(--acb-shadow)] transition-[background-color,box-shadow,transform] duration-200 hover:bg-slate-50 hover:text-slate-900 hover:shadow-[var(--acb-shadow-lg)] touch-manipulation active:scale-[0.98]"
+                className="min-h-8 shrink-0 rounded-[var(--acb-radius-sm)] border border-slate-300 bg-white px-3 py-1.5 text-[0.75rem] font-medium text-slate-700 shadow-[var(--acb-shadow)] transition-[background-color,box-shadow,transform] duration-200 hover:bg-slate-50 hover:text-slate-900 hover:shadow-[var(--acb-shadow-lg)] touch-manipulation active:scale-[0.98]"
               >
                 Kabul et
               </button>
@@ -271,7 +271,7 @@ export function CerezOnayBanner() {
                   setAnalitikAcik(true);
                   setGorunum("ayarlar");
                 }}
-                className="min-h-8 rounded-[var(--acb-radius-sm)] border border-slate-200 bg-slate-50 px-3 py-1.5 text-[0.75rem] font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-800 touch-manipulation whitespace-nowrap"
+                className="min-h-8 shrink-0 rounded-[var(--acb-radius-sm)] border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[0.75rem] font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-800 touch-manipulation whitespace-nowrap"
               >
                 Ayarla
               </button>
