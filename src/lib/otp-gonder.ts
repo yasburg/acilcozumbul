@@ -1,16 +1,16 @@
 import { sendSms, type SmsAliciTipi } from "./sms-provider";
+import { WhatsAppTemplates, whatsappAktifMi } from "./whatsapp-provider";
 
 export interface OtpGonderimSonuc {
   basarili: boolean;
-  /** Netgsm OTP SMS kanalı */
-  kanal: "otp_sms";
+  /** Netgsm OTP SMS / WhatsApp kanalı */
+  kanal: "otp_sms" | "whatsapp";
   saglayici: string;
   hata?: string;
 }
 
 /**
- * Doğrulama kodu — Netgsm OTP SMS paketi (öncelikli teslim).
- * @see https://api.netgsm.com.tr/sms/rest/v2/otp
+ * Doğrulama kodu — WhatsApp veya Netgsm OTP SMS paketi.
  */
 export async function sendOtp(
   telefon: string,
@@ -31,18 +31,22 @@ export async function sendOtp(
     talepId: meta.talepId,
     krediDus: false,
     kanal: "otp",
+    whatsappTemplate: WhatsAppTemplates.otp(digits),
   });
+
+  const kanal = sms.saglayici === "whatsapp" ? "whatsapp" : "otp_sms";
 
   return {
     basarili: sms.basarili,
-    kanal: "otp_sms",
+    kanal,
     saglayici: sms.saglayici,
     hata: sms.hata,
   };
 }
 
 export function otpBasariMesaji(telefonMaskeli: string): string {
-  return `${telefonMaskeli} numarasına SMS ile doğrulama kodu gönderildi.`;
+  const kanal = whatsappAktifMi() ? "WhatsApp / SMS" : "SMS";
+  return `${telefonMaskeli} numarasına ${kanal} ile doğrulama kodu gönderildi.`;
 }
 
 export function otpBekleyenMesaji(): string {

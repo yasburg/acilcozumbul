@@ -6,8 +6,22 @@ import {
 import { cekiciKrediDus, cekiciToplamKredi } from "./kredi-bakiye";
 import { randomUUID } from "crypto";
 
+import {
+  getWhatsAppConfig,
+  sendWhatsAppTemplate,
+  sendWhatsAppText,
+  whatsappAktifMi,
+  whatsappNumaraIcinAktifMi,
+  type WhatsAppTemplatePayload,
+} from "./whatsapp-provider";
+
 export type SmsAliciTipi = "cekici" | "musteri";
-export type SmsSaglayici = "netgsm" | "netgsm-otp" | "demo";
+export type SmsSaglayici =
+  | "netgsm"
+  | "netgsm-otp"
+  | "whatsapp"
+  | "whatsapp-fallback-sms"
+  | "demo";
 /** xml = klasik SMS; otp = Netgsm OTP SMS paketi (öncelikli teslim) */
 export type SmsKanal = "xml" | "otp";
 
@@ -15,6 +29,7 @@ export interface SmsGonderimSonuc {
   basarili: boolean;
   saglayici: SmsSaglayici;
   hata?: string;
+  mesajId?: string;
 }
 
 const NETGSM_OTP_URL = "https://api.netgsm.com.tr/sms/rest/v2/otp";
@@ -425,6 +440,8 @@ export async function sendSms(
     krediMiktar?: number;
     /** varsayılan xml; dogrulama + premium talep → otp */
     kanal?: SmsKanal;
+    /** WhatsApp için özel şablon (belirtilirse şablon mesajı gönderilir) */
+    whatsappTemplate?: WhatsAppTemplatePayload;
   }
 ): Promise<SmsGonderimSonuc> {
   const krediDus =
@@ -450,7 +467,7 @@ export async function sendSms(
       const sonuc: SmsGonderimSonuc = {
         basarili: false,
         saglayici: "demo",
-        hata: `Yetersiz kredi (SMS bildirimi için ${krediMiktar} kredi gerekir)`,
+        hata: `Yetersiz kredi (SMS/WhatsApp bildirimi için ${krediMiktar} kredi gerekir)`,
       };
       await logSmsKaydi(telefon, mesaj, meta, sonuc);
       return sonuc;
@@ -461,7 +478,49 @@ export async function sendSms(
   const kanal: SmsKanal = meta.kanal === "otp" ? "otp" : "xml";
   let sonuc: SmsGonderimSonuc;
 
-  if (netgsmYapilandirildi()) {
+  const waConfig = getWhatsAppConfig();
+  const waAktif = whatsappNumaraIcinAktifMi(telefon, waConfig);
+
+  if (waAktif) {
+    const waSonuc = meta.whatsappTemplate
+      ? await sendWhatsAppTemplate(telefon, meta.whatsappTemplate, waConfig)
+      : await sendWhatsAppText(telefon, mesaj, waConfig);
+
+    if (waSonuc.basarili) {
+      sonuc = {
+        basarili: true,
+        saglayici: "whatsapp",
+        mesajId: waSonuc.mesajId,
+      };
+    } else if (waConfig.fallbackToSms && netgsmYapilandirildi()) {
+      console.warn(
+        `[WhatsApp] Gönderim başarısız (${waSonuc.hata}), SMS fallback deneniyor...`
+      );
+      const smsSonuc =
+        kanal === "otp"
+          ? await netgsmOtpSmsGonder(telefon, mesaj)
+          : await netgsmXmlGonder(telefon, mesaj);
+
+      if (smsSonuc.basarili) {
+        sonuc = {
+          basarili: true,
+          saglayici: "whatsapp-fallback-sms",
+        };
+      } else {
+        sonuc = {
+          basarili: false,
+          saglayici: "whatsapp-fallback-sms",
+          hata: `WhatsApp (${waSonuc.hata}) | SMS (${smsSonuc.hata})`,
+        };
+      }
+    } else {
+      sonuc = {
+        basarili: false,
+        saglayici: "whatsapp",
+        hata: waSonuc.hata,
+      };
+    }
+  } else if (netgsmYapilandirildi()) {
     sonuc =
       kanal === "otp"
         ? await netgsmOtpSmsGonder(telefon, mesaj)
@@ -470,7 +529,7 @@ export async function sendSms(
     sonuc = {
       basarili: false,
       saglayici: "demo",
-      hata: "Netgsm yapılandırılmamış",
+      hata: "WhatsApp ve Netgsm yapılandırılmamış",
     };
   }
 
@@ -483,7 +542,7 @@ export async function sendSms(
   }
 
   if (!sonuc.basarili) {
-    console.log(`[SMS DEMO - gönderilmedi] → ${telefon}: ${mesaj}`);
+    console.log(`[BİLDİRİM DEMO - gönderilmedi] → ${telefon}: ${mesaj}`);
     if (sonuc.hata) console.log(`  Sebep: ${sonuc.hata}`);
   }
 
@@ -520,11 +579,26 @@ async function logSmsKaydi(
 export function smsDurumu(): {
   gercekGonderim: boolean;
   saglayici: string;
+  whatsappAktif: boolean;
 } {
-  if (netgsmYapilandirildi()) {
-    return { gercekGonderim: true, saglayici: "netgsm (xml + otp)" };
+  const waConfig = getWhatsAppConfig();
+  const waAktif = waConfig.enabled && Boolean(waConfig.token && waConfig.phoneNumberId);
+  const netgsm = netgsmYapilandirildi();
+
+  let saglayici = "demo (sadece log)";
+  if (waAktif && netgsm) {
+    saglayici = "whatsapp (yedek: netgsm)";
+  } else if (waAktif) {
+    saglayici = "whatsapp";
+  } else if (netgsm) {
+    saglayici = "netgsm (xml + otp)";
   }
-  return { gercekGonderim: false, saglayici: "demo (sadece log)" };
+
+  return {
+    gercekGonderim: waAktif || netgsm,
+    saglayici,
+    whatsappAktif: waAktif,
+  };
 }
 
 export interface GondericiAdiSorguSonuc {

@@ -32,7 +32,7 @@ type Saglik = {
   }>;
 };
 
-type TabId = "sms" | "sesli";
+type TabId = "sms" | "whatsapp" | "sesli";
 
 const STATE_LABEL: Record<string, string> = {
   acilan: "Açılan",
@@ -60,6 +60,26 @@ export default function PanelSmsPage() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // WhatsApp Durumu ve Test Formu State
+  const [waDurum, setWaDurum] = useState<{
+    yapilandirildi: boolean;
+    aktif: boolean;
+    phoneNumberId: string | null;
+    businessAccountId: string | null;
+    fallbackToSms: boolean;
+    apiVersion: string;
+  } | null>(null);
+  const [waTestTel, setWaTestTel] = useState("");
+  const [waTestMesaj, setWaTestMesaj] = useState("");
+  const [waTestSablon, setWaTestSablon] = useState<string>("text");
+  const [waTestLoading, setWaTestLoading] = useState(false);
+  const [waTestSonuc, setWaTestSonuc] = useState<{
+    basarili?: boolean;
+    hata?: string;
+    mesajId?: string;
+    saglayici?: string;
+  } | null>(null);
+
   useEffect(() => {
     fetch("/api/panel/sms", { credentials: "include" })
       .then((r) => r.json())
@@ -70,6 +90,11 @@ export default function PanelSmsPage() {
         setSesli(d.sesli ?? null);
       })
       .finally(() => setLoading(false));
+
+    fetch("/api/panel/whatsapp/test", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setWaDurum(d))
+      .catch(() => null);
   }, []);
 
   const s24 = saglik?.son24Saat;
@@ -120,6 +145,7 @@ export default function PanelSmsPage() {
         {(
           [
             { id: "sms" as const, label: "SMS" },
+            { id: "whatsapp" as const, label: "WhatsApp" },
             { id: "sesli" as const, label: "Sesli mesaj" },
           ] as const
         ).map((t) => {
@@ -271,6 +297,258 @@ export default function PanelSmsPage() {
             ))}
           </div>
         </>
+      )}
+
+      {tab === "whatsapp" && (
+        <div className="space-y-4">
+          <Card
+            className={
+              waDurum?.aktif
+                ? "bg-emerald-50 border-emerald-200"
+                : waDurum?.yapilandirildi
+                ? "bg-amber-50 border-amber-200"
+                : "bg-slate-50 border-slate-200"
+            }
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="font-semibold text-slate-900">
+                  WhatsApp Business Cloud API Durumu
+                </h3>
+                <p className="text-sm text-slate-600 mt-0.5">
+                  {waDurum?.aktif
+                    ? "WhatsApp Cloud API aktif — tüm bildirimler öncelikle WhatsApp ile iletilir."
+                    : waDurum?.yapilandirildi
+                    ? "Kimlik bilgileri tanımlı ancak WHATSAPP_ENABLED kapalı (veya NOTIFICATION_CHANNEL=sms)."
+                    : "WhatsApp henüz yapılandırılmamış (.env içinde WHATSAPP_TOKEN ve WHATSAPP_PHONE_NUMBER_ID gereklidir)."}
+                </p>
+              </div>
+              <span
+                className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                  waDurum?.aktif
+                    ? "bg-emerald-200 text-emerald-900"
+                    : waDurum?.yapilandirildi
+                    ? "bg-amber-200 text-amber-900"
+                    : "bg-slate-200 text-slate-700"
+                }`}
+              >
+                {waDurum?.aktif
+                  ? "Aktif (Gönderime Hazır)"
+                  : waDurum?.yapilandirildi
+                  ? "Yapılandırıldı (Devre Dışı)"
+                  : "Yapılandırılmamış"}
+              </span>
+            </div>
+
+            {waDurum && (
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs border-t border-slate-200/60 pt-3">
+                <div>
+                  <span className="text-slate-500 block">Phone Number ID:</span>
+                  <span className="font-mono font-medium text-slate-800">
+                    {waDurum.phoneNumberId || "—"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">WABA ID:</span>
+                  <span className="font-mono font-medium text-slate-800">
+                    {waDurum.businessAccountId || "—"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">API Versiyonu:</span>
+                  <span className="font-mono font-medium text-slate-800">
+                    {waDurum.apiVersion}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block">SMS Fallback (Yedek):</span>
+                  <span
+                    className={`font-medium ${
+                      waDurum.fallbackToSms
+                        ? "text-emerald-700 font-semibold"
+                        : "text-slate-600"
+                    }`}
+                  >
+                    {waDurum.fallbackToSms ? "Açık (Netgsm)" : "Kapalı"}
+                  </span>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            {/* Test Gönderim Kutusu */}
+            <Card>
+              <h3 className="text-base font-bold text-slate-800 mb-1">
+                WhatsApp Test Mesajı Gönder
+              </h3>
+              <p className="text-xs text-slate-500 mb-4">
+                Sandbox / Developer modundaysanız numaranızın Meta panelinde Test
+                Alıcısı olarak ekli olduğundan emin olun.
+              </p>
+
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!waTestTel.trim()) return;
+                  setWaTestLoading(true);
+                  setWaTestSonuc(null);
+                  try {
+                    const res = await fetch("/api/panel/whatsapp/test", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        telefon: waTestTel,
+                        mesaj: waTestSablon === "text" ? waTestMesaj : undefined,
+                        sablon:
+                          waTestSablon !== "text" ? waTestSablon : undefined,
+                      }),
+                    });
+                    const data = await res.json();
+                    setWaTestSonuc(data);
+                  } catch (err) {
+                    setWaTestSonuc({ basarili: false, hata: String(err) });
+                  } finally {
+                    setWaTestLoading(false);
+                  }
+                }}
+                className="space-y-3"
+              >
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Telefon Numarası
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="05XXXXXXXXX"
+                    value={waTestTel}
+                    onChange={(e) => setWaTestTel(e.target.value)}
+                    required
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Mesaj / Şablon Tipi
+                  </label>
+                  <select
+                    value={waTestSablon}
+                    onChange={(e) => setWaTestSablon(e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+                  >
+                    <option value="text">
+                      Serbest Metin (24 saat sohbet penceresi veya sandbox)
+                    </option>
+                    <option value="otp">Şablon: Doğrulama Kodu (OTP)</option>
+                    <option value="yeni_talep">Şablon: Yeni Talep (Çekici)</option>
+                    <option value="talep_alindi">
+                      Şablon: Talep Alındı (Müşteri)
+                    </option>
+                    <option value="yeni_teklif">
+                      Şablon: Yeni Teklif (Müşteri)
+                    </option>
+                    <option value="musteri_secildi">
+                      Şablon: Müşteri Seçti (Çekici)
+                    </option>
+                  </select>
+                </div>
+
+                {waTestSablon === "text" && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Metin İçeriği (İsteğe bağlı)
+                    </label>
+                    <textarea
+                      placeholder="acilcozumbul.com: Test WhatsApp mesajı"
+                      value={waTestMesaj}
+                      onChange={(e) => setWaTestMesaj(e.target.value)}
+                      rows={2}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={waTestLoading || !waTestTel.trim()}
+                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  {waTestLoading ? "Gönderiliyor…" : "WhatsApp Test Gönder"}
+                </button>
+              </form>
+
+              {waTestSonuc && (
+                <div
+                  className={`mt-4 rounded-lg p-3 text-xs ${
+                    waTestSonuc.basarili
+                      ? "bg-emerald-50 text-emerald-900 border border-emerald-200"
+                      : "bg-red-50 text-red-900 border border-red-200"
+                  }`}
+                >
+                  <p className="font-semibold">
+                    {waTestSonuc.basarili
+                      ? "✓ Test Mesajı Başarıyla İletildi!"
+                      : "✕ Gönderim Başarısız"}
+                  </p>
+                  {waTestSonuc.mesajId && (
+                    <p className="mt-1 font-mono">
+                      Mesaj ID: {waTestSonuc.mesajId}
+                    </p>
+                  )}
+                  {waTestSonuc.hata && (
+                    <p className="mt-1 leading-relaxed">{waTestSonuc.hata}</p>
+                  )}
+                </div>
+              )}
+            </Card>
+
+            {/* Meta Şablonları Bilgilendirme */}
+            <Card>
+              <h3 className="text-base font-bold text-slate-800 mb-1">
+                Meta Onaylı Mesaj Şablonları (HSM)
+              </h3>
+              <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+                WhatsApp Business politikasında 24 saattir mesaj atmamış
+                alıcılara outbound mesaj göndermek için Meta onaylı şablon
+                zorunludur.
+              </p>
+
+              <div className="space-y-2 text-xs">
+                <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                  <span className="font-semibold text-slate-800 block">
+                    dogrulama_kodu (AUTHENTICATION)
+                  </span>
+                  <span className="text-slate-600 font-mono">
+                    acilcozumbul.com dogrulama kodunuz: &#123;&#123;1&#125;&#125;
+                  </span>
+                </div>
+                <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                  <span className="font-semibold text-slate-800 block">
+                    yeni_talep_cekici (UTILITY)
+                  </span>
+                  <span className="text-slate-600 font-mono">
+                    Yeni yol yardim talebi: &#123;&#123;1&#125;&#125;. Link: &#123;&#123;2&#125;&#125;
+                  </span>
+                </div>
+                <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                  <span className="font-semibold text-slate-800 block">
+                    yeni_teklif_musteri (UTILITY)
+                  </span>
+                  <span className="text-slate-600 font-mono">
+                    acilcozumbul.com: Teklif geldi. Goruntulemek icin: &#123;&#123;1&#125;&#125;
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
+                <span className="text-slate-500">
+                  Webhook URL: <code className="font-mono">/api/webhooks/whatsapp</code>
+                </span>
+              </div>
+            </Card>
+          </div>
+        </div>
       )}
 
       {tab === "sesli" && (

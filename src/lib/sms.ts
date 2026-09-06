@@ -24,6 +24,7 @@ import {
 import type { Cekici, Talep } from "./types";
 import { telefonGecerliMi } from "./telefon";
 import { bildirimCopyVaryanti, talepYasiDakika } from "./marketplace-p2";
+import { WhatsAppTemplates } from "./whatsapp-provider";
 
 /**
  * Yerel `next dev` / açıkça açılan modda gerçek çekicilere SMS gitmez;
@@ -177,6 +178,7 @@ export async function notifyCekiciler(
         krediMiktar: tutar,
         krediDus: !sesliIsteniyor,
         kanal,
+        whatsappTemplate: WhatsAppTemplates.yeniTalep(smsTalepYer(talep), link),
       });
 
       if (sonuc.basarili && sesliIsteniyor) {
@@ -266,11 +268,19 @@ export async function notifyMusteri(
   const metin = mesajlar[tip as keyof typeof mesajlar];
   if (!metin) return;
 
+  const whatsappTemplate =
+    tip === "talep_alindi"
+      ? WhatsAppTemplates.talepAlindi(bekleLink)
+      : tip === "yeni_teklif"
+        ? WhatsAppTemplates.yeniTeklif(bekleLink)
+        : undefined;
+
   const sonuc = await sendSms(talep.telefon, metin, {
     aliciTipi: "musteri",
     talepId: talep.id,
     link: bekleLink,
     kanal,
+    whatsappTemplate,
   });
 
   if (tip === "talep_alindi" && sonuc.basarili) {
@@ -283,7 +293,7 @@ export async function notifyMusteri(
   }
 }
 
-/** Memnuniyet formu — klasik toplu SMS */
+/** Memnuniyet formu — klasik toplu SMS / WhatsApp */
 export async function notifyMusteriMemnuniyet(
   talep: Talep,
   baseUrl: string
@@ -296,6 +306,7 @@ export async function notifyMusteriMemnuniyet(
     talepId: talep.id,
     link,
     kanal: "xml",
+    whatsappTemplate: WhatsAppTemplates.memnuniyet(link),
   });
 }
 
@@ -347,6 +358,7 @@ export async function notifyCekiciSecildi(
     link,
     krediDus: false,
     kanal: "otp",
+    whatsappTemplate: WhatsAppTemplates.musteriSecildi(yer, talep.telefon, link),
   });
 
   if (sonuc.basarili) {
