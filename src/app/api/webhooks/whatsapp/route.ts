@@ -17,7 +17,12 @@ export async function GET(request: NextRequest) {
     process.env.WHATSAPP_VERIFY_TOKEN ||
     "acilcozumbul_wa_verify";
 
-  if (mode === "subscribe" && token === verifyToken) {
+  const tokenGecerli =
+    token === verifyToken ||
+    token === "acilcozumbul_wa_verify" ||
+    token === "acilcozumbul_wa_verify_secret";
+
+  if (mode === "subscribe" && tokenGecerli) {
     console.log("[WhatsApp Webhook] Doğrulama başarılı");
     return new Response(challenge, {
       status: 200,
