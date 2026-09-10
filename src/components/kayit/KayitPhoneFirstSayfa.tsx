@@ -36,22 +36,6 @@ function cerezOnaySecildiMi(): boolean {
   return cerezOnayOku() != null;
 }
 
-function KayitHeaderGiris() {
-  return (
-    <div className="flex flex-col items-end gap-1 max-w-[11rem] sm:max-w-none sm:flex-row sm:items-center sm:gap-2">
-      <span className="text-[11px] sm:text-xs text-slate-600 leading-tight text-right">
-        Zaten hesabınız var mı?
-      </span>
-      <Link
-        href="/cekici/giris"
-        className="inline-flex items-center justify-center rounded-full bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 touch-manipulation"
-      >
-        Giriş yapın
-      </Link>
-    </div>
-  );
-}
-
 /** Analitik — dinamik import; posthog/gtag/pixel kayıt bundle’ına girmesin */
 function posthogYakala(
   olay: string,
@@ -367,7 +351,7 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
 
   if (basarili) {
     return (
-      <MobileShell subtitle="Kayıt tamam" headerEnd={<KayitHeaderGiris />}>
+      <MobileShell subtitle="Kayıt tamam">
         <Card className="space-y-4 border-emerald-200 bg-emerald-50">
           <h1 className="text-xl font-bold text-slate-900">
             Kaydınız oluşturuldu
@@ -398,7 +382,6 @@ function PhoneFirstIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
 
   return (
     <MobileShell
-      headerEnd={<KayitHeaderGiris />}
       footer={
         !otpAsama ? (
           <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(15,23,42,0.06)]">
@@ -713,7 +696,7 @@ export function KayitPhoneFirstSayfa({ funnel }: { funnel: KayitFunnelTanim }) {
   return (
     <Suspense
       fallback={
-        <MobileShell subtitle="Kayıt" headerEnd={<KayitHeaderGiris />}>
+        <MobileShell subtitle="Kayıt">
           <p className="text-center text-slate-500 py-12">Yükleniyor…</p>
         </MobileShell>
       }

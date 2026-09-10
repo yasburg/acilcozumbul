@@ -5,6 +5,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { SeoLandingShell } from "@/components/seo/SeoLandingShell";
 import {
   SEO_YAYIN_SEHIRLER,
+  seoIlceIndexlensinMi,
   seoIlceYayindaMi,
   seoSehirHizmetYayindaMi,
   seoSehirYayindaMi,
@@ -79,6 +80,7 @@ export async function generateMetadata({ params }: Props) {
       description: icerik.description,
       path: `/${sehir}/${segment}`,
       absoluteTitle: true,
+      noIndex: !seoIlceIndexlensinMi(sehir, segment),
     });
   }
 
@@ -95,6 +97,7 @@ export default async function SehirSegmentPage({ params }: Props) {
     const hizmet = seoHizmetGetir(segment)!;
     const icerik = sehirHizmetIcerik(sehirKayit.ad, hizmet);
     const path = `/${sehir}/${segment}`;
+    const ctaHref = seoTalepOlusturYolu({ sehir, hizmet: segment });
     const ilceLinkleri = seoYayinIlceSluglari(sehir).map((ilceSlugAd) => {
       const ilce = seoIlceGetir(sehir, ilceSlugAd);
       return {
@@ -102,6 +105,10 @@ export default async function SehirSegmentPage({ params }: Props) {
         label: ilce?.ad ?? ilceSlugAd,
       };
     });
+    const secimLinkleri =
+      ilceLinkleri.length > 0
+        ? ilceLinkleri
+        : [{ href: ctaHref, label: `${sehirKayit.ad} geneli talep oluştur` }];
 
     return (
       <SeoLandingShell
@@ -113,13 +120,23 @@ export default async function SehirSegmentPage({ params }: Props) {
           { name: sehirKayit.ad, path: `/${sehir}` },
           { name: hizmet.etiket, path },
         ]}
-        ctaHref={seoTalepOlusturYolu({ sehir, hizmet: segment })}
-        secimBaslik="İlçenizi seçin"
-        secimAlt={`${hizmet.etiket} için ilçeyi seçin; ardından talep oluşturun.`}
-        secimLinkleri={ilceLinkleri}
+        ctaHref={ctaHref}
+        secimBaslik={
+          ilceLinkleri.length > 0 ? "İlçenizi seçin" : "Talebi oluştur"
+        }
+        secimAlt={
+          ilceLinkleri.length > 0
+            ? `${hizmet.etiket} için ilçeyi seçin; ardından talep oluşturun.`
+            : `${sehirKayit.ad} genelinde ${hizmet.etiket} talebi oluşturun.`
+        }
+        secimLinkleri={secimLinkleri}
         ilgili={[
           {
-            href: seoTalepOlusturYolu({ sehir, hizmet: segment }),
+            href: `/${sehir}`,
+            label: `${sehirKayit.ad} yol yardım`,
+          },
+          {
+            href: ctaHref,
             label: `${sehirKayit.ad} geneli ${hizmet.etiket} talebi`,
           },
         ]}
@@ -152,7 +169,7 @@ export default async function SehirSegmentPage({ params }: Props) {
       sadeceYakin: true,
     });
 
-    /** İlçe hub = form + dinamik ilçe SEO (tüm yayınlı şehirler) */
+    /** İlçe hub = form + dinamik ilçe SEO (yalnızca derin şehirler) */
     return (
       <>
         <JsonLd

@@ -115,11 +115,14 @@ function CerezPopup({
   onClose,
   children,
   footer,
+  kapatilabilir = true,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   footer: ReactNode;
+  /** İlk onayda X / backdrop ile kaçılmasın */
+  kapatilabilir?: boolean;
 }) {
   const titleId = useId();
   const [mounted, setMounted] = useState(false);
@@ -130,7 +133,7 @@ function CerezPopup({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && kapatilabilir) onClose();
     };
     window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
@@ -139,7 +142,7 @@ function CerezPopup({
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [onClose]);
+  }, [onClose, kapatilabilir]);
 
   if (!mounted) return null;
 
@@ -148,12 +151,19 @@ function CerezPopup({
       className="fixed inset-0 z-[110] flex items-center justify-center p-4"
       role="presentation"
     >
-      <button
-        type="button"
-        aria-label="Kapat"
-        className="absolute inset-0 bg-slate-900/30 backdrop-blur-[2px]"
-        onClick={onClose}
-      />
+      {kapatilabilir ? (
+        <button
+          type="button"
+          aria-label="Kapat"
+          className="absolute inset-0 bg-slate-900/30 backdrop-blur-[2px]"
+          onClick={onClose}
+        />
+      ) : (
+        <div
+          className="absolute inset-0 bg-slate-900/30 backdrop-blur-[2px]"
+          aria-hidden
+        />
+      )}
       <div
         role="dialog"
         aria-modal="true"
@@ -167,16 +177,20 @@ function CerezPopup({
           >
             {title}
           </p>
-          <button
-            type="button"
-            onClick={onClose}
-            className={ikonDugmeSinif}
-            aria-label="Kapat"
-          >
-            <span className="text-base leading-none" aria-hidden>
-              ×
-            </span>
-          </button>
+          {kapatilabilir ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className={ikonDugmeSinif}
+              aria-label="Kapat"
+            >
+              <span className="text-base leading-none" aria-hidden>
+                ×
+              </span>
+            </button>
+          ) : (
+            <span className="size-8 shrink-0" aria-hidden />
+          )}
         </div>
         <div className="px-4 py-3">{children}</div>
         <div className="flex gap-2 border-t border-slate-100 px-4 py-2.5">
@@ -238,46 +252,44 @@ export function CerezOnayBanner() {
 
   return (
     <>
-      {/* Alt şerit — yalnızca özet */}
       {gorunum === "ozet" ? (
-        <div
-          className="pointer-events-none fixed inset-x-0 z-[100] bottom-[calc(var(--acil-sticky-cta-h,env(safe-area-inset-bottom,0px))+0.5rem)]"
-          role="dialog"
-          aria-labelledby="cerez-banner-baslik"
-          aria-describedby="cerez-banner-aciklama"
-        >
-          <div className="pointer-events-auto mx-auto max-w-lg border-t border-white/60 bg-white/90 px-3 py-1.5 shadow-[0_-10px_30px_-8px_rgba(27,45,42,0.14),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-xl backdrop-saturate-150">
-            <p id="cerez-banner-aciklama" className="sr-only">
-              Zorunlu çerezler site için gereklidir. İsteğe bağlı analitik
-              çerezlerini kabul edebilir veya ayarlardan yönetebilirsiniz.
-            </p>
-            <div className="flex items-center gap-2">
-              <h2
-                id="cerez-banner-baslik"
-                className="min-w-0 flex-1 truncate text-[0.7rem] font-medium text-slate-500"
-              >
-                Çerezleri kullanıyoruz
-              </h2>
-              <button
-                type="button"
-                onClick={() => tercihKaydet("tumu", kapat)}
-                className="min-h-8 shrink-0 rounded-[var(--acb-radius-sm)] border border-slate-300 bg-white px-3 py-1.5 text-[0.75rem] font-medium text-slate-700 shadow-[var(--acb-shadow)] transition-[background-color,box-shadow,transform] duration-200 hover:bg-slate-50 hover:text-slate-900 hover:shadow-[var(--acb-shadow-lg)] touch-manipulation active:scale-[0.98]"
-              >
-                Kabul et
-              </button>
+        <CerezPopup
+          title="Çerezleri kullanıyoruz"
+          onClose={() => {}}
+          kapatilabilir={false}
+          footer={
+            <>
               <button
                 type="button"
                 onClick={() => {
                   setAnalitikAcik(true);
                   setGorunum("ayarlar");
                 }}
-                className="min-h-8 shrink-0 rounded-[var(--acb-radius-sm)] border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[0.75rem] font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-800 touch-manipulation whitespace-nowrap"
+                className="min-h-8 flex-1 rounded-[var(--acb-radius-sm)] border border-slate-200 bg-white text-[0.75rem] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-800 touch-manipulation"
               >
                 Ayarla
               </button>
-            </div>
-          </div>
-        </div>
+              <button
+                type="button"
+                onClick={() => tercihKaydet("tumu", kapat)}
+                className="min-h-8 flex-[1.4] rounded-[var(--acb-radius-sm)] border border-emerald-200 bg-emerald-50 text-[0.75rem] font-semibold text-emerald-800 shadow-[var(--acb-shadow)] transition-[background-color,box-shadow,transform] duration-200 hover:border-emerald-300 hover:bg-emerald-100 hover:shadow-[var(--acb-shadow-lg)] touch-manipulation active:scale-[0.98]"
+              >
+                Kabul et
+              </button>
+            </>
+          }
+        >
+          <p className="text-[0.75rem] leading-snug text-slate-500">
+            Zorunlu çerezler site için gereklidir. İsteğe bağlı analitik
+            çerezlerini kabul edebilir veya ayarlardan yönetebilirsiniz.{" "}
+            <Link
+              href="/cerez-politikasi"
+              className="font-medium text-slate-800 underline underline-offset-2"
+            >
+              Çerez politikası
+            </Link>
+          </p>
+        </CerezPopup>
       ) : null}
 
       {gorunum === "ayarlar" ? (

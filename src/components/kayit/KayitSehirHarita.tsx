@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   TURKIYE_IL_SINIR_VIEWBOX,
   TURKIYE_IL_SINIR_GENISLIK,
@@ -20,8 +20,11 @@ const MERKEZ_X = HARITA_W / 2;
 const MERKEZ_Y = HARITA_H / 2;
 const GECIS_MS = 600;
 const ILK_UCUS_GECIKME_MS = 250;
+const KAYDIR_SONRASI_MS = 520;
 const OLCEK_MIN = 1.9;
 const OLCEK_MAX = 8;
+/** Sticky nav / üst güvenli alan — harita bu çizginin altında görünmeli. */
+const KAYDIR_UST_PAY_PX = 72;
 
 /**
  * Haritanın kart genişliği responsive olduğundan gerçek ekran-px karşılığı
@@ -64,6 +67,46 @@ function ilOlcegiHesapla(kutu: IlSinirVerisi["kutu"]): number {
   const oranX = (HARITA_W * 0.58) / genislik;
   const oranY = (HARITA_H * 0.78) / yukseklik;
   return Math.min(OLCEK_MAX, Math.max(OLCEK_MIN, Math.min(oranX, oranY)));
+}
+
+/**
+ * Kenar illerde (İstanbul, İzmir…) etiketi içeri kaydırır / textAnchor
+ * değiştirir; böylece taşan harfler viewBox dışında kesilmez.
+ */
+function etiketKonumu(
+  merkez: { x: number; y: number },
+  metin: string,
+  fontSize: number
+): { x: number; y: number; textAnchor: "start" | "middle" | "end" } {
+  const tahminiYarim = (metin.length * fontSize * 0.58) / 2;
+  const pay = Math.max(6, fontSize * 0.35);
+  let x = merkez.x;
+  let textAnchor: "start" | "middle" | "end" = "middle";
+
+  if (merkez.x - tahminiYarim < pay) {
+    textAnchor = "start";
+    x = Math.max(pay, merkez.x);
+  } else if (merkez.x + tahminiYarim > HARITA_W - pay) {
+    textAnchor = "end";
+    x = Math.min(HARITA_W - pay, merkez.x);
+  }
+
+  const y = Math.min(
+    HARITA_H - fontSize * 0.25,
+    Math.max(fontSize * 0.9, merkez.y + fontSize * 0.35)
+  );
+
+  return { x, y, textAnchor };
+}
+
+function haritaGorunurMu(el: HTMLElement): boolean {
+  const rect = el.getBoundingClientRect();
+  return (
+    rect.top >= KAYDIR_UST_PAY_PX &&
+    rect.bottom <= window.innerHeight - 12 &&
+    rect.top < window.innerHeight &&
+    rect.bottom > 0
+  );
 }
 
 type TalepNoktasi = {
@@ -109,39 +152,69 @@ export function KayitSehirHarita({
   onSehirSec: (il: string) => void;
   className?: string;
 }) {
+  const kokRef = useRef<HTMLDivElement>(null);
   const [faz, setFaz] = useState<Faz>("genel");
-
-  // Şehir değişince (arama/GPS/başka bir nokta) harita zaten yakınlaşmışsa
-  // doğrudan yeni konuma kayar — render sırasında state ayarlamak, React'ın
-  // "prop değişince state uyarlama" deseni: fazladan bir effect turu olmadan
-  // aynı render geçişinde uygulanır.
-  const [izlenenSehir, setIzlenenSehir] = useState(sehir);
-  if (sehir !== izlenenSehir) {
-    setIzlenenSehir(sehir);
-    if (faz !== "genel") setFaz("geciyor");
-  }
+  /** Yakınlaştırma hedefi — scroll bitene kadar eski şehirde kalır. */
+  const [ucusSehir, setUcusSehir] = useState(sehir);
 
   useEffect(() => {
-    const t = window.setTimeout(() => {
-      setFaz((f) => (f === "genel" ? "geciyor" : f));
-    }, ILK_UCUS_GECIKME_MS);
-    return () => window.clearTimeout(t);
-    // Yalnızca ilk yüklemede tetiklenir; sonraki şehir değişimleri yukarıdaki
-    // render-sırası uyarlamasıyla yönetilir.
-  }, []);
+    if (!sehir) {
+      setUcusSehir("");
+      setFaz("genel");
+      return;
+    }
 
-  const veriSecili = ilSinirBul(sehir);
-  const olcekSecili = veriSecili ? ilOlcegiHesapla(veriSecili.kutu) : 1;
+    let iptal = false;
+    let timer = 0;
+    const el = kokRef.current;
+    const kaydir = el ? !haritaGorunurMu(el) : false;
+
+    if (kaydir && el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    const bekleMs = kaydir ? KAYDIR_SONRASI_MS : ILK_UCUS_GECIKME_MS;
+    timer = window.setTimeout(() => {
+      if (iptal) return;
+      setUcusSehir(sehir);
+      setFaz("geciyor");
+    }, bekleMs);
+
+    return () => {
+      iptal = true;
+      window.clearTimeout(timer);
+    };
+  }, [sehir]);
+
+  const veriUcus = ilSinirBul(ucusSehir);
+  const olcekUcus = veriUcus ? ilOlcegiHesapla(veriUcus.kutu) : 1;
 
   const donusum =
-    faz === "genel" || !veriSecili
+    faz === "genel" || !veriUcus
       ? "translate(0px, 0px) scale(1)"
-      : `translate(${MERKEZ_X - veriSecili.merkez.x * olcekSecili}px, ${
-          MERKEZ_Y - veriSecili.merkez.y * olcekSecili
-        }px) scale(${olcekSecili})`;
+      : `translate(${MERKEZ_X - veriUcus.merkez.x * olcekUcus}px, ${
+          MERKEZ_Y - veriUcus.merkez.y * olcekUcus
+        }px) scale(${olcekUcus})`;
 
-  const noktalar = faz === "yerlesti" ? talepNoktalariUret(sehir, olcekSecili) : [];
-  const talep = useMemo(() => sehirYolYardimTalepParcalari(sehir), [sehir]);
+  const noktalar =
+    faz === "yerlesti" && ucusSehir
+      ? talepNoktalariUret(ucusSehir, olcekUcus)
+      : [];
+  const talep = useMemo(
+    () => sehirYolYardimTalepParcalari(ucusSehir || sehir),
+    [ucusSehir, sehir]
+  );
+
+  const etiketFont = birim(7.5, 1);
+  const oneCikanEtiketler = useMemo(() => {
+    return DESTEKLENEN_ILLER.flatMap((il) => {
+      if (!ONE_CIKAN_ILLER.has(il)) return [];
+      const veri = TURKIYE_IL_SINIR[il];
+      if (!veri) return [];
+      const konum = etiketKonumu(veri.merkez, il, etiketFont);
+      return [{ il, ...konum }];
+    });
+  }, [etiketFont]);
 
   function gecisBittiginde(e: React.TransitionEvent<SVGGElement>) {
     if (e.target !== e.currentTarget || e.propertyName !== "transform") return;
@@ -150,13 +223,18 @@ export function KayitSehirHarita({
 
   return (
     <div
+      ref={kokRef}
       className={`relative w-full overflow-hidden rounded-[var(--acb-radius-lg)] border border-slate-200 bg-gradient-to-b from-[#eef8f1] to-[#eef3f0] shadow-[var(--acb-shadow)] ${className}`}
     >
       <svg
         viewBox={TURKIYE_IL_SINIR_VIEWBOX}
-        className="h-[240px] w-full xs:h-[270px] sm:h-[320px]"
+        className="h-[240px] w-full overflow-visible xs:h-[270px] sm:h-[320px]"
         role="img"
-        aria-label={`Türkiye haritası, seçili şehir: ${sehir}`}
+        aria-label={
+          sehir
+            ? `Türkiye haritası, seçili şehir: ${sehir}`
+            : "Türkiye haritası, şehir seçin"
+        }
       >
         <defs>
           <radialGradient id="acb-harita-zemin" cx="50%" cy="35%" r="80%">
@@ -194,61 +272,67 @@ export function KayitSehirHarita({
             const veri = TURKIYE_IL_SINIR[il];
             if (!veri) return null;
             const secili = il === sehir;
-            const oneCikan = ONE_CIKAN_ILLER.has(il);
-            const genel = faz === "genel";
             return (
-              <g key={il}>
-                <path
-                  d={ilYoluOlustur(veri)}
-                  fill={secili ? "#5fbf7a" : "#dcefe1"}
-                  fillOpacity={secili ? 0.85 : 1}
-                  stroke="#ffffff"
-                  strokeWidth={0.9}
-                  strokeLinejoin="round"
-                  onClick={() => onSehirSec(il)}
-                  className="cursor-pointer touch-manipulation transition-[fill-opacity] duration-150 hover:fill-opacity-80"
-                />
-                {oneCikan && genel && (
-                  <text
-                    x={veri.merkez.x}
-                    y={veri.merkez.y}
-                    textAnchor="middle"
-                    fontSize={birim(8.5, 1)}
-                    fontWeight={700}
-                    fill="#3c4f45"
-                    className="pointer-events-none select-none"
-                  >
-                    {il}
-                  </text>
-                )}
-              </g>
+              <path
+                key={il}
+                d={ilYoluOlustur(veri)}
+                fill={secili ? "#5fbf7a" : "#dcefe1"}
+                fillOpacity={secili ? 0.85 : 1}
+                stroke="#ffffff"
+                strokeWidth={0.9}
+                strokeLinejoin="round"
+                onClick={() => onSehirSec(il)}
+                className="cursor-pointer touch-manipulation transition-[fill-opacity] duration-150 hover:fill-opacity-80"
+              />
             );
           })}
 
-          {faz === "yerlesti" && veriSecili && (
+          {/* Etiketler tüm illerin üstünde — sonraki path'ler yazıyı örtmesin */}
+          {faz === "genel" &&
+            oneCikanEtiketler.map(({ il, x, y, textAnchor }) => (
+              <text
+                key={`etiket-${il}`}
+                x={x}
+                y={y}
+                textAnchor={textAnchor}
+                fontSize={etiketFont}
+                fontWeight={700}
+                fill="#3c4f45"
+                className="pointer-events-none select-none"
+                style={{
+                  paintOrder: "stroke",
+                  stroke: "#eef6f0",
+                  strokeWidth: etiketFont * 0.22,
+                }}
+              >
+                {il}
+              </text>
+            ))}
+
+          {faz === "yerlesti" && veriUcus && (
             <path
-              d={ilYoluOlustur(veriSecili)}
+              d={ilYoluOlustur(veriUcus)}
               fill="var(--acb-green)"
               fillOpacity={0.14}
               stroke="var(--acb-green)"
               strokeOpacity={0.7}
-              strokeWidth={birim(2, olcekSecili)}
+              strokeWidth={birim(2, olcekUcus)}
               strokeLinejoin="round"
               filter="url(#acb-harita-golge)"
               className="acb-harita-vurgu-in pointer-events-none"
             />
           )}
 
-          {veriSecili && (
+          {veriUcus && faz !== "genel" && (
             <g
-              key={sehir}
-              transform={`translate(${veriSecili.merkez.x}, ${veriSecili.merkez.y})`}
+              key={ucusSehir}
+              transform={`translate(${veriUcus.merkez.x}, ${veriUcus.merkez.y})`}
             >
               <circle
-                r={birim(16, olcekSecili)}
+                r={birim(16, olcekUcus)}
                 fill="none"
                 stroke="var(--acb-green)"
-                strokeWidth={birim(2, olcekSecili)}
+                strokeWidth={birim(2, olcekUcus)}
                 className="acb-harita-pin-ping"
               />
 
@@ -261,7 +345,7 @@ export function KayitSehirHarita({
                     r={n.r}
                     fill="#ffffff"
                     stroke="var(--acb-green)"
-                    strokeWidth={birim(1.1, olcekSecili)}
+                    strokeWidth={birim(1.1, olcekUcus)}
                     className={
                       n.kalici
                         ? "acb-harita-talep-belir acb-harita-talep-nabiz"
@@ -272,32 +356,32 @@ export function KayitSehirHarita({
                 ))}
 
               <circle
-                r={birim(8, olcekSecili)}
+                r={birim(8, olcekUcus)}
                 fill="#ffffff"
                 stroke="var(--acb-green)"
-                strokeWidth={birim(2.4, olcekSecili)}
+                strokeWidth={birim(2.4, olcekUcus)}
                 className="acb-harita-pin-drop"
               />
               <circle
-                r={birim(3.4, olcekSecili)}
+                r={birim(3.4, olcekUcus)}
                 fill="var(--acb-green)"
                 className="acb-harita-pin-drop"
               />
 
               <text
-                y={-birim(15, olcekSecili)}
+                y={-birim(15, olcekUcus)}
                 textAnchor="middle"
-                fontSize={birim(13, olcekSecili)}
+                fontSize={birim(13, olcekUcus)}
                 fontWeight={700}
                 fill="var(--acb-dark)"
                 className="acb-harita-pin-drop select-none"
                 style={{
                   paintOrder: "stroke",
                   stroke: "#ffffff",
-                  strokeWidth: birim(3, olcekSecili),
+                  strokeWidth: birim(3, olcekUcus),
                 }}
               >
-                {sehir}
+                {ucusSehir}
               </text>
             </g>
           )}
