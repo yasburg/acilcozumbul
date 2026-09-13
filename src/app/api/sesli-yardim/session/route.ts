@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { fishAudioAktif, fishAudioTtsModel } from "@/lib/fish-audio";
-import { openaiRealtimeClientSecret, OpenAiHata } from "@/lib/openai-ses";
+import { openaiLiveOturumAc, OpenAiHata } from "@/lib/openai-ses";
 import { smsYalnizTesterCekicilerMi } from "@/lib/sms";
 import {
   elevenlabsAktif,
   elevenlabsTtsModel,
   openaiAktif,
+  openaiLiveBackendModel,
+  openaiLiveDakikaTahminiUsd,
   openaiRealtimeModel,
   sesliMaliyetYazi,
   sesliSaglayiciParse,
@@ -27,8 +29,8 @@ function saglayicilar(usdTry: number): SesliSaglayiciDurum[] {
       id: "openai",
       ad: "ChatGPT",
       aktif: openaiAktif(),
-      model: openaiRealtimeModel(),
-      birim: `~${sesliMaliyetYazi(0.1, usdTry)}/dk canlı`,
+      model: `${openaiRealtimeModel()} · ${openaiLiveBackendModel()}`,
+      birim: `${sesliMaliyetYazi(openaiLiveDakikaTahminiUsd(), usdTry)}/dk`,
       canli: true,
     },
     {
@@ -61,9 +63,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  let saglayici = sesliSaglayiciParse(
-    (await request.json().catch(() => ({})) as { saglayici?: unknown }).saglayici
-  );
+  const govde = (await request.json().catch(() => ({}))) as {
+    saglayici?: unknown;
+    sdp?: unknown;
+  };
+  let saglayici = sesliSaglayiciParse(govde.saglayici);
   if (!saglayici) saglayici = "openai";
 
   if (saglayici === "openai") {
@@ -73,9 +77,16 @@ export async function POST(request: Request) {
         { status: 503 }
       );
     }
+    const sdp = typeof govde.sdp === "string" ? govde.sdp : "";
+    if (!sdp.trim()) {
+      return NextResponse.json(
+        { error: "WebRTC SDP teklifi gerekli." },
+        { status: 400 }
+      );
+    }
     try {
-      const oturum = await openaiRealtimeClientSecret();
-      return NextResponse.json({ tur: "openai-realtime", ...oturum });
+      const oturum = await openaiLiveOturumAc(sdp);
+      return NextResponse.json({ tur: "openai-live", ...oturum });
     } catch (e) {
       const mesaj = e instanceof OpenAiHata ? e.message : "Oturum açılamadı.";
       const status = e instanceof OpenAiHata ? e.status : 502;

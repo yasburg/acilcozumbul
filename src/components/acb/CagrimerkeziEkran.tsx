@@ -17,11 +17,12 @@ import {
 } from "@/lib/fish-audio-talep";
 import { parseJsonYanit } from "@/lib/api-json";
 import {
-  openaiRealtimeBaglan,
+  openaiLiveBaglan,
   type OpenAiRealtimeBaglanti,
 } from "@/lib/openai-webrtc";
 import {
-  openaiRealtimeKullanimUsd,
+  openaiLiveDkUsd,
+  openaiLunaKullanimUsd,
   sesliMaliyetHeaderOku,
   sesliMaliyetYazi,
   type SesliSaglayiciDurum,
@@ -110,6 +111,8 @@ export function CagrimerkeziEkran() {
   const saglayiciRef = useRef<SesliSaglayiciId>("openai");
   const yanitAktifRef = useRef(false);
   const yanitBekleRef = useRef(false);
+  const liveBaslangicRef = useRef(0);
+  const lunaUsdRef = useRef(0);
 
   const secili = saglayicilar.find((s) => s.id === saglayici);
   const canliKonusma = secili?.canli === true;
@@ -459,7 +462,14 @@ export function CagrimerkeziEkran() {
   );
 
   const openaiOlay = useCallback(
-    (ev: Record<string, unknown>) => {
+    (evHam: Record<string, unknown>) => {
+      const ic =
+        evHam.type === "response.event" &&
+        evHam.event &&
+        typeof evHam.event === "object"
+          ? (evHam.event as Record<string, unknown>)
+          : evHam;
+      const ev = ic;
       const type = String(ev.type ?? "");
       if (type === "error") {
         const err = ev.error as { message?: string } | undefined;
@@ -469,27 +479,91 @@ export function CagrimerkeziEkran() {
           yanitBekleRef.current = true;
           return;
         }
+        if (/conversation\.item\.create/i.test(msg)) return;
         if (msg) setHata(msg);
         return;
+      }
+      if (type === "session.started") {
+        setMod("listening");
+      }
+      if (type === "session.closed") {
+        const usage = ev.usage as {
+          seconds?: number;
+          duration_seconds?: number;
+          audio_seconds?: number;
+        } | undefined;
+        const sn =
+          usage?.seconds ?? usage?.duration_seconds ?? usage?.audio_seconds;
+        if (typeof sn === "number" && sn > 0) {
+          setToplamMaliyet(openaiLiveDkUsd(sn) + lunaUsdRef.current);
+        }
       }
       if (type === "response.created") {
         yanitAktifRef.current = true;
       }
-      if (type === "response.output_audio.delta" || type === "response.audio.delta") {
+      if (
+        type === "response.output_audio.delta" ||
+        type === "response.audio.delta" ||
+        type === "session.output_audio.started"
+      ) {
         setMod("speaking");
       }
-      if (type === "output_audio_buffer.stopped") {
+      if (type === "output_audio_buffer.stopped" || type === "session.output_audio.stopped") {
         setMod("listening");
       }
       if (type === "response.done") {
         setMod("listening");
         yanitAktifRef.current = false;
-        const resp = ev.response as { usage?: Parameters<typeof openaiRealtimeKullanimUsd>[0] } | undefined;
-        const usage = resp?.usage;
-        if (usage) setToplamMaliyet((n) => n + openaiRealtimeKullanimUsd(usage));
+        const resp = ev.response as { usage?: Parameters<typeof openaiLunaKullanimUsd>[0] } | undefined;
+        const usage = resp?.usage ?? (ev.usage as Parameters<typeof openaiLunaKullanimUsd>[0] | undefined);
+        if (usage) {
+          lunaUsdRef.current += openaiLunaKullanimUsd(usage);
+          const sn = liveBaslangicRef.current
+            ? (Date.now() - liveBaslangicRef.current) / 1000
+            : 0;
+          setToplamMaliyet(openaiLiveDkUsd(sn) + lunaUsdRef.current);
+        }
         if (yanitBekleRef.current) {
           yanitBekleRef.current = false;
           yanitIste();
+        }
+      }
+      const canliGirdi =
+        type === "session.input_transcript.delta" ||
+        type === "session.input_transcript.done" ||
+        type === "session.input_transcript.completed";
+      const canliCikti =
+        type === "session.output_transcript.delta" ||
+        type === "session.output_transcript.done" ||
+        type === "session.output_transcript.completed";
+      if (canliGirdi || canliCikti) {
+        const bitis = type.endsWith(".done") || type.endsWith(".completed");
+        const parca = bitis
+          ? (typeof ev.transcript === "string" && ev.transcript) ||
+            (typeof ev.delta === "string" ? ev.delta : "")
+          : typeof ev.delta === "string"
+            ? ev.delta
+            : "";
+        if (parca) {
+          const role = canliGirdi ? "user" : "agent";
+          const itemId =
+            (typeof ev.item_id === "string" && ev.item_id) ||
+            (typeof ev.transcript_id === "string" && ev.transcript_id) ||
+            `live-${role}`;
+          setSohbet((onceki) => {
+            const i = onceki.findIndex((x) => x.key === itemId);
+            if (i < 0) {
+              return [...onceki, { key: itemId, role, text: parca, final: bitis }];
+            }
+            const kopya = onceki.slice();
+            kopya[i] = {
+              ...kopya[i],
+              text: bitis && typeof ev.transcript === "string" ? ev.transcript : kopya[i].text + parca,
+              final: bitis,
+            };
+            return kopya;
+          });
+          if (canliGirdi && bitis) musteriOzetIsle(parca);
         }
       }
       if (
@@ -545,24 +619,25 @@ export function CagrimerkeziEkran() {
       const fnName = typeof ev.name === "string" ? ev.name : "";
       const callId = typeof ev.call_id === "string" ? ev.call_id : "";
       const item = ev.item as
-        | { type?: string; name?: string; call_id?: string; arguments?: unknown }
+        | { type?: string; name?: string; call_id?: string; arguments?: unknown; status?: string }
         | undefined;
       const fn =
         type === "response.function_call_arguments.done"
           ? { name: fnName, call_id: callId, arguments: ev.arguments }
-          : item?.type === "function_call"
+          : type === "response.output_item.done" && item?.type === "function_call"
             ? item
             : null;
       if (fn?.name && fn.call_id) {
         if (aracCagriRef.current.has(fn.call_id)) return;
         aracCagriRef.current.add(fn.call_id);
         void openaiAracCalistir(fn.name, aracArgs(fn.arguments)).then((out) => {
+          const cikti = JSON.stringify(out);
           openaiRef.current?.gonder({
-            type: "conversation.item.create",
+            type: "response.item.create",
             item: {
               type: "function_call_output",
               call_id: fn.call_id,
-              output: JSON.stringify(out),
+              output: cikti,
             },
           });
           yanitIste();
@@ -616,6 +691,11 @@ export function CagrimerkeziEkran() {
   }, [musteriMetniIsle, sesDurdur]);
 
   const cagriBitir = useCallback(() => {
+    if (liveBaslangicRef.current) {
+      const sn = (Date.now() - liveBaslangicRef.current) / 1000;
+      setToplamMaliyet(openaiLiveDkUsd(sn) + lunaUsdRef.current);
+      liveBaslangicRef.current = 0;
+    }
     sesDurdur();
     openaiRef.current?.kapat();
     openaiRef.current = null;
@@ -645,32 +725,33 @@ export function CagrimerkeziEkran() {
     aracCagriRef.current = new Set();
     yanitAktifRef.current = false;
     yanitBekleRef.current = false;
+    liveBaslangicRef.current = 0;
+    lunaUsdRef.current = 0;
     try {
       void gpsAl();
       if (secili.canli) {
-        const res = await fetch("/api/sesli-yardim/session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ saglayici: secili.id }),
-        });
-        const data = await parseJsonYanit<{
-          tur?: string;
-          clientSecret?: string;
-          error?: string;
-        }>(res);
-        if (!res.ok || !data.clientSecret) {
-          throw new Error(data.error || "Oturum açılamadı.");
-        }
-        const bag = await openaiRealtimeBaglan({
-          clientSecret: data.clientSecret,
+        const bag = await openaiLiveBaglan({
           onEvent: openaiOlay,
+          sdpAlisveris: async (sdp) => {
+            const res = await fetch("/api/sesli-yardim/session", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ saglayici: secili.id, sdp }),
+            });
+            const data = await parseJsonYanit<{
+              sdp?: string;
+              error?: string;
+            }>(res);
+            if (!res.ok || !data.sdp) {
+              throw new Error(data.error || "Oturum açılamadı.");
+            }
+            return data.sdp;
+          },
         });
         openaiRef.current = bag;
+        liveBaslangicRef.current = Date.now();
         setDurum("connected");
-        setMod("speaking");
-        yanitIste({
-          instructions: `Sadece şu cümleyi söyle. Araç çağırma, başka cümle ekleme: ${SESLI_YARDIM_ILK_MESAJ}`,
-        });
+        setMod("listening");
         return;
       }
       await navigator.mediaDevices.getUserMedia({ audio: true }).then((s) => {
@@ -700,7 +781,7 @@ export function CagrimerkeziEkran() {
       sohbetEkle("user", text);
       musteriOzetIsle(text);
       openaiRef.current.gonder({
-        type: "conversation.item.create",
+        type: "response.item.create",
         item: {
           type: "message",
           role: "user",
@@ -851,7 +932,7 @@ export function CagrimerkeziEkran() {
           {saglayici === "openai" ? (
             <>
               <code className="font-mono">OPENAI_API_KEY</code> ekleyin. ChatGPT{" "}
-              <strong>gpt-realtime-2.1</strong> ile canlı konuşur.
+              <strong>gpt-live-1</strong> + <strong>gpt-5.6-luna</strong> ile canlı konuşur.
             </>
           ) : saglayici === "elevenlabs" ? (
             <>

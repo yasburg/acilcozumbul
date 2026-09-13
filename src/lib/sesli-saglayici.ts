@@ -5,8 +5,9 @@ export type SesliSaglayiciId = (typeof SESLI_SAGLAYICILAR)[number];
 
 export const SESLI_MALIYET_HEADER = "X-Sesli-Maliyet-Usd";
 
-export const OPENAI_REALTIME_MODEL_DEFAULT = "gpt-realtime-2.1";
+export const OPENAI_REALTIME_MODEL_DEFAULT = "gpt-live-1";
 export const OPENAI_REALTIME_VOICE_DEFAULT = "marin";
+export const OPENAI_LIVE_BACKEND_DEFAULT = "gpt-5.6-luna";
 export const OPENAI_INPUT_TRANSCRIBE_DEFAULT = "gpt-4o-transcribe";
 export const ELEVENLABS_TTS_MODEL_DEFAULT = "eleven_v3";
 /** Ücretsiz planda API ile kullanılabilen premade ses — George. Kütüphane sesleri 402 verir. */
@@ -14,6 +15,13 @@ export const ELEVENLABS_VOICE_ID_DEFAULT = "JBFqnCBsd6RMkjVDRZzb";
 
 /** Yayınlanmış API birim fiyatları (USD, tahmini gösterim). */
 export const SESLI_BIRIM_FIYAT = {
+  openaiLivePerDk: 0.05,
+  /** gpt-5.6-luna Responses — $ / 1M token */
+  openaiLunaInPerMTok: 0.2,
+  openaiLunaCachedPerMTok: 0.02,
+  openaiLunaOutPerMTok: 1.2,
+  /** Çağrıda dakikada birkaç araç turu için kaba Luna eki */
+  openaiLunaTahminiPerDk: 0.004,
   openaiRealtimeAudioInPerMTok: 32,
   openaiRealtimeAudioCachedPerMTok: 0.4,
   openaiRealtimeAudioOutPerMTok: 64,
@@ -55,6 +63,44 @@ export function openaiRealtimeModel(): string {
 export function openaiRealtimeVoice(): string {
   return (
     process.env.OPENAI_TTS_VOICE?.trim() || OPENAI_REALTIME_VOICE_DEFAULT
+  );
+}
+
+export function openaiLiveBackendModel(): string {
+  return (
+    process.env.OPENAI_LIVE_BACKEND_MODEL?.trim() || OPENAI_LIVE_BACKEND_DEFAULT
+  );
+}
+
+export function openaiLiveDkUsd(saniye: number): number {
+  if (!Number.isFinite(saniye) || saniye <= 0) return 0;
+  return (saniye / 60) * SESLI_BIRIM_FIYAT.openaiLivePerDk;
+}
+
+export function openaiLiveDakikaTahminiUsd(): number {
+  return SESLI_BIRIM_FIYAT.openaiLivePerDk + SESLI_BIRIM_FIYAT.openaiLunaTahminiPerDk;
+}
+
+export function openaiLunaKullanimUsd(usage: {
+  input_tokens?: number;
+  output_tokens?: number;
+  total_tokens?: number;
+  input_tokens_details?: { cached_tokens?: number };
+  input_token_details?: { cached_tokens?: number; text_tokens?: number };
+}): number {
+  const cached =
+    usage.input_tokens_details?.cached_tokens ??
+    usage.input_token_details?.cached_tokens ??
+    0;
+  const input = usage.input_tokens ?? usage.input_token_details?.text_tokens ?? 0;
+  const output = usage.output_tokens ?? 0;
+  const uncached = Math.max(0, input - cached);
+  if (uncached + cached + output <= 0) return 0;
+  return (
+    (uncached * SESLI_BIRIM_FIYAT.openaiLunaInPerMTok +
+      cached * SESLI_BIRIM_FIYAT.openaiLunaCachedPerMTok +
+      output * SESLI_BIRIM_FIYAT.openaiLunaOutPerMTok) /
+    1_000_000
   );
 }
 

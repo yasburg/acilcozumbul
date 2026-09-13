@@ -5,6 +5,7 @@ import {
 } from "./fish-audio-prompt";
 import {
   openaiApiKey,
+  openaiLiveBackendModel,
   openaiRealtimeModel,
   openaiRealtimeVoice,
 } from "./sesli-saglayici";
@@ -54,83 +55,84 @@ function realtimeAraclar(): Record<string, unknown>[] {
   });
 }
 
-function realtimeSessionGovde(extra: Record<string, unknown> = {}) {
-  return {
-    type: "realtime",
-    model: openaiRealtimeModel(),
-    instructions: `${SESLI_YARDIM_SISTEM_PROMPT}
+function liveTalimat(): string {
+  return `${SESLI_YARDIM_SISTEM_PROMPT}
 
-Konuşma yalnızca Türkçe. İlk sözün: ${SESLI_YARDIM_ILK_MESAJ}`,
+Konuşma yalnızca Türkçe, doğal ve kısa. İlk sözün: ${SESLI_YARDIM_ILK_MESAJ}
+Konum, sorun ve talep güncellemelerini arka plana delege et.`;
+}
+
+function liveOturumGovde(delegation: Record<string, unknown>): Record<string, unknown> {
+  return {
+    model: openaiRealtimeModel(),
+    instructions: liveTalimat(),
     audio: {
-      input: {
-        transcription: { model: "gpt-4o-transcribe" },
-        turn_detection: { type: "semantic_vad" },
-      },
       output: { voice: openaiRealtimeVoice() },
     },
-    tools: realtimeAraclar(),
-    tool_choice: "auto",
-    reasoning: { effort: "low" },
-    ...extra,
+    delegation,
   };
 }
 
-function clientSecretOku(data: Record<string, unknown>): string {
-  if (typeof data.value === "string" && data.value.startsWith("ek_")) {
-    return data.value;
-  }
-  const secret = data.client_secret;
-  if (secret && typeof secret === "object") {
-    const v = (secret as { value?: string }).value;
-    if (typeof v === "string") return v;
-  }
-  throw new OpenAiHata(502, "ChatGPT oturum anahtarı alınamadı.");
+function sdpCevapOku(data: Record<string, unknown>): {
+  sdp: string;
+  sessionId: string;
+} {
+  const transport = data.transport as { sdp?: string } | undefined;
+  const session = data.session as { id?: string } | undefined;
+  const sdp = typeof transport?.sdp === "string" ? transport.sdp : "";
+  const sessionId = typeof session?.id === "string" ? session.id : "";
+  if (!sdp.trim()) throw new OpenAiHata(502, "ChatGPT Live SDP yanıtı alınamadı.");
+  return { sdp, sessionId };
 }
 
-export async function openaiRealtimeClientSecret(): Promise<{
-  clientSecret: string;
+export function sdpTeklifHazirla(sdp: string): string {
+  const govde = sdp.replace(/^\uFEFF/, "").trim();
+  if (!govde) throw new OpenAiHata(400, "WebRTC SDP teklifi gerekli.");
+  if (!govde.includes("v=0")) {
+    throw new OpenAiHata(400, "WebRTC SDP teklifi geçersiz.");
+  }
+  const crlf = govde.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\n/g, "\r\n");
+  return crlf.endsWith("\r\n") ? crlf : `${crlf}\r\n`;
+}
+
+export async function openaiLiveOturumAc(sdp: string): Promise<{
+  sdp: string;
+  sessionId: string;
   model: string;
 }> {
   const key = openaiApiKey();
   if (!key) throw new OpenAiHata(503, "OPENAI_API_KEY tanımlı değil.");
+  const teklif = sdpTeklifHazirla(sdp);
 
   const denemeler: Record<string, unknown>[] = [
-    realtimeSessionGovde(),
-    realtimeSessionGovde({
-      audio: {
-        input: {
-          transcription: { model: "gpt-4o-mini-transcribe" },
-          turn_detection: { type: "server_vad" },
-        },
-        output: { voice: openaiRealtimeVoice() },
+    liveOturumGovde({
+      type: "responses",
+      responses: {
+        model: openaiLiveBackendModel(),
+        instructions: SESLI_YARDIM_SISTEM_PROMPT,
+        tools: realtimeAraclar(),
+        tool_choice: "auto",
       },
     }),
-    {
-      type: "realtime",
-      model: openaiRealtimeModel(),
-      instructions: `${SESLI_YARDIM_SISTEM_PROMPT}\nKonuşma Türkçe. İlk sözün: ${SESLI_YARDIM_ILK_MESAJ}`,
-      audio: { output: { voice: openaiRealtimeVoice() } },
-      tools: realtimeAraclar(),
-      tool_choice: "auto",
-    },
+    liveOturumGovde({ type: "client" }),
   ];
 
   let sonHata: OpenAiHata | null = null;
   for (const session of denemeler) {
-    const res = await fetch(`${OPENAI_API}/realtime/client_secrets`, {
+    const res = await fetch(`${OPENAI_API}/live/sessions`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ session }),
+      body: JSON.stringify({
+        session,
+        transport: { type: "webrtc", sdp: teklif },
+      }),
     });
     if (res.ok) {
       const data = (await res.json()) as Record<string, unknown>;
-      return {
-        clientSecret: clientSecretOku(data),
-        model: openaiRealtimeModel(),
-      };
+      return { ...sdpCevapOku(data), model: openaiRealtimeModel() };
     }
     try {
       await openaiHata(res);
@@ -141,5 +143,5 @@ export async function openaiRealtimeClientSecret(): Promise<{
       }
     }
   }
-  throw sonHata ?? new OpenAiHata(502, "ChatGPT canlı oturum açılamadı.");
+  throw sonHata ?? new OpenAiHata(502, "ChatGPT Live oturumu açılamadı.");
 }
