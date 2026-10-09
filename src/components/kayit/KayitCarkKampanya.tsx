@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
 import { SpinnerWheel } from "react-spin-prize";
@@ -31,18 +30,6 @@ import {
   kayitFunnelOlayBirKez,
   kayitFunnelOlayGonder,
 } from "@/lib/kayit-funnel-client";
-import { cerezBannerGosterilmeli } from "@/lib/cerez-onay";
-
-function cerezBannerSubscribe(onStoreChange: () => void) {
-  if (typeof window === "undefined") return () => {};
-  const handler = () => onStoreChange();
-  window.addEventListener("storage", handler);
-  window.addEventListener("acil-cerez-banner", handler);
-  return () => {
-    window.removeEventListener("storage", handler);
-    window.removeEventListener("acil-cerez-banner", handler);
-  };
-}
 
 type ModalAsama = "spin" | "tekrar" | "odul";
 
@@ -65,11 +52,6 @@ function dilimEtiketKisa(etiket: string): string {
 }
 
 export function KayitCarkKampanya({ funnelId, aktif }: Props) {
-  const cerezBannerAcik = useSyncExternalStore(
-    cerezBannerSubscribe,
-    cerezBannerGosterilmeli,
-    () => false
-  );
   const [mounted, setMounted] = useState(false);
   const [ikonHazir, setIkonHazir] = useState(false);
   const [ikonGitti, setIkonGitti] = useState(false);
@@ -271,12 +253,9 @@ export function KayitCarkKampanya({ funnelId, aktif }: Props) {
   if (!aktif || !mounted) return null;
 
   const ikonGorunur = ikonHazir && !ikonGitti;
-  // Sticky CTA + çerez şeridinin üstünde dursun; aksi halde “Kabul et / Ayarla”ya biner.
   const stickyTaban =
     "var(--acil-sticky-cta-h, env(safe-area-inset-bottom, 0px))";
-  const ikonBottom = cerezBannerAcik
-    ? `calc(${stickyTaban} + 5.75rem)`
-    : `calc(${stickyTaban} + 0.75rem)`;
+  const ikonBottom = `calc(${stickyTaban} + 0.75rem)`;
 
   const ui = (
     <>

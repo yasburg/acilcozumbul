@@ -10,6 +10,9 @@
 - [İstanbul yol yardım](https://www.acilcozumbul.com/istanbul): İstanbul şehir hub; hizmet ve ilçe sayfalarına bağlantılar.
 - [İstanbul çekici](https://www.acilcozumbul.com/istanbul/cekici): İstanbul geneli çekici teklifi.
 - [Hizmet veren ol](https://www.acilcozumbul.com/hizmet-veren): Çekici, lastikçi veya anahtarcı kayıt bilgisi (SEO). Kayıt formu ayrıdır.
+- [Nasıl çalışır](https://www.acilcozumbul.com/nasil-calisir): Talep, teklif ve seçim adımları; ücret modeli.
+- [Hakkımızda](https://www.acilcozumbul.com/hakkimizda): Platform ve işleten şirket (YSN LABS) kimliği.
+- [Yol yardım rehberi](https://www.acilcozumbul.com/rehber): Çekici, lastik, akü ve yolda kalma yazıları.
 - [Sitemap](https://www.acilcozumbul.com/sitemap.xml): İndekslenebilir sayfaların XML listesi.
 
 ## Yasal

@@ -157,6 +157,129 @@
   scrollbar-width: none;
 }
 
+/*
+ * Hero typewriter + delayed fades — CSS-only choreography.
+ * Caret is border-right on the typing box (stays flush with the reveal edge).
+ * CTA uses `translate` property (not transform) to avoid Tailwind v4 double -50%.
+ */
+.acb-hero-type-wrap {
+  display: inline-block;
+  max-width: 100%;
+}
+.acb-hero--intro .acb-hero-type {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  border-right: 3px solid var(--acb-green, #089b2d);
+  animation:
+    acb-hero-type 1.12s steps(16, end) 0.35s forwards,
+    acb-hero-caret-blink 0.75s step-end 1.47s 3,
+    acb-hero-caret-hide 0s linear 3.8s forwards;
+}
+@keyframes acb-hero-type {
+  to {
+    width: 100%;
+  }
+}
+@keyframes acb-hero-caret-blink {
+  50% {
+    border-right-color: transparent;
+  }
+}
+@keyframes acb-hero-caret-hide {
+  to {
+    border-right-color: transparent;
+  }
+}
+
+.acb-hero-cta {
+  translate: -50% -50%;
+}
+
+.acb-hero--intro .acb-hero-subtitle {
+  opacity: 0;
+  translate: 0 0.5rem;
+  animation: acb-hero-fade-up 0.4s ease-out 1.72s forwards;
+}
+.acb-hero--intro .acb-hero-cta {
+  opacity: 0;
+  visibility: hidden;
+  scale: 0.95;
+  animation: acb-hero-fade-cta 0.5s cubic-bezier(0.32, 0.72, 0, 1) 2.17s forwards;
+}
+.acb-hero--intro .acb-hero-trust {
+  opacity: 0;
+  translate: 0 1rem;
+  animation: acb-hero-fade-up 0.55s cubic-bezier(0.32, 0.72, 0, 1) 2.25s forwards;
+}
+.acb-hero--intro .acb-hero-about {
+  opacity: 0;
+  translate: 0 1rem;
+  animation: acb-hero-fade-up 0.55s cubic-bezier(0.32, 0.72, 0, 1) 2.32s forwards;
+}
+
+.acb-hero--return .acb-hero-subtitle {
+  opacity: 0;
+  translate: 0 0.5rem;
+  animation: acb-hero-fade-up 0.35s ease-out 0.05s forwards;
+}
+.acb-hero--return .acb-hero-cta {
+  opacity: 0;
+  visibility: hidden;
+  scale: 0.95;
+  animation: acb-hero-fade-cta 0.45s cubic-bezier(0.32, 0.72, 0, 1) 0.1s forwards;
+}
+.acb-hero--return .acb-hero-trust {
+  opacity: 0;
+  translate: 0 1rem;
+  animation: acb-hero-fade-up 0.45s cubic-bezier(0.32, 0.72, 0, 1) 0.15s forwards;
+}
+.acb-hero--return .acb-hero-about {
+  opacity: 0;
+  translate: 0 1rem;
+  animation: acb-hero-fade-up 0.45s cubic-bezier(0.32, 0.72, 0, 1) 0.2s forwards;
+}
+
+@keyframes acb-hero-fade-up {
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes acb-hero-fade-cta {
+  to {
+    opacity: 1;
+    visibility: visible;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acb-hero--intro .acb-hero-type {
+    width: 100%;
+    border-right: none;
+    animation: none;
+  }
+  .acb-hero--intro .acb-hero-subtitle,
+  .acb-hero--intro .acb-hero-cta,
+  .acb-hero--intro .acb-hero-trust,
+  .acb-hero--intro .acb-hero-about,
+  .acb-hero--return .acb-hero-subtitle,
+  .acb-hero--return .acb-hero-cta,
+  .acb-hero--return .acb-hero-trust,
+  .acb-hero--return .acb-hero-about {
+    opacity: 1;
+    visibility: visible;
+    translate: 0 0;
+    scale: 1;
+    animation: none;
+  }
+  .acb-hero-cta {
+    translate: -50% -50%;
+  }
+}
+
 /* Step-to-step content transition — fades + slides in the direction of travel,
    so advancing/going back reads as motion instead of an instant content swap. */
 .acb-step-transition {

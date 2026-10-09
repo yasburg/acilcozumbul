@@ -132,6 +132,14 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {/* LCP: hero opening mark — WebP ~40KB (was 2.6MB PNG) */}
+        <link
+          rel="preload"
+          as="image"
+          href={ACB_BRAND.logoOpening}
+          type="image/webp"
+          fetchPriority="high"
+        />
         {/*
           Consent bootstrap: next/script beforeInteractive React 19’da
           client’ta script uyarıları veriyor; head’de düz script güvenli.

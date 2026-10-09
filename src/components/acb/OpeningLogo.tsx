@@ -5,6 +5,35 @@ import { ACB_BRAND } from "@/lib/brand";
 import { ACB_SHELL_MAX_W } from "@/lib/design-tokens";
 
 export const OPENING_LOGO_SRC = ACB_BRAND.logoOpening;
+const LOGO_PNG = ACB_BRAND.logoOpeningPng;
+const LOGO_W = ACB_BRAND.logoOpeningBoyut.width;
+const LOGO_H = ACB_BRAND.logoOpeningBoyut.height;
+
+function OpeningLogoImg({
+  className,
+  fetchPriority,
+  decoding,
+}: {
+  className: string;
+  fetchPriority?: "high" | "low" | "auto";
+  decoding?: "async" | "sync" | "auto";
+}) {
+  return (
+    <picture>
+      <source srcSet={OPENING_LOGO_SRC} type="image/webp" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={LOGO_PNG}
+        alt="Acil Çözüm Bul"
+        width={LOGO_W}
+        height={LOGO_H}
+        decoding={decoding}
+        fetchPriority={fetchPriority}
+        className={className}
+      />
+    </picture>
+  );
+}
 
 export function OpeningLogo({
   forceDocked = false,
@@ -76,14 +105,10 @@ export function OpeningLogo({
               aria-label="Acil Çözüm Bul — ana sayfa"
               className="flex shrink-0 items-center gap-2 touch-manipulation cursor-pointer"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={OPENING_LOGO_SRC}
-                alt="Acil Çözüm Bul"
-                width={100}
-                height={100}
-                decoding="async"
+              <OpeningLogoImg
                 className="size-9 object-contain"
+                fetchPriority="low"
+                decoding="async"
               />
             </button>
             {chromeDocked && center ? (
@@ -106,15 +131,10 @@ export function OpeningLogo({
             aria-label="Acil Çözüm Bul — ana sayfa"
             className="touch-manipulation cursor-pointer active:scale-95 transition-transform"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={OPENING_LOGO_SRC}
-              alt="Acil Çözüm Bul"
-              width={2000}
-              height={2002}
-              decoding="async"
-              fetchPriority="high"
+            <OpeningLogoImg
               className="h-28 w-28 sm:h-36 sm:w-36 object-contain"
+              fetchPriority="high"
+              decoding="sync"
             />
           </button>
         </div>

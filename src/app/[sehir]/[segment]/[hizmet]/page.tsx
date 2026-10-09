@@ -3,6 +3,7 @@ import { SeoLandingShell } from "@/components/seo/SeoLandingShell";
 import {
   SEO_YAYIN_SEHIRLER,
   seoIlceHizmetYayindaMi,
+  seoIlceHizmetIndexlensinMi,
   seoYayinIlceSluglari,
 } from "@/data/seo-yayin";
 import { sayfaMetadata } from "@/lib/seo";
@@ -48,6 +49,7 @@ export async function generateMetadata({ params }: Props) {
     description: icerik.description,
     path: `/${sehir}/${ilce}/${hizmet}`,
     absoluteTitle: true,
+    noIndex: !seoIlceHizmetIndexlensinMi(sehir, ilce, hizmet),
   });
 }
 

@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { createPortal } from "react-dom";
 import { MobileShell } from "@/components/MobileShell";
 import { OpeningLogo } from "@/components/acb/OpeningLogo";
@@ -193,21 +192,27 @@ function KayitStickyNav({
 
   if (!mounted) return null;
 
+  // Outer shell is pointer-events-none; only interactive controls opt in.
+  // A disabled sticky "Devam" must NOT eat mobile taps meant for cards beneath.
+  const geriVar = !geriGizle && Boolean(onGeri);
+
   return createPortal(
     <div
       ref={rootRef}
       className="fixed inset-x-0 bottom-0 z-20 pointer-events-none px-4 pt-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
     >
-      <div className={`mx-auto ${ACB_SHELL_MAX_W} pointer-events-auto`}>
+      <div className={`mx-auto ${ACB_SHELL_MAX_W}`}>
         {progress ? (
-          <div className="-mt-8 mb-2 flex justify-center">{progress}</div>
+          <div className="-mt-8 mb-2 flex justify-center pointer-events-auto">
+            {progress}
+          </div>
         ) : null}
         <div className="flex gap-3">
-          {!geriGizle && onGeri ? (
+          {geriVar ? (
             <Btn
               type="button"
               variant="geri"
-              className="shrink-0 min-w-[4.25rem] max-w-[5.5rem] !px-3 text-xs xs:text-sm"
+              className="shrink-0 min-w-[4.25rem] max-w-[5.5rem] !px-3 text-xs xs:text-sm pointer-events-auto"
               onClick={onGeri}
               disabled={loading}
             >
@@ -218,7 +223,11 @@ function KayitStickyNav({
             type="button"
             className={[
               "flex-1 !font-bold !tracking-wide",
-              !devamDisabled && !loading ? "animate-devam-glow" : "",
+              !devamDisabled && !loading
+                ? "animate-devam-glow pointer-events-auto"
+                : loading
+                  ? "pointer-events-auto"
+                  : "pointer-events-none",
             ]
               .filter(Boolean)
               .join(" ")}
@@ -249,7 +258,7 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   const [adim, setAdim] = useState<Adim>("is");
   const [hizmet, setHizmet] = useState<KayitHizmetOnsecim>(null);
   const [cokluSorunlar, setCokluSorunlar] = useState<string[]>([]);
-  const [sehir, setSehir] = useState(ISTANBUL_IL);
+  const [sehir, setSehir] = useState("");
   const [sehirAra, setSehirAra] = useState("");
   const [acikIller, setAcikIller] = useState<readonly string[]>([
     ...KULLANIMA_ACIK_ILLER,
@@ -448,8 +457,15 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
     if (q.length < 1) return [];
     return DESTEKLENEN_ILLER.filter((il) =>
       il.toLocaleLowerCase("tr-TR").includes(q)
-    ).slice(0, 8);
+    );
   }, [sehirAra]);
+
+  const digerSehirler = useMemo(() => {
+    const populer = new Set(POPULER_SEHIRLER);
+    return DESTEKLENEN_ILLER.filter((il) => !populer.has(il)).sort((a, b) =>
+      a.localeCompare(b, "tr")
+    );
+  }, []);
 
   function sehirSec(il: string) {
     setSehir(il);
@@ -509,6 +525,8 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
   }
 
   function hizmetSec(id: Exclude<KayitHizmetOnsecim, null>) {
+    // Sticky overlay / double-tap: ignore if we already left the hizmet step.
+    if (adim !== "is") return;
     setHizmet(id);
     void kayitFunnelOlayGonder(funnel.id, "cta_kayit_basla", {
       meta: { hizmet: id },
@@ -726,14 +744,6 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
             <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Ücretsiz Firma Kaydı
           </span>
-        }
-        trailing={
-          <Link
-            href="/cekici/giris"
-            className="group inline-flex items-center gap-1 rounded-full border border-[#9ee3b2] bg-[#eaf8ee] px-3 py-1 text-[11px] font-bold text-[#0b4e1e] shadow-[0_2px_8px_rgba(8,155,45,0.14)] transition-all duration-200 hover:border-[#089b2d] hover:bg-[#d5f3dc] hover:shadow-[0_4px_12px_rgba(8,155,45,0.22)] active:scale-95 touch-manipulation"
-          >
-            Giriş yap →
-          </Link>
         }
         onClick={() => setAdim("is")}
       />
@@ -962,19 +972,10 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                   );
                 })}
               </div>
-            </section>
 
-            <KayitStickyNav
-              progress={flowProgressBar}
-              devamDisabled={!hizmet}
-              devamMetin={hizmet ? "Devam et" : "Önce hizmet seç"}
-              geriGizle={true}
-              onDevam={() => {
-                if (!hizmet) return;
-                if (hizmet === "birden_fazla") setAdim("is_coklu");
-                else adimaIlerle("sehir");
-              }}
-            />
+              {/* Seçim otomatik ilerler — sticky Devam yok (mobilde kartları örtüyordu) */}
+              <div className="flex justify-center pt-1">{flowProgressBar}</div>
+            </section>
           </div>
         )}
 
@@ -1162,23 +1163,68 @@ function WizardIcerik({ funnel }: { funnel: KayitFunnelTanim }) {
                     </div>
                   </div>
 
-                  {/* Seçili Şehir Kartı */}
-                  <div className="rounded-[var(--acb-radius)] border border-[#9ee3b2] bg-[#eaf8ee] p-4 flex items-center gap-3.5 shadow-[0_2px_10px_rgba(8,155,45,0.12)]">
-                    <div className="size-11 rounded-xl bg-white text-[var(--acb-green)] flex items-center justify-center shadow-sm shrink-0">
-                      <MapPin className="size-6" />
+                  {/* Diğer şehirler — kaydırılabilir tam liste */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Tüm Şehirler
+                    </p>
+                    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm max-h-56 overflow-y-auto divide-y divide-slate-100">
+                      {digerSehirler.map((il) => {
+                        const secili = sehir === il;
+                        return (
+                          <button
+                            key={il}
+                            type="button"
+                            onClick={() => sehirSec(il)}
+                            className={`w-full text-left px-4 py-2.5 text-[14px] font-medium flex items-center justify-between transition touch-manipulation ${
+                              secili
+                                ? "bg-[#eaf8ee] text-[#0b4e1e] font-semibold"
+                                : "text-slate-800 hover:bg-slate-50"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2.5">
+                              <MapPin
+                                className={`size-3.5 ${
+                                  secili
+                                    ? "text-[var(--acb-green)]"
+                                    : "text-slate-400"
+                                }`}
+                              />
+                              {il}
+                            </span>
+                            {secili ? (
+                              <span className="size-5 rounded-full bg-[var(--acb-green)] text-white text-xs flex items-center justify-center font-bold">
+                                ✓
+                              </span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="block text-xs font-semibold text-emerald-800 uppercase tracking-wide">
-                        Seçili Hizmet Şehri
-                      </span>
-                      <span className="block font-bold text-slate-900 text-lg leading-tight mt-0.5">
-                        {sehir}
-                      </span>
-                    </div>
-                    <span className="shrink-0 size-6 rounded-full bg-[var(--acb-green)] text-white text-xs font-bold flex items-center justify-center shadow-sm">
-                      ✓
-                    </span>
                   </div>
+
+                  {sehir ? (
+                    <div className="rounded-[var(--acb-radius)] border border-[#9ee3b2] bg-[#eaf8ee] p-4 flex items-center gap-3.5 shadow-[0_2px_10px_rgba(8,155,45,0.12)]">
+                      <div className="size-11 rounded-xl bg-white text-[var(--acb-green)] flex items-center justify-center shadow-sm shrink-0">
+                        <MapPin className="size-6" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="block text-xs font-semibold text-emerald-800 uppercase tracking-wide">
+                          Seçili Hizmet Şehri
+                        </span>
+                        <span className="block font-bold text-slate-900 text-lg leading-tight mt-0.5">
+                          {sehir}
+                        </span>
+                      </div>
+                      <span className="shrink-0 size-6 rounded-full bg-[var(--acb-green)] text-white text-xs font-bold flex items-center justify-center shadow-sm">
+                        ✓
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-center text-sm text-slate-500 py-1">
+                      Haritadan, popüler şehirlerden veya listeden seçin.
+                    </p>
+                  )}
                 </>
               )}
             </section>

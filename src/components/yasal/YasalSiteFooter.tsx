@@ -10,6 +10,9 @@ import { ACB_BRAND } from "@/lib/brand";
 import { YASAL_LINKLER } from "@/lib/yasal-sirket";
 
 const PLATFORM_LINKLER = [
+  { href: "/nasil-calisir", label: "Nasıl çalışır" },
+  { href: "/hakkimizda", label: "Hakkımızda" },
+  { href: "/rehber", label: "Rehber" },
   { href: "/cekici-fiyat-hesaplama", label: "Çekici fiyat hesaplama" },
   { href: "/is-birligi", label: "İş birliği" },
   { href: "/hizmet-veren", label: "Hizmet veren ol" },

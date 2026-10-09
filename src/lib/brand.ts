@@ -11,8 +11,13 @@ export const ACB_BRAND = {
   logoFavicon192: "/brand/acb/favicon-192.png",
   logoFavicon512: "/brand/acb/favicon-512.png",
   logoSocial: "/brand/acb/ACB-Logo-Social-Media.png",
-  /** Square mark used in header morph + footer */
-  logoOpening: "/brand/acb/opening-logo.png",
+  /**
+   * Hero / chrome mark — 576px WebP (~40KB). Master: assets/brand/opening-logo-master.png
+   * Display max ~144px CSS; do not point at the multi‑MB master.
+   */
+  logoOpening: "/brand/acb/opening-logo.webp",
+  logoOpeningPng: "/brand/acb/opening-logo.png",
+  logoOpeningBoyut: { width: 576, height: 576 } as const,
   animationPingpong: "/brand/acb/ACB-Animation-pingpong.svg",
   themeColor: "#089B2D",
   backgroundColor: "#EAF0CE",

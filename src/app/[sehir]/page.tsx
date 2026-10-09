@@ -16,6 +16,7 @@ import {
   sehirHubIcerik,
   seoBolgeBaglantilari,
 } from "@/lib/seo-icerik";
+import { SEO_HIZMET_SLUGS, seoHizmetGetir } from "@/lib/seo-hizmetler";
 
 export const revalidate = 86400;
 
@@ -42,7 +43,7 @@ export async function generateMetadata({ params }: Props) {
 
 /**
  * Tüm iller: form + şehir SEO hub (`/{sehir}`).
- * İlçe / hizmet derin SEO tüm yayınlı illerde (seo-yayin).
+ * İlçe derin SEO yalnızca seo-yayin derin allowlist (İstanbul).
  */
 export default async function SehirHubPage({ params }: Props) {
   const { sehir } = await params;
@@ -51,7 +52,13 @@ export default async function SehirHubPage({ params }: Props) {
 
   const icerik = sehirHubIcerik(kayit.ad);
   const baglantilar = seoBolgeBaglantilari(kayit.ad);
-  const bolgeLinkleri = baglantilar.filter((l) => l.ad !== kayit.ad);
+  const ilceLinkleri = baglantilar.filter((l) => l.ad !== kayit.ad);
+  /** Hub güçlendirme: şehir×hizmet linkleri crawl yolu */
+  const hizmetLinkleri = SEO_HIZMET_SLUGS.map((slug) => {
+    const h = seoHizmetGetir(slug)!;
+    return { ad: h.etiket, href: `/${sehir}/${slug}` };
+  });
+  const bolgeLinkleri = [...hizmetLinkleri, ...ilceLinkleri];
 
   return (
     <>
