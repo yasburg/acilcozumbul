@@ -52,11 +52,17 @@ describe("panelSifreDogru", () => {
   const prevMap = process.env.PANEL_ADMIN_PASSWORDS;
   const prevHash = process.env.PANEL_ADMIN_PASSWORD_HASH;
   const prevPlain = process.env.PANEL_ADMIN_PASSWORD;
+  const prevMuhSifre = process.env.PANEL_MUHASEBE_PASSWORD;
+  const prevMuhEmails = process.env.PANEL_MUHASEBE_EMAILS;
+  const prevAdminEmails = process.env.PANEL_ADMIN_EMAILS;
 
   afterEach(() => {
     process.env.PANEL_ADMIN_PASSWORDS = prevMap;
     process.env.PANEL_ADMIN_PASSWORD_HASH = prevHash;
     process.env.PANEL_ADMIN_PASSWORD = prevPlain;
+    process.env.PANEL_MUHASEBE_PASSWORD = prevMuhSifre;
+    process.env.PANEL_MUHASEBE_EMAILS = prevMuhEmails;
+    process.env.PANEL_ADMIN_EMAILS = prevAdminEmails;
   });
 
   it("hash yoksa her şifreyi reddeder", () => {
@@ -81,5 +87,16 @@ describe("panelSifreDogru", () => {
     expect(panelSifreDogru("yasin@example.com", "yasin-sifre")).toBe(true);
     expect(panelSifreDogru("yasin@example.com", "ortak")).toBe(false);
     expect(panelSifreDogru("admin@example.com", "ortak")).toBe(true);
+  });
+
+  it("muhasebe şifresini PANEL_MUHASEBE_PASSWORD ile doğrular", () => {
+    process.env.PANEL_ADMIN_EMAILS = "admin@example.com";
+    process.env.PANEL_MUHASEBE_EMAILS = "fatih@iror.com.tr";
+    process.env.PANEL_MUHASEBE_PASSWORD = "muhasebe-sifre";
+    delete process.env.PANEL_ADMIN_PASSWORDS;
+    process.env.PANEL_ADMIN_PASSWORD_HASH = sifreHashle("ortak");
+    expect(panelSifreDogru("fatih@iror.com.tr", "muhasebe-sifre")).toBe(true);
+    expect(panelSifreDogru("fatih@iror.com.tr", "ortak")).toBe(false);
+    expect(panelSifreDogru("admin@example.com", "221292")).toBe(false);
   });
 });
